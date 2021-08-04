@@ -1,8 +1,8 @@
-message("===================================================")
-message("|                                                 |")
-message("|                 Find Orbbec SDK                 |")
-message("|                                                 |")
-message("===================================================")
+message("***************************************************")
+message("*                                                 *")
+message("*                 Find Orbbec SDK                 *")
+message("*                                                 *")
+message("***************************************************")
 
 set(ORBBEC_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/orbbec")
 

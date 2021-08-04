@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="orbbec_camera" type="orbbec_camera_node" name="ob_camera">
+    </node>
+</launch>
