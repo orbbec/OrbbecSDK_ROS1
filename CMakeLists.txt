@@ -16,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  image_transport
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -74,6 +76,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  sensor_msgs
 )
 
 ################################################
@@ -108,7 +111,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES orbbec_ros_sdk
- CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+ CATKIN_DEPENDS roscpp rospy std_msgs message_runtime image_transport sensor_msgs
 #  DEPENDS system_lib
 )
 
@@ -150,6 +153,7 @@ include_directories(
 add_executable(${PROJECT_NAME}_node 
   src/main.cpp
   src/orbbec_device_manager.cpp
+  src/orbbec_device.cpp
 )
 
 ## Rename C++ executable without prefix

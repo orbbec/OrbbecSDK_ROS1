@@ -13,10 +13,21 @@ class OrbbecDeviceManager
 {
 private:
     ros::NodeHandle nodeHandle;
+    ros::NodeHandle privateNodeHandle;
 
     std::shared_ptr<ob::DeviceList> deviceList;
 
     std::vector<std::shared_ptr<ob::Device>> devices;
+
+    std::shared_ptr<ob::Device> device;
+
+    std::string deviceName;
+    std::string serialNumber;
+    int pid;
+    int vid;
+
+    void findDevice();
+    void openDevice();
     
     void DeviceConnectCallback(std::shared_ptr< ob::DeviceList > connectList);
     void DeviceDisconnectCallback(std::shared_ptr< ob::DeviceList > disconnectList);
@@ -24,6 +35,6 @@ private:
     bool getDeviceList(orbbec_camera::GetDeviceList::Request& request, orbbec_camera::GetDeviceList::Response& response);
 
 public:
-    OrbbecDeviceManager(ros::NodeHandle nh);
+    OrbbecDeviceManager(ros::NodeHandle nh, ros::NodeHandle pnh);
     ~OrbbecDeviceManager();
 };
