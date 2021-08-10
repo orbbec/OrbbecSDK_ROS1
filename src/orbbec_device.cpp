@@ -3,13 +3,18 @@
 #include <sensor_msgs/image_encodings.h>
 #include <libobsensor/hpp/StreamProfile.hpp>
 #include <libobsensor/hpp/Frame.hpp>
+#include "std_msgs/String.h"
 
-OrbbecDevice::OrbbecDevice(ros::NodeHandle nh, ros::NodeHandle pnh, std::shared_ptr<ob::Device> dev) : 
-                nodeHandle(nh), privateNodeHandle(pnh), colorIt(nh), depthIt(nh), irIt(nh), device(dev)
+OrbbecDevice::OrbbecDevice(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> dev) : nodeHandle(nh), privateNodeHandle(pnh)/*, colorIt(nh), depthIt(nh), irIt(nh)*/, device(dev)
 {
-    colorPub = colorIt.advertiseCamera("image/color", 1);
-    depthPub = depthIt.advertiseCamera("image/depth", 1);
-    irPub = irIt.advertiseCamera("image/ir", 1);
+    // colorPub = colorIt.advertiseCamera("image/color", 1);
+    // depthPub = depthIt.advertiseCamera("image/depth", 1);
+    // irPub = irIt.advertiseCamera("image/ir", 1);
+
+    image_transport::ImageTransport it(nh);
+    colorPub = it.advertise("camera/color", 1);
+    depthPub = it.advertise("camera/depth", 1);
+    irPub = it.advertise("camera/ir", 1);
 
     colorSensor = dev->getSensor(OB_SENSOR_COLOR);
     depthSensor = dev->getSensor(OB_SENSOR_DEPTH);
@@ -17,7 +22,7 @@ OrbbecDevice::OrbbecDevice(ros::NodeHandle nh, ros::NodeHandle pnh, std::shared_
 
     startColorStream();
     startDepthStream();
-    startIRStream();    
+    startIRStream();
 }
 
 OrbbecDevice::~OrbbecDevice()
@@ -28,65 +33,73 @@ void OrbbecDevice::startColorStream()
 {
     auto profiles = colorSensor->getStreamProfiles();
     std::shared_ptr<ob::StreamProfile> profile;
-    for(int i = 0; i < profiles.size(); i++)
+    for (int i = 0; i < profiles.size(); i++)
     {
-        if(profiles[i]->format() == OB_FORMAT_YUY2)
+        if (profiles[i]->format() == OB_FORMAT_MJPG)
         {
             profile = profiles[i];
+            break;
         }
     }
 
-    if(profile != NULL)
+    if (profile != NULL)
     {
-        colorSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame){
-            sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
-            image->width = frame->width();
-            image->height = frame->height();
-            image->step = frame->width() * 4;
-            image->encoding = sensor_msgs::image_encodings::YUV422;
-            image->data.resize(frame->dataSize());
-            memcpy(&image->data[0], frame->data(), frame->dataSize());
+        colorSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame)
+                           {
+                               sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+                               image->width = frame->width();
+                               image->height = frame->height();
+                               image->step = frame->width() * 4;
+                               image->encoding = sensor_msgs::image_encodings::YUV422;
+                               image->data.resize(frame->dataSize());
+                               memcpy(&image->data[0], frame->data(), frame->dataSize());
 
-            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
-            cinfo->width = frame->width();
-            cinfo->height = frame->height();
-            cinfo->header.frame_id = frame->index();
+                               sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
+                               cinfo->width = frame->width();
+                               cinfo->height = frame->height();
+                               cinfo->header.frame_id = frame->index();
 
-            colorPub.publish(image, cinfo);
-        });
-    }    
+                            //    colorPub.publish(image, cinfo);
+
+                               colorPub.publish(image);
+                           });
+    }
 }
 
 void OrbbecDevice::startDepthStream()
 {
     auto profiles = depthSensor->getStreamProfiles();
     std::shared_ptr<ob::StreamProfile> profile;
-    for(int i = 0; i < profiles.size(); i++)
+    for (int i = 0; i < profiles.size(); i++)
     {
-        if(profiles[i]->format() == OB_FORMAT_Y16)
+        if (profiles[i]->format() == OB_FORMAT_Y16)
         {
             profile = profiles[i];
+            break;
         }
     }
 
-    if(profile != NULL)
+    if (profile != NULL)
     {
-        depthSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame){
-            sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
-            image->width = frame->width();
-            image->height = frame->height();
-            image->step = frame->width() * 2;
-            image->encoding = sensor_msgs::image_encodings::MONO16;
-            image->data.resize(frame->dataSize());
-            memcpy(&image->data[0], frame->data(), frame->dataSize());
+        depthSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame)
+                           {
+                               sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+                               image->width = frame->width();
+                               image->height = frame->height();
+                               image->step = frame->width() * 2;
+                               image->encoding = sensor_msgs::image_encodings::MONO16;
+                               image->data.resize(frame->dataSize());
+                               memcpy(&image->data[0], frame->data(), frame->dataSize());
 
-            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
-            cinfo->width = frame->width();
-            cinfo->height = frame->height();
-            cinfo->header.frame_id = frame->index();
+                               sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
+                               cinfo->width = frame->width();
+                               cinfo->height = frame->height();
+                               cinfo->header.frame_id = frame->index();
 
-            depthPub.publish(image, cinfo);
-        });
+                            //    depthPub.publish(image, cinfo);
+
+                               depthPub.publish(image);
+                           });
     }
 }
 
@@ -94,31 +107,35 @@ void OrbbecDevice::startIRStream()
 {
     auto profiles = irSensor->getStreamProfiles();
     std::shared_ptr<ob::StreamProfile> profile;
-    for(int i = 0; i < profiles.size(); i++)
+    for (int i = 0; i < profiles.size(); i++)
     {
-        if(profiles[i]->format() == OB_FORMAT_Y16)
+        if (profiles[i]->format() == OB_FORMAT_Y16)
         {
             profile = profiles[i];
+            break;
         }
     }
 
-    if(profile != NULL)
+    if (profile != NULL)
     {
-        irSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame){
-            sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
-            image->width = frame->width();
-            image->height = frame->height();
-            image->step = frame->width() * 2;
-            image->encoding = sensor_msgs::image_encodings::MONO16;
-            image->data.resize(frame->dataSize());
-            memcpy(&image->data[0], frame->data(), frame->dataSize());
+        irSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame)
+                        {
+                            sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+                            image->width = frame->width();
+                            image->height = frame->height();
+                            image->step = frame->width() * 2;
+                            image->encoding = sensor_msgs::image_encodings::MONO16;
+                            image->data.resize(frame->dataSize());
+                            memcpy(&image->data[0], frame->data(), frame->dataSize());
 
-            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
-            cinfo->width = frame->width();
-            cinfo->height = frame->height();
-            cinfo->header.frame_id = frame->index();
+                            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
+                            cinfo->width = frame->width();
+                            cinfo->height = frame->height();
+                            cinfo->header.frame_id = frame->index();
 
-            irPub.publish(image, cinfo);
-        });
+                            // irPub.publish(image, cinfo);
+
+                            irPub.publish(image);
+                        });
     }
 }

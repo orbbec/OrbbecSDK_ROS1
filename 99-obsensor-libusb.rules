@@ -1,0 +1,9 @@
+#  UVC cameras ()
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2bc5", ATTRS{idProduct}=="0100", MODE:="0666", GROUP:="plugdev", 
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2bc5", ATTRS{idProduct}=="0601", MODE:="0666", GROUP:="plugdev"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2bc5", ATTRS{idProduct}=="053e", MODE:="0666", GROUP:="plugdev"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2bc5", ATTRS{idProduct}=="0636", MODE:="0666", GROUP:="plugdev"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2bc5", ATTRS{idProduct}=="0537", MODE:="0666", GROUP:="plugdev"
+
+
+

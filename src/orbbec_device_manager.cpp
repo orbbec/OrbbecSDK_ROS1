@@ -1,10 +1,7 @@
 #include "orbbec_device_manager.h"
-#include "orbbec_device.h"
 
-OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle nh, ros::NodeHandle pnh) : nodeHandle(nh), privateNodeHandle(pnh), deviceName(""), serialNumber(""), pid(0), vid(0)
+OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh) : nodeHandle(nh), privateNodeHandle(pnh), deviceName(""), serialNumber(""), pid(0), vid(0)
 {
-    ob::Context ctx;
-
     ctx.setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> addedList)
                                  {
                                      DeviceConnectCallback(addedList);
@@ -19,7 +16,7 @@ OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle nh, ros::NodeHandle pnh
         devices.push_back(dev);
     }
 
-    nodeHandle.advertiseService("get_device_list", &OrbbecDeviceManager::getDeviceList, this);
+    deviceListService = nodeHandle.advertiseService("get_device_list", &OrbbecDeviceManager::getDeviceList, this);
 
     findDevice();
 
@@ -72,7 +69,7 @@ void OrbbecDeviceManager::findDevice()
 
 void OrbbecDeviceManager::openDevice()
 {
-    std::shared_ptr<OrbbecDevice> deviceNode = std::make_shared<OrbbecDevice>(nodeHandle, privateNodeHandle, device);
+    orbbecDevice = std::make_shared<OrbbecDevice>(nodeHandle, privateNodeHandle, device);
 }
 
 void OrbbecDeviceManager::DeviceConnectCallback(std::shared_ptr<ob::DeviceList> connectList)

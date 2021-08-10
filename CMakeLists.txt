@@ -127,14 +127,14 @@ if(!ORBBEC_SDK_FOUND)
 message("Could not find Orbbec SDK!")
 endif()
 
-set(orbbec_ros_sdk_INCLUDE_DIR "include/orbbec_ros_sdk")
+set(orbbec_camera_INCLUDE_DIR "include/orbbec_camera")
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
   ${ORBBEC_SDK_INCLUDE_DIR}
-  ${orbbec_ros_sdk_INCLUDE_DIR}
+  ${orbbec_camera_INCLUDE_DIR}
 )
 
 ## Declare a C++ library
@@ -164,7 +164,7 @@ add_executable(${PROJECT_NAME}_node
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
