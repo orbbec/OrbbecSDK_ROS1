@@ -1,6 +1,6 @@
 #include "orbbec_device_manager.h"
 
-OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDeviceName(""), mSerialNumber(""), pid(0), vid(0)
+OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDeviceName(""), mSerialNumber(""), mPid(0), mVid(0)
 {
     mCtx.setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> addedList)
                                  {
@@ -92,7 +92,7 @@ bool OrbbecDeviceManager::getDeviceList(orbbec_camera::GetDeviceList::Request &r
         info.name = devInfo->name();
         info.vid = devInfo->vid();
         info.pid = devInfo->pid();
-        info.sn = devInfo->mSerialNumber();
+        info.sn = devInfo->serialNumber();
         devInfos.push_back(info);
     }
     response.dev_infos = devInfos;

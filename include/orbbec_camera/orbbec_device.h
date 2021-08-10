@@ -1,11 +1,11 @@
 #pragma once
 
-#include <libobsensor/hpp/Context.hpp>
-#include <libobsensor/hpp/Device.hpp>
-#include <libobsensor/hpp/Sensor.hpp>
-#include <ros/ros.h>
-#include <image_transport/image_transport.h>
-#include <image_transport/camera_publisher.h>
+#include "libobsensor/hpp/Context.hpp"
+#include "libobsensor/hpp/Device.hpp"
+#include "libobsensor/hpp/Sensor.hpp"
+#include "ros/ros.h"
+#include "image_transport/image_transport.h"
+#include "image_transport/camera_publisher.h"
 
 class OrbbecDevice
 {
@@ -31,6 +31,14 @@ private:
     image_transport::Publisher mIrPub;
 
     sensor_msgs::CameraInfo mInfo;
+
+    size_t mArgbBufferSize;
+    void* mArgbBuffer;
+    size_t mRgbBufferSize;
+    void* mRgbBuffer;
+
+    void* getArgbBuffer(size_t bufferSize);
+    void* getRgbBuffer(size_t bufferSize);
 
 public:
     OrbbecDevice(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> dev);
