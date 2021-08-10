@@ -13,24 +13,24 @@
 class OrbbecDeviceManager
 {
 private:
-    ros::NodeHandle& nodeHandle;
-    ros::NodeHandle& privateNodeHandle;
-    ros::ServiceServer deviceListService;
+    ros::NodeHandle& mNodeHandle;
+    ros::NodeHandle& mPrivateNodeHandle;
+    ros::ServiceServer mDeviceListService;
 
-    ob::Context ctx;
+    ob::Context mCtx;
 
-    std::shared_ptr<ob::DeviceList> deviceList;
+    std::shared_ptr<ob::DeviceList> mDeviceList;
 
-    std::vector<std::shared_ptr<ob::Device>> devices;
+    std::vector<std::shared_ptr<ob::Device>> mDevices;
 
-    std::shared_ptr<ob::Device> device;
+    std::shared_ptr<ob::Device> mDevice;
 
-    std::shared_ptr<OrbbecDevice> orbbecDevice;
+    std::shared_ptr<OrbbecDevice> mOrbbecDevice;
 
-    std::string deviceName;
-    std::string serialNumber;
-    int pid;
-    int vid;
+    std::string mDeviceName;
+    std::string mSerialNumber;
+    int mPid;
+    int mVid;
 
     void findDevice();
     void openDevice();

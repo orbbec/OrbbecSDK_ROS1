@@ -10,27 +10,27 @@
 class OrbbecDevice
 {
 private:
-    ros::NodeHandle& nodeHandle;
-    ros::NodeHandle& privateNodeHandle;
+    ros::NodeHandle& mNodeHandle;
+    ros::NodeHandle& mPrivateNodeHandle;
 
-    std::shared_ptr<ob::Device> device;
-    std::shared_ptr<ob::Sensor> colorSensor;
-    std::shared_ptr<ob::Sensor> depthSensor;
-    std::shared_ptr<ob::Sensor> irSensor;
+    std::shared_ptr<ob::Device> mDevice;
+    std::shared_ptr<ob::Sensor> mColorSensor;
+    std::shared_ptr<ob::Sensor> mDepthSensor;
+    std::shared_ptr<ob::Sensor> mIrSensor;
 
-    // image_transport::ImageTransport colorIt;
-    // image_transport::ImageTransport depthIt;
-    // image_transport::ImageTransport irIt;
+    // image_transport::ImageTransport mColorIt;
+    // image_transport::ImageTransport mDepthIt;
+    // image_transport::ImageTransport mIrIt;
 
-    // image_transport::CameraPublisher colorPub;
-    // image_transport::CameraPublisher depthPub;
-    // image_transport::CameraPublisher irPub;
+    // image_transport::CameraPublisher mColorPub;
+    // image_transport::CameraPublisher mDepthPub;
+    // image_transport::CameraPublisher mIrPub;
 
-    image_transport::Publisher colorPub;
-    image_transport::Publisher depthPub;
-    image_transport::Publisher irPub;
+    image_transport::Publisher mColorPub;
+    image_transport::Publisher mDepthPub;
+    image_transport::Publisher mIrPub;
 
-    sensor_msgs::CameraInfo info;
+    sensor_msgs::CameraInfo mInfo;
 
 public:
     OrbbecDevice(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> dev);
