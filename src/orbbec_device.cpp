@@ -60,6 +60,7 @@ void* OrbbecDevice::getRgbBuffer(size_t bufferSize)
 
 void OrbbecDevice::startColorStream()
 {
+    bool found = false;
     auto profiles = mColorSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
@@ -67,11 +68,12 @@ void OrbbecDevice::startColorStream()
         if (profile->format() == OB_FORMAT_MJPG)
         {
             mColorProfile = profile;
+            found = true;
             break;
         }
     }
 
-    if (mColorProfile != NULL)
+    if (found)
     {
         mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame)
                             {
@@ -101,16 +103,23 @@ void OrbbecDevice::startColorStream()
 
                                 mColorPub.publish(image);
                             });
+        ROS_INFO("Start color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(), mColorProfile->fps());
+    }
+    else
+    {
+        ROS_WARN("Start color stream failed: no profile found");
     }
 }
 
 void OrbbecDevice::stopColorStream()
 {
     mColorSensor->stop();
+    ROS_INFO("Stop color stream");
 }
 
 void OrbbecDevice::reconfigColorStream(int width, int height, int fps)
 {
+    bool found = false;
     auto profiles = mColorSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
@@ -118,15 +127,24 @@ void OrbbecDevice::reconfigColorStream(int width, int height, int fps)
         if (profile->format() == OB_FORMAT_MJPG && profile->width() == width && profile->height() == height && profile->fps() == fps)
         {
             mColorProfile = profile;
-            mColorSensor->switchProfile(mColorProfile);
-            ROS_INFO("Reconfig color stream: %dx%d(%d)", width, height, fps);
+            found = true;
             break;
         }
+    }
+    if(found)
+    {
+        mColorSensor->switchProfile(mColorProfile);
+        ROS_INFO("Reconfig color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(), mColorProfile->fps());
+    }
+    else
+    {
+        ROS_WARN("Reconfig color stream failed: no profile found");
     }
 }
 
 void OrbbecDevice::startDepthStream()
 {
+    bool found = false;
     auto profiles = mDepthSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
@@ -134,11 +152,12 @@ void OrbbecDevice::startDepthStream()
         if (profile->format() == OB_FORMAT_Y16)
         {
             mDepthProfile = profile;
+            found = true;
             break;
         }
     }
 
-    if (mDepthProfile != NULL)
+    if (found)
     {
         mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame)
                             {
@@ -159,16 +178,23 @@ void OrbbecDevice::startDepthStream()
 
                                 mDepthPub.publish(image);
                             });
+        ROS_INFO("Start depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(), mDepthProfile->fps());
+    }
+    else
+    {
+        ROS_WARN("Start depth stream failed: no profile found");
     }
 }
 
 void OrbbecDevice::stopDepthStream()
 {
     mDepthSensor->stop();
+    ROS_INFO("Stop depth stream");
 }
 
 void OrbbecDevice::reconfigDepthStream(int width, int height, int fps)
 {
+    bool found = false;
     auto profiles = mDepthSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
@@ -176,15 +202,24 @@ void OrbbecDevice::reconfigDepthStream(int width, int height, int fps)
         if (profile->format() == OB_FORMAT_Y16 && profile->width() == width && profile->height() == height && profile->fps() == fps)
         {
             mDepthProfile = profile;
-            mDepthSensor->switchProfile(mDepthProfile);
-            ROS_INFO("Reconfig depth stream: %dx%d(%d)", width, height, fps);
+            found = true;
             break;
         }
+    }
+    if(found)
+    {
+        mDepthSensor->switchProfile(mDepthProfile);
+        ROS_INFO("Reconfig depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(), mDepthProfile->fps());
+    }
+    else
+    {
+        ROS_WARN("Reconfig depth stream failed: no profile found");
     }
 }
 
 void OrbbecDevice::startIrStream()
 {
+    bool found = false;
     auto profiles = mIrSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
@@ -192,11 +227,12 @@ void OrbbecDevice::startIrStream()
         if (profile->format() == OB_FORMAT_Y16)
         {
             mIrProfile = profile;
+            found = true;
             break;
         }
     }
 
-    if (mIrProfile != NULL)
+    if (found)
     {
         mIrSensor->start(mIrProfile, [&](std::shared_ptr<ob::Frame> frame)
                          {
@@ -217,16 +253,23 @@ void OrbbecDevice::startIrStream()
 
                              mIrPub.publish(image);
                          });
+        ROS_INFO("Start ir stream: %dx%d(%d)", mIrProfile->width(), mIrProfile->height(), mIrProfile->fps());
+    }
+    else
+    {
+        ROS_WARN("Start ir stream failed: no profile found");
     }
 }
 
 void OrbbecDevice::stopIrStream()
 {
     mIrSensor->stop();
+    ROS_INFO("Stop ir stream");
 }
 
 void OrbbecDevice::reconfigIrStream(int width, int height, int fps)
 {
+    bool found = false;
     auto profiles = mIrSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
@@ -234,9 +277,17 @@ void OrbbecDevice::reconfigIrStream(int width, int height, int fps)
         if (profile->format() == OB_FORMAT_Y16 && profile->width() == width && profile->height() == height && profile->fps() == fps)
         {
             mIrProfile = profile;
-            mIrSensor->switchProfile(mIrProfile);
-            ROS_INFO("Reconfig ir stream: %dx%d(%d)", width, height, fps);
+            found = true;
             break;
         }
+    }
+    if(found)
+    {
+        mIrSensor->switchProfile(mIrProfile);
+        ROS_INFO("Reconfig ir stream: %dx%d(%d)", mIrProfile->width(), mIrProfile->height(), mIrProfile->fps());
+    }
+    else
+    {
+        ROS_WARN("Reconfig ir stream failed: no profile found");
     }
 }

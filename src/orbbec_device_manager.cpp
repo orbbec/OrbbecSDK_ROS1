@@ -34,7 +34,7 @@ void OrbbecDeviceManager::findDevice()
 {
     if (mDevices.size() == 0)
     {
-        ROS_WARN("No device found");
+        ROS_WARN("No device connect");
         return;
     }
     if (mSerialNumber == "" && mDeviceName == "" && mPid == 0 && mVid == 0)
