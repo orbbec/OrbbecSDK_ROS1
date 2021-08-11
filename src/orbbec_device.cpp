@@ -23,7 +23,7 @@ OrbbecDevice::OrbbecDevice(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::share
 
     startColorStream();
     startDepthStream();
-    startIRStream();
+    startIrStream();
 }
 
 OrbbecDevice::~OrbbecDevice()
@@ -61,30 +61,33 @@ void* OrbbecDevice::getRgbBuffer(size_t bufferSize)
 void OrbbecDevice::startColorStream()
 {
     auto profiles = mColorSensor->getStreamProfiles();
-    std::shared_ptr<ob::StreamProfile> profile;
     for (int i = 0; i < profiles.size(); i++)
     {
-        if (profiles[i]->format() == OB_FORMAT_MJPG)
+        auto profile = profiles[i];
+        if (profile->format() == OB_FORMAT_MJPG)
         {
-            profile = profiles[i];
+            mColorProfile = profile;
             break;
         }
     }
 
-    if (profile != NULL)
+    if (mColorProfile != NULL)
     {
-        mColorSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame)
+        mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame)
                             {
-                                void* argbBuffer = getArgbBuffer(frame->width() * frame->height() * 4);
-                                libyuv::MJPGToARGB((uint8_t*)frame->data(), frame->dataSize(), (uint8_t*)argbBuffer, frame->width() * 4, frame->width(), frame->height(), frame->width(), frame->height());
+                                int width = frame->width();
+                                int height = frame->height();
 
-                                void* rgbBuffer = getRgbBuffer(frame->width() * frame->height() * 3);
-                                libyuv::ARGBToRGB24((uint8_t*)argbBuffer, frame->width() * 4, (uint8_t*)rgbBuffer, frame->width() * 3, frame->width(), frame->height());
+                                void* argbBuffer = getArgbBuffer(width * height * 4);
+                                libyuv::MJPGToARGB((uint8_t*)frame->data(), frame->dataSize(), (uint8_t*)argbBuffer, width * 4, width, height, width, height);
+
+                                void* rgbBuffer = getRgbBuffer(width * height * 3);
+                                libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * 4, (uint8_t*)rgbBuffer, width * 3, width, height);
 
                                 sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
-                                image->width = frame->width();
-                                image->height = frame->height();
-                                image->step = frame->width() * 3;
+                                image->width = width;
+                                image->height = height;
+                                image->step = width * 3;
                                 image->encoding = sensor_msgs::image_encodings::BGR8;
                                 image->data.resize(mRgbBufferSize);
                                 memcpy(&image->data[0], mRgbBuffer, mRgbBufferSize);
@@ -101,22 +104,43 @@ void OrbbecDevice::startColorStream()
     }
 }
 
+void OrbbecDevice::stopColorStream()
+{
+    mColorSensor->stop();
+}
+
+void OrbbecDevice::reconfigColorStream(int width, int height, int fps)
+{
+    auto profiles = mColorSensor->getStreamProfiles();
+    for (int i = 0; i < profiles.size(); i++)
+    {
+        auto profile = profiles[i];
+        if (profile->format() == OB_FORMAT_MJPG && profile->width() == width && profile->height() == height && profile->fps() == fps)
+        {
+            mColorProfile = profile;
+            mColorSensor->switchProfile(mColorProfile);
+            ROS_INFO("Reconfig color stream: %dx%d(%d)", width, height, fps);
+            break;
+        }
+    }
+}
+
 void OrbbecDevice::startDepthStream()
 {
     auto profiles = mDepthSensor->getStreamProfiles();
-    std::shared_ptr<ob::StreamProfile> profile;
     for (int i = 0; i < profiles.size(); i++)
     {
-        if (profiles[i]->format() == OB_FORMAT_Y16)
+        auto profile = profiles[i];
+        if (profile->format() == OB_FORMAT_Y16)
         {
-            profile = profiles[i];
+            mDepthProfile = profile;
             break;
         }
     }
 
-    if (profile != NULL)
+    if (mDepthProfile != NULL)
     {
-        mDepthSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame)
+        mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame)
                             {
                                 sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
                                 image->width = frame->width();
@@ -138,22 +162,43 @@ void OrbbecDevice::startDepthStream()
     }
 }
 
-void OrbbecDevice::startIRStream()
+void OrbbecDevice::stopDepthStream()
 {
-    auto profiles = mIrSensor->getStreamProfiles();
-    std::shared_ptr<ob::StreamProfile> profile;
+    mDepthSensor->stop();
+}
+
+void OrbbecDevice::reconfigDepthStream(int width, int height, int fps)
+{
+    auto profiles = mDepthSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
-        if (profiles[i]->format() == OB_FORMAT_Y16)
+        auto profile = profiles[i];
+        if (profile->format() == OB_FORMAT_Y16 && profile->width() == width && profile->height() == height && profile->fps() == fps)
         {
-            profile = profiles[i];
+            mDepthProfile = profile;
+            mDepthSensor->switchProfile(mDepthProfile);
+            ROS_INFO("Reconfig depth stream: %dx%d(%d)", width, height, fps);
+            break;
+        }
+    }
+}
+
+void OrbbecDevice::startIrStream()
+{
+    auto profiles = mIrSensor->getStreamProfiles();
+    for (int i = 0; i < profiles.size(); i++)
+    {
+        auto profile = profiles[i];
+        if (profile->format() == OB_FORMAT_Y16)
+        {
+            mIrProfile = profile;
             break;
         }
     }
 
-    if (profile != NULL)
+    if (mIrProfile != NULL)
     {
-        mIrSensor->start(profile, [&](std::shared_ptr<ob::Frame> frame)
+        mIrSensor->start(mIrProfile, [&](std::shared_ptr<ob::Frame> frame)
                          {
                              sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
                              image->width = frame->width();
@@ -172,5 +217,26 @@ void OrbbecDevice::startIRStream()
 
                              mIrPub.publish(image);
                          });
+    }
+}
+
+void OrbbecDevice::stopIrStream()
+{
+    mIrSensor->stop();
+}
+
+void OrbbecDevice::reconfigIrStream(int width, int height, int fps)
+{
+    auto profiles = mIrSensor->getStreamProfiles();
+    for (int i = 0; i < profiles.size(); i++)
+    {
+        auto profile = profiles[i];
+        if (profile->format() == OB_FORMAT_Y16 && profile->width() == width && profile->height() == height && profile->fps() == fps)
+        {
+            mIrProfile = profile;
+            mIrSensor->switchProfile(mIrProfile);
+            ROS_INFO("Reconfig ir stream: %dx%d(%d)", width, height, fps);
+            break;
+        }
     }
 }

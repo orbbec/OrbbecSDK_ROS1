@@ -18,6 +18,10 @@ private:
     std::shared_ptr<ob::Sensor> mDepthSensor;
     std::shared_ptr<ob::Sensor> mIrSensor;
 
+    std::shared_ptr<ob::StreamProfile> mColorProfile;
+    std::shared_ptr<ob::StreamProfile> mDepthProfile;
+    std::shared_ptr<ob::StreamProfile> mIrProfile;
+
     // image_transport::ImageTransport mColorIt;
     // image_transport::ImageTransport mDepthIt;
     // image_transport::ImageTransport mIrIt;
@@ -45,6 +49,12 @@ public:
     ~OrbbecDevice();
 
     void startColorStream();
+    void stopColorStream();
+    void reconfigColorStream(int width, int height, int fps);
     void startDepthStream();
-    void startIRStream();
+    void stopDepthStream();
+    void reconfigDepthStream(int width, int height, int fps);
+    void startIrStream();
+    void stopIrStream();
+    void reconfigIrStream(int width, int height, int fps);
 };
