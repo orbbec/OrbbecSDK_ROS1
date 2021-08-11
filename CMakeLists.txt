@@ -167,6 +167,9 @@ add_executable(${PROJECT_NAME}_node
   src/main.cpp
   src/orbbec_device_manager.cpp
   src/orbbec_device.cpp
+  src/color_sensor.cpp
+  src/depth_sensor.cpp
+  src/ir_sensor.cpp
 )
 
 ## Rename C++ executable without prefix
