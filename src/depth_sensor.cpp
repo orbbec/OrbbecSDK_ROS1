@@ -10,7 +10,15 @@
 
 DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mDepthSensor(sensor)
 {
-    mDepthInfoService = mNodeHandle.advertiseService("depth/get_camera_info", &DepthSensor::getCameraInfoCallback, this);
+    mCameraInfoService = mNodeHandle.advertiseService("depth/get_camera_info", &DepthSensor::getCameraInfoCallback, this);
+    mGetExposureService = mNodeHandle.advertiseService("depth/get_exposure", &DepthSensor::getExposureCallback, this);
+    mSetExposureService = mNodeHandle.advertiseService("depth/set_exposure", &DepthSensor::setExposureCallback, this);
+    mGetGainService = mNodeHandle.advertiseService("depth/get_gain", &DepthSensor::getGainCallback, this);
+    mSetGainService = mNodeHandle.advertiseService("depth/set_gain", &DepthSensor::setGainCallback, this);
+    mGetWhiteBalanceService = mNodeHandle.advertiseService("depth/get_white_balance", &DepthSensor::getWhiteBalanceCallback, this);
+    mSetWhiteBalanceService = mNodeHandle.advertiseService("depth/set_white_balance", &DepthSensor::setWhiteBalanceCallback, this);
+    mSetAutoExposureService = mNodeHandle.advertiseService("depth/set_auto_exposure", &DepthSensor::setAutoExposureCallback, this);
+    mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("depth/set_auto_white_balance", &DepthSensor::setAutoWhiteBalanceCallback, this);
 
     image_transport::ImageTransport it(nh);
     mDepthPub = it.advertise("camera/depth", 1);
@@ -27,6 +35,62 @@ bool DepthSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
     sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
     res.info = info;
+}
+
+bool DepthSensor::getExposureCallback(orbbec_camera::GetExposureRequest& req, orbbec_camera::GetExposureResponse& res)
+{
+    int32_t exposure = mDepthSensor->getIntProperty(OB_SENSOR_PROPERTY_EXPOSURE_INT);
+    res.value = exposure;
+    return true;
+}
+
+bool DepthSensor::setExposureCallback(orbbec_camera::SetExposureRequest& req, orbbec_camera::SetExposureResponse& res)
+{
+    int32_t exposure = req.value;
+    mDepthSensor->setIntProperty(OB_SENSOR_PROPERTY_EXPOSURE_INT, exposure);
+    return true;
+}
+
+bool DepthSensor::getGainCallback(orbbec_camera::GetGainRequest& req, orbbec_camera::GetGainResponse& res)
+{
+    int32_t gain = mDepthSensor->getIntProperty(OB_SENSOR_PROPERTY_GAIN_INT);
+    res.value = gain;
+    return true;
+}
+
+bool DepthSensor::setGainCallback(orbbec_camera::SetGainRequest& req, orbbec_camera::SetGainResponse& res)
+{
+    int32_t gain = req.value;
+    mDepthSensor->setIntProperty(OB_SENSOR_PROPERTY_GAIN_INT, gain);
+    return true; 
+}
+
+bool DepthSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req, orbbec_camera::GetWhiteBalanceResponse& res)
+{
+    int32_t whiteBalance = mDepthSensor->getIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT);
+    res.value = whiteBalance;
+    return true;
+}
+
+bool DepthSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req, orbbec_camera::SetWhiteBalanceResponse& res)
+{
+    int32_t whiteBalance = req.value;
+    mDepthSensor->setIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT, whiteBalance);
+    return true; 
+}
+
+bool DepthSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req, orbbec_camera::SetAutoExposureResponse& res)
+{
+    bool autoExposure = req.enable;
+    mDepthSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_EXPOSURE_BOOL, autoExposure);
+    return true;
+}
+
+bool DepthSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req, orbbec_camera::SetAutoWhiteBalanceResponse& res)
+{
+    bool autoWhiteBalance = req.enable;
+    mDepthSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_WHITE_BALANCE_BOOL, autoWhiteBalance);
+    return true;
 }
 
 void DepthSensor::startDepthStream()

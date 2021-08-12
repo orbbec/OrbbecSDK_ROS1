@@ -64,6 +64,18 @@ add_service_files(
   FILES
   GetDeviceList.srv
   GetCameraInfo.srv
+  GetExposure.srv
+  SetExposure.srv
+  GetGain.srv
+  SetGain.srv
+  GetWhiteBalance.srv
+  SetWhiteBalance.srv
+  SetAutoExposure.srv
+  SetAutoWhiteBalance.srv
+  SetLaserEnable.srv
+  SetLdpEnable.srv
+  SetFloorEnable.srv
+  SetFanMode.srv
 )
 
 ## Generate actions in the 'action' folder

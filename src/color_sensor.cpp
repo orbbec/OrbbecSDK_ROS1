@@ -10,7 +10,15 @@
 
 ColorSensor::ColorSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mColorSensor(sensor), mArgbBufferSize(0), mArgbBuffer(NULL), mRgbBufferSize(0), mRgbBuffer(NULL)
 {
-    mColorInfoService = mNodeHandle.advertiseService("color/get_camera_info", &ColorSensor::getCameraInfoCallback, this);
+    mGetCameraInfoService = mNodeHandle.advertiseService("color/get_camera_info", &ColorSensor::getCameraInfoCallback, this);
+    mGetExposureService = mNodeHandle.advertiseService("color/get_exposure", &ColorSensor::getExposureCallback, this);
+    mSetExposureService = mNodeHandle.advertiseService("color/set_exposure", &ColorSensor::setExposureCallback, this);
+    mGetGainService = mNodeHandle.advertiseService("color/get_gain", &ColorSensor::getGainCallback, this);
+    mSetGainService = mNodeHandle.advertiseService("color/set_gain", &ColorSensor::setGainCallback, this);
+    mGetWhiteBalanceService = mNodeHandle.advertiseService("color/get_white_balance", &ColorSensor::getWhiteBalanceCallback, this);
+    mSetWhiteBalanceService = mNodeHandle.advertiseService("color/set_white_balance", &ColorSensor::setWhiteBalanceCallback, this);
+    mSetAutoExposureService = mNodeHandle.advertiseService("color/set_auto_exposure", &ColorSensor::setAutoExposureCallback, this);
+    mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("color/set_auto_white_balance", &ColorSensor::setAutoWhiteBalanceCallback, this);
 
     image_transport::ImageTransport it(nh);
     mColorPub = it.advertise("camera/color", 1);
@@ -67,6 +75,63 @@ bool ColorSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
     sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
     res.info = info;
+    return true;
+}
+
+bool ColorSensor::getExposureCallback(orbbec_camera::GetExposureRequest& req, orbbec_camera::GetExposureResponse& res)
+{
+    int32_t exposure = mColorSensor->getIntProperty(OB_SENSOR_PROPERTY_EXPOSURE_INT);
+    res.value = exposure;
+    return true;
+}
+
+bool ColorSensor::setExposureCallback(orbbec_camera::SetExposureRequest& req, orbbec_camera::SetExposureResponse& res)
+{
+    int32_t exposure = req.value;
+    mColorSensor->setIntProperty(OB_SENSOR_PROPERTY_EXPOSURE_INT, exposure);
+    return true;
+}
+
+bool ColorSensor::getGainCallback(orbbec_camera::GetGainRequest& req, orbbec_camera::GetGainResponse& res)
+{
+    int32_t gain = mColorSensor->getIntProperty(OB_SENSOR_PROPERTY_GAIN_INT);
+    res.value = gain;
+    return true;
+}
+
+bool ColorSensor::setGainCallback(orbbec_camera::SetGainRequest& req, orbbec_camera::SetGainResponse& res)
+{
+    int32_t gain = req.value;
+    mColorSensor->setIntProperty(OB_SENSOR_PROPERTY_GAIN_INT, gain);
+    return true; 
+}
+
+bool ColorSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req, orbbec_camera::GetWhiteBalanceResponse& res)
+{
+    int32_t whiteBalance = mColorSensor->getIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT);
+    res.value = whiteBalance;
+    return true;
+}
+
+bool ColorSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req, orbbec_camera::SetWhiteBalanceResponse& res)
+{
+    int32_t whiteBalance = req.value;
+    mColorSensor->setIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT, whiteBalance);
+    return true; 
+}
+
+bool ColorSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req, orbbec_camera::SetAutoExposureResponse& res)
+{
+    bool autoExposure = req.enable;
+    mColorSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_EXPOSURE_BOOL, autoExposure);
+    return true;
+}
+
+bool ColorSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req, orbbec_camera::SetAutoWhiteBalanceResponse& res)
+{
+    bool autoWhiteBalance = req.enable;
+    mColorSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_WHITE_BALANCE_BOOL, autoWhiteBalance);
+    return true;
 }
 
 void ColorSensor::startColorStream()

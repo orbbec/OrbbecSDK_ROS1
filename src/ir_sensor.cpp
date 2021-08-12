@@ -10,7 +10,15 @@
 
 IrSensor::IrSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mIrSensor(sensor)
 {
-    mIrInfoService = mNodeHandle.advertiseService("ir/get_camera_info", &IrSensor::getCameraInfoCallback, this);
+    mGetCameraInfoService = mNodeHandle.advertiseService("ir/get_camera_info", &IrSensor::getCameraInfoCallback, this);
+    mGetExposureService = mNodeHandle.advertiseService("ir/get_exposure", &IrSensor::getExposureCallback, this);
+    mSetExposureService = mNodeHandle.advertiseService("ir/set_exposure", &IrSensor::setExposureCallback, this);
+    mGetGainService = mNodeHandle.advertiseService("ir/get_gain", &IrSensor::getGainCallback, this);
+    mSetGainService = mNodeHandle.advertiseService("ir/set_gain", &IrSensor::setGainCallback, this);
+    mGetWhiteBalanceService = mNodeHandle.advertiseService("ir/get_white_balance", &IrSensor::getWhiteBalanceCallback, this);
+    mSetWhiteBalanceService = mNodeHandle.advertiseService("ir/set_white_balance", &IrSensor::setWhiteBalanceCallback, this);
+    mSetAutoExposureService = mNodeHandle.advertiseService("ir/set_auto_exposure", &IrSensor::setAutoExposureCallback, this);
+    mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("ir/set_auto_white_balance", &IrSensor::setAutoWhiteBalanceCallback, this);
 
     image_transport::ImageTransport it(nh);
     mIrPub = it.advertise("camera/ir", 1);
@@ -27,6 +35,62 @@ bool IrSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, o
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
     sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
     res.info = info;
+}
+
+bool IrSensor::getExposureCallback(orbbec_camera::GetExposureRequest& req, orbbec_camera::GetExposureResponse& res)
+{
+    int32_t exposure = mIrSensor->getIntProperty(OB_SENSOR_PROPERTY_EXPOSURE_INT);
+    res.value = exposure;
+    return true;
+}
+
+bool IrSensor::setExposureCallback(orbbec_camera::SetExposureRequest& req, orbbec_camera::SetExposureResponse& res)
+{
+    int32_t exposure = req.value;
+    mIrSensor->setIntProperty(OB_SENSOR_PROPERTY_EXPOSURE_INT, exposure);
+    return true;
+}
+
+bool IrSensor::getGainCallback(orbbec_camera::GetGainRequest& req, orbbec_camera::GetGainResponse& res)
+{
+    int32_t gain = mIrSensor->getIntProperty(OB_SENSOR_PROPERTY_GAIN_INT);
+    res.value = gain;
+    return true;
+}
+
+bool IrSensor::setGainCallback(orbbec_camera::SetGainRequest& req, orbbec_camera::SetGainResponse& res)
+{
+    int32_t gain = req.value;
+    mIrSensor->setIntProperty(OB_SENSOR_PROPERTY_GAIN_INT, gain);
+    return true; 
+}
+
+bool IrSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req, orbbec_camera::GetWhiteBalanceResponse& res)
+{
+    int32_t whiteBalance = mIrSensor->getIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT);
+    res.value = whiteBalance;
+    return true;
+}
+
+bool IrSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req, orbbec_camera::SetWhiteBalanceResponse& res)
+{
+    int32_t whiteBalance = req.value;
+    mIrSensor->setIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT, whiteBalance);
+    return true; 
+}
+
+bool IrSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req, orbbec_camera::SetAutoExposureResponse& res)
+{
+    bool autoExposure = req.enable;
+    mIrSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_EXPOSURE_BOOL, autoExposure);
+    return true;
+}
+
+bool IrSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req, orbbec_camera::SetAutoWhiteBalanceResponse& res)
+{
+    bool autoWhiteBalance = req.enable;
+    mIrSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_WHITE_BALANCE_BOOL, autoWhiteBalance);
+    return true;
 }
 
 void IrSensor::startIrStream()
