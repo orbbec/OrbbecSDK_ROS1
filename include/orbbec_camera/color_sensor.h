@@ -6,6 +6,7 @@
 #include "ros/ros.h"
 #include "image_transport/image_transport.h"
 #include "image_transport/camera_publisher.h"
+#include "orbbec_camera/GetCameraInfo.h"
 
 class ColorSensor
 {
@@ -27,7 +28,7 @@ private:
     void* getArgbBuffer(size_t bufferSize);
     void* getRgbBuffer(size_t bufferSize);
 
-    sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic obParam);
+    bool getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res);
 
 public:
     ColorSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor);
@@ -36,6 +37,4 @@ public:
     void startColorStream();
     void stopColorStream();
     void reconfigColorStream(int width, int height, int fps);
-
-    void getColorCameraInfo();
 };

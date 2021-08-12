@@ -6,6 +6,7 @@
 #include "ros/ros.h"
 #include "image_transport/image_transport.h"
 #include "image_transport/camera_publisher.h"
+#include "orbbec_camera/GetCameraInfo.h"
 
 class IrSensor
 {
@@ -19,7 +20,7 @@ private:
     std::shared_ptr<ob::Sensor> mIrSensor;
     std::shared_ptr<ob::StreamProfile> mIrProfile;
 
-    sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic obParam);
+    bool getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res);
 
 public:
     IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor);
@@ -28,6 +29,4 @@ public:
     void startIrStream();
     void stopIrStream();
     void reconfigIrStream(int width, int height, int fps);
-
-    void getIrCameraInfo();
 };
