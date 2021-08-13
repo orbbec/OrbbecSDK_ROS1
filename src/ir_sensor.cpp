@@ -32,7 +32,7 @@ IrSensor::~IrSensor()
 
 bool IrSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res)
 {
-    OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
+    OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_IR);
     sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
     res.info = info;
 }
