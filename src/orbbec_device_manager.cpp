@@ -2,6 +2,11 @@
 
 OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDeviceName(""), mSerialNumber(""), mPid(0), mVid(0)
 {
+    mPrivateNodeHandle.getParam("device_name", mDeviceName);
+    mPrivateNodeHandle.getParam("sn", mSerialNumber);
+    mPrivateNodeHandle.getParam("vid", mVid);
+    mPrivateNodeHandle.getParam("pid", mPid);
+
     mCtx.setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> addedList)
                                  {
                                      DeviceConnectCallback(addedList);
@@ -49,14 +54,20 @@ void OrbbecDeviceManager::findDevice()
             if (mSerialNumber != "" && devInfo->serialNumber() == mSerialNumber)
             {
                 mDevice = mDevices[i];
+                ROS_INFO("Find device with sn: %s", mSerialNumber.c_str());
+                break;
             }
             else if (mPid != 0 && mVid != 0 && devInfo->pid() == mPid && devInfo->vid() == mVid)
             {
                 mDevice = mDevices[i];
+                ROS_INFO("Find device with vid pid: %d, %d", mVid, mPid);
+                break;
             }
             if (mDeviceName != "" && devInfo->name() == mDeviceName)
             {
                 mDevice = mDevices[i];
+                ROS_INFO("Find device with name: %s", mDeviceName.c_str());
+                break;
             }
         }
     }

@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   image_transport
   sensor_msgs
+  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -107,10 +108,9 @@ generate_messages(
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+generate_dynamic_reconfigure_options(
+  cfg/Orbbec.cfg
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -124,7 +124,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES orbbec_ros_sdk
- CATKIN_DEPENDS roscpp rospy std_msgs message_runtime image_transport sensor_msgs
+ CATKIN_DEPENDS roscpp rospy std_msgs message_runtime image_transport sensor_msgs dynamic_reconfigure
 #  DEPENDS system_lib
 )
 

@@ -21,7 +21,9 @@ class DepthSensor
 private:
     ros::NodeHandle& mNodeHandle;
     ros::NodeHandle& mPrivateNodeHandle;
-    image_transport::Publisher mDepthPub;
+    // image_transport::Publisher mDepthPub;
+    image_transport::CameraPublisher mDepthPub;
+    ros::Publisher mCameraInfoPub;
     ros::ServiceServer mCameraInfoService;
     ros::ServiceServer mGetExposureService;
     ros::ServiceServer mSetExposureService;
@@ -31,6 +33,9 @@ private:
     ros::ServiceServer mSetWhiteBalanceService;
     ros::ServiceServer mSetAutoExposureService;
     ros::ServiceServer mSetAutoWhiteBalanceService;
+    sensor_msgs::CameraInfo mInfo;
+
+    std::string mFrameId;
 
     std::shared_ptr<ob::Device> mDevice;
     std::shared_ptr<ob::Sensor> mDepthSensor;

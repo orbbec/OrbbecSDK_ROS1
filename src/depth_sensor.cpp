@@ -8,7 +8,7 @@
 #include "libyuv.h"
 #include "utils.h"
 
-DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mDepthSensor(sensor)
+DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mDepthSensor(sensor), mFrameId("")
 {
     mCameraInfoService = mNodeHandle.advertiseService("depth/get_camera_info", &DepthSensor::getCameraInfoCallback, this);
     mGetExposureService = mNodeHandle.advertiseService("depth/get_exposure", &DepthSensor::getExposureCallback, this);
@@ -21,7 +21,12 @@ DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_
     mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("depth/set_auto_white_balance", &DepthSensor::setAutoWhiteBalanceCallback, this);
 
     image_transport::ImageTransport it(nh);
-    mDepthPub = it.advertise("camera/depth", 1);
+    // mDepthPub = it.advertise("camera/depth", 1);
+    mDepthPub = it.advertiseCamera("camera/depth/image_raw", 1);
+    mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("camera/depth/camera_info", 1);
+
+    OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
+    mInfo = Utils::convertToCameraInfo(intrinsic);
 
     startDepthStream();
 }
@@ -32,9 +37,7 @@ DepthSensor::~DepthSensor()
 
 bool DepthSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res)
 {
-    OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
-    sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
-    res.info = info;
+    res.info = mInfo;
 }
 
 bool DepthSensor::getExposureCallback(orbbec_camera::GetExposureRequest& req, orbbec_camera::GetExposureResponse& res)
@@ -97,6 +100,14 @@ void DepthSensor::startDepthStream()
 {
     bool found = false;
     auto profiles = mDepthSensor->getStreamProfiles();
+    // for (int i = 0; i < profiles.size(); i++)
+    // {
+    //     auto profile = profiles[i];
+    //     if (profile->format() == OB_FORMAT_Y16)
+    //     {
+    //         ROS_INFO("Depth profile: %d x %d (%d)", profile->width(), profile->height(), profile->fps());
+    //     }
+    // }
     for (int i = 0; i < profiles.size(); i++)
     {
         auto profile = profiles[i];
@@ -120,14 +131,16 @@ void DepthSensor::startDepthStream()
                                 image->data.resize(frame->dataSize());
                                 memcpy(&image->data[0], frame->data(), frame->dataSize());
 
-                                // sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
-                                // cinfo->width = frame->width();
-                                // cinfo->height = frame->height();
-                                // cinfo->header.frame_id = frame->index();
+                                sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+                                cinfo->width = frame->width();
+                                cinfo->height = frame->height();
+                                cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+                                cinfo->header.frame_id = mFrameId;
+                                cinfo->header.stamp = ros::Time(frame->timeStamp());
 
-                                //    mDepthPub.publish(image, cinfo);
-
-                                mDepthPub.publish(image);
+                                // mDepthPub.publish(image);
+                                mDepthPub.publish(image, cinfo);
+                                mCameraInfoPub.publish(cinfo);
                             });
         ROS_INFO("Start depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(), mDepthProfile->fps());
     }
@@ -145,6 +158,14 @@ void DepthSensor::stopDepthStream()
 
 void DepthSensor::reconfigDepthStream(int width, int height, int fps)
 {
+    if(mDepthProfile == nullptr)
+    {
+        return;
+    }
+    if(width == mDepthProfile->width() && height == mDepthProfile->height() && fps == mDepthProfile->fps())
+    {
+        return;
+    }
     bool found = false;
     auto profiles = mDepthSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)

@@ -21,7 +21,11 @@ ColorSensor::ColorSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_
     mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("color/set_auto_white_balance", &ColorSensor::setAutoWhiteBalanceCallback, this);
 
     image_transport::ImageTransport it(nh);
-    mColorPub = it.advertise("camera/color", 1);
+    mColorPub = it.advertise("camera/color/image_raw", 1);
+    mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("camera/color/camera_info", 1);
+
+    OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
+    mInfo = Utils::convertToCameraInfo(intrinsic);
 
     startColorStream();
 }
@@ -138,6 +142,14 @@ void ColorSensor::startColorStream()
 {
     bool found = false;
     auto profiles = mColorSensor->getStreamProfiles();
+    // for (int i = 0; i < profiles.size(); i++)
+    // {
+    //     auto profile = profiles[i];
+    //     if (profile->format() == OB_FORMAT_MJPG)
+    //     {
+    //         ROS_INFO("Color profile: %d x %d (%d)", profile->width(), profile->height(), profile->fps());
+    //     }
+    // }
     for (int i = 0; i < profiles.size(); i++)
     {
         auto profile = profiles[i];
@@ -170,14 +182,17 @@ void ColorSensor::startColorStream()
                                 image->data.resize(mRgbBufferSize);
                                 memcpy(&image->data[0], mRgbBuffer, mRgbBufferSize);
 
-                                // sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
-                                // cinfo->width = frame->width();
-                                // cinfo->height = frame->height();
-                                // cinfo->header.frame_id = frame->index();
+                                sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+                                cinfo->width = frame->width();
+                                cinfo->height = frame->height();
+                                cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+                                cinfo->header.frame_id = mFrameId;
+                                cinfo->header.stamp = ros::Time(frame->timeStamp());
 
                                 //    mColorPub.publish(image, cinfo);
 
                                 mColorPub.publish(image);
+                                mCameraInfoPub.publish(cinfo);
                             });
         ROS_INFO("Start color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(), mColorProfile->fps());
     }
@@ -195,6 +210,15 @@ void ColorSensor::stopColorStream()
 
 void ColorSensor::reconfigColorStream(int width, int height, int fps)
 {
+    if(mColorProfile == nullptr)
+    {
+        return;
+    }
+    if(width == mColorProfile->width() && height == mColorProfile->height() && fps == mColorProfile->fps())
+    {
+        return;
+    }
+    
     bool found = false;
     auto profiles = mColorSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)

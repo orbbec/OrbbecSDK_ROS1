@@ -97,6 +97,14 @@ void IrSensor::startIrStream()
 {
     bool found = false;
     auto profiles = mIrSensor->getStreamProfiles();
+    // for (int i = 0; i < profiles.size(); i++)
+    // {
+    //     auto profile = profiles[i];
+    //     if (profile->format() == OB_FORMAT_Y16)
+    //     {
+    //         ROS_INFO("Ir profile: %d x %d (%d)", profile->width(), profile->height(), profile->fps());
+    //     }
+    // }
     for (int i = 0; i < profiles.size(); i++)
     {
         auto profile = profiles[i];
@@ -145,6 +153,14 @@ void IrSensor::stopIrStream()
 
 void IrSensor::reconfigIrStream(int width, int height, int fps)
 {
+    if(mIrProfile == nullptr)
+    {
+        return;
+    }
+    if(width == mIrProfile->width() && height == mIrProfile->height() && fps == mIrProfile->fps())
+    {
+        return;
+    }
     bool found = false;
     auto profiles = mIrSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)

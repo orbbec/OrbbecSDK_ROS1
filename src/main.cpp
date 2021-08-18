@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "ob_ros");
+  ros::init(argc, argv, "ob_camera");
 
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
