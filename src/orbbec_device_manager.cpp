@@ -1,4 +1,6 @@
 #include "orbbec_device_manager.h"
+#include "version.h"
+#include "libobsensor/ObSensor.h"
 
 OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDeviceName(""), mSerialNumber(""), mPid(0), mVid(0)
 {
@@ -29,6 +31,7 @@ OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& p
         ROS_INFO("Device found: %s %x:%x %s", info.name.c_str(), info.vid, info.pid, info.sn.c_str());
     }
 
+    mGetVersionService = mNodeHandle.advertiseService("get_version", &OrbbecDeviceManager::getVersionCallback, this);
     mDeviceListService = mNodeHandle.advertiseService("get_device_list", &OrbbecDeviceManager::getDeviceListCallback, this);
 
     findDevice();
@@ -114,6 +117,13 @@ void OrbbecDeviceManager::DeviceConnectCallback(std::shared_ptr<ob::DeviceList> 
 void OrbbecDeviceManager::DeviceDisconnectCallback(std::shared_ptr<ob::DeviceList> disconnectList)
 {
     ROS_INFO("Device disconnect: %d", disconnectList->deviceCount());
+}
+
+bool OrbbecDeviceManager::getVersionCallback(orbbec_camera::GetVersion::Request& request, orbbec_camera::GetVersion::Response& response)
+{
+    response.version = OB_ROS_VERSION_STR;
+    response.core_version = OB_API_VERSION_STR;
+    return true;
 }
 
 bool OrbbecDeviceManager::getDeviceListCallback(orbbec_camera::GetDeviceList::Request &request, orbbec_camera::GetDeviceList::Response &response)

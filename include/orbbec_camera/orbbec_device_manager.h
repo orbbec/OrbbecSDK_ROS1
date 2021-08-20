@@ -6,6 +6,7 @@
 #include "ros/ros.h"
 #include "orbbec_camera/GetDeviceList.h"
 #include "orbbec_camera/DeviceInfo.h"
+#include "orbbec_camera/GetVersion.h"
 #include "orbbec_device.h"
 #include <string>
 #include <vector>
@@ -16,6 +17,7 @@ private:
     ros::NodeHandle& mNodeHandle;
     ros::NodeHandle& mPrivateNodeHandle;
     ros::ServiceServer mDeviceListService;
+    ros::ServiceServer mGetVersionService;
 
     ob::Context mCtx;
 
@@ -26,6 +28,9 @@ private:
     std::shared_ptr<OrbbecDevice> mDeviceNode;
 
     std::vector<orbbec_camera::DeviceInfo> mDevInfos;
+
+    std::string version;
+    std::string coreVersion;
 
     std::string mDeviceName;
     std::string mSerialNumber;
@@ -38,6 +43,7 @@ private:
     void DeviceConnectCallback(std::shared_ptr< ob::DeviceList > connectList);
     void DeviceDisconnectCallback(std::shared_ptr< ob::DeviceList > disconnectList);
 
+    bool getVersionCallback(orbbec_camera::GetVersion::Request& request, orbbec_camera::GetVersion::Response& response);
     bool getDeviceListCallback(orbbec_camera::GetDeviceList::Request& request, orbbec_camera::GetDeviceList::Response& response);
 
 public:
