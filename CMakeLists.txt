@@ -78,6 +78,7 @@ add_service_files(
   SetFloorEnable.srv
   SetFanMode.srv
   GetVersion.srv
+  EnableStream.srv
 )
 
 ## Generate actions in the 'action' folder

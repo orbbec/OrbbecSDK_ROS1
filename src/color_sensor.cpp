@@ -19,6 +19,7 @@ ColorSensor::ColorSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_
     mSetWhiteBalanceService = mNodeHandle.advertiseService("color/set_white_balance", &ColorSensor::setWhiteBalanceCallback, this);
     mSetAutoExposureService = mNodeHandle.advertiseService("color/set_auto_exposure", &ColorSensor::setAutoExposureCallback, this);
     mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("color/set_auto_white_balance", &ColorSensor::setAutoWhiteBalanceCallback, this);
+    mEnableStreamService = mNodeHandle.advertiseService("color/enable_stream", &ColorSensor::enableStreamCallback, this);
 
     image_transport::ImageTransport it(nh);
     mColorPub = it.advertise("color/image_raw", 1);
@@ -138,13 +139,28 @@ bool ColorSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalance
     return true;
 }
 
+bool ColorSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req, orbbec_camera::EnableStreamResponse& res)
+{
+    bool enable = req.enable;
+    if(enable)
+    {
+        startColorStream();
+    }
+    else
+    {
+        stopColorStream();
+    }
+    return true;
+}
+
 void ColorSensor::startColorStream()
 {
+    if(mIsStreaming) return;
+
     if(mColorProfile == nullptr)
     {
         mColorProfile = findProfile();
     }
-
     if (mColorProfile != nullptr)
     {
         mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame)
@@ -189,6 +205,8 @@ void ColorSensor::startColorStream()
 
 void ColorSensor::stopColorStream()
 {
+    if(!mIsStreaming) return;
+
     mColorSensor->stop();
     mIsStreaming = false;
     ROS_INFO("Stop color stream");
@@ -225,8 +243,16 @@ std::shared_ptr<ob::StreamProfile> ColorSensor::findProfile(int width, int heigh
     for (int i = 0; i < profiles.size(); i++)
     {
         auto profile = profiles[i];
-        if (profile->format() == OB_FORMAT_MJPG && profile->width() == width && profile->height() == height && profile->fps() == fps)
+        if (profile->format() == OB_FORMAT_MJPG)
         {
+            if(width == 0 && height == 0 && fps == 0)
+            {
+                return profile;
+            }
+            if(profile->width() == width && profile->height() == height && profile->fps() == fps)
+            {
+                return profile;
+            }
             return profile;
         }
     }

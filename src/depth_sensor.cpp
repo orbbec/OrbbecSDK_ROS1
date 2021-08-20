@@ -19,6 +19,7 @@ DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_
     mSetWhiteBalanceService = mNodeHandle.advertiseService("depth/set_white_balance", &DepthSensor::setWhiteBalanceCallback, this);
     mSetAutoExposureService = mNodeHandle.advertiseService("depth/set_auto_exposure", &DepthSensor::setAutoExposureCallback, this);
     mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("depth/set_auto_white_balance", &DepthSensor::setAutoWhiteBalanceCallback, this);
+    mEnableStreamService = mNodeHandle.advertiseService("depth/enable_stream", &DepthSensor::enableStreamCallback, this);
 
     image_transport::ImageTransport it(nh);
     // mDepthPub = it.advertise("camera/depth", 1);
@@ -96,13 +97,28 @@ bool DepthSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalance
     return true;
 }
 
+bool DepthSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req, orbbec_camera::EnableStreamResponse& res)
+{
+    bool enable = req.enable;
+    if(enable)
+    {
+        startDepthStream();
+    }
+    else
+    {
+        stopDepthStream();
+    }
+    return true;
+}
+
 void DepthSensor::startDepthStream()
 {
+    if(mIsStreaming) return;
+
     if(mDepthProfile == nullptr)
     {
         mDepthProfile = findProfile();
     }
-
     if (mDepthProfile != nullptr)
     {
         mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame)
@@ -137,6 +153,8 @@ void DepthSensor::startDepthStream()
 
 void DepthSensor::stopDepthStream()
 {
+    if(!mIsStreaming) return;
+
     mDepthSensor->stop();
     mIsStreaming = false;
     ROS_INFO("Stop depth stream");
@@ -173,9 +191,16 @@ std::shared_ptr<ob::StreamProfile> DepthSensor::findProfile(int width, int heigh
     for (int i = 0; i < profiles.size(); i++)
     {
         auto profile = profiles[i];
-        if (profile->format() == OB_FORMAT_Y16 && profile->width() == width && profile->height() == height && profile->fps() == fps)
+        if (profile->format() == OB_FORMAT_Y16)
         {
-            return profile;
+            if(width == 0 && height == 0 && fps == 0)
+            {
+                return profile;
+            }
+            if(profile->width() == width && profile->height() == height && profile->fps() == fps)
+            {
+                return profile;
+            }
         }
     }
     return nullptr;
