@@ -1,18 +1,16 @@
 #include "orbbec_device_manager.h"
 #include "ros/ros.h"
 
-
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "ob_camera");
+    ros::init(argc, argv, "ob_camera");
 
-  ros::NodeHandle nh;
-  ros::NodeHandle pnh("~");
-    
-  OrbbecDeviceManager manager(nh, pnh);
+    ros::NodeHandle nh;
+    ros::NodeHandle pnh("~");
 
-  ros::spin();
+    OrbbecDeviceManager manager(nh, pnh);
 
-  return 0;
+    ros::spin();
+
+    return 0;
 }
-

@@ -8,18 +8,26 @@
 #include "libyuv.h"
 #include "utils.h"
 
-DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mDepthSensor(sensor), mFrameId(""), mIsStreaming(false)
+DepthSensor::DepthSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device,
+                         std::shared_ptr<ob::Sensor> sensor)
+    : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mDepthSensor(sensor), mFrameId(""), mIsStreaming(false)
 {
-    mCameraInfoService = mNodeHandle.advertiseService("depth/get_camera_info", &DepthSensor::getCameraInfoCallback, this);
+    mCameraInfoService =
+        mNodeHandle.advertiseService("depth/get_camera_info", &DepthSensor::getCameraInfoCallback, this);
     mGetExposureService = mNodeHandle.advertiseService("depth/get_exposure", &DepthSensor::getExposureCallback, this);
     mSetExposureService = mNodeHandle.advertiseService("depth/set_exposure", &DepthSensor::setExposureCallback, this);
     mGetGainService = mNodeHandle.advertiseService("depth/get_gain", &DepthSensor::getGainCallback, this);
     mSetGainService = mNodeHandle.advertiseService("depth/set_gain", &DepthSensor::setGainCallback, this);
-    mGetWhiteBalanceService = mNodeHandle.advertiseService("depth/get_white_balance", &DepthSensor::getWhiteBalanceCallback, this);
-    mSetWhiteBalanceService = mNodeHandle.advertiseService("depth/set_white_balance", &DepthSensor::setWhiteBalanceCallback, this);
-    mSetAutoExposureService = mNodeHandle.advertiseService("depth/set_auto_exposure", &DepthSensor::setAutoExposureCallback, this);
-    mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("depth/set_auto_white_balance", &DepthSensor::setAutoWhiteBalanceCallback, this);
-    mEnableStreamService = mNodeHandle.advertiseService("depth/enable_stream", &DepthSensor::enableStreamCallback, this);
+    mGetWhiteBalanceService =
+        mNodeHandle.advertiseService("depth/get_white_balance", &DepthSensor::getWhiteBalanceCallback, this);
+    mSetWhiteBalanceService =
+        mNodeHandle.advertiseService("depth/set_white_balance", &DepthSensor::setWhiteBalanceCallback, this);
+    mSetAutoExposureService =
+        mNodeHandle.advertiseService("depth/set_auto_exposure", &DepthSensor::setAutoExposureCallback, this);
+    mSetAutoWhiteBalanceService =
+        mNodeHandle.advertiseService("depth/set_auto_white_balance", &DepthSensor::setAutoWhiteBalanceCallback, this);
+    mEnableStreamService =
+        mNodeHandle.advertiseService("depth/enable_stream", &DepthSensor::enableStreamCallback, this);
 
     image_transport::ImageTransport it(nh);
     // mDepthPub = it.advertise("camera/depth", 1);
@@ -36,7 +44,8 @@ DepthSensor::~DepthSensor()
 {
 }
 
-bool DepthSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res)
+bool DepthSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req,
+                                        orbbec_camera::GetCameraInfoResponse& res)
 {
     res.info = mInfo;
 }
@@ -66,41 +75,46 @@ bool DepthSensor::setGainCallback(orbbec_camera::SetGainRequest& req, orbbec_cam
 {
     int32_t gain = req.value;
     mDepthSensor->setIntProperty(OB_SENSOR_PROPERTY_GAIN_INT, gain);
-    return true; 
+    return true;
 }
 
-bool DepthSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req, orbbec_camera::GetWhiteBalanceResponse& res)
+bool DepthSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req,
+                                          orbbec_camera::GetWhiteBalanceResponse& res)
 {
     int32_t whiteBalance = mDepthSensor->getIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT);
     res.value = whiteBalance;
     return true;
 }
 
-bool DepthSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req, orbbec_camera::SetWhiteBalanceResponse& res)
+bool DepthSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req,
+                                          orbbec_camera::SetWhiteBalanceResponse& res)
 {
     int32_t whiteBalance = req.value;
     mDepthSensor->setIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT, whiteBalance);
-    return true; 
+    return true;
 }
 
-bool DepthSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req, orbbec_camera::SetAutoExposureResponse& res)
+bool DepthSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req,
+                                          orbbec_camera::SetAutoExposureResponse& res)
 {
     bool autoExposure = req.enable;
     mDepthSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_EXPOSURE_BOOL, autoExposure);
     return true;
 }
 
-bool DepthSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req, orbbec_camera::SetAutoWhiteBalanceResponse& res)
+bool DepthSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req,
+                                              orbbec_camera::SetAutoWhiteBalanceResponse& res)
 {
     bool autoWhiteBalance = req.enable;
     mDepthSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_WHITE_BALANCE_BOOL, autoWhiteBalance);
     return true;
 }
 
-bool DepthSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req, orbbec_camera::EnableStreamResponse& res)
+bool DepthSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req,
+                                       orbbec_camera::EnableStreamResponse& res)
 {
     bool enable = req.enable;
-    if(enable)
+    if (enable)
     {
         startDepthStream();
     }
@@ -113,37 +127,38 @@ bool DepthSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req, 
 
 void DepthSensor::startDepthStream()
 {
-    if(mIsStreaming) return;
+    if (mIsStreaming)
+        return;
 
-    if(mDepthProfile == nullptr)
+    if (mDepthProfile == nullptr)
     {
         mDepthProfile = findProfile();
     }
     if (mDepthProfile != nullptr)
     {
-        mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame)
-                            {
-                                sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
-                                image->width = frame->width();
-                                image->height = frame->height();
-                                image->step = frame->width() * 2;
-                                image->encoding = sensor_msgs::image_encodings::MONO16;
-                                image->data.resize(frame->dataSize());
-                                memcpy(&image->data[0], frame->data(), frame->dataSize());
+        mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame) {
+            sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+            image->width = frame->width();
+            image->height = frame->height();
+            image->step = frame->width() * 2;
+            image->encoding = sensor_msgs::image_encodings::MONO16;
+            image->data.resize(frame->dataSize());
+            memcpy(&image->data[0], frame->data(), frame->dataSize());
 
-                                sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
-                                cinfo->width = frame->width();
-                                cinfo->height = frame->height();
-                                cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-                                cinfo->header.frame_id = mFrameId;
-                                cinfo->header.stamp = ros::Time(frame->timeStamp());
+            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+            cinfo->width = frame->width();
+            cinfo->height = frame->height();
+            cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+            cinfo->header.frame_id = mFrameId;
+            cinfo->header.stamp = ros::Time(frame->timeStamp());
 
-                                // mDepthPub.publish(image);
-                                mDepthPub.publish(image, cinfo);
-                                mCameraInfoPub.publish(cinfo);
-                            });
+            // mDepthPub.publish(image);
+            mDepthPub.publish(image, cinfo);
+            mCameraInfoPub.publish(cinfo);
+        });
         mIsStreaming = true;
-        ROS_INFO("Start depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(), mDepthProfile->fps());
+        ROS_INFO("Start depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(),
+                 mDepthProfile->fps());
     }
     else
     {
@@ -153,7 +168,8 @@ void DepthSensor::startDepthStream()
 
 void DepthSensor::stopDepthStream()
 {
-    if(!mIsStreaming) return;
+    if (!mIsStreaming)
+        return;
 
     mDepthSensor->stop();
     mIsStreaming = false;
@@ -162,7 +178,8 @@ void DepthSensor::stopDepthStream()
 
 void DepthSensor::reconfigDepthStream(int width, int height, int fps)
 {
-    if(mDepthProfile != nullptr && mDepthProfile->width() == width && mDepthProfile->height() == height && mDepthProfile->fps() == fps)
+    if (mDepthProfile != nullptr && mDepthProfile->width() == width && mDepthProfile->height() == height &&
+        mDepthProfile->fps() == fps)
     {
         return;
     }
@@ -172,11 +189,12 @@ void DepthSensor::reconfigDepthStream(int width, int height, int fps)
         if (profile != nullptr)
         {
             mDepthProfile = profile;
-            if(mIsStreaming)
+            if (mIsStreaming)
             {
                 mDepthSensor->switchProfile(mDepthProfile);
             }
-            ROS_INFO("Reconfig depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(), mDepthProfile->fps());
+            ROS_INFO("Reconfig depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(),
+                     mDepthProfile->fps());
         }
         else
         {
@@ -193,11 +211,11 @@ std::shared_ptr<ob::StreamProfile> DepthSensor::findProfile(int width, int heigh
         auto profile = profiles[i];
         if (profile->format() == OB_FORMAT_Y16)
         {
-            if(width == 0 && height == 0 && fps == 0)
+            if (width == 0 && height == 0 && fps == 0)
             {
                 return profile;
             }
-            if(profile->width() == width && profile->height() == height && profile->fps() == fps)
+            if (profile->width() == width && profile->height() == height && profile->fps() == fps)
             {
                 return profile;
             }

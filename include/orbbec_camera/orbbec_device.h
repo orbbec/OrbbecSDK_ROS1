@@ -18,7 +18,7 @@
 
 class OrbbecDevice
 {
-private:
+  private:
     ros::NodeHandle& mNodeHandle;
     ros::NodeHandle& mPrivateNodeHandle;
 
@@ -45,7 +45,7 @@ private:
 
     void reconfigCallback(orbbec_camera::OrbbecConfig& config, uint32_t level);
 
-public:
+  public:
     OrbbecDevice(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> dev);
     ~OrbbecDevice();
 };

@@ -19,7 +19,7 @@
 
 class ColorSensor
 {
-private:
+  private:
     ros::NodeHandle& mNodeHandle;
     ros::NodeHandle& mPrivateNodeHandle;
     image_transport::Publisher mColorPub;
@@ -37,7 +37,7 @@ private:
     sensor_msgs::CameraInfo mInfo;
 
     std::string mFrameId;
-    
+
     std::shared_ptr<ob::Device> mDevice;
     std::shared_ptr<ob::Sensor> mColorSensor;
     std::shared_ptr<ob::StreamProfile> mColorProfile;
@@ -59,14 +59,19 @@ private:
     bool setExposureCallback(orbbec_camera::SetExposureRequest& req, orbbec_camera::SetExposureResponse& res);
     bool getGainCallback(orbbec_camera::GetGainRequest& req, orbbec_camera::GetGainResponse& res);
     bool setGainCallback(orbbec_camera::SetGainRequest& req, orbbec_camera::SetGainResponse& res);
-    bool getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req, orbbec_camera::GetWhiteBalanceResponse& res);
-    bool setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req, orbbec_camera::SetWhiteBalanceResponse& res);
-    bool setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req, orbbec_camera::SetAutoExposureResponse& res);
-    bool setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req, orbbec_camera::SetAutoWhiteBalanceResponse& res);
+    bool getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req,
+                                 orbbec_camera::GetWhiteBalanceResponse& res);
+    bool setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req,
+                                 orbbec_camera::SetWhiteBalanceResponse& res);
+    bool setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req,
+                                 orbbec_camera::SetAutoExposureResponse& res);
+    bool setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req,
+                                     orbbec_camera::SetAutoWhiteBalanceResponse& res);
     bool enableStreamCallback(orbbec_camera::EnableStreamRequest& req, orbbec_camera::EnableStreamResponse& res);
 
-public:
-    ColorSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor);
+  public:
+    ColorSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device,
+                std::shared_ptr<ob::Sensor> sensor);
     ~ColorSensor();
 
     void startColorStream();

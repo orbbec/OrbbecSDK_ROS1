@@ -8,18 +8,27 @@
 #include "libyuv.h"
 #include "utils.h"
 
-ColorSensor::ColorSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mColorSensor(sensor), mIsStreaming(false), mArgbBufferSize(0), mArgbBuffer(NULL), mRgbBufferSize(0), mRgbBuffer(NULL)
+ColorSensor::ColorSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device,
+                         std::shared_ptr<ob::Sensor> sensor)
+    : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mColorSensor(sensor), mIsStreaming(false),
+      mArgbBufferSize(0), mArgbBuffer(NULL), mRgbBufferSize(0), mRgbBuffer(NULL)
 {
-    mGetCameraInfoService = mNodeHandle.advertiseService("color/get_camera_info", &ColorSensor::getCameraInfoCallback, this);
+    mGetCameraInfoService =
+        mNodeHandle.advertiseService("color/get_camera_info", &ColorSensor::getCameraInfoCallback, this);
     mGetExposureService = mNodeHandle.advertiseService("color/get_exposure", &ColorSensor::getExposureCallback, this);
     mSetExposureService = mNodeHandle.advertiseService("color/set_exposure", &ColorSensor::setExposureCallback, this);
     mGetGainService = mNodeHandle.advertiseService("color/get_gain", &ColorSensor::getGainCallback, this);
     mSetGainService = mNodeHandle.advertiseService("color/set_gain", &ColorSensor::setGainCallback, this);
-    mGetWhiteBalanceService = mNodeHandle.advertiseService("color/get_white_balance", &ColorSensor::getWhiteBalanceCallback, this);
-    mSetWhiteBalanceService = mNodeHandle.advertiseService("color/set_white_balance", &ColorSensor::setWhiteBalanceCallback, this);
-    mSetAutoExposureService = mNodeHandle.advertiseService("color/set_auto_exposure", &ColorSensor::setAutoExposureCallback, this);
-    mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("color/set_auto_white_balance", &ColorSensor::setAutoWhiteBalanceCallback, this);
-    mEnableStreamService = mNodeHandle.advertiseService("color/enable_stream", &ColorSensor::enableStreamCallback, this);
+    mGetWhiteBalanceService =
+        mNodeHandle.advertiseService("color/get_white_balance", &ColorSensor::getWhiteBalanceCallback, this);
+    mSetWhiteBalanceService =
+        mNodeHandle.advertiseService("color/set_white_balance", &ColorSensor::setWhiteBalanceCallback, this);
+    mSetAutoExposureService =
+        mNodeHandle.advertiseService("color/set_auto_exposure", &ColorSensor::setAutoExposureCallback, this);
+    mSetAutoWhiteBalanceService =
+        mNodeHandle.advertiseService("color/set_auto_white_balance", &ColorSensor::setAutoWhiteBalanceCallback, this);
+    mEnableStreamService =
+        mNodeHandle.advertiseService("color/enable_stream", &ColorSensor::enableStreamCallback, this);
 
     image_transport::ImageTransport it(nh);
     mColorPub = it.advertise("color/image_raw", 1);
@@ -45,7 +54,7 @@ ColorSensor::~ColorSensor()
     // }
 }
 
-void *ColorSensor::getArgbBuffer(size_t bufferSize)
+void* ColorSensor::getArgbBuffer(size_t bufferSize)
 {
     if (bufferSize != mArgbBufferSize)
     {
@@ -60,7 +69,7 @@ void *ColorSensor::getArgbBuffer(size_t bufferSize)
     return mArgbBuffer;
 }
 
-void *ColorSensor::getRgbBuffer(size_t bufferSize)
+void* ColorSensor::getRgbBuffer(size_t bufferSize)
 {
     if (bufferSize != mRgbBufferSize)
     {
@@ -75,7 +84,8 @@ void *ColorSensor::getRgbBuffer(size_t bufferSize)
     return mRgbBuffer;
 }
 
-bool ColorSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res)
+bool ColorSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req,
+                                        orbbec_camera::GetCameraInfoResponse& res)
 {
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
     sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
@@ -108,41 +118,46 @@ bool ColorSensor::setGainCallback(orbbec_camera::SetGainRequest& req, orbbec_cam
 {
     int32_t gain = req.value;
     mColorSensor->setIntProperty(OB_SENSOR_PROPERTY_GAIN_INT, gain);
-    return true; 
+    return true;
 }
 
-bool ColorSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req, orbbec_camera::GetWhiteBalanceResponse& res)
+bool ColorSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req,
+                                          orbbec_camera::GetWhiteBalanceResponse& res)
 {
     int32_t whiteBalance = mColorSensor->getIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT);
     res.value = whiteBalance;
     return true;
 }
 
-bool ColorSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req, orbbec_camera::SetWhiteBalanceResponse& res)
+bool ColorSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req,
+                                          orbbec_camera::SetWhiteBalanceResponse& res)
 {
     int32_t whiteBalance = req.value;
     mColorSensor->setIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT, whiteBalance);
-    return true; 
+    return true;
 }
 
-bool ColorSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req, orbbec_camera::SetAutoExposureResponse& res)
+bool ColorSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req,
+                                          orbbec_camera::SetAutoExposureResponse& res)
 {
     bool autoExposure = req.enable;
     mColorSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_EXPOSURE_BOOL, autoExposure);
     return true;
 }
 
-bool ColorSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req, orbbec_camera::SetAutoWhiteBalanceResponse& res)
+bool ColorSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req,
+                                              orbbec_camera::SetAutoWhiteBalanceResponse& res)
 {
     bool autoWhiteBalance = req.enable;
     mColorSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_WHITE_BALANCE_BOOL, autoWhiteBalance);
     return true;
 }
 
-bool ColorSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req, orbbec_camera::EnableStreamResponse& res)
+bool ColorSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req,
+                                       orbbec_camera::EnableStreamResponse& res)
 {
     bool enable = req.enable;
-    if(enable)
+    if (enable)
     {
         startColorStream();
     }
@@ -155,47 +170,49 @@ bool ColorSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req, 
 
 void ColorSensor::startColorStream()
 {
-    if(mIsStreaming) return;
+    if (mIsStreaming)
+        return;
 
-    if(mColorProfile == nullptr)
+    if (mColorProfile == nullptr)
     {
         mColorProfile = findProfile();
     }
     if (mColorProfile != nullptr)
     {
-        mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame)
-                            {
-                                int width = frame->width();
-                                int height = frame->height();
+        mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame) {
+            int width = frame->width();
+            int height = frame->height();
 
-                                void *argbBuffer = getArgbBuffer(width * height * 4);
-                                libyuv::MJPGToARGB((uint8_t *)frame->data(), frame->dataSize(), (uint8_t *)argbBuffer, width * 4, width, height, width, height);
+            void* argbBuffer = getArgbBuffer(width * height * 4);
+            libyuv::MJPGToARGB((uint8_t*)frame->data(), frame->dataSize(), (uint8_t*)argbBuffer, width * 4, width,
+                               height, width, height);
 
-                                void *rgbBuffer = getRgbBuffer(width * height * 3);
-                                libyuv::ARGBToRGB24((uint8_t *)argbBuffer, width * 4, (uint8_t *)rgbBuffer, width * 3, width, height);
+            void* rgbBuffer = getRgbBuffer(width * height * 3);
+            libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * 4, (uint8_t*)rgbBuffer, width * 3, width, height);
 
-                                sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
-                                image->width = width;
-                                image->height = height;
-                                image->step = width * 3;
-                                image->encoding = sensor_msgs::image_encodings::BGR8;
-                                image->data.resize(mRgbBufferSize);
-                                memcpy(&image->data[0], mRgbBuffer, mRgbBufferSize);
+            sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+            image->width = width;
+            image->height = height;
+            image->step = width * 3;
+            image->encoding = sensor_msgs::image_encodings::BGR8;
+            image->data.resize(mRgbBufferSize);
+            memcpy(&image->data[0], mRgbBuffer, mRgbBufferSize);
 
-                                sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
-                                cinfo->width = frame->width();
-                                cinfo->height = frame->height();
-                                cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-                                cinfo->header.frame_id = mFrameId;
-                                cinfo->header.stamp = ros::Time(frame->timeStamp());
+            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+            cinfo->width = frame->width();
+            cinfo->height = frame->height();
+            cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+            cinfo->header.frame_id = mFrameId;
+            cinfo->header.stamp = ros::Time(frame->timeStamp());
 
-                                //    mColorPub.publish(image, cinfo);
+            //    mColorPub.publish(image, cinfo);
 
-                                mColorPub.publish(image);
-                                mCameraInfoPub.publish(cinfo);
-                            });
+            mColorPub.publish(image);
+            mCameraInfoPub.publish(cinfo);
+        });
         mIsStreaming = true;
-        ROS_INFO("Start color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(), mColorProfile->fps());
+        ROS_INFO("Start color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(),
+                 mColorProfile->fps());
     }
     else
     {
@@ -205,7 +222,8 @@ void ColorSensor::startColorStream()
 
 void ColorSensor::stopColorStream()
 {
-    if(!mIsStreaming) return;
+    if (!mIsStreaming)
+        return;
 
     mColorSensor->stop();
     mIsStreaming = false;
@@ -214,7 +232,8 @@ void ColorSensor::stopColorStream()
 
 void ColorSensor::reconfigColorStream(int width, int height, int fps)
 {
-    if(mColorProfile != nullptr && mColorProfile->width() == width && mColorProfile->height() == height && mColorProfile->fps() == fps)
+    if (mColorProfile != nullptr && mColorProfile->width() == width && mColorProfile->height() == height &&
+        mColorProfile->fps() == fps)
     {
         return;
     }
@@ -224,11 +243,12 @@ void ColorSensor::reconfigColorStream(int width, int height, int fps)
         if (profile != nullptr)
         {
             mColorProfile = profile;
-            if(mIsStreaming)
+            if (mIsStreaming)
             {
                 mColorSensor->switchProfile(mColorProfile);
             }
-            ROS_INFO("Reconfig color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(), mColorProfile->fps());
+            ROS_INFO("Reconfig color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(),
+                     mColorProfile->fps());
         }
         else
         {
@@ -245,11 +265,11 @@ std::shared_ptr<ob::StreamProfile> ColorSensor::findProfile(int width, int heigh
         auto profile = profiles[i];
         if (profile->format() == OB_FORMAT_MJPG)
         {
-            if(width == 0 && height == 0 && fps == 0)
+            if (width == 0 && height == 0 && fps == 0)
             {
                 return profile;
             }
-            if(profile->width() == width && profile->height() == height && profile->fps() == fps)
+            if (profile->width() == width && profile->height() == height && profile->fps() == fps)
             {
                 return profile;
             }

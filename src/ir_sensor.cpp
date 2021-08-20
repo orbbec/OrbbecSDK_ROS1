@@ -8,17 +8,23 @@
 #include "libyuv.h"
 #include "utils.h"
 
-IrSensor::IrSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mIrSensor(sensor), mIsStreaming(false)
+IrSensor::IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device,
+                   std::shared_ptr<ob::Sensor> sensor)
+    : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mIrSensor(sensor), mIsStreaming(false)
 {
     mGetCameraInfoService = mNodeHandle.advertiseService("ir/get_camera_info", &IrSensor::getCameraInfoCallback, this);
     mGetExposureService = mNodeHandle.advertiseService("ir/get_exposure", &IrSensor::getExposureCallback, this);
     mSetExposureService = mNodeHandle.advertiseService("ir/set_exposure", &IrSensor::setExposureCallback, this);
     mGetGainService = mNodeHandle.advertiseService("ir/get_gain", &IrSensor::getGainCallback, this);
     mSetGainService = mNodeHandle.advertiseService("ir/set_gain", &IrSensor::setGainCallback, this);
-    mGetWhiteBalanceService = mNodeHandle.advertiseService("ir/get_white_balance", &IrSensor::getWhiteBalanceCallback, this);
-    mSetWhiteBalanceService = mNodeHandle.advertiseService("ir/set_white_balance", &IrSensor::setWhiteBalanceCallback, this);
-    mSetAutoExposureService = mNodeHandle.advertiseService("ir/set_auto_exposure", &IrSensor::setAutoExposureCallback, this);
-    mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("ir/set_auto_white_balance", &IrSensor::setAutoWhiteBalanceCallback, this);
+    mGetWhiteBalanceService =
+        mNodeHandle.advertiseService("ir/get_white_balance", &IrSensor::getWhiteBalanceCallback, this);
+    mSetWhiteBalanceService =
+        mNodeHandle.advertiseService("ir/set_white_balance", &IrSensor::setWhiteBalanceCallback, this);
+    mSetAutoExposureService =
+        mNodeHandle.advertiseService("ir/set_auto_exposure", &IrSensor::setAutoExposureCallback, this);
+    mSetAutoWhiteBalanceService =
+        mNodeHandle.advertiseService("ir/set_auto_white_balance", &IrSensor::setAutoWhiteBalanceCallback, this);
     mEnableStreamService = mNodeHandle.advertiseService("ir/enable_stream", &IrSensor::enableStreamCallback, this);
 
     image_transport::ImageTransport it(nh);
@@ -31,7 +37,8 @@ IrSensor::~IrSensor()
 {
 }
 
-bool IrSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res)
+bool IrSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req,
+                                     orbbec_camera::GetCameraInfoResponse& res)
 {
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_IR);
     sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
@@ -63,31 +70,35 @@ bool IrSensor::setGainCallback(orbbec_camera::SetGainRequest& req, orbbec_camera
 {
     int32_t gain = req.value;
     mIrSensor->setIntProperty(OB_SENSOR_PROPERTY_GAIN_INT, gain);
-    return true; 
+    return true;
 }
 
-bool IrSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req, orbbec_camera::GetWhiteBalanceResponse& res)
+bool IrSensor::getWhiteBalanceCallback(orbbec_camera::GetWhiteBalanceRequest& req,
+                                       orbbec_camera::GetWhiteBalanceResponse& res)
 {
     int32_t whiteBalance = mIrSensor->getIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT);
     res.value = whiteBalance;
     return true;
 }
 
-bool IrSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req, orbbec_camera::SetWhiteBalanceResponse& res)
+bool IrSensor::setWhiteBalanceCallback(orbbec_camera::SetWhiteBalanceRequest& req,
+                                       orbbec_camera::SetWhiteBalanceResponse& res)
 {
     int32_t whiteBalance = req.value;
     mIrSensor->setIntProperty(OB_SENSOR_PROPERTY_WHITE_BALANCE_INT, whiteBalance);
-    return true; 
+    return true;
 }
 
-bool IrSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req, orbbec_camera::SetAutoExposureResponse& res)
+bool IrSensor::setAutoExposureCallback(orbbec_camera::SetAutoExposureRequest& req,
+                                       orbbec_camera::SetAutoExposureResponse& res)
 {
     bool autoExposure = req.enable;
     mIrSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_EXPOSURE_BOOL, autoExposure);
     return true;
 }
 
-bool IrSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req, orbbec_camera::SetAutoWhiteBalanceResponse& res)
+bool IrSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req,
+                                           orbbec_camera::SetAutoWhiteBalanceResponse& res)
 {
     bool autoWhiteBalance = req.enable;
     mIrSensor->setBoolProperty(OB_SENSOR_PROPERTY_ENABLE_AUTO_WHITE_BALANCE_BOOL, autoWhiteBalance);
@@ -97,7 +108,7 @@ bool IrSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceReq
 bool IrSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req, orbbec_camera::EnableStreamResponse& res)
 {
     bool enable = req.enable;
-    if(enable)
+    if (enable)
     {
         startIrStream();
     }
@@ -110,33 +121,33 @@ bool IrSensor::enableStreamCallback(orbbec_camera::EnableStreamRequest& req, orb
 
 void IrSensor::startIrStream()
 {
-    if(mIsStreaming) return;
+    if (mIsStreaming)
+        return;
 
-    if(mIrProfile == nullptr)
+    if (mIrProfile == nullptr)
     {
         mIrProfile = findProfile();
     }
     if (mIrProfile != nullptr)
     {
-        mIrSensor->start(mIrProfile, [&](std::shared_ptr<ob::Frame> frame)
-                         {
-                             sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
-                             image->width = frame->width();
-                             image->height = frame->height();
-                             image->step = frame->width() * 2;
-                             image->encoding = sensor_msgs::image_encodings::MONO16;
-                             image->data.resize(frame->dataSize());
-                             memcpy(&image->data[0], frame->data(), frame->dataSize());
+        mIrSensor->start(mIrProfile, [&](std::shared_ptr<ob::Frame> frame) {
+            sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+            image->width = frame->width();
+            image->height = frame->height();
+            image->step = frame->width() * 2;
+            image->encoding = sensor_msgs::image_encodings::MONO16;
+            image->data.resize(frame->dataSize());
+            memcpy(&image->data[0], frame->data(), frame->dataSize());
 
-                            //  sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
-                            //  cinfo->width = frame->width();
-                            //  cinfo->height = frame->height();
-                            //  cinfo->header.frame_id = frame->index();
+            //  sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+            //  cinfo->width = frame->width();
+            //  cinfo->height = frame->height();
+            //  cinfo->header.frame_id = frame->index();
 
-                             // mIrPub.publish(image, cinfo);
+            // mIrPub.publish(image, cinfo);
 
-                             mIrPub.publish(image);
-                         });
+            mIrPub.publish(image);
+        });
         mIsStreaming = true;
         ROS_INFO("Start ir stream: %dx%d(%d)", mIrProfile->width(), mIrProfile->height(), mIrProfile->fps());
     }
@@ -148,8 +159,9 @@ void IrSensor::startIrStream()
 
 void IrSensor::stopIrStream()
 {
-    if(!mIsStreaming) return;
-    
+    if (!mIsStreaming)
+        return;
+
     mIrSensor->stop();
     mIsStreaming = false;
     ROS_INFO("Stop ir stream");
@@ -157,7 +169,8 @@ void IrSensor::stopIrStream()
 
 void IrSensor::reconfigIrStream(int width, int height, int fps)
 {
-    if(mIrProfile != nullptr && mIrProfile->width() == width && mIrProfile->height() == height && mIrProfile->fps() == fps)
+    if (mIrProfile != nullptr && mIrProfile->width() == width && mIrProfile->height() == height &&
+        mIrProfile->fps() == fps)
     {
         return;
     }
@@ -167,7 +180,7 @@ void IrSensor::reconfigIrStream(int width, int height, int fps)
         if (profile != nullptr)
         {
             mIrProfile = profile;
-            if(mIsStreaming)
+            if (mIsStreaming)
             {
                 mIrSensor->switchProfile(mIrProfile);
             }
@@ -188,11 +201,11 @@ std::shared_ptr<ob::StreamProfile> IrSensor::findProfile(int width, int height, 
         auto profile = profiles[i];
         if (profile->format() == OB_FORMAT_Y16)
         {
-            if(width == 0 && height == 0 && fps == 0)
+            if (width == 0 && height == 0 && fps == 0)
             {
                 return profile;
             }
-            if(profile->width() == width && profile->height() == height && profile->fps() == fps)
+            if (profile->width() == width && profile->height() == height && profile->fps() == fps)
             {
                 return profile;
             }

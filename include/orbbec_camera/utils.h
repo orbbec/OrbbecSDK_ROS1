@@ -6,7 +6,7 @@
 
 class Utils
 {
-public:
+  public:
     static sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic obParam)
     {
         sensor_msgs::CameraInfo info;

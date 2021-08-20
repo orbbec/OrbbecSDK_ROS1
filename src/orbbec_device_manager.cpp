@@ -2,18 +2,19 @@
 #include "version.h"
 #include "libobsensor/ObSensor.h"
 
-OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDeviceName(""), mSerialNumber(""), mPid(0), mVid(0)
+OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh)
+    : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDeviceName(""), mSerialNumber(""), mPid(0), mVid(0)
 {
     mPrivateNodeHandle.getParam("device_name", mDeviceName);
     mPrivateNodeHandle.getParam("sn", mSerialNumber);
     mPrivateNodeHandle.getParam("vid", mVid);
     mPrivateNodeHandle.getParam("pid", mPid);
 
-    mCtx.setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> addedList)
-                                 {
-                                     DeviceConnectCallback(addedList);
-                                     DeviceDisconnectCallback(removedList);
-                                 });
+    mCtx.setDeviceChangedCallback(
+        [this](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> addedList) {
+            DeviceConnectCallback(addedList);
+            DeviceDisconnectCallback(removedList);
+        });
 
     mDeviceList = mCtx.queryDeviceList();
     ROS_INFO("dev count: %d", mDeviceList->deviceCount());
@@ -27,31 +28,16 @@ OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& p
         info.pid = devInfo->pid();
         info.sn = devInfo->serialNumber();
         mDevInfos.push_back(info);
-        // mDevices.push_back(dev);
         ROS_INFO("Device found: %s %x:%x %s", info.name.c_str(), info.vid, info.pid, info.sn.c_str());
     }
 
     mGetVersionService = mNodeHandle.advertiseService("get_version", &OrbbecDeviceManager::getVersionCallback, this);
-    mDeviceListService = mNodeHandle.advertiseService("get_device_list", &OrbbecDeviceManager::getDeviceListCallback, this);
+    mDeviceListService =
+        mNodeHandle.advertiseService("get_device_list", &OrbbecDeviceManager::getDeviceListCallback, this);
 
     findDevice();
-    // auto it = mDevices.begin();
-    // while(it != mDevices.end())
-    // {
-    //     const char* sn = (*it)->getDeviceInfo()->serialNumber();
-    //     const char* curSn = mDevice->getDeviceInfo()->serialNumber();
-    //     if(strcmp(sn, curSn) != 0)
-    //     {
-    //         ROS_INFO("Close device: %s", sn);
-    //         mDevices.erase(it);
-    //     }
-    //     else
-    //     {
-    //         ++it;
-    //     }
-    // }
 
-    if(mDevice)
+    if (mDevice)
     {
         openDevice();
     }
@@ -97,7 +83,7 @@ void OrbbecDeviceManager::findDevice()
             }
         }
     }
-    if(!mDevice)
+    if (!mDevice)
     {
         ROS_WARN("No device found");
         return;
@@ -119,26 +105,17 @@ void OrbbecDeviceManager::DeviceDisconnectCallback(std::shared_ptr<ob::DeviceLis
     ROS_INFO("Device disconnect: %d", disconnectList->deviceCount());
 }
 
-bool OrbbecDeviceManager::getVersionCallback(orbbec_camera::GetVersion::Request& request, orbbec_camera::GetVersion::Response& response)
+bool OrbbecDeviceManager::getVersionCallback(orbbec_camera::GetVersion::Request& request,
+                                             orbbec_camera::GetVersion::Response& response)
 {
     response.version = OB_ROS_VERSION_STR;
     response.core_version = OB_API_VERSION_STR;
     return true;
 }
 
-bool OrbbecDeviceManager::getDeviceListCallback(orbbec_camera::GetDeviceList::Request &request, orbbec_camera::GetDeviceList::Response &response)
+bool OrbbecDeviceManager::getDeviceListCallback(orbbec_camera::GetDeviceList::Request& request,
+                                                orbbec_camera::GetDeviceList::Response& response)
 {
-    // std::vector<orbbec_camera::DeviceInfo> devInfos;
-    // for (int i = 0; i < mDevices.size(); i++)
-    // {
-    //     auto devInfo = mDevices[i]->getDeviceInfo();
-    //     orbbec_camera::DeviceInfo info;
-    //     info.name = devInfo->name();
-    //     info.vid = devInfo->vid();
-    //     info.pid = devInfo->pid();
-    //     info.sn = devInfo->serialNumber();
-    //     devInfos.push_back(info);
-    // }
     response.dev_infos = mDevInfos;
     return true;
 }
