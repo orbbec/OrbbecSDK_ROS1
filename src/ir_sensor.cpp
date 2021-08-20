@@ -21,7 +21,7 @@ IrSensor::IrSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob
     mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("ir/set_auto_white_balance", &IrSensor::setAutoWhiteBalanceCallback, this);
 
     image_transport::ImageTransport it(nh);
-    mIrPub = it.advertise("camera/ir", 1);
+    mIrPub = it.advertise("ir/image", 1);
 
     startIrStream();
 }

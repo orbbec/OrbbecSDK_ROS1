@@ -21,8 +21,8 @@ ColorSensor::ColorSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_
     mSetAutoWhiteBalanceService = mNodeHandle.advertiseService("color/set_auto_white_balance", &ColorSensor::setAutoWhiteBalanceCallback, this);
 
     image_transport::ImageTransport it(nh);
-    mColorPub = it.advertise("camera/color/image_raw", 1);
-    mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("camera/color/camera_info", 1);
+    mColorPub = it.advertise("color/image_raw", 1);
+    mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("color/camera_info", 1);
 
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
     mInfo = Utils::convertToCameraInfo(intrinsic);
@@ -32,16 +32,16 @@ ColorSensor::ColorSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_
 
 ColorSensor::~ColorSensor()
 {
-    if (mArgbBuffer)
-    {
-        free(mArgbBuffer);
-        mArgbBuffer = NULL;
-    }
-    if (mRgbBuffer)
-    {
-        free(mRgbBuffer);
-        mRgbBuffer = NULL;
-    }
+    // if (mArgbBuffer)
+    // {
+    //     free(mArgbBuffer);
+    //     mArgbBuffer = NULL;
+    // }
+    // if (mRgbBuffer)
+    // {
+    //     free(mRgbBuffer);
+    //     mRgbBuffer = NULL;
+    // }
 }
 
 void *ColorSensor::getArgbBuffer(size_t bufferSize)

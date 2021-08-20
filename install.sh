@@ -1,0 +1,1 @@
+sudo cp 99-obsensor-libusb.rules /etc/udev/rules.d

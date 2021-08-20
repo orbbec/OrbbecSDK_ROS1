@@ -14,16 +14,39 @@ OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& p
                                  });
 
     mDeviceList = mCtx.queryDeviceList();
+    ROS_INFO("dev count: %d", mDeviceList->deviceCount());
     for (int i = 0; i < mDeviceList->deviceCount(); i++)
     {
-        ROS_INFO("Device found: %s, %x:%x", mDeviceList->name(i), mDeviceList->vid(i), mDeviceList->pid(i));
         auto dev = mDeviceList->createDevice(i);
-        mDevices.push_back(dev);
+        auto devInfo = dev->getDeviceInfo();
+        orbbec_camera::DeviceInfo info;
+        info.name = devInfo->name();
+        info.vid = devInfo->vid();
+        info.pid = devInfo->pid();
+        info.sn = devInfo->serialNumber();
+        mDevInfos.push_back(info);
+        // mDevices.push_back(dev);
+        ROS_INFO("Device found: %s %x:%x %s", info.name.c_str(), info.vid, info.pid, info.sn.c_str());
     }
 
     mDeviceListService = mNodeHandle.advertiseService("get_device_list", &OrbbecDeviceManager::getDeviceListCallback, this);
 
     findDevice();
+    // auto it = mDevices.begin();
+    // while(it != mDevices.end())
+    // {
+    //     const char* sn = (*it)->getDeviceInfo()->serialNumber();
+    //     const char* curSn = mDevice->getDeviceInfo()->serialNumber();
+    //     if(strcmp(sn, curSn) != 0)
+    //     {
+    //         ROS_INFO("Close device: %s", sn);
+    //         mDevices.erase(it);
+    //     }
+    //     else
+    //     {
+    //         ++it;
+    //     }
+    // }
 
     if(mDevice)
     {
@@ -37,35 +60,35 @@ OrbbecDeviceManager::~OrbbecDeviceManager()
 
 void OrbbecDeviceManager::findDevice()
 {
-    if (mDevices.size() == 0)
+    if (mDevInfos.size() == 0)
     {
         ROS_WARN("No device connect");
         return;
     }
     if (mSerialNumber == "" && mDeviceName == "" && mPid == 0 && mVid == 0)
     {
-        mDevice = mDevices[0];
+        mDevice = mDeviceList->createDevice(0);
     }
     else
     {
-        for (int i = 0; i < mDevices.size(); i++)
+        for (int i = 0; i < mDevInfos.size(); i++)
         {
-            auto devInfo = mDevices[i]->getDeviceInfo();
-            if (mSerialNumber != "" && devInfo->serialNumber() == mSerialNumber)
+            auto devInfo = mDevInfos[i];
+            if (mSerialNumber != "" && devInfo.sn == mSerialNumber)
             {
-                mDevice = mDevices[i];
+                mDevice = mDeviceList->createDevice(i);
                 ROS_INFO("Find device with sn: %s", mSerialNumber.c_str());
                 break;
             }
-            else if (mPid != 0 && mVid != 0 && devInfo->pid() == mPid && devInfo->vid() == mVid)
+            else if (mPid != 0 && mVid != 0 && devInfo.pid == mPid && devInfo.vid == mVid)
             {
-                mDevice = mDevices[i];
+                mDevice = mDeviceList->createDevice(i);
                 ROS_INFO("Find device with vid pid: %d, %d", mVid, mPid);
                 break;
             }
-            if (mDeviceName != "" && devInfo->name() == mDeviceName)
+            if (mDeviceName != "" && devInfo.name == mDeviceName)
             {
-                mDevice = mDevices[i];
+                mDevice = mDeviceList->createDevice(i);
                 ROS_INFO("Find device with name: %s", mDeviceName.c_str());
                 break;
             }
@@ -95,17 +118,17 @@ void OrbbecDeviceManager::DeviceDisconnectCallback(std::shared_ptr<ob::DeviceLis
 
 bool OrbbecDeviceManager::getDeviceListCallback(orbbec_camera::GetDeviceList::Request &request, orbbec_camera::GetDeviceList::Response &response)
 {
-    std::vector<orbbec_camera::DeviceInfo> devInfos;
-    for (int i = 0; i < mDevices.size(); i++)
-    {
-        auto devInfo = mDevices[i]->getDeviceInfo();
-        orbbec_camera::DeviceInfo info;
-        info.name = devInfo->name();
-        info.vid = devInfo->vid();
-        info.pid = devInfo->pid();
-        info.sn = devInfo->serialNumber();
-        devInfos.push_back(info);
-    }
-    response.dev_infos = devInfos;
+    // std::vector<orbbec_camera::DeviceInfo> devInfos;
+    // for (int i = 0; i < mDevices.size(); i++)
+    // {
+    //     auto devInfo = mDevices[i]->getDeviceInfo();
+    //     orbbec_camera::DeviceInfo info;
+    //     info.name = devInfo->name();
+    //     info.vid = devInfo->vid();
+    //     info.pid = devInfo->pid();
+    //     info.sn = devInfo->serialNumber();
+    //     devInfos.push_back(info);
+    // }
+    response.dev_infos = mDevInfos;
     return true;
 }

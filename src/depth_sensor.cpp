@@ -22,8 +22,8 @@ DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_
 
     image_transport::ImageTransport it(nh);
     // mDepthPub = it.advertise("camera/depth", 1);
-    mDepthPub = it.advertiseCamera("camera/depth/image_raw", 1);
-    mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("camera/depth/camera_info", 1);
+    mDepthPub = it.advertiseCamera("depth/image_raw", 1);
+    mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("depth/camera_info", 1);
 
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
     mInfo = Utils::convertToCameraInfo(intrinsic);

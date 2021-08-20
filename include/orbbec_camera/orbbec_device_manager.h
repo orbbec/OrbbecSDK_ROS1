@@ -20,10 +20,12 @@ private:
     ob::Context mCtx;
 
     std::shared_ptr<ob::DeviceList> mDeviceList;
-    std::vector<std::shared_ptr<ob::Device>> mDevices;
+    // std::vector<std::shared_ptr<ob::Device>> mDevices;
     std::shared_ptr<ob::Device> mDevice;
 
     std::shared_ptr<OrbbecDevice> mDeviceNode;
+
+    std::vector<orbbec_camera::DeviceInfo> mDevInfos;
 
     std::string mDeviceName;
     std::string mSerialNumber;
