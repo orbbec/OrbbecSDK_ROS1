@@ -41,6 +41,10 @@ private:
     std::shared_ptr<ob::Sensor> mDepthSensor;
     std::shared_ptr<ob::StreamProfile> mDepthProfile;
 
+    bool mIsStreaming;
+
+    std::shared_ptr<ob::StreamProfile> findProfile(int width = 0, int height = 0, int fps = 0);
+
     bool getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res);
     bool getExposureCallback(orbbec_camera::GetExposureRequest& req, orbbec_camera::GetExposureResponse& res);
     bool setExposureCallback(orbbec_camera::SetExposureRequest& req, orbbec_camera::SetExposureResponse& res);

@@ -8,7 +8,7 @@
 #include "libyuv.h"
 #include "utils.h"
 
-DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mDepthSensor(sensor), mFrameId("")
+DepthSensor::DepthSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mDepthSensor(sensor), mFrameId(""), mIsStreaming(false)
 {
     mCameraInfoService = mNodeHandle.advertiseService("depth/get_camera_info", &DepthSensor::getCameraInfoCallback, this);
     mGetExposureService = mNodeHandle.advertiseService("depth/get_exposure", &DepthSensor::getExposureCallback, this);
@@ -98,28 +98,12 @@ bool DepthSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalance
 
 void DepthSensor::startDepthStream()
 {
-    bool found = false;
-    auto profiles = mDepthSensor->getStreamProfiles();
-    // for (int i = 0; i < profiles.size(); i++)
-    // {
-    //     auto profile = profiles[i];
-    //     if (profile->format() == OB_FORMAT_Y16)
-    //     {
-    //         ROS_INFO("Depth profile: %d x %d (%d)", profile->width(), profile->height(), profile->fps());
-    //     }
-    // }
-    for (int i = 0; i < profiles.size(); i++)
+    if(mDepthProfile == nullptr)
     {
-        auto profile = profiles[i];
-        if (profile->format() == OB_FORMAT_Y16)
-        {
-            mDepthProfile = profile;
-            found = true;
-            break;
-        }
+        mDepthProfile = findProfile();
     }
 
-    if (found)
+    if (mDepthProfile != nullptr)
     {
         mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame)
                             {
@@ -142,6 +126,7 @@ void DepthSensor::startDepthStream()
                                 mDepthPub.publish(image, cinfo);
                                 mCameraInfoPub.publish(cinfo);
                             });
+        mIsStreaming = true;
         ROS_INFO("Start depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(), mDepthProfile->fps());
     }
     else
@@ -153,38 +138,45 @@ void DepthSensor::startDepthStream()
 void DepthSensor::stopDepthStream()
 {
     mDepthSensor->stop();
+    mIsStreaming = false;
     ROS_INFO("Stop depth stream");
 }
 
 void DepthSensor::reconfigDepthStream(int width, int height, int fps)
 {
-    if(mDepthProfile == nullptr)
+    if(mDepthProfile != nullptr && mDepthProfile->width() == width && mDepthProfile->height() == height && mDepthProfile->fps() == fps)
     {
         return;
     }
-    if(width == mDepthProfile->width() && height == mDepthProfile->height() && fps == mDepthProfile->fps())
+    else
     {
-        return;
+        auto profile = findProfile(width, height, fps);
+        if (profile != nullptr)
+        {
+            mDepthProfile = profile;
+            if(mIsStreaming)
+            {
+                mDepthSensor->switchProfile(mDepthProfile);
+            }
+            ROS_INFO("Reconfig depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(), mDepthProfile->fps());
+        }
+        else
+        {
+            ROS_WARN("Reconfig depth stream failed: no profile found");
+        }
     }
-    bool found = false;
+}
+
+std::shared_ptr<ob::StreamProfile> DepthSensor::findProfile(int width, int height, int fps)
+{
     auto profiles = mDepthSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
         auto profile = profiles[i];
         if (profile->format() == OB_FORMAT_Y16 && profile->width() == width && profile->height() == height && profile->fps() == fps)
         {
-            mDepthProfile = profile;
-            found = true;
-            break;
+            return profile;
         }
     }
-    if (found)
-    {
-        mDepthSensor->switchProfile(mDepthProfile);
-        ROS_INFO("Reconfig depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(), mDepthProfile->fps());
-    }
-    else
-    {
-        ROS_WARN("Reconfig depth stream failed: no profile found");
-    }
+    return nullptr;
 }

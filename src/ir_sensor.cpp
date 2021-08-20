@@ -8,7 +8,7 @@
 #include "libyuv.h"
 #include "utils.h"
 
-IrSensor::IrSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mIrSensor(sensor)
+IrSensor::IrSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mIrSensor(sensor), mIsStreaming(false)
 {
     mGetCameraInfoService = mNodeHandle.advertiseService("ir/get_camera_info", &IrSensor::getCameraInfoCallback, this);
     mGetExposureService = mNodeHandle.advertiseService("ir/get_exposure", &IrSensor::getExposureCallback, this);
@@ -95,28 +95,12 @@ bool IrSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceReq
 
 void IrSensor::startIrStream()
 {
-    bool found = false;
-    auto profiles = mIrSensor->getStreamProfiles();
-    // for (int i = 0; i < profiles.size(); i++)
-    // {
-    //     auto profile = profiles[i];
-    //     if (profile->format() == OB_FORMAT_Y16)
-    //     {
-    //         ROS_INFO("Ir profile: %d x %d (%d)", profile->width(), profile->height(), profile->fps());
-    //     }
-    // }
-    for (int i = 0; i < profiles.size(); i++)
+    if(mIrProfile == nullptr)
     {
-        auto profile = profiles[i];
-        if (profile->format() == OB_FORMAT_Y16)
-        {
-            mIrProfile = profile;
-            found = true;
-            break;
-        }
+        mIrProfile = findProfile();
     }
 
-    if (found)
+    if (mIrProfile != nullptr)
     {
         mIrSensor->start(mIrProfile, [&](std::shared_ptr<ob::Frame> frame)
                          {
@@ -137,6 +121,7 @@ void IrSensor::startIrStream()
 
                              mIrPub.publish(image);
                          });
+        mIsStreaming = true;
         ROS_INFO("Start ir stream: %dx%d(%d)", mIrProfile->width(), mIrProfile->height(), mIrProfile->fps());
     }
     else
@@ -148,38 +133,45 @@ void IrSensor::startIrStream()
 void IrSensor::stopIrStream()
 {
     mIrSensor->stop();
+    mIsStreaming = false;
     ROS_INFO("Stop ir stream");
 }
 
 void IrSensor::reconfigIrStream(int width, int height, int fps)
 {
-    if(mIrProfile == nullptr)
+    if(mIrProfile != nullptr && mIrProfile->width() == width && mIrProfile->height() == height && mIrProfile->fps() == fps)
     {
         return;
     }
-    if(width == mIrProfile->width() && height == mIrProfile->height() && fps == mIrProfile->fps())
+    else
     {
-        return;
+        auto profile = findProfile(width, height, fps);
+        if (profile != nullptr)
+        {
+            mIrProfile = profile;
+            if(mIsStreaming)
+            {
+                mIrSensor->switchProfile(mIrProfile);
+            }
+            ROS_INFO("Reconfig ir stream: %dx%d(%d)", mIrProfile->width(), mIrProfile->height(), mIrProfile->fps());
+        }
+        else
+        {
+            ROS_WARN("Reconfig ir stream failed: no profile found");
+        }
     }
-    bool found = false;
+}
+
+std::shared_ptr<ob::StreamProfile> IrSensor::findProfile(int width, int height, int fps)
+{
     auto profiles = mIrSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
         auto profile = profiles[i];
         if (profile->format() == OB_FORMAT_Y16 && profile->width() == width && profile->height() == height && profile->fps() == fps)
         {
-            mIrProfile = profile;
-            found = true;
-            break;
+            return profile;
         }
     }
-    if (found)
-    {
-        mIrSensor->switchProfile(mIrProfile);
-        ROS_INFO("Reconfig ir stream: %dx%d(%d)", mIrProfile->width(), mIrProfile->height(), mIrProfile->fps());
-    }
-    else
-    {
-        ROS_WARN("Reconfig ir stream failed: no profile found");
-    }
+    return nullptr;
 }

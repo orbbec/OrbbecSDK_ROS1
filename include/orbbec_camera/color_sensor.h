@@ -40,6 +40,8 @@ private:
     std::shared_ptr<ob::Sensor> mColorSensor;
     std::shared_ptr<ob::StreamProfile> mColorProfile;
 
+    bool mIsStreaming;
+
     size_t mArgbBufferSize;
     void* mArgbBuffer;
     size_t mRgbBufferSize;
@@ -47,6 +49,8 @@ private:
 
     void* getArgbBuffer(size_t bufferSize);
     void* getRgbBuffer(size_t bufferSize);
+
+    std::shared_ptr<ob::StreamProfile> findProfile(int width = 0, int height = 0, int fps = 0);
 
     bool getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req, orbbec_camera::GetCameraInfoResponse& res);
     bool getExposureCallback(orbbec_camera::GetExposureRequest& req, orbbec_camera::GetExposureResponse& res);

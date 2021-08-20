@@ -8,7 +8,7 @@
 #include "libyuv.h"
 #include "utils.h"
 
-ColorSensor::ColorSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mColorSensor(sensor), mArgbBufferSize(0), mArgbBuffer(NULL), mRgbBufferSize(0), mRgbBuffer(NULL)
+ColorSensor::ColorSensor(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor) : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mColorSensor(sensor), mIsStreaming(false), mArgbBufferSize(0), mArgbBuffer(NULL), mRgbBufferSize(0), mRgbBuffer(NULL)
 {
     mGetCameraInfoService = mNodeHandle.advertiseService("color/get_camera_info", &ColorSensor::getCameraInfoCallback, this);
     mGetExposureService = mNodeHandle.advertiseService("color/get_exposure", &ColorSensor::getExposureCallback, this);
@@ -140,28 +140,12 @@ bool ColorSensor::setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalance
 
 void ColorSensor::startColorStream()
 {
-    bool found = false;
-    auto profiles = mColorSensor->getStreamProfiles();
-    // for (int i = 0; i < profiles.size(); i++)
-    // {
-    //     auto profile = profiles[i];
-    //     if (profile->format() == OB_FORMAT_MJPG)
-    //     {
-    //         ROS_INFO("Color profile: %d x %d (%d)", profile->width(), profile->height(), profile->fps());
-    //     }
-    // }
-    for (int i = 0; i < profiles.size(); i++)
+    if(mColorProfile == nullptr)
     {
-        auto profile = profiles[i];
-        if (profile->format() == OB_FORMAT_MJPG)
-        {
-            mColorProfile = profile;
-            found = true;
-            break;
-        }
+        mColorProfile = findProfile();
     }
 
-    if (found)
+    if (mColorProfile != nullptr)
     {
         mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame)
                             {
@@ -194,6 +178,7 @@ void ColorSensor::startColorStream()
                                 mColorPub.publish(image);
                                 mCameraInfoPub.publish(cinfo);
                             });
+        mIsStreaming = true;
         ROS_INFO("Start color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(), mColorProfile->fps());
     }
     else
@@ -205,39 +190,45 @@ void ColorSensor::startColorStream()
 void ColorSensor::stopColorStream()
 {
     mColorSensor->stop();
+    mIsStreaming = false;
     ROS_INFO("Stop color stream");
 }
 
 void ColorSensor::reconfigColorStream(int width, int height, int fps)
 {
-    if(mColorProfile == nullptr)
+    if(mColorProfile != nullptr && mColorProfile->width() == width && mColorProfile->height() == height && mColorProfile->fps() == fps)
     {
         return;
     }
-    if(width == mColorProfile->width() && height == mColorProfile->height() && fps == mColorProfile->fps())
+    else
     {
-        return;
+        auto profile = findProfile(width, height, fps);
+        if (profile != nullptr)
+        {
+            mColorProfile = profile;
+            if(mIsStreaming)
+            {
+                mColorSensor->switchProfile(mColorProfile);
+            }
+            ROS_INFO("Reconfig color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(), mColorProfile->fps());
+        }
+        else
+        {
+            ROS_WARN("Reconfig color stream failed: no profile found");
+        }
     }
-    
-    bool found = false;
+}
+
+std::shared_ptr<ob::StreamProfile> ColorSensor::findProfile(int width, int height, int fps)
+{
     auto profiles = mColorSensor->getStreamProfiles();
     for (int i = 0; i < profiles.size(); i++)
     {
         auto profile = profiles[i];
         if (profile->format() == OB_FORMAT_MJPG && profile->width() == width && profile->height() == height && profile->fps() == fps)
         {
-            mColorProfile = profile;
-            found = true;
-            break;
+            return profile;
         }
     }
-    if (found)
-    {
-        mColorSensor->switchProfile(mColorProfile);
-        ROS_INFO("Reconfig color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(), mColorProfile->fps());
-    }
-    else
-    {
-        ROS_WARN("Reconfig color stream failed: no profile found");
-    }
+    return nullptr;
 }
