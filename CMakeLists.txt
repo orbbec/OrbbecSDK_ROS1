@@ -143,18 +143,19 @@ message("Could not find Orbbec SDK!")
 endif()
 
 add_subdirectory(libjpeg)
-find_package(JPEG)
-if(!JPEG_FOUND)
-message("Could not find libjpeg")
-endif()
+# find_package(JPEG)
+# if(!JPEG_FOUND)
+# message("Could not find libjpeg")
+# endif()
 
 add_subdirectory(libyuv)
-find_package(YUV)
-if(!YUV_FOUND)
-message("Could not find libyuv")
-endif()
+# find_package(YUV)
+# if(!YUV_FOUND)
+# message("Could not find libyuv")
+# endif()
 
 set(orbbec_camera_INCLUDE_DIR "include/orbbec_camera")
+set(YUV_INCLUDE_DIR "libyuv/include")
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
@@ -201,7 +202,8 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${ORBBEC_SDK_LIBRARIES}
-  ${YUV_LIBRARY}
+  yuv
+  # ${YUV_LIBRARY}
 )
 
 #############
