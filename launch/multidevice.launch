@@ -1,4 +1,6 @@
 <launch>
+    <arg name="camera" default="camera" />
+
     <arg name="camera1" default="camera1" />
     <arg name="device_name1" default="" />
     <arg name="sn1" default="BY286160031" />
@@ -10,6 +12,10 @@
     <arg name="sn2" default="BY286160033" />
     <arg name="vid2" default="0" />
     <arg name="pid2" default="0" />
+
+    <!-- <group ns="$(arg camera)"> -->
+        <node pkg="orbbec_camera" type="device_list_node" name="ob_device_list" />
+    <!-- </group> -->
 
     <include file="$(find orbbec_camera)/launch/device.launch">
         <arg name="camera" value="$(arg camera1)" />

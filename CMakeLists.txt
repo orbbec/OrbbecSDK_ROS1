@@ -206,6 +206,13 @@ target_link_libraries(${PROJECT_NAME}_node
   # ${YUV_LIBRARY}
 )
 
+add_executable(device_list_node src/orbbec_device_list.cpp)
+
+target_link_libraries(device_list_node 
+  ${catkin_LIBRARIES}
+  ${ORBBEC_SDK_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############

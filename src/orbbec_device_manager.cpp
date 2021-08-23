@@ -1,6 +1,8 @@
 #include "orbbec_device_manager.h"
 #include "version.h"
 #include "libobsensor/ObSensor.h"
+#include <chrono>
+#include <thread>
 
 OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh)
     : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDeviceName(""), mSerialNumber(""), mPid(0), mVid(0)
@@ -10,30 +12,45 @@ OrbbecDeviceManager::OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& p
     mPrivateNodeHandle.getParam("vid", mVid);
     mPrivateNodeHandle.getParam("pid", mPid);
 
-    mCtx.setDeviceChangedCallback(
-        [this](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> addedList) {
-            DeviceConnectCallback(addedList);
-            DeviceDisconnectCallback(removedList);
-        });
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
-    mDeviceList = mCtx.queryDeviceList();
-    ROS_INFO("dev count: %d", mDeviceList->deviceCount());
-    for (int i = 0; i < mDeviceList->deviceCount(); i++)
+    // std::string ns = ros::this_node::getNamespace();
+    // ros::ServiceClient client = nh.serviceClient<orbbec_camera::GetDeviceList>(ns + "get_device_list");
+    ros::ServiceClient client = nh.serviceClient<orbbec_camera::GetDeviceList>("/get_device_list");
+    orbbec_camera::GetDeviceList srv;
+    if(client.call(srv))
     {
-        auto dev = mDeviceList->createDevice(i);
-        auto devInfo = dev->getDeviceInfo();
-        orbbec_camera::DeviceInfo info;
-        info.name = devInfo->name();
-        info.vid = devInfo->vid();
-        info.pid = devInfo->pid();
-        info.sn = devInfo->serialNumber();
-        mDevInfos.push_back(info);
-        ROS_INFO("Device found: %s %x:%x %s", info.name.c_str(), info.vid, info.pid, info.sn.c_str());
+        ROS_INFO("Get device list");
+        mDevInfos = srv.response.dev_infos;
     }
+    else
+    {
+        ROS_INFO("Get device list failed");
+    }
+    // mCtx.setDeviceChangedCallback(
+    //     [this](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> addedList) {
+    //         DeviceConnectCallback(addedList);
+    //         DeviceDisconnectCallback(removedList);
+    //     });
 
-    mGetVersionService = mNodeHandle.advertiseService("get_version", &OrbbecDeviceManager::getVersionCallback, this);
-    mDeviceListService =
-        mNodeHandle.advertiseService("get_device_list", &OrbbecDeviceManager::getDeviceListCallback, this);
+    // mDeviceList = mCtx.queryDeviceList();
+    // ROS_INFO("dev count: %d", mDeviceList->deviceCount());
+    // for (int i = 0; i < mDeviceList->deviceCount(); i++)
+    // {
+    //     auto dev = mDeviceList->createDevice(i);
+    //     auto devInfo = dev->getDeviceInfo();
+    //     orbbec_camera::DeviceInfo info;
+    //     info.name = devInfo->name();
+    //     info.vid = devInfo->vid();
+    //     info.pid = devInfo->pid();
+    //     info.sn = devInfo->serialNumber();
+    //     mDevInfos.push_back(info);
+    //     ROS_INFO("Device found: %s %x:%x %s", info.name.c_str(), info.vid, info.pid, info.sn.c_str());
+    // }
+
+    // mGetVersionService = mNodeHandle.advertiseService("get_version", &OrbbecDeviceManager::getVersionCallback, this);
+    // mDeviceListService =
+    //     mNodeHandle.advertiseService("get_device_list", &OrbbecDeviceManager::getDeviceListCallback, this);
 
     findDevice();
 
@@ -49,6 +66,8 @@ OrbbecDeviceManager::~OrbbecDeviceManager()
 
 void OrbbecDeviceManager::findDevice()
 {
+    mDeviceList = mCtx.queryDeviceList();
+
     if (mDevInfos.size() == 0)
     {
         ROS_WARN("No device connect");
