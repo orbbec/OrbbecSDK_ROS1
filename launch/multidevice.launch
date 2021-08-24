@@ -17,7 +17,7 @@
         <node pkg="orbbec_camera" type="device_list_node" name="ob_device_list" />
     <!-- </group> -->
 
-    <include file="$(find orbbec_camera)/launch/device.launch">
+    <include file="$(find orbbec_camera)/launch/include/orbbec.launch">
         <arg name="camera" value="$(arg camera1)" />
         <arg name="device_name" value="$(arg device_name1)" />
         <arg name="sn" value="$(arg sn1)" />
@@ -25,7 +25,7 @@
         <arg name="pid" value="$(arg pid1)" />
     </include>
 
-    <include file="$(find orbbec_camera)/launch/device.launch">
+    <include file="$(find orbbec_camera)/launch/include/orbbec.launch">
         <arg name="camera" value="$(arg camera2)" />
         <arg name="device_name" value="$(arg device_name2)" />
         <arg name="sn" value="$(arg sn2)" />
