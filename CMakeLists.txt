@@ -203,6 +203,8 @@ target_link_libraries(${PROJECT_NAME}_node
 
 add_executable(device_list_node src/orbbec_device_list.cpp)
 
+add_dependencies(device_list_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 target_link_libraries(device_list_node 
   ${catkin_LIBRARIES}
   ${ORBBEC_SDK_LIBRARIES}
