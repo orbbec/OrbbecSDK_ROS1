@@ -5,12 +5,20 @@
     <arg name="vid" default="11205" />
     <arg name="pid" default="1590" />
 
+    <node pkg="tf" type="static_transform_publisher" name="orbbec_depth_frame" args="0 0 0 0 0 0 /map /orbbec_depth_frame 100" />
+
     <group ns="$(arg camera)">
         <node pkg="orbbec_camera" type="orbbec_camera_node" name="ob_camera">
             <param name="device_name" type="string" value="$(arg device_name)" />
             <param name="sn" type="string" value="$(arg sn)" />
             <param name="vid" type="int" value="$(arg vid)" />
             <param name="pid" type="int" value="$(arg pid)" />
+        </node>
+        <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
+        <node pkg="nodelet" type="nodelet" name="point_cloud_xyz"
+            args="load depth_image_proc/point_cloud_xyz nodelet_manager">
+            <remap from="image_rect" to="depth/image_raw"/>
+            <remap from="camera_info" to="depth/camera_info"/>
         </node>
     </group>
 

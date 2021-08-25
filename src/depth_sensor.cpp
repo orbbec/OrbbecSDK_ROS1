@@ -30,8 +30,8 @@ DepthSensor::DepthSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_
         mNodeHandle.advertiseService("depth/enable_stream", &DepthSensor::enableStreamCallback, this);
 
     image_transport::ImageTransport it(nh);
-    // mDepthPub = it.advertise("camera/depth", 1);
-    mDepthPub = it.advertiseCamera("depth/image_raw", 1);
+    mDepthPub = it.advertise("depth/image_raw", 1);
+    // mDepthPub = it.advertiseCamera("depth/image_raw", 1);
     mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("depth/camera_info", 1);
 
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
@@ -137,23 +137,27 @@ void DepthSensor::startDepthStream()
     if (mDepthProfile != nullptr)
     {
         mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame) {
+            ros::Time ros_now = ros::Time::now();
+
             sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+            image->header.stamp = ros_now;
+            image->header.frame_id = "orbbec_depth_frame";
             image->width = frame->width();
             image->height = frame->height();
             image->step = frame->width() * 2;
-            image->encoding = sensor_msgs::image_encodings::MONO16;
+            image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
             image->data.resize(frame->dataSize());
             memcpy(&image->data[0], frame->data(), frame->dataSize());
 
             sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+            cinfo->header.stamp = ros_now;
+            cinfo->header.frame_id = "orbbec_depth_frame";
             cinfo->width = frame->width();
             cinfo->height = frame->height();
             cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-            cinfo->header.frame_id = mFrameId;
-            cinfo->header.stamp = ros::Time(frame->timeStamp());
 
-            // mDepthPub.publish(image);
-            mDepthPub.publish(image, cinfo);
+            mDepthPub.publish(image);
+            // mDepthPub.publish(image, cinfo);
             mCameraInfoPub.publish(cinfo);
         });
         mIsStreaming = true;
