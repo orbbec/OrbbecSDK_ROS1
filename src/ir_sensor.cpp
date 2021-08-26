@@ -131,7 +131,10 @@ void IrSensor::startIrStream()
     if (mIrProfile != nullptr)
     {
         mIrSensor->start(mIrProfile, [&](std::shared_ptr<ob::Frame> frame) {
+            ros::Time ros_now = ros::Time::now();
+
             sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+            image->header.stamp = ros_now;
             image->width = frame->width();
             image->height = frame->height();
             image->step = frame->width() * 2;

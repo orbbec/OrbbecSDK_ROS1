@@ -6,6 +6,7 @@
     <arg name="pid" default="1590" />
 
     <node pkg="tf" type="static_transform_publisher" name="orbbec_depth_frame" args="0 0 0 0 0 0 /map /orbbec_depth_frame 100" />
+    <node pkg="tf" type="static_transform_publisher" name="orbbec_color_frame" args="0 0 0 0 0 0 /map /orbbec_color_frame 100" />
 
     <group ns="$(arg camera)">
         <node pkg="orbbec_camera" type="orbbec_camera_node" name="ob_camera">
@@ -20,24 +21,16 @@
             <remap from="image_rect" to="depth/image_raw"/>
             <remap from="camera_info" to="depth/camera_info"/>
         </node>
+        <node pkg="nodelet" type="nodelet" name="register"
+            args="load depth_image_proc/register nodelet_manager">
+            <remap from="rgb/camera_info" to="color/camera_info"/>
+            <remap from="depth/image_rect" to="depth/image_raw"/>
+            <remap from="depth/camera_info" to="depth/camera_info"/>
+        </node>
+        <node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb"
+            args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager">
+            <remap from="rgb/camera_info" to="color/camera_info" />
+            <remap from="rgb/image_rect_color" to="color/image_raw" />
+        </node>
     </group>
-
-    <!-- <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
-    <node pkg="nodelet" type="nodelet" name="ob_points"
-        args="load depth_image_proc/point_cloud_xyz nodelet_manager">
-        <remap from="camera_info" to="/camera/depth/camera_info"/>
-        <remap from="image_rect" to="/camera/depth/image_rect"/>
-        <remap from="points" to="/camera/depth/points"/>
-    </node> -->
-
-    <!-- <node pkg="image_proc" type="image_proc" name="image_proc" ns="camera/color"/> -->
-    <!-- <node pkg="image_proc" type="image_proc" name="image_proc">
-        <remap from="image_raw" to="camera/color/image_raw" />
-        <remap from="camera_info" to="camera/color/camera_info" />
-        <remap from="image_color" to="camera/color/image_color" />
-        <remap from="image_mono" to="camera/color/image_mono" />
-        <remap from="image_rect" to="camera/color/image_rect" />
-        <remap from="image_rect_color" to="camera/color/image_rect_color" />
-    </node> -->
-
 </launch>

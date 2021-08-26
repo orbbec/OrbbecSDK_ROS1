@@ -190,7 +190,11 @@ void ColorSensor::startColorStream()
             void* rgbBuffer = getRgbBuffer(width * height * 3);
             libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * 4, (uint8_t*)rgbBuffer, width * 3, width, height);
 
+            ros::Time ros_now = ros::Time::now();
+
             sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
+            image->header.stamp = ros_now;
+            image->header.frame_id = "orbbec_color_frame";
             image->width = width;
             image->height = height;
             image->step = width * 3;
@@ -199,11 +203,11 @@ void ColorSensor::startColorStream()
             memcpy(&image->data[0], mRgbBuffer, mRgbBufferSize);
 
             sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+            cinfo->header.stamp = ros_now;
+            cinfo->header.frame_id = "orbbec_color_frame";
             cinfo->width = frame->width();
             cinfo->height = frame->height();
             cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-            cinfo->header.frame_id = mFrameId;
-            cinfo->header.stamp = ros::Time(frame->timeStamp());
 
             //    mColorPub.publish(image, cinfo);
 
