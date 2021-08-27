@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0.2)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 project(orbbec_camera)
 
@@ -148,9 +150,9 @@ set(JPEG_LIBRARY jpeg-static)
 set(JPEG_FOUND TRUE)
 
 add_subdirectory(libyuv)
+set(YUV_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libyuv/include")
 
 set(orbbec_camera_INCLUDE_DIR "include/orbbec_camera")
-set(YUV_INCLUDE_DIR "libyuv/include")
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
@@ -160,11 +162,6 @@ include_directories(
   ${ORBBEC_SDK_INCLUDE_DIR}
   ${YUV_INCLUDE_DIR}
 )
-
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/orbbec_ros_sdk.cpp
-# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -208,6 +205,26 @@ add_dependencies(device_list_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 target_link_libraries(device_list_node 
   ${catkin_LIBRARIES}
   ${ORBBEC_SDK_LIBRARIES}
+)
+
+## Declare a C++ library
+add_library(${PROJECT_NAME}_nodelet
+  src/nodelet.cpp
+  src/orbbec_device_manager.cpp
+  src/orbbec_device.cpp
+  src/color_sensor.cpp
+  src/depth_sensor.cpp
+  src/ir_sensor.cpp
+)
+
+add_dependencies(${PROJECT_NAME}_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(${PROJECT_NAME}_nodelet
+  ${catkin_LIBRARIES}
+  ${ORBBEC_SDK_LIBRARIES}
+  yuv
+  # ${YUV_LIBRARY}
 )
 
 #############
