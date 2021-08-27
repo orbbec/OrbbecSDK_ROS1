@@ -5,10 +5,12 @@
     <arg name="vid" default="11205" />
     <arg name="pid" default="1590" />
 
-    <node pkg="tf" type="static_transform_publisher" name="orbbec_depth_frame" args="0 0 0 0 0 0 /map /orbbec_depth_frame 100" />
-    <node pkg="tf" type="static_transform_publisher" name="orbbec_color_frame" args="0 0 0 0 0 0 /map /orbbec_color_frame 100" />
 
     <group ns="$(arg camera)">
+        <node pkg="tf" type="static_transform_publisher" name="orbbec_depth_frame" 
+            args="0 0 0 0 0 0 /map /orbbec_depth_frame 100" />
+        <node pkg="tf" type="static_transform_publisher" name="orbbec_color_frame" 
+            args="0 0 0 0 0 0 /map /orbbec_color_frame 100" />
         <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
         <node pkg="nodelet" type="nodelet" name="ob_camera" 
           args="load OrbbecNodelet nodelet_manager">
