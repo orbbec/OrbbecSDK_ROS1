@@ -163,6 +163,26 @@ include_directories(
   ${YUV_INCLUDE_DIR}
 )
 
+## Declare a C++ library
+add_library(${PROJECT_NAME}_nodelet
+  src/nodelet.cpp
+  src/orbbec_device_manager.cpp
+  src/orbbec_device.cpp
+  src/color_sensor.cpp
+  src/depth_sensor.cpp
+  src/ir_sensor.cpp
+)
+
+add_dependencies(${PROJECT_NAME}_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(${PROJECT_NAME}_nodelet
+  ${catkin_LIBRARIES}
+  ${ORBBEC_SDK_LIBRARIES}
+  yuv
+  # ${YUV_LIBRARY}
+)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -205,26 +225,6 @@ add_dependencies(device_list_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 target_link_libraries(device_list_node 
   ${catkin_LIBRARIES}
   ${ORBBEC_SDK_LIBRARIES}
-)
-
-## Declare a C++ library
-add_library(${PROJECT_NAME}_nodelet
-  src/nodelet.cpp
-  src/orbbec_device_manager.cpp
-  src/orbbec_device.cpp
-  src/color_sensor.cpp
-  src/depth_sensor.cpp
-  src/ir_sensor.cpp
-)
-
-add_dependencies(${PROJECT_NAME}_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_nodelet
-  ${catkin_LIBRARIES}
-  ${ORBBEC_SDK_LIBRARIES}
-  yuv
-  # ${YUV_LIBRARY}
 )
 
 #############
