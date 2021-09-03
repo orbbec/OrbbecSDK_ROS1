@@ -11,9 +11,9 @@
             args="0 0 0 0 0 0 /map /orbbec_depth_frame 100" />
         <node pkg="tf" type="static_transform_publisher" name="orbbec_color_frame" 
             args="0 0 0 0 0 0 /map /orbbec_color_frame 100" />
-        <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
+        <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" output="screen" />
         <node pkg="nodelet" type="nodelet" name="ob_camera" 
-          args="load OrbbecNodelet nodelet_manager">
+            args="load OrbbecNodelet nodelet_manager">
             <param name="device_name" type="string" value="$(arg device_name)" />
             <param name="sn" type="string" value="$(arg sn)" />
             <param name="vid" type="int" value="$(arg vid)" />

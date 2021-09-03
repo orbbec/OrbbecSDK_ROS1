@@ -188,7 +188,6 @@ void ColorSensor::startColorStream()
             void* argbBuffer = getArgbBuffer(width * height * kArgbChannel);
             libyuv::MJPGToARGB((uint8_t*)frame->data(), frame->dataSize(), (uint8_t*)argbBuffer, width * kArgbChannel, width,
                                height, width, height);
-
             void* rgbBuffer = getRgbBuffer(width * height * kRgbChannel);
             libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * kArgbChannel, (uint8_t*)rgbBuffer, width * kRgbChannel, width, height);
 
@@ -279,7 +278,6 @@ std::shared_ptr<ob::StreamProfile> ColorSensor::findProfile(int width, int heigh
             {
                 return profile;
             }
-            return profile;
         }
     }
     return nullptr;

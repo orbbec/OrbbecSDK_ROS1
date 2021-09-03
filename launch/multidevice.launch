@@ -11,7 +11,7 @@
     <arg name="vid2" default="0" />
     <arg name="pid2" default="0" />
 
-    <node pkg="orbbec_camera" type="device_list_node" name="ob_device_list" />
+    <node pkg="orbbec_camera" type="device_list_node" name="ob_device_list" respawn="true" output="screen" />
 
     <include file="$(find orbbec_camera)/launch/include/orbbec.launch">
         <arg name="camera" value="$(arg camera1)" />
