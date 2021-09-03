@@ -183,12 +183,14 @@ void ColorSensor::startColorStream()
             int width = frame->width();
             int height = frame->height();
 
-            void* argbBuffer = getArgbBuffer(width * height * 4);
-            libyuv::MJPGToARGB((uint8_t*)frame->data(), frame->dataSize(), (uint8_t*)argbBuffer, width * 4, width,
+            const int kArgbChannel = 4;
+            const int kRgbChannel = 3;
+            void* argbBuffer = getArgbBuffer(width * height * kArgbChannel);
+            libyuv::MJPGToARGB((uint8_t*)frame->data(), frame->dataSize(), (uint8_t*)argbBuffer, width * kArgbChannel, width,
                                height, width, height);
 
-            void* rgbBuffer = getRgbBuffer(width * height * 3);
-            libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * 4, (uint8_t*)rgbBuffer, width * 3, width, height);
+            void* rgbBuffer = getRgbBuffer(width * height * kRgbChannel);
+            libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * kArgbChannel, (uint8_t*)rgbBuffer, width * kRgbChannel, width, height);
 
             ros::Time ros_now = ros::Time::now();
 
