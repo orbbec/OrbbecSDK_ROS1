@@ -1,3 +1,15 @@
+/**************************************************************************/
+/*                                                                        */
+/* Copyright (c) 2013-2021 Orbbec 3D Technology, Inc                      */
+/*                                                                        */
+/* PROPRIETARY RIGHTS of Orbbec 3D Technology are involved in the         */
+/* subject matter of this material. All manufacturing, reproduction, use, */
+/* and sales rights pertaining to this subject matter are governed by the */
+/* license agreement. The recipient of this software implicitly accepts   */
+/* the terms of the license.                                              */
+/*                                                                        */
+/**************************************************************************/
+
 #pragma once
 
 #include "libobsensor/hpp/Context.hpp"
@@ -19,6 +31,15 @@
 
 class IrSensor
 {
+  public:
+    IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_ptr<ob::Device> device,
+             const std::shared_ptr<ob::Sensor> sensor);
+    ~IrSensor();
+
+    void startIrStream();
+    void stopIrStream();
+    void reconfigIrStream(int width, int height, int fps);
+
   private:
     ros::NodeHandle& mNodeHandle;
     ros::NodeHandle& mPrivateNodeHandle;
@@ -34,8 +55,8 @@ class IrSensor
     ros::ServiceServer mSetAutoWhiteBalanceService;
     ros::ServiceServer mEnableStreamService;
 
-    std::shared_ptr<ob::Device> mDevice;
-    std::shared_ptr<ob::Sensor> mIrSensor;
+    const std::shared_ptr<ob::Device> mDevice;
+    const std::shared_ptr<ob::Sensor> mIrSensor;
     std::shared_ptr<ob::StreamProfile> mIrProfile;
 
     bool mIsStreaming;
@@ -56,13 +77,4 @@ class IrSensor
     bool setAutoWhiteBalanceCallback(orbbec_camera::SetAutoWhiteBalanceRequest& req,
                                      orbbec_camera::SetAutoWhiteBalanceResponse& res);
     bool enableStreamCallback(orbbec_camera::EnableStreamRequest& req, orbbec_camera::EnableStreamResponse& res);
-
-  public:
-    IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device,
-             std::shared_ptr<ob::Sensor> sensor);
-    ~IrSensor();
-
-    void startIrStream();
-    void stopIrStream();
-    void reconfigIrStream(int width, int height, int fps);
 };

@@ -7,7 +7,7 @@
 #include "sensor_msgs/distortion_models.h"
 #include "libyuv.h"
 
-OrbbecDevice::OrbbecDevice(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> dev)
+OrbbecDevice::OrbbecDevice(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_ptr<ob::Device> dev)
     : mNodeHandle(nh), mPrivateNodeHandle(pnh), mReconfigServer(pnh), mDevice(dev)
 {
     mSetLaserEnableService =

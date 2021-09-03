@@ -8,8 +8,8 @@
 #include "libyuv.h"
 #include "utils.h"
 
-DepthSensor::DepthSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device,
-                         std::shared_ptr<ob::Sensor> sensor)
+DepthSensor::DepthSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_ptr<ob::Device> device,
+                         const std::shared_ptr<ob::Sensor> sensor)
     : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mDepthSensor(sensor), mFrameId(""), mIsStreaming(false)
 {
     mCameraInfoService =

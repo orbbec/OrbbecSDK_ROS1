@@ -8,8 +8,8 @@
 #include "libyuv.h"
 #include "utils.h"
 
-IrSensor::IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device,
-                   std::shared_ptr<ob::Sensor> sensor)
+IrSensor::IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_ptr<ob::Device> device,
+                   const std::shared_ptr<ob::Sensor> sensor)
     : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mIrSensor(sensor), mIsStreaming(false)
 {
     mGetCameraInfoService = mNodeHandle.advertiseService("ir/get_camera_info", &IrSensor::getCameraInfoCallback, this);

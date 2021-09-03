@@ -1,3 +1,15 @@
+/**************************************************************************/
+/*                                                                        */
+/* Copyright (c) 2013-2021 Orbbec 3D Technology, Inc                      */
+/*                                                                        */
+/* PROPRIETARY RIGHTS of Orbbec 3D Technology are involved in the         */
+/* subject matter of this material. All manufacturing, reproduction, use, */
+/* and sales rights pertaining to this subject matter are governed by the */
+/* license agreement. The recipient of this software implicitly accepts   */
+/* the terms of the license.                                              */
+/*                                                                        */
+/**************************************************************************/
+
 #pragma once
 
 #include "libobsensor/hpp/Context.hpp"
@@ -18,11 +30,15 @@
 
 class OrbbecDevice
 {
+  public:
+    OrbbecDevice(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_ptr<ob::Device> dev);
+    ~OrbbecDevice();
+
   private:
     ros::NodeHandle& mNodeHandle;
     ros::NodeHandle& mPrivateNodeHandle;
 
-    std::shared_ptr<ob::Device> mDevice;
+    const std::shared_ptr<ob::Device> mDevice;
     std::shared_ptr<ob::Sensor> mColorSensor;
     std::shared_ptr<ob::Sensor> mDepthSensor;
     std::shared_ptr<ob::Sensor> mIrSensor;
@@ -44,8 +60,4 @@ class OrbbecDevice
     bool setFanModeCallback(orbbec_camera::SetFanModeRequest& req, orbbec_camera::SetFanModeResponse& res);
 
     void reconfigCallback(orbbec_camera::OrbbecConfig& config, uint32_t level);
-
-  public:
-    OrbbecDevice(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> dev);
-    ~OrbbecDevice();
 };

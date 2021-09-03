@@ -8,8 +8,8 @@
 #include "libyuv.h"
 #include "utils.h"
 
-ColorSensor::ColorSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, std::shared_ptr<ob::Device> device,
-                         std::shared_ptr<ob::Sensor> sensor)
+ColorSensor::ColorSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_ptr<ob::Device> device,
+                         const std::shared_ptr<ob::Sensor> sensor)
     : mNodeHandle(nh), mPrivateNodeHandle(pnh), mDevice(device), mColorSensor(sensor), mIsStreaming(false),
       mArgbBufferSize(0), mArgbBuffer(NULL), mRgbBufferSize(0), mRgbBuffer(NULL)
 {
