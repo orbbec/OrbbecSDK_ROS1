@@ -14,18 +14,18 @@ DepthSensor::DepthSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::s
 {
     mCameraInfoService =
         mNodeHandle.advertiseService("depth/get_camera_info", &DepthSensor::getCameraInfoCallback, this);
-    mGetExposureService = mNodeHandle.advertiseService("depth/get_exposure", &DepthSensor::getExposureCallback, this);
-    mSetExposureService = mNodeHandle.advertiseService("depth/set_exposure", &DepthSensor::setExposureCallback, this);
-    mGetGainService = mNodeHandle.advertiseService("depth/get_gain", &DepthSensor::getGainCallback, this);
-    mSetGainService = mNodeHandle.advertiseService("depth/set_gain", &DepthSensor::setGainCallback, this);
-    mGetWhiteBalanceService =
-        mNodeHandle.advertiseService("depth/get_white_balance", &DepthSensor::getWhiteBalanceCallback, this);
-    mSetWhiteBalanceService =
-        mNodeHandle.advertiseService("depth/set_white_balance", &DepthSensor::setWhiteBalanceCallback, this);
-    mSetAutoExposureService =
-        mNodeHandle.advertiseService("depth/set_auto_exposure", &DepthSensor::setAutoExposureCallback, this);
-    mSetAutoWhiteBalanceService =
-        mNodeHandle.advertiseService("depth/set_auto_white_balance", &DepthSensor::setAutoWhiteBalanceCallback, this);
+    // mGetExposureService = mNodeHandle.advertiseService("depth/get_exposure", &DepthSensor::getExposureCallback, this);
+    // mSetExposureService = mNodeHandle.advertiseService("depth/set_exposure", &DepthSensor::setExposureCallback, this);
+    // mGetGainService = mNodeHandle.advertiseService("depth/get_gain", &DepthSensor::getGainCallback, this);
+    // mSetGainService = mNodeHandle.advertiseService("depth/set_gain", &DepthSensor::setGainCallback, this);
+    // mGetWhiteBalanceService =
+    //     mNodeHandle.advertiseService("depth/get_white_balance", &DepthSensor::getWhiteBalanceCallback, this);
+    // mSetWhiteBalanceService =
+    //     mNodeHandle.advertiseService("depth/set_white_balance", &DepthSensor::setWhiteBalanceCallback, this);
+    // mSetAutoExposureService =
+    //     mNodeHandle.advertiseService("depth/set_auto_exposure", &DepthSensor::setAutoExposureCallback, this);
+    // mSetAutoWhiteBalanceService =
+    //     mNodeHandle.advertiseService("depth/set_auto_white_balance", &DepthSensor::setAutoWhiteBalanceCallback, this);
     mEnableStreamService =
         mNodeHandle.advertiseService("depth/enable_stream", &DepthSensor::enableStreamCallback, this);
 

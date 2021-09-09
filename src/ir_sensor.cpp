@@ -17,14 +17,14 @@ IrSensor::IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_
     mSetExposureService = mNodeHandle.advertiseService("ir/set_exposure", &IrSensor::setExposureCallback, this);
     mGetGainService = mNodeHandle.advertiseService("ir/get_gain", &IrSensor::getGainCallback, this);
     mSetGainService = mNodeHandle.advertiseService("ir/set_gain", &IrSensor::setGainCallback, this);
-    mGetWhiteBalanceService =
-        mNodeHandle.advertiseService("ir/get_white_balance", &IrSensor::getWhiteBalanceCallback, this);
-    mSetWhiteBalanceService =
-        mNodeHandle.advertiseService("ir/set_white_balance", &IrSensor::setWhiteBalanceCallback, this);
-    mSetAutoExposureService =
-        mNodeHandle.advertiseService("ir/set_auto_exposure", &IrSensor::setAutoExposureCallback, this);
-    mSetAutoWhiteBalanceService =
-        mNodeHandle.advertiseService("ir/set_auto_white_balance", &IrSensor::setAutoWhiteBalanceCallback, this);
+    // mGetWhiteBalanceService =
+    //     mNodeHandle.advertiseService("ir/get_white_balance", &IrSensor::getWhiteBalanceCallback, this);
+    // mSetWhiteBalanceService =
+    //     mNodeHandle.advertiseService("ir/set_white_balance", &IrSensor::setWhiteBalanceCallback, this);
+    // mSetAutoExposureService =
+    //     mNodeHandle.advertiseService("ir/set_auto_exposure", &IrSensor::setAutoExposureCallback, this);
+    // mSetAutoWhiteBalanceService =
+    //     mNodeHandle.advertiseService("ir/set_auto_white_balance", &IrSensor::setAutoWhiteBalanceCallback, this);
     mEnableStreamService = mNodeHandle.advertiseService("ir/enable_stream", &IrSensor::enableStreamCallback, this);
 
     image_transport::ImageTransport it(nh);
