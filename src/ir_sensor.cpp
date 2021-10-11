@@ -131,16 +131,18 @@ void IrSensor::startIrStream()
     if (mIrProfile != nullptr)
     {
         mIrSensor->start(mIrProfile, [&](std::shared_ptr<ob::Frame> frame) {
+            auto irFrame = frame->as<ob::VideoFrame>();
+
             ros::Time ros_now = ros::Time::now();
 
             sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
             image->header.stamp = ros_now;
-            image->width = frame->width();
-            image->height = frame->height();
-            image->step = frame->width() * 2;
+            image->width = irFrame->width();
+            image->height = irFrame->height();
+            image->step = irFrame->width() * 2;
             image->encoding = sensor_msgs::image_encodings::MONO16;
-            image->data.resize(frame->dataSize());
-            memcpy(&image->data[0], frame->data(), frame->dataSize());
+            image->data.resize(irFrame->dataSize());
+            memcpy(&image->data[0], irFrame->data(), irFrame->dataSize());
 
             //  sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
             //  cinfo->width = frame->width();
@@ -185,7 +187,9 @@ void IrSensor::reconfigIrStream(int width, int height, int fps)
             mIrProfile = profile;
             if (mIsStreaming)
             {
-                mIrSensor->switchProfile(mIrProfile);
+                stopIrStream();
+                startIrStream();
+                // mIrSensor->switchProfile(mIrProfile);
             }
             ROS_INFO("Reconfig ir stream: %dx%d(%d)", mIrProfile->width(), mIrProfile->height(), mIrProfile->fps());
         }
@@ -198,10 +202,10 @@ void IrSensor::reconfigIrStream(int width, int height, int fps)
 
 std::shared_ptr<ob::StreamProfile> IrSensor::findProfile(int width, int height, int fps)
 {
-    auto profiles = mIrSensor->getStreamProfiles();
-    for (int i = 0; i < profiles.size(); i++)
+    auto profiles = mIrSensor->getStreamProfileList();
+    for (int i = 0; i < profiles->count(); i++)
     {
-        auto profile = profiles[i];
+        auto profile = profiles->getProfile(i);
         if (profile->format() == OB_FORMAT_Y16)
         {
             if (width == 0 && height == 0 && fps == 0)

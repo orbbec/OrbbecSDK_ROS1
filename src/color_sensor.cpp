@@ -180,13 +180,14 @@ void ColorSensor::startColorStream()
     if (mColorProfile != nullptr)
     {
         mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame) {
-            int width = frame->width();
-            int height = frame->height();
+            auto colorFrame = frame->as<ob::VideoFrame>();
+            int width = colorFrame->width();
+            int height = colorFrame->height();
 
             const int kArgbChannel = 4;
             const int kRgbChannel = 3;
             void* argbBuffer = getArgbBuffer(width * height * kArgbChannel);
-            libyuv::MJPGToARGB((uint8_t*)frame->data(), frame->dataSize(), (uint8_t*)argbBuffer, width * kArgbChannel, width,
+            libyuv::MJPGToARGB((uint8_t*)colorFrame->data(), colorFrame->dataSize(), (uint8_t*)argbBuffer, width * kArgbChannel, width,
                                height, width, height);
             void* rgbBuffer = getRgbBuffer(width * height * kRgbChannel);
             libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * kArgbChannel, (uint8_t*)rgbBuffer, width * kRgbChannel, width, height);
@@ -206,8 +207,8 @@ void ColorSensor::startColorStream()
             sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
             cinfo->header.stamp = ros_now;
             cinfo->header.frame_id = "orbbec_color_frame";
-            cinfo->width = frame->width();
-            cinfo->height = frame->height();
+            cinfo->width = colorFrame->width();
+            cinfo->height = colorFrame->height();
             cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
 
             //    mColorPub.publish(image, cinfo);
@@ -250,7 +251,9 @@ void ColorSensor::reconfigColorStream(int width, int height, int fps)
             mColorProfile = profile;
             if (mIsStreaming)
             {
-                mColorSensor->switchProfile(mColorProfile);
+                stopColorStream();
+                startColorStream();
+                // mColorSensor->switchProfile(mColorProfile);
             }
             ROS_INFO("Reconfig color stream: %dx%d(%d)", mColorProfile->width(), mColorProfile->height(),
                      mColorProfile->fps());
@@ -264,10 +267,10 @@ void ColorSensor::reconfigColorStream(int width, int height, int fps)
 
 std::shared_ptr<ob::StreamProfile> ColorSensor::findProfile(int width, int height, int fps)
 {
-    auto profiles = mColorSensor->getStreamProfiles();
-    for (int i = 0; i < profiles.size(); i++)
+    auto profiles = mColorSensor->getStreamProfileList();
+    for (int i = 0; i < profiles->count(); i++)
     {
-        auto profile = profiles[i];
+        auto profile = profiles->getProfile(i);
         if (profile->format() == OB_FORMAT_MJPG)
         {
             if (width == 0 && height == 0 && fps == 0)

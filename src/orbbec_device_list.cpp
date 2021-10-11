@@ -1,6 +1,7 @@
 #include "libobsensor/hpp/Context.hpp"
 #include "libobsensor/hpp/Device.hpp"
 #include "libobsensor/ObSensor.h"
+#include "libobsensor/ObSensor.hpp"
 #include "ros/ros.h"
 #include "version.h"
 #include "orbbec_camera/GetVersion.h"
@@ -23,7 +24,9 @@ bool getVersionCallback(orbbec_camera::GetVersion::Request& request,
                                              orbbec_camera::GetVersion::Response& response)
 {
     response.version = OB_ROS_VERSION_STR;
-    response.core_version = OB_API_VERSION_STR;
+    std::stringstream ss; 
+    ss << ob::Version::major() << "." << ob::Version::minor() << "." << ob::Version::patch(); 
+    response.core_version = ss.str();
     return true;
 }
 
@@ -51,7 +54,7 @@ int main(int argc, char** argv)
     auto deviceList = ctx.queryDeviceList();
     for (int i = 0; i < deviceList->deviceCount(); i++)
     {
-        auto dev = deviceList->createDevice(i);
+        auto dev = deviceList->getDevice(i);
         auto devInfo = dev->getDeviceInfo();
         orbbec_camera::DeviceInfo info;
         info.name = devInfo->name();

@@ -75,7 +75,7 @@ void OrbbecDeviceManager::findDevice()
     }
     if (mSerialNumber == "" && mDeviceName == "" && mPid == 0 && mVid == 0)
     {
-        mDevice = mDeviceList->createDevice(0);
+        mDevice = mDeviceList->getDevice(0);
     }
     else
     {
@@ -84,19 +84,19 @@ void OrbbecDeviceManager::findDevice()
             auto devInfo = mDevInfos[i];
             if (mSerialNumber != "" && devInfo.sn == mSerialNumber)
             {
-                mDevice = mDeviceList->createDevice(i);
+                mDevice = mDeviceList->getDevice(i);
                 ROS_INFO("Find device with sn: %s", mSerialNumber.c_str());
                 break;
             }
             else if (mPid != 0 && mVid != 0 && devInfo.pid == mPid && devInfo.vid == mVid)
             {
-                mDevice = mDeviceList->createDevice(i);
+                mDevice = mDeviceList->getDevice(i);
                 ROS_INFO("Find device with vid pid: %d, %d", mVid, mPid);
                 break;
             }
             if (mDeviceName != "" && devInfo.name == mDeviceName)
             {
-                mDevice = mDeviceList->createDevice(i);
+                mDevice = mDeviceList->getDevice(i);
                 ROS_INFO("Find device with name: %s", mDeviceName.c_str());
                 break;
             }
@@ -114,27 +114,29 @@ void OrbbecDeviceManager::openDevice()
     mDeviceNode = std::make_shared<OrbbecDevice>(mNodeHandle, mPrivateNodeHandle, mDevice);
 }
 
-void OrbbecDeviceManager::DeviceConnectCallback(std::shared_ptr<ob::DeviceList> connectList)
-{
-    ROS_INFO("Device connect: %d", connectList->deviceCount());
-}
+// void OrbbecDeviceManager::DeviceConnectCallback(std::shared_ptr<ob::DeviceList> connectList)
+// {
+//     ROS_INFO("Device connect: %d", connectList->deviceCount());
+// }
 
-void OrbbecDeviceManager::DeviceDisconnectCallback(std::shared_ptr<ob::DeviceList> disconnectList)
-{
-    ROS_INFO("Device disconnect: %d", disconnectList->deviceCount());
-}
+// void OrbbecDeviceManager::DeviceDisconnectCallback(std::shared_ptr<ob::DeviceList> disconnectList)
+// {
+//     ROS_INFO("Device disconnect: %d", disconnectList->deviceCount());
+// }
 
-bool OrbbecDeviceManager::getVersionCallback(orbbec_camera::GetVersion::Request& request,
-                                             orbbec_camera::GetVersion::Response& response)
-{
-    response.version = OB_ROS_VERSION_STR;
-    response.core_version = OB_API_VERSION_STR;
-    return true;
-}
+// bool OrbbecDeviceManager::getVersionCallback(orbbec_camera::GetVersion::Request& request,
+//                                              orbbec_camera::GetVersion::Response& response)
+// {
+//     response.version = OB_ROS_VERSION_STR;
+//     std::stringstream ss; 
+//     ss << ob::Version::major() << "." << ob::Version::minor() << "." << ob::Version::patch(); 
+//     response.core_version = ss.str();
+//     return true;
+// }
 
-bool OrbbecDeviceManager::getDeviceListCallback(orbbec_camera::GetDeviceList::Request& request,
-                                                orbbec_camera::GetDeviceList::Response& response)
-{
-    response.dev_infos = mDevInfos;
-    return true;
-}
+// bool OrbbecDeviceManager::getDeviceListCallback(orbbec_camera::GetDeviceList::Request& request,
+//                                                 orbbec_camera::GetDeviceList::Response& response)
+// {
+//     response.dev_infos = mDevInfos;
+//     return true;
+// }

@@ -137,23 +137,25 @@ void DepthSensor::startDepthStream()
     if (mDepthProfile != nullptr)
     {
         mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame) {
+            auto depthFrame = frame->as<ob::VideoFrame>();
+
             ros::Time ros_now = ros::Time::now();
 
             sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
             image->header.stamp = ros_now;
             image->header.frame_id = "orbbec_depth_frame";
-            image->width = frame->width();
-            image->height = frame->height();
-            image->step = frame->width() * 2;
+            image->width = depthFrame->width();
+            image->height = depthFrame->height();
+            image->step = depthFrame->width() * 2;
             image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
-            image->data.resize(frame->dataSize());
-            memcpy(&image->data[0], frame->data(), frame->dataSize());
+            image->data.resize(depthFrame->dataSize());
+            memcpy(&image->data[0], depthFrame->data(), depthFrame->dataSize());
 
             sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
             cinfo->header.stamp = ros_now;
             cinfo->header.frame_id = "orbbec_depth_frame";
-            cinfo->width = frame->width();
-            cinfo->height = frame->height();
+            cinfo->width = depthFrame->width();
+            cinfo->height = depthFrame->height();
             cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
 
             mDepthPub.publish(image);
@@ -195,7 +197,9 @@ void DepthSensor::reconfigDepthStream(int width, int height, int fps)
             mDepthProfile = profile;
             if (mIsStreaming)
             {
-                mDepthSensor->switchProfile(mDepthProfile);
+                stopDepthStream();
+                startDepthStream();
+                // mDepthSensor->switchProfile(mDepthProfile);
             }
             ROS_INFO("Reconfig depth stream: %dx%d(%d)", mDepthProfile->width(), mDepthProfile->height(),
                      mDepthProfile->fps());
@@ -209,10 +213,10 @@ void DepthSensor::reconfigDepthStream(int width, int height, int fps)
 
 std::shared_ptr<ob::StreamProfile> DepthSensor::findProfile(int width, int height, int fps)
 {
-    auto profiles = mDepthSensor->getStreamProfiles();
-    for (int i = 0; i < profiles.size(); i++)
+    auto profiles = mDepthSensor->getStreamProfileList();
+    for (int i = 0; i < profiles->count(); i++)
     {
-        auto profile = profiles[i];
+        auto profile = profiles->getProfile(i);
         if (profile->format() == OB_FORMAT_Y16)
         {
             if (width == 0 && height == 0 && fps == 0)

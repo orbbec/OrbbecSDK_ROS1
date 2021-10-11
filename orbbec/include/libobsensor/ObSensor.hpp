@@ -6,16 +6,13 @@
  * libobsensor的纯C++的入口文件
  */
 #pragma once
-#include "ObSensor.h"
-#include <algorithm>
-#include <memory>
-#include <vector>
-#include <functional>
 
 #include <libobsensor/hpp/Context.hpp>
 #include <libobsensor/hpp/Device.hpp>
-#include <libobsensor/hpp/Sensor.hpp>
+#include <libobsensor/hpp/Error.hpp>
 #include <libobsensor/hpp/Frame.hpp>
 #include <libobsensor/hpp/Pipeline.hpp>
+#include <libobsensor/hpp/Sensor.hpp>
 #include <libobsensor/hpp/StreamProfile.hpp>
+#include <libobsensor/hpp/Types.hpp>
 #include <libobsensor/hpp/Version.hpp>
