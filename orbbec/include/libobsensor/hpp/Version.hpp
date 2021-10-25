@@ -4,6 +4,8 @@
  *
  */
 
+#pragma once
+
 namespace ob {
 class OB_EXTENSION_API Version {
 public:

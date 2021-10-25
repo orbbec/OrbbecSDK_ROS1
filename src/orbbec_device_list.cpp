@@ -1,5 +1,6 @@
 #include "libobsensor/hpp/Context.hpp"
 #include "libobsensor/hpp/Device.hpp"
+#include "libobsensor/h/Version.h"
 #include "libobsensor/ObSensor.h"
 #include "libobsensor/ObSensor.hpp"
 #include "ros/ros.h"
@@ -25,7 +26,7 @@ bool getVersionCallback(orbbec_camera::GetVersion::Request& request,
 {
     response.version = OB_ROS_VERSION_STR;
     std::stringstream ss; 
-    ss << ob::Version::major() << "." << ob::Version::minor() << "." << ob::Version::patch(); 
+    ss << ob_get_major_version() << "." << ob_get_minor_version() << "." << ob_get_patch_version(); 
     response.core_version = ss.str();
     return true;
 }
