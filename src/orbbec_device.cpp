@@ -82,13 +82,13 @@ void OrbbecDevice::reconfigCallback(orbbec_camera::OrbbecConfig& config, uint32_
         colorFps = 30;
         break;
     case 3:
-        colorWidth = 1856;
-        colorHeight = 1392;
-        colorFps = 15;
-        break;
-    case 4:
         colorWidth = 800;
         colorHeight = 600;
+        colorFps = 30;
+        break;
+    case 4:
+        colorWidth = 1280;
+        colorHeight = 720;
         colorFps = 30;
         break;
     case 5:
@@ -97,9 +97,9 @@ void OrbbecDevice::reconfigCallback(orbbec_camera::OrbbecConfig& config, uint32_
         colorFps = 30;
         break;
     case 6:
-        colorWidth = 1280;
-        colorHeight = 720;
-        colorFps = 30;
+        colorWidth = 2048;
+        colorHeight = 1536;
+        colorFps = 15;
         break;
     default:
         break;
