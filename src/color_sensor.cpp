@@ -184,6 +184,17 @@ void ColorSensor::startColorStream()
             int width = colorFrame->width();
             int height = colorFrame->height();
 
+            // if(frame->format() != OB_FORMAT_MJPG)
+            // {
+            //     return;
+            // }
+            // auto data = ( unsigned char* )colorFrame->data();
+            // auto size = colorFrame->dataSize();
+            // if ( data[ 0 ] != 0xff || data[ 1 ] != 0xd8 || ( data[ size - 2 ] != 0xff && data[ size - 2 ] != 0 && data[ size - 2 ] != 0xd9 ) || ( data[ size - 1 ] != 0xd9 && data[ size - 1 ] != 0 ) ) {
+            //     ROS_WARN("mjpeg frame invalid with index:%d!", colorFrame->index());
+            //     return;
+            // }
+
             const int kArgbChannel = 4;
             const int kRgbChannel = 3;
             void* argbBuffer = getArgbBuffer(width * height * kArgbChannel);
