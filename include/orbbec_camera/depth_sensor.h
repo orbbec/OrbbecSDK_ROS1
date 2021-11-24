@@ -56,7 +56,7 @@ class DepthSensor
     ros::ServiceServer mSetAutoExposureService;
     ros::ServiceServer mSetAutoWhiteBalanceService;
     ros::ServiceServer mEnableStreamService;
-    sensor_msgs::CameraInfo mInfo;
+    // sensor_msgs::CameraInfo mInfo;
 
     std::string mFrameId;
 

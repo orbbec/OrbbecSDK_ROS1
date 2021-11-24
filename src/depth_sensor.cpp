@@ -34,9 +34,6 @@ DepthSensor::DepthSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::s
     // mDepthPub = it.advertiseCamera("depth/image_raw", 1);
     mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("depth/camera_info", 1);
 
-    OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
-    mInfo = Utils::convertToCameraInfo(intrinsic);
-
     startDepthStream();
 }
 
@@ -47,7 +44,11 @@ DepthSensor::~DepthSensor()
 bool DepthSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req,
                                         orbbec_camera::GetCameraInfoResponse& res)
 {
-    res.info = mInfo;
+    OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
+    OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_DEPTH);
+    sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic, distortion);
+    res.info = info;
+    return true;
 }
 
 bool DepthSensor::getExposureCallback(orbbec_camera::GetExposureRequest& req, orbbec_camera::GetExposureResponse& res)
@@ -136,6 +137,10 @@ void DepthSensor::startDepthStream()
     }
     if (mDepthProfile != nullptr)
     {
+        OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
+        OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_DEPTH);
+        sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic, distortion);
+
         mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame) {
             auto depthFrame = frame->as<ob::VideoFrame>();
 
@@ -151,7 +156,7 @@ void DepthSensor::startDepthStream()
             image->data.resize(depthFrame->dataSize());
             memcpy(&image->data[0], depthFrame->data(), depthFrame->dataSize());
 
-            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
             cinfo->header.stamp = ros_now;
             cinfo->header.frame_id = "orbbec_depth_frame";
             cinfo->width = depthFrame->width();

@@ -19,19 +19,24 @@
 class Utils
 {
   public:
-    static sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic obParam)
+    static sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic, OBCameraDistortion distortion)
     {
         sensor_msgs::CameraInfo info;
         info.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-        info.width = obParam.width;
-        info.height = obParam.height;
+        info.width = intrinsic.width;
+        info.height = intrinsic.height;
         info.D.resize(5, 0.0);
+        info.D[0] = distortion.k1;
+        info.D[1] = distortion.k2;
+        info.D[2] = distortion.k3;
+        info.D[3] = distortion.k4;
+        info.D[4] = distortion.k5;
 
         info.K.assign(0.0);
-        info.K[0] = obParam.fx;
-        info.K[2] = obParam.cx;
-        info.K[4] = obParam.fy;
-        info.K[5] = obParam.cy;
+        info.K[0] = intrinsic.fx;
+        info.K[2] = intrinsic.cx;
+        info.K[4] = intrinsic.fy;
+        info.K[5] = intrinsic.cy;
         info.K[8] = 1.0;
 
         info.R.assign(0.0);

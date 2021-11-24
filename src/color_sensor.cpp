@@ -34,9 +34,6 @@ ColorSensor::ColorSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::s
     mColorPub = it.advertise("color/image_raw", 1);
     mCameraInfoPub = nh.advertise<sensor_msgs::CameraInfo>("color/camera_info", 1);
 
-    OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
-    mInfo = Utils::convertToCameraInfo(intrinsic);
-
     startColorStream();
 }
 
@@ -88,7 +85,8 @@ bool ColorSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req
                                         orbbec_camera::GetCameraInfoResponse& res)
 {
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
-    sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
+    OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_COLOR);
+    sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic, distortion);
     res.info = info;
     return true;
 }
@@ -179,6 +177,10 @@ void ColorSensor::startColorStream()
     }
     if (mColorProfile != nullptr)
     {
+        OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
+        OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_COLOR);
+        sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic, distortion);
+
         mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame) {
             auto colorFrame = frame->as<ob::VideoFrame>();
             int width = colorFrame->width();
@@ -215,7 +217,7 @@ void ColorSensor::startColorStream()
             image->data.resize(mRgbBufferSize);
             memcpy(&image->data[0], mRgbBuffer, mRgbBufferSize);
 
-            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
+            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
             cinfo->header.stamp = ros_now;
             cinfo->header.frame_id = "orbbec_color_frame";
             cinfo->width = colorFrame->width();
