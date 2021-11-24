@@ -177,14 +177,19 @@ void ColorSensor::startColorStream()
     }
     if (mColorProfile != nullptr)
     {
-        OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
-        OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_COLOR);
-        sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic, distortion);
-
         mColorSensor->start(mColorProfile, [&](std::shared_ptr<ob::Frame> frame) {
             auto colorFrame = frame->as<ob::VideoFrame>();
             int width = colorFrame->width();
             int height = colorFrame->height();
+
+            if(mInfo.width != width || mInfo.height != height)
+            {
+                OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
+                OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_COLOR);
+                mInfo = Utils::convertToCameraInfo(intrinsic, distortion);
+                mInfo.width = width;
+                mInfo.height = height;
+            }
 
             // if(frame->format() != OB_FORMAT_MJPG)
             // {
@@ -217,11 +222,11 @@ void ColorSensor::startColorStream()
             image->data.resize(mRgbBufferSize);
             memcpy(&image->data[0], mRgbBuffer, mRgbBufferSize);
 
-            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
+            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
             cinfo->header.stamp = ros_now;
             cinfo->header.frame_id = "orbbec_color_frame";
-            cinfo->width = colorFrame->width();
-            cinfo->height = colorFrame->height();
+            cinfo->width = width;
+            cinfo->height = height;
             cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
 
             //    mColorPub.publish(image, cinfo);

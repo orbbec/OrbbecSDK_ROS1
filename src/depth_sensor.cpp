@@ -137,30 +137,36 @@ void DepthSensor::startDepthStream()
     }
     if (mDepthProfile != nullptr)
     {
-        OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
-        OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_DEPTH);
-        sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic, distortion);
-
         mDepthSensor->start(mDepthProfile, [&](std::shared_ptr<ob::Frame> frame) {
             auto depthFrame = frame->as<ob::VideoFrame>();
+            int width = depthFrame->width();
+            int height = depthFrame->height();
 
+            if(mInfo.width != width || mInfo.height != height)
+            {
+                OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_DEPTH);
+                OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_DEPTH);
+                mInfo = Utils::convertToCameraInfo(intrinsic, distortion);
+                mInfo.width = width;
+                mInfo.height = height;
+            }
             ros::Time ros_now = ros::Time::now();
 
             sensor_msgs::Image::Ptr image(new sensor_msgs::Image());
             image->header.stamp = ros_now;
             image->header.frame_id = "orbbec_depth_frame";
-            image->width = depthFrame->width();
-            image->height = depthFrame->height();
-            image->step = depthFrame->width() * 2;
+            image->width = width;
+            image->height = height;
+            image->step = width * 2;
             image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
             image->data.resize(depthFrame->dataSize());
             memcpy(&image->data[0], depthFrame->data(), depthFrame->dataSize());
 
-            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(info));
+            sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
             cinfo->header.stamp = ros_now;
             cinfo->header.frame_id = "orbbec_depth_frame";
-            cinfo->width = depthFrame->width();
-            cinfo->height = depthFrame->height();
+            cinfo->width = width;
+            cinfo->height = height;
             cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
 
             mDepthPub.publish(image);

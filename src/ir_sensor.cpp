@@ -41,7 +41,8 @@ bool IrSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req,
                                      orbbec_camera::GetCameraInfoResponse& res)
 {
     OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_IR);
-    sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic);
+    OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_IR);
+    sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic, distortion);
     res.info = info;
 }
 
