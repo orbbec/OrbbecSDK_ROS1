@@ -12,9 +12,9 @@
 
 #pragma once
 
-#define OB_ROS_MAJOR_VERSION 0
-#define OB_ROS_MINOR_VERSION 2
-#define OB_ROS_PATCH_VERSION 1
+#define OB_ROS_MAJOR_VERSION 1
+#define OB_ROS_MINOR_VERSION 0
+#define OB_ROS_PATCH_VERSION 0
 
 #ifndef STRINGIFY
 #define STRINGIFY(arg) #arg
