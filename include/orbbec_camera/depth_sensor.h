@@ -44,7 +44,6 @@ class DepthSensor
     ros::NodeHandle& mNodeHandle;
     ros::NodeHandle& mPrivateNodeHandle;
     image_transport::Publisher mDepthPub;
-    // image_transport::CameraPublisher mDepthPub;
     ros::Publisher mCameraInfoPub;
     ros::ServiceServer mCameraInfoService;
     ros::ServiceServer mGetExposureService;

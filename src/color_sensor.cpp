@@ -37,19 +37,7 @@ ColorSensor::ColorSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::s
     startColorStream();
 }
 
-ColorSensor::~ColorSensor()
-{
-    // if (mArgbBuffer)
-    // {
-    //     free(mArgbBuffer);
-    //     mArgbBuffer = NULL;
-    // }
-    // if (mRgbBuffer)
-    // {
-    //     free(mRgbBuffer);
-    //     mRgbBuffer = NULL;
-    // }
-}
+ColorSensor::~ColorSensor() = default;
 
 void* ColorSensor::getArgbBuffer(size_t bufferSize)
 {
@@ -182,7 +170,7 @@ void ColorSensor::startColorStream()
             int width = colorFrame->width();
             int height = colorFrame->height();
 
-            if(mInfo.width != width || mInfo.height != height)
+            if (mInfo.width != width || mInfo.height != height)
             {
                 OBCameraIntrinsic intrinsic = mDevice->getCameraIntrinsic(OB_SENSOR_COLOR);
                 OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_COLOR);
@@ -190,25 +178,14 @@ void ColorSensor::startColorStream()
                 mInfo.width = width;
                 mInfo.height = height;
             }
-
-            // if(frame->format() != OB_FORMAT_MJPG)
-            // {
-            //     return;
-            // }
-            // auto data = ( unsigned char* )colorFrame->data();
-            // auto size = colorFrame->dataSize();
-            // if ( data[ 0 ] != 0xff || data[ 1 ] != 0xd8 || ( data[ size - 2 ] != 0xff && data[ size - 2 ] != 0 && data[ size - 2 ] != 0xd9 ) || ( data[ size - 1 ] != 0xd9 && data[ size - 1 ] != 0 ) ) {
-            //     ROS_WARN("mjpeg frame invalid with index:%d!", colorFrame->index());
-            //     return;
-            // }
-
             const int kArgbChannel = 4;
             const int kRgbChannel = 3;
             void* argbBuffer = getArgbBuffer(width * height * kArgbChannel);
-            libyuv::MJPGToARGB((uint8_t*)colorFrame->data(), colorFrame->dataSize(), (uint8_t*)argbBuffer, width * kArgbChannel, width,
-                               height, width, height);
+            libyuv::MJPGToARGB((uint8_t*)colorFrame->data(), colorFrame->dataSize(), (uint8_t*)argbBuffer,
+                               width * kArgbChannel, width, height, width, height);
             void* rgbBuffer = getRgbBuffer(width * height * kRgbChannel);
-            libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * kArgbChannel, (uint8_t*)rgbBuffer, width * kRgbChannel, width, height);
+            libyuv::ARGBToRGB24((uint8_t*)argbBuffer, width * kArgbChannel, (uint8_t*)rgbBuffer, width * kRgbChannel,
+                                width, height);
 
             ros::Time ros_now = ros::Time::now();
 
@@ -228,9 +205,6 @@ void ColorSensor::startColorStream()
             cinfo->width = width;
             cinfo->height = height;
             cinfo->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-
-            //    mColorPub.publish(image, cinfo);
-
             mColorPub.publish(image);
             mCameraInfoPub.publish(cinfo);
         });

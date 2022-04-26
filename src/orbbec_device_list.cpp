@@ -21,18 +21,17 @@ void deviceDisconnectCallback(std::shared_ptr<ob::DeviceList> disconnectList)
     ROS_INFO("Device disconnect: %d", disconnectList->deviceCount());
 }
 
-bool getVersionCallback(orbbec_camera::GetVersion::Request& request,
-                                             orbbec_camera::GetVersion::Response& response)
+bool getVersionCallback(orbbec_camera::GetVersion::Request& request, orbbec_camera::GetVersion::Response& response)
 {
     response.version = OB_ROS_VERSION_STR;
-    std::stringstream ss; 
-    ss << ob_get_major_version() << "." << ob_get_minor_version() << "." << ob_get_patch_version(); 
+    std::stringstream ss;
+    ss << ob_get_major_version() << "." << ob_get_minor_version() << "." << ob_get_patch_version();
     response.core_version = ss.str();
     return true;
 }
 
 bool getDeviceListCallback(orbbec_camera::GetDeviceList::Request& request,
-                                                orbbec_camera::GetDeviceList::Response& response)
+                           orbbec_camera::GetDeviceList::Response& response)
 {
     response.dev_infos = devInfos;
     return true;
@@ -41,7 +40,6 @@ bool getDeviceListCallback(orbbec_camera::GetDeviceList::Request& request,
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "ob_device_list");
-
     ros::NodeHandle nh;
 
     ob::Context ctx;
@@ -65,11 +63,8 @@ int main(int argc, char** argv)
         devInfos.push_back(info);
         ROS_INFO("Device found: %s %x:%x %s", info.name.c_str(), info.vid, info.pid, info.sn.c_str());
     }
-
     ros::ServiceServer getVersionService = nh.advertiseService("get_version", getVersionCallback);
     ros::ServiceServer deviceListService = nh.advertiseService("get_device_list", getDeviceListCallback);
-
     ros::spin();
-
     return 0;
 }

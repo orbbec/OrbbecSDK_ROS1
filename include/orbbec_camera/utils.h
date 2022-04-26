@@ -50,18 +50,6 @@ class Utils
         info.P[5] = info.K[4];
         info.P[6] = info.K[5];
         info.P[10] = 1.0;
-
-        // int width = mColorProfile->width();
-        // double scaling = (double)width / 640;
-        // info.K[0] *= scaling; // fx
-        // info.K[2] *= scaling; // cx
-        // info.K[4] *= scaling; // fy
-        // info.K[5] *= scaling; // cy
-        // info.P[0] *= scaling; // fx
-        // info.P[2] *= scaling; // cx
-        // info.P[5] *= scaling; // fy
-        // info.P[6] *= scaling; // cy
-
         return info;
     }
 };

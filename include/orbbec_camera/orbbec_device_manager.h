@@ -27,7 +27,7 @@ class OrbbecDeviceManager
   public:
     OrbbecDeviceManager(ros::NodeHandle& nh, ros::NodeHandle& pnh);
     ~OrbbecDeviceManager();
-    
+
   private:
     ros::NodeHandle& mNodeHandle;
     ros::NodeHandle& mPrivateNodeHandle;

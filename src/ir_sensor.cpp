@@ -17,14 +17,6 @@ IrSensor::IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_
     mSetExposureService = mNodeHandle.advertiseService("ir/set_exposure", &IrSensor::setExposureCallback, this);
     mGetGainService = mNodeHandle.advertiseService("ir/get_gain", &IrSensor::getGainCallback, this);
     mSetGainService = mNodeHandle.advertiseService("ir/set_gain", &IrSensor::setGainCallback, this);
-    // mGetWhiteBalanceService =
-    //     mNodeHandle.advertiseService("ir/get_white_balance", &IrSensor::getWhiteBalanceCallback, this);
-    // mSetWhiteBalanceService =
-    //     mNodeHandle.advertiseService("ir/set_white_balance", &IrSensor::setWhiteBalanceCallback, this);
-    // mSetAutoExposureService =
-    //     mNodeHandle.advertiseService("ir/set_auto_exposure", &IrSensor::setAutoExposureCallback, this);
-    // mSetAutoWhiteBalanceService =
-    //     mNodeHandle.advertiseService("ir/set_auto_white_balance", &IrSensor::setAutoWhiteBalanceCallback, this);
     mEnableStreamService = mNodeHandle.advertiseService("ir/enable_stream", &IrSensor::enableStreamCallback, this);
 
     image_transport::ImageTransport it(nh);
@@ -33,9 +25,7 @@ IrSensor::IrSensor(ros::NodeHandle& nh, ros::NodeHandle& pnh, const std::shared_
     startIrStream();
 }
 
-IrSensor::~IrSensor()
-{
-}
+IrSensor::~IrSensor() = default;
 
 bool IrSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req,
                                      orbbec_camera::GetCameraInfoResponse& res)
@@ -44,6 +34,7 @@ bool IrSensor::getCameraInfoCallback(orbbec_camera::GetCameraInfoRequest& req,
     OBCameraDistortion distortion = mDevice->getCameraDistortion(OB_SENSOR_IR);
     sensor_msgs::CameraInfo info = Utils::convertToCameraInfo(intrinsic, distortion);
     res.info = info;
+    return true;
 }
 
 bool IrSensor::getExposureCallback(orbbec_camera::GetExposureRequest& req, orbbec_camera::GetExposureResponse& res)
@@ -144,14 +135,6 @@ void IrSensor::startIrStream()
             image->encoding = sensor_msgs::image_encodings::MONO16;
             image->data.resize(irFrame->dataSize());
             memcpy(&image->data[0], irFrame->data(), irFrame->dataSize());
-
-            //  sensor_msgs::CameraInfo::Ptr cinfo(new sensor_msgs::CameraInfo(mInfo));
-            //  cinfo->width = frame->width();
-            //  cinfo->height = frame->height();
-            //  cinfo->header.frame_id = frame->index();
-
-            // mIrPub.publish(image, cinfo);
-
             mIrPub.publish(image);
         });
         mIsStreaming = true;
