@@ -82,7 +82,7 @@ class OBCameraNode {
 
   void publishStaticTransforms();
 
-  std::optional<OBCameraParam> getCameraParam();
+  boost::optional<OBCameraParam> getCameraParam();
 
   int getCameraParamIndex();
 

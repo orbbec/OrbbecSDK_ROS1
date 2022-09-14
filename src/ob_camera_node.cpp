@@ -370,7 +370,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
   }
 }
 
-std::optional<OBCameraParam> OBCameraNode::getCameraParam() {
+boost::optional<OBCameraParam> OBCameraNode::getCameraParam() {
   auto camera_params = device_->getCalibrationCameraParamList();
   for (size_t i = 0; i < camera_params->count(); i++) {
     auto param = camera_params->getCameraParam(i);
@@ -383,7 +383,7 @@ std::optional<OBCameraParam> OBCameraNode::getCameraParam() {
       return param;
     }
   }
-  return std::nullopt;
+  return {};
 }
 
 int OBCameraNode::getCameraParamIndex() {
@@ -427,7 +427,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
   std::vector<float> zero_trans = {0, 0, 0};
   auto camera_param = getCameraParam();
-  if (camera_param.has_value()) {
+  if (camera_param) {
     auto ex = camera_param->transform;
     Q = rotationMatrixToQuaternion(ex.rot);
     Q = quaternion_optical * Q * quaternion_optical.inverse();

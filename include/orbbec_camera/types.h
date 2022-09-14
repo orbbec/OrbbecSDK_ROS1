@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "json.hpp"
 #include <functional>
-#include <optional>
+#include <boost/optional.hpp>
 #include <glog/logging.h>
 #include <eigen3/Eigen/Dense>
 #include "orbbec_camera/DeviceInfo.h"
@@ -20,8 +20,9 @@
 #include "orbbec_camera/SetString.h"
 #include "std_srvs/SetBool.h"
 #include "std_srvs/Empty.h"
-#include <magic_enum.hpp>
 #include <boost/filesystem.hpp>
+#include <atomic>
+#include <mutex>
 
 namespace orbbec_camera {
 

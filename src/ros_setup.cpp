@@ -54,7 +54,9 @@ void OBCameraNode::setupDevices() {
       sensors_[sip] = std::make_shared<ROSOBSensor>(device_, sensor, stream_name_[sip]);
     }
   }
-  for (const auto& [stream_index, enable] : enable_) {
+  for (const auto& item : enable_) {
+    auto stream_index = item.first;
+    auto enable = item.second;
     if (enable && sensors_.find(stream_index) == sensors_.end()) {
       ROS_INFO_STREAM(stream_name_[stream_index]
                       << "sensor isn't supported by current device! -- Skipping...");
@@ -116,18 +118,17 @@ void OBCameraNode::setupProfiles() {
         width_[stream_index], height_[stream_index], format_[stream_index]);
     if (!selected_profile) {
       ROS_WARN_STREAM("Given stream configuration is not supported by the device! "
-                      << " Stream: " << magic_enum::enum_name(stream_index.first)
-                      << ", Stream Index: " << stream_index.second
-                      << ", Width: " << width_[stream_index]
+                      << " Stream: " << stream_index.first << ", Stream Index: "
+                      << stream_index.second << ", Width: " << width_[stream_index]
                       << ", Height: " << height_[stream_index] << ", FPS: " << fps_[stream_index]
-                      << ", Format: " << magic_enum::enum_name(format_[stream_index]));
+                      << ", Format: " << format_[stream_index]);
       if (default_profile) {
         ROS_WARN_STREAM("Using default profile instead.");
         ROS_WARN_STREAM("default FPS " << default_profile->fps());
         selected_profile = default_profile;
       } else {
-        ROS_WARN_STREAM(" NO default_profile found , Stream: "
-                        << magic_enum::enum_name(stream_index.first) << " will be disable");
+        ROS_WARN_STREAM(" NO default_profile found , Stream: " << stream_index.first
+                                                               << " will be disable");
         enable_[stream_index] = false;
         continue;
       }
@@ -139,7 +140,7 @@ void OBCameraNode::setupProfiles() {
     ROS_INFO_STREAM(" stream " << stream_name_[stream_index] << " is enabled - width: "
                                << width_[stream_index] << ", height: " << height_[stream_index]
                                << ", fps: " << fps_[stream_index] << ", "
-                               << "Format: " << magic_enum::enum_name(selected_profile->format()));
+                               << "Format: " << selected_profile->format());
   }
   if (!enable_pipeline_) {
     int index = getCameraParamIndex();
