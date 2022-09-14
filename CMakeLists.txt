@@ -30,7 +30,6 @@ find_package(catkin REQUIRED
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
-find_package(magic_enum REQUIRED)
 find_package(Boost REQUIRED)
 
 find_package(PkgConfig REQUIRED)
@@ -137,7 +136,6 @@ target_link_libraries(${PROJECT_NAME}
   ${GLOG_LIBRARIES}
   -lOrbbecSDK
   -L${ORBBEC_LIBS}
-  magic_enum::magic_enum
   )
 
 add_executable(${PROJECT_NAME}_node
@@ -162,7 +160,6 @@ target_link_libraries(${PROJECT_NAME}_node
   ${GLOG_LIBRARIES}
   -lOrbbecSDK
   -L${ORBBEC_LIBS}
-  magic_enum::magic_enum
   )
 
 add_executable(list_devices_node
