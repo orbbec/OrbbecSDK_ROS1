@@ -14,42 +14,29 @@
 
 #include "sensor_msgs/CameraInfo.h"
 #include "sensor_msgs/distortion_models.h"
-#include "libobsensor/h/ObTypes.h"
+#include "libobsensor/ObSensor.hpp"
+#include <tf2/LinearMath/Quaternion.h>
+#include "types.h"
+#include "sensor_msgs/PointCloud2.h"
+#include "orbbec_camera/Extrinsics.h"
 
-class Utils
-{
-  public:
-    static sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic, OBCameraDistortion distortion)
-    {
-        sensor_msgs::CameraInfo info;
-        info.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
-        info.width = intrinsic.width;
-        info.height = intrinsic.height;
-        info.D.resize(5, 0.0);
-        info.D[0] = distortion.k1;
-        info.D[1] = distortion.k2;
-        info.D[2] = distortion.k3;
-        info.D[3] = distortion.k4;
-        info.D[4] = distortion.k5;
+namespace orbbec_camera {
+OBFormat OBFormatFromString(const std::string &format);
 
-        info.K.assign(0.0);
-        info.K[0] = intrinsic.fx;
-        info.K[2] = intrinsic.cx;
-        info.K[4] = intrinsic.fy;
-        info.K[5] = intrinsic.cy;
-        info.K[8] = 1.0;
+sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
+                                            OBCameraDistortion distortion, int width);
 
-        info.R.assign(0.0);
-        info.R[0] = 1;
-        info.R[4] = 1;
-        info.R[8] = 1;
+void savePointToPly(sensor_msgs::PointCloud2::Ptr cloud, const std::string& filename);
 
-        info.P.assign(0.0);
-        info.P[0] = info.K[0];
-        info.P[2] = info.K[2];
-        info.P[5] = info.K[4];
-        info.P[6] = info.K[5];
-        info.P[10] = 1.0;
-        return info;
-    }
-};
+void saveRGBPointToPly(sensor_msgs::PointCloud2::Ptr cloud, const std::string& filename);
+
+
+tf2::Quaternion rotationMatrixToQuaternion(const float rotation[9]);
+
+std::ostream &operator<<(std::ostream &os, const OBCameraParam &rhs);
+
+Extrinsics obExtrinsicsToMsg(const OBD2CTransform &extrinsics, const std::string &frame_id);
+
+ros::Time frameTimeStampToROSTime(uint64_t ms);
+
+}  // namespace orbbec_camera

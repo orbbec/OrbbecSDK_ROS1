@@ -1,0 +1,42 @@
+#pragma once
+#include "libobsensor/ObSensor.hpp"
+#include "constants.h"
+#include "utils.h"
+#include "json.hpp"
+#include <functional>
+#include <optional>
+#include <glog/logging.h>
+#include <eigen3/Eigen/Dense>
+#include "orbbec_camera/DeviceInfo.h"
+#include "orbbec_camera/Extrinsics.h"
+#include "orbbec_camera/Metadata.h"
+#include "orbbec_camera/GetDeviceInfo.h"
+#include "orbbec_camera/GetBool.h"
+#include "orbbec_camera/GetInt32.h"
+#include "orbbec_camera/GetString.h"
+#include "orbbec_camera/GetCameraInfo.h"
+#include "orbbec_camera/SetBool.h"
+#include "orbbec_camera/SetInt32.h"
+#include "orbbec_camera/SetString.h"
+#include "std_srvs/SetBool.h"
+#include "std_srvs/Empty.h"
+#include <magic_enum.hpp>
+#include <boost/filesystem.hpp>
+
+namespace orbbec_camera {
+
+typedef std::pair<ob_stream_type, int> stream_index_pair;
+
+const stream_index_pair COLOR{OB_STREAM_COLOR, 0};
+const stream_index_pair DEPTH{OB_STREAM_DEPTH, 0};
+const stream_index_pair INFRA0{OB_STREAM_IR, 0};
+const stream_index_pair INFRA1{OB_STREAM_IR, 1};
+const stream_index_pair INFRA2{OB_STREAM_IR, 2};
+
+const stream_index_pair GYRO{OB_STREAM_GYRO, 0};
+const stream_index_pair ACCEL{OB_STREAM_ACCEL, 0};
+
+const std::vector<stream_index_pair> IMAGE_STREAMS = {DEPTH, INFRA0, COLOR};
+
+const std::vector<stream_index_pair> HID_STREAMS = {GYRO, ACCEL};
+}  // namespace orbbec_camera

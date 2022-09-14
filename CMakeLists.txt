@@ -1,45 +1,83 @@
 cmake_minimum_required(VERSION 3.0.2)
-
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
 project(orbbec_camera)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  std_msgs
-  message_generation
-  image_transport
-  sensor_msgs
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -fPIC -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -g")
+set(CMAKE_BUILD_TYPE "Debug")
+if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif ()
+
+find_package(catkin REQUIRED
+  camera_info_manager
+  cv_bridge
   dynamic_reconfigure
-)
+  image_geometry
+  image_transport
+  message_filters
+  message_generation
+  roscpp
+  sensor_msgs
+  std_srvs
+  tf2
+  tf2_ros
+  )
+
+find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(Boost REQUIRED)
+find_package(magic_enum REQUIRED)
+find_package(Boost REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_search_module(LIBUVC REQUIRED libuvc)
+if (NOT LIBUVC_FOUND)
+  message(FATAL_ERROR "libuvc is not found")
+endif ()
+pkg_search_module(GLOG REQUIRED libglog)
+
+if (NOT GLOG_FOUND)
+  message(FATAL_ERROR "glog is not found")
+endif ()
+
+execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
+execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
+message(STATUS "ORRBEC Machine : ${MACHINES}")
+message(STATUS "ORRBEC Machine Bits : ${MACHINES_BIT}")
+if ((${MACHINES} MATCHES "x86_64") AND (${MACHINES_BIT} MATCHES "64"))
+  set(HOST_PLATFORM "x64")
+elseif (${MACHINES} MATCHES "arm")
+  set(HOST_PLATFORM "arm")
+elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "64"))
+  set(HOST_PLATFORM "arm64")
+elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "32"))
+  set(HOST_PLATFORM "arm")
+endif ()
+
+set(ORBBEC_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
+set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
 
 add_message_files(
   FILES
   DeviceInfo.msg
+  Extrinsics.msg
+  Metadata.msg
 )
 
 add_service_files(
   FILES
-  GetDeviceList.srv
+  GetBool.srv
+  SetBool.srv
   GetCameraInfo.srv
-  GetExposure.srv
-  SetExposure.srv
-  GetGain.srv
-  SetGain.srv
-  GetWhiteBalance.srv
-  SetWhiteBalance.srv
-  SetAutoExposure.srv
-  SetAutoWhiteBalance.srv
-  SetLaserEnable.srv
-  SetLdpEnable.srv
-  SetFloorEnable.srv
-  SetFanMode.srv
-  GetVersion.srv
-  EnableStream.srv
+  GetDeviceInfo.srv
+  GetInt32.srv
+  GetString.srv
+  SetInt32.srv
+  SetString.srv
 )
 
 generate_messages(
@@ -48,86 +86,134 @@ generate_messages(
   sensor_msgs
 )
 
-generate_dynamic_reconfigure_options(
-  cfg/Orbbec.cfg
-)
-
 catkin_package(
- CATKIN_DEPENDS roscpp
- rospy
- std_msgs
- message_runtime
- image_transport
- sensor_msgs
- dynamic_reconfigure
+  INCLUDE_DIRS include
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS
+  camera_info_manager
+  cv_bridge
+  dynamic_reconfigure
+  image_geometry
+  image_transport
+  message_filters
+  message_runtime
+  roscpp
+  sensor_msgs
+  std_srvs
+  tf2
+  tf2_ros
 )
 
+link_directories(${ORBBEC_LIBS}
+  ${catkin_LINK_DIRS}
+  ${OpenCV_LIBS})
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+add_library(${PROJECT_NAME}
+  src/point_cloud_proc/point_cloud_xyz.cpp
+  src/point_cloud_proc/point_cloud_xyzrgb.cpp
+  src/d2c_viewer.cpp
+  src/ob_camera_node.cpp
+  src/ob_camera_node_factory.cpp
+  src/ros_sensor.cpp
+  src/ros_service.cpp
+  src/utils.cpp
+  src/ros_setup.cpp
+  )
 
-find_package(ORBBEC_SDK)
-
-if(!ORBBEC_SDK_FOUND)
-message("Could not find Orbbec SDK!")
-endif()
-
-add_subdirectory(libjpeg)
-set(JPEG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libjpeg")
-set(JPEG_LIBRARY jpeg-static)
-set(JPEG_FOUND TRUE)
-
-add_subdirectory(libyuv)
-set(YUV_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libyuv/include")
-
-set(orbbec_camera_INCLUDE_DIR "include/orbbec_camera")
-
-include_directories(
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
   ${catkin_INCLUDE_DIRS}
-  ${orbbec_camera_INCLUDE_DIR}
-  ${ORBBEC_SDK_INCLUDE_DIR}
-  ${YUV_INCLUDE_DIR}
-)
+  ${Boost_INCLUDE_DIRS}
+  ${OpenCV_INCLUDED_DIRS}
+  ${ORBBEC_INCLUDE_DIR}
+  )
 
-add_library(${PROJECT_NAME}_nodelet
-  src/nodelet.cpp
-  src/orbbec_device_manager.cpp
-  src/orbbec_device.cpp
-  src/color_sensor.cpp
-  src/depth_sensor.cpp
-  src/ir_sensor.cpp
-)
-
-add_dependencies(${PROJECT_NAME}_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(${PROJECT_NAME}_nodelet
+target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${ORBBEC_SDK_LIBRARIES}
-  yuv
-)
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${OpenCV_LIBS}
+  ${GLOG_LIBRARIES}
+  -lOrbbecSDK
+  -L${ORBBEC_LIBS}
+  magic_enum::magic_enum
+  )
 
-add_executable(${PROJECT_NAME}_node 
+add_executable(${PROJECT_NAME}_node
   src/main.cpp
-  src/orbbec_device_manager.cpp
-  src/orbbec_device.cpp
-  src/color_sensor.cpp
-  src/depth_sensor.cpp
-  src/ir_sensor.cpp
-)
+  )
 
-
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_include_directories(${PROJECT_NAME}_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${OpenCV_INCLUDED_DIRS}
+  ${ORBBEC_INCLUDE_DIR}
+  )
 
 target_link_libraries(${PROJECT_NAME}_node
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${ORBBEC_SDK_LIBRARIES}
-  yuv
-)
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${OpenCV_LIBS}
+  ${GLOG_LIBRARIES}
+  -lOrbbecSDK
+  -L${ORBBEC_LIBS}
+  magic_enum::magic_enum
+  )
 
-add_executable(device_list_node src/orbbec_device_list.cpp)
+add_executable(list_devices_node
+  src/list_devices_node.cpp
+  )
 
-add_dependencies(device_list_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_include_directories(list_devices_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${OpenCV_INCLUDED_DIRS}
+  )
 
-target_link_libraries(device_list_node 
+target_link_libraries(list_devices_node
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${ORBBEC_SDK_LIBRARIES}
-)
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${OpenCV_LIBS}
+  ${GLOG_LIBRARIES}
+  -lOrbbecSDK
+  -L${ORBBEC_LIBS}
+  )
+
+add_dependencies(${PROJECT_NAME}
+  ${PROJECT_NAME}_generate_messages_cpp)
+
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+install(TARGETS ${PROJECT_NAME}
+  ${PROJECT_NAME}_node
+  list_devices_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+
+
+install(DIRECTORY include
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
+  )
+
+  install(DIRECTORY
+  ${ORBBEC_INCLUDE_DIR}
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
+  )
+
+install(FILES
+  ${ORBBEC_LIBS}/libOrbbecSDK.so
+  ${ORBBEC_LIBS}/libOrbbecSDK.so.1.3
+  ${ORBBEC_LIBS}/libOrbbecSDK.so.1.3.1
+  ${ORBBEC_LIBS}/libpostfilter.so
+  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/
+  )

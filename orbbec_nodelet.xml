@@ -1,7 +1,0 @@
-<library path="lib/liborbbec_camera_nodelet">
-  <class name="OrbbecNodelet" type="OrbbecNodelet" base_class_type="nodelet::Nodelet">
-  <description>
-  Orbbec camera nodelet.
-  </description>
-  </class>
-</library>
