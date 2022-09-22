@@ -207,10 +207,9 @@ install(DIRECTORY include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
   )
 
-install(FILES
-  ${ORBBEC_LIBS}/libOrbbecSDK.so
-  ${ORBBEC_LIBS}/libOrbbecSDK.so.1.3
-  ${ORBBEC_LIBS}/libOrbbecSDK.so.1.3.1
-  ${ORBBEC_LIBS}/libpostfilter.so
+install(DIRECTORY
+  ${ORBBEC_LIBS}/
   DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/
+  FILES_MATCHING PATTERN "*.so"
+  PATTERN "*.so.*"
   )
