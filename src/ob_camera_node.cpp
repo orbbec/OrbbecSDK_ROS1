@@ -7,6 +7,7 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
 }
 
 void OBCameraNode::init() {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   is_running_ = true;
   setupConfig();
   getParameters();
