@@ -142,10 +142,14 @@ void OBCameraNode::setupProfiles() {
                                << ", fps: " << fps_[stream_index] << ", "
                                << "Format: " << selected_profile->format());
   }
-  if (!enable_pipeline_) {
+  if (!enable_pipeline_ && depth_align_) {
     int index = getCameraParamIndex();
-    device_->setIntProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_MODE_INT, index);
-    device_->setBoolProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, depth_align_);
+    try {
+      device_->setIntProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_MODE_INT, index);
+      device_->setBoolProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, depth_align_);
+    } catch (ob::Error& e) {
+      ROS_ERROR_STREAM("set d2c error " << e.getMessage());
+    }
   }
 }
 
