@@ -470,7 +470,8 @@ typedef enum {
     FORMAT_MJPEG_TO_NV21,      /**< \if English MJPG to NV21 \else MJPG转换为NV21 \endif */
     FORMAT_MJPEG_TO_RGB888,    /**< \if English MJPG to RGB888 \else MJPG转换为RGB888 \endif */
     FORMAT_MJPEG_TO_BGR888,    /**< \if English MJPG to BGR888 \else MJPG转换为BGR888 \endif */
-    FORMAT_MJPEG_TO_BGRA,      /**< MJPG转BRGA */
+    FORMAT_MJPEG_TO_BGRA,      /**< \if English MJPG to BGRA \else MJPG转换为BGRA \endif */
+    FORMAT_UYVY_TO_RGB888,     /**< \if English UYVY to RGB888 \else MJPG转换为RGB888 \endif */
 } OBConvertFormat,
     ob_convert_format;
 
