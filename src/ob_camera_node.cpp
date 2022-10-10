@@ -8,6 +8,7 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
 
 void OBCameraNode::init() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  CHECK_NOTNULL(device_);
   is_running_ = true;
   setupConfig();
   getParameters();
@@ -85,6 +86,7 @@ void OBCameraNode::startStreams() {
     }
     CHECK_NOTNULL(pipeline_.get());
     pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
+      CHECK_NOTNULL(frame_set);
       this->onNewFrameSetCallback(std::move(frame_set));
     });
     pipeline_started_ = true;
@@ -99,6 +101,7 @@ void OBCameraNode::startStreams() {
 
 void OBCameraNode::stopStreams() {
   if (enable_pipeline_) {
+    CHECK_NOTNULL(pipeline_);
     pipeline_->stop();
     pipeline_started_ = false;
   } else {
