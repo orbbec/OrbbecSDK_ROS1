@@ -1,6 +1,5 @@
 #pragma once
 #include "ob_camera_node.h"
-#include "point_cloud_proc/point_cloud_proc.h"
 
 namespace orbbec_camera {
 class OBCameraNodeFactory {
@@ -29,8 +28,6 @@ class OBCameraNodeFactory {
   ros::NodeHandle nh_private_;
   std::unique_ptr<ob::Context> ctx_ = nullptr;
   std::unique_ptr<OBCameraNode> ob_camera_node_ = nullptr;
-  std::unique_ptr<PointCloudXyzNode> point_cloud_xyz_node_ = nullptr;
-  std::unique_ptr<PointCloudXyzrgbNode> point_cloud_xyzrgb_node_ = nullptr;
   std::shared_ptr<ob::Device> device_ = nullptr;
   std::shared_ptr<ob::DeviceInfo> device_info_ = nullptr;
   ros::WallTimer check_connection_timer_;
@@ -38,8 +35,6 @@ class OBCameraNodeFactory {
   std::atomic_bool is_alive_{false};
   std::string serial_number_;
   std::string log_level_;
-  bool enable_point_cloud_ = true;
-  bool enable_point_cloud_xyzrgb_ = true;
   int connection_delay_ = 1.0;
   std::shared_ptr<std::thread> query_thread_ = nullptr;
 };

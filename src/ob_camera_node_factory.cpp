@@ -18,14 +18,6 @@ void OBCameraNodeFactory::init() {
   ctx_->setLoggerSeverity(obLogSeverityFromString(log_level));
   serial_number_ = nh_private_.param<std::string>("serial_number", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 1.0);
-  enable_point_cloud_ = nh_private_.param<bool>("enable_point_cloud", true);
-  enable_point_cloud_xyzrgb_ = nh_private_.param<bool>("enable_point_cloud_xyzrgb", true);
-  if (enable_point_cloud_) {
-    point_cloud_xyz_node_ = std::make_unique<PointCloudXyzNode>(nh_, nh_private_);
-  }
-  if (enable_point_cloud_xyzrgb_) {
-    point_cloud_xyzrgb_node_ = std::make_unique<PointCloudXyzrgbNode>(nh_, nh_private_);
-  }
   check_connection_timer_ = nh_.createWallTimer(
       ros::WallDuration(1.0), [this](const ros::WallTimerEvent&) { this->checkConnectionTimer(); });
   ctx_->setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removed_list,

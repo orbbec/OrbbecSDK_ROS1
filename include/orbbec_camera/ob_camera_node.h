@@ -18,6 +18,8 @@
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
+#include "point_cloud_proc/point_cloud_proc.h"
+
 
 namespace orbbec_camera {
 class OBCameraNode {
@@ -214,6 +216,10 @@ class OBCameraNode {
   sensor_msgs::PointCloud2 cloud_msg_;
   ob::PointCloudFilter cloud_filter_;
   std::atomic_bool pipeline_started_{false};
+  bool enable_point_cloud_ = true;
+  bool enable_point_cloud_xyzrgb_ = true;
+  std::unique_ptr<PointCloudXyzNode> point_cloud_xyz_node_ = nullptr;
+  std::unique_ptr<PointCloudXyzrgbNode> point_cloud_xyzrgb_node_ = nullptr;
 };
 
 }  // namespace orbbec_camera

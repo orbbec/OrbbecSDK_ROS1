@@ -17,6 +17,12 @@ void OBCameraNode::init() {
   setupTopics();
   setupCameraCtrlServices();
   setupFrameCallback();
+  if (enable_point_cloud_) {
+    point_cloud_xyz_node_ = std::make_unique<PointCloudXyzNode>(nh_, nh_private_);
+  }
+  if (enable_point_cloud_xyzrgb_) {
+    point_cloud_xyzrgb_node_ = std::make_unique<PointCloudXyzrgbNode>(nh_, nh_private_);
+  }
 }
 
 OBCameraNode::~OBCameraNode() {
@@ -59,6 +65,8 @@ void OBCameraNode::getParameters() {
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");
   enable_d2c_viewer_ = nh_private_.param<bool>("enable_d2c_viewer", false);
   enable_pipeline_ = nh_private_.param<bool>("enable_pipeline", false);
+  enable_point_cloud_ = nh_private_.param<bool>("enable_point_cloud", true);
+  enable_point_cloud_xyzrgb_ = nh_private_.param<bool>("enable_point_cloud_xyzrgb", true);
 }
 
 void OBCameraNode::startStreams() {
