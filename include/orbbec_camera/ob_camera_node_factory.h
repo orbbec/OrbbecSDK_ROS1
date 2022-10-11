@@ -1,5 +1,7 @@
 #pragma once
 #include "ob_camera_node.h"
+#include <thread>
+#include <mutex>
 
 namespace orbbec_camera {
 class OBCameraNodeFactory {
@@ -37,5 +39,7 @@ class OBCameraNodeFactory {
   std::string log_level_;
   int connection_delay_ = 1.0;
   std::shared_ptr<std::thread> query_thread_ = nullptr;
+  std::recursive_mutex device_lock_;
+
 };
 }  // namespace orbbec_camera
