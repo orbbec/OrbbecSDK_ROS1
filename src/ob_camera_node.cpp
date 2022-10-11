@@ -76,7 +76,7 @@ void OBCameraNode::startStreams() {
       pipeline_config_.reset();
     }
     pipeline_config_ = std::make_shared<ob::Config>();
-    if (depth_align_) {
+    if (depth_align_ && enable_[COLOR] && enable_[DEPTH]) {
       pipeline_config_->setAlignMode(ALIGN_D2C_HW_MODE);
     }
     for (const auto& stream_index : IMAGE_STREAMS) {
@@ -375,7 +375,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
         all_stream_no_subscriber = false;
       }
     }
-    if(all_stream_no_subscriber) {
+    if (all_stream_no_subscriber) {
       stopStreams();
     }
   } else {
