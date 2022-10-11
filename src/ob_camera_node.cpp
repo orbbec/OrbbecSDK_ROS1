@@ -369,7 +369,15 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       ROS_WARN_STREAM("pipe line not start");
       return;
     }
-    stopStreams();
+    bool all_stream_no_subscriber = true;
+    for (auto& item : image_publishers_) {
+      if (item.second.getNumSubscribers() > 0) {
+        all_stream_no_subscriber = false;
+      }
+    }
+    if(all_stream_no_subscriber) {
+      stopStreams();
+    }
   } else {
     if (!stream_started_[stream_index]) {
       ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " is not started.");
