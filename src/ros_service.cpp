@@ -79,26 +79,22 @@ void OBCameraNode::setupCameraCtrlServices() {
         return response.success;
       });
   set_fan_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "set_fan_mode",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setFanEnableCallback(request, response);
+      "set_fan", [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+        response.success = this->setFanCallback(request, response);
         return response.success;
       });
   set_floor_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "set_floor_enable",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setFloorEnableCallback(request, response);
+      "set_floor", [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+        response.success = this->setFloorCallback(request, response);
         return response.success;
       });
   set_laser_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "set_laser_enable",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setLaserEnableCallback(request, response);
+      "set_laser", [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+        response.success = this->setLaserCallback(request, response);
         return response.success;
       });
   set_ldp_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "set_ldp_enable",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+      "set_ldp", [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
         response.success = this->setLdpEnableCallback(request, response);
         return response.success;
       });
@@ -243,31 +239,54 @@ bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
   return true;
 }
 
-bool OBCameraNode::setLaserEnableCallback(std_srvs::SetBoolRequest& request,
-                                          std_srvs::SetBoolResponse& response) {
+bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
+                                    std_srvs::SetBoolResponse& response) {
   (void)response;
-  device_->setBoolProperty(OB_PROP_LASER_BOOL, request.data);
+  try {
+    device_->setBoolProperty(OB_PROP_LASER_BOOL, request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to set laser: " << e.getMessage());
+    response.message = e.getMessage();
+    return false;
+  }
   return true;
 }
 
 bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response) {
   (void)response;
-  device_->setBoolProperty(OB_PROP_LDP_BOOL, request.data);
+  try {
+    device_->setBoolProperty(OB_PROP_LDP_BOOL, request.data);
+  }catch (const ob::Error &e){
+    ROS_ERROR_STREAM("Failed to set LDP: " << e.getMessage());
+    response.message = e.getMessage();
+    return false;
+  }
   return true;
 }
 
-bool OBCameraNode::setFanEnableCallback(std_srvs::SetBoolRequest& request,
-                                        std_srvs::SetBoolResponse& response) {
+bool OBCameraNode::setFanCallback(std_srvs::SetBoolRequest& request,
+                                  std_srvs::SetBoolResponse& response) {
   (void)response;
-  device_->setBoolProperty(OB_PROP_FAN_WORK_MODE_INT, request.data);
+  try {
+    device_->setBoolProperty(OB_PROP_FAN_WORK_MODE_INT, request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("set fan failed: " << e.getMessage());
+    response.message = e.getMessage();
+    return false;
+  }
   return true;
 }
 
-bool OBCameraNode::setFloorEnableCallback(std_srvs::SetBoolRequest& request,
-                                          std_srvs::SetBoolResponse& response) {
-  (void)response;
-  device_->setBoolProperty(OB_PROP_FLOOD_BOOL, request.data);
+bool OBCameraNode::setFloorCallback(std_srvs::SetBoolRequest& request,
+                                    std_srvs::SetBoolResponse& response) {
+  try {
+    device_->setBoolProperty(OB_PROP_FLOOD_BOOL, request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("set floor failed: " << e.getMessage());
+    response.message = e.getMessage();
+    return false;
+  }
   return true;
 }
 

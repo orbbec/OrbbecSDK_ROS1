@@ -118,14 +118,14 @@ class OBCameraNode {
                                std_srvs::SetBoolResponse& response,
                                const stream_index_pair& stream_index);
 
-  bool setLaserEnableCallback(std_srvs::SetBoolRequest& request,
+  bool setLaserCallback(std_srvs::SetBoolRequest& request,
                               std_srvs::SetBoolResponse& response);
 
   bool setLdpEnableCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
-  bool setFanEnableCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
+  bool setFanCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
-  bool setFloorEnableCallback(std_srvs::SetBoolRequest& request,
+  bool setFloorCallback(std_srvs::SetBoolRequest& request,
                               std_srvs::SetBoolResponse& response);
 
   bool getDeviceInfoCallback(GetDeviceInfoRequest& request, GetDeviceInfoResponse& response);
