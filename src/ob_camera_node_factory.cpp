@@ -107,8 +107,10 @@ OBLogSeverity OBCameraNodeFactory::obLogSeverityFromString(const std::string& lo
     return OBLogSeverity::OB_LOG_SEVERITY_ERROR;
   } else if (log_level == "fatal") {
     return OBLogSeverity::OB_LOG_SEVERITY_FATAL;
-  } else {
+  } else if (log_level == "info") {
     return OBLogSeverity::OB_LOG_SEVERITY_INFO;
+  } else {
+    return OBLogSeverity::OB_LOG_SEVERITY_NONE;
   }
 }
 
