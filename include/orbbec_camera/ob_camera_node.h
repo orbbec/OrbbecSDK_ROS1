@@ -61,6 +61,8 @@ class OBCameraNode {
 
   void setupTopics();
 
+  void setupPipelineConfig();
+
   void setupPublishers();
 
   void publishStaticTF(const ros::Time& t, const std::vector<float>& trans,

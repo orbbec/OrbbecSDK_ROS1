@@ -72,23 +72,23 @@ void OBCameraNode::getParameters() {
 
 void OBCameraNode::startStreams() {
   if (enable_pipeline_) {
-    if (pipeline_config_) {
-      pipeline_config_.reset();
-    }
-    pipeline_config_ = std::make_shared<ob::Config>();
-    if (depth_align_ && enable_[COLOR] && enable_[DEPTH]) {
-      pipeline_config_->setAlignMode(ALIGN_D2C_HW_MODE);
-    }
-    for (const auto& stream_index : IMAGE_STREAMS) {
-      if (enable_[stream_index]) {
-        pipeline_config_->enableStream(stream_profile_[stream_index]);
-      }
-    }
     CHECK_NOTNULL(pipeline_.get());
-    pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
-      CHECK_NOTNULL(frame_set);
-      this->onNewFrameSetCallback(std::move(frame_set));
-    });
+    try {
+      setupPipelineConfig();
+      pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
+        CHECK_NOTNULL(frame_set);
+        this->onNewFrameSetCallback(std::move(frame_set));
+      });
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("failed to start pipeline: " << e.getMessage()
+                                                    << " try to disable ir stream try again");
+      enable_[INFRA0] = false;
+      setupPipelineConfig();
+      pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
+        CHECK_NOTNULL(frame_set);
+        this->onNewFrameSetCallback(std::move(frame_set));
+      });
+    }
     pipeline_started_ = true;
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
@@ -137,9 +137,13 @@ void OBCameraNode::startStream(const stream_index_pair& stream_index) {
   CHECK_GE(sensors_.count(stream_index), 0u);
   auto callback = frame_callback_[stream_index];
   auto profile = stream_profile_[stream_index];
-  sensors_[stream_index]->startStream(profile, callback);
-  stream_started_[stream_index] = true;
-  ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " started.");
+  try {
+    sensors_[stream_index]->startStream(profile, callback);
+    stream_started_[stream_index] = true;
+    ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " started.");
+  } catch (...) {
+    ROS_ERROR_STREAM("Failed to start stream " << stream_name_[stream_index] << ".");
+  }
 }
 
 void OBCameraNode::stopStream(const stream_index_pair& stream_index) {

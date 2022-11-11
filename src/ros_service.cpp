@@ -257,7 +257,7 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
   (void)response;
   try {
     device_->setBoolProperty(OB_PROP_LDP_BOOL, request.data);
-  }catch (const ob::Error &e){
+  } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set LDP: " << e.getMessage());
     response.message = e.getMessage();
     return false;
@@ -288,6 +288,21 @@ bool OBCameraNode::setFloorCallback(std_srvs::SetBoolRequest& request,
     return false;
   }
   return true;
+}
+
+void OBCameraNode::setupPipelineConfig() {
+  if (pipeline_config_) {
+    pipeline_config_.reset();
+  }
+   pipeline_config_ = std::make_shared<ob::Config>();
+  if (depth_align_ && enable_[COLOR] && enable_[DEPTH]) {
+    pipeline_config_->setAlignMode(ALIGN_D2C_HW_MODE);
+  }
+  for (const auto& stream_index : IMAGE_STREAMS) {
+    if (enable_[stream_index]) {
+      pipeline_config_->enableStream(stream_profile_[stream_index]);
+    }
+  }
 }
 
 bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
