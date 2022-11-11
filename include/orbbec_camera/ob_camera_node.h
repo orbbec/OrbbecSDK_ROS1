@@ -145,6 +145,9 @@ class OBCameraNode {
 
   bool getDeviceTypeCallback(GetStringRequest& request, GetStringResponse& response);
 
+  bool getCameraInfoCallback(GetCameraInfoRequest& request, GetCameraInfoResponse& response,
+                             const stream_index_pair& stream_index);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -186,13 +189,14 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::ServiceServer> set_mirror_srv_;
   std::map<stream_index_pair, ros::ServiceServer> toggle_sensor_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_auto_exposure_srv_;
+  std::map<stream_index_pair, ros::ServiceServer> get_camera_info_srv_;
+
   ros::ServiceServer get_sdk_version_srv_;
   ros::ServiceServer get_device_info_srv_;
   ros::ServiceServer set_laser_srv_;
   ros::ServiceServer set_floor_srv_;
   ros::ServiceServer set_ldp_srv_;
   ros::ServiceServer set_fan_srv_;
-  ros::ServiceServer get_camera_info_srv_;
   ros::ServiceServer get_auto_white_balance_srv_;
   ros::ServiceServer set_auto_white_balance_srv_;
   ros::ServiceServer get_white_balance_srv_;

@@ -57,6 +57,14 @@ void OBCameraNode::setupCameraCtrlServices() {
               response.success = this->toggleSensorCallback(request, response, stream_index);
               return response.success;
             });
+    service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_camera_info";
+    get_camera_info_srv_[stream_index] =
+        nh_.advertiseService<GetCameraInfoRequest, GetCameraInfoResponse>(
+            service_name,
+            [this, stream_index](GetCameraInfoRequest& request, GetCameraInfoResponse& response) {
+              response.success = this->getCameraInfoCallback(request, response, stream_index);
+              return response.success;
+            });
   }
   get_auto_white_balance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
       "/" + camera_name_ + "/" + "get_auto_white_balance",
@@ -113,7 +121,7 @@ void OBCameraNode::setupCameraCtrlServices() {
         return response.success;
       });
   get_serial_number_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
-      "/" + camera_name_ + "/" + "get_serial_number",
+      "/" + camera_name_ + "/" + "get_serial",
       [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->getSerialNumberCallback(request, response);
         return response.success;
@@ -505,6 +513,26 @@ bool OBCameraNode::getDeviceTypeCallback(GetStringRequest& request, GetStringRes
   auto device_info = device_->getDeviceInfo();
   response.data = device_info->name();
   response.success = true;
+  return true;
+}
+
+bool OBCameraNode::getCameraInfoCallback(GetCameraInfoRequest& request,
+                                         GetCameraInfoResponse& response,
+                                         const stream_index_pair& stream_index) {
+  (void)request;
+  try {
+    auto camera_param = pipeline_->getCameraParam();
+    auto& intrinsic =
+        stream_index == COLOR ? camera_param.rgbIntrinsic : camera_param.depthIntrinsic;
+    auto& distortion =
+        stream_index == COLOR ? camera_param.rgbDistortion : camera_param.depthDistortion;
+    auto width = width_[stream_index];
+    auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
+    response.info = camera_info;
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get camera info: " << e.getMessage());
+    return false;
+  }
   return true;
 }
 
