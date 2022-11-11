@@ -27,6 +27,7 @@ void OBCameraNode::init() {
 }
 
 OBCameraNode::~OBCameraNode() {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   is_running_ = false;
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
@@ -71,6 +72,7 @@ void OBCameraNode::getParameters() {
 }
 
 void OBCameraNode::startStreams() {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
     try {
@@ -100,6 +102,7 @@ void OBCameraNode::startStreams() {
 }
 
 void OBCameraNode::stopStreams() {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_);
     pipeline_->stop();
@@ -114,6 +117,7 @@ void OBCameraNode::stopStreams() {
 }
 
 void OBCameraNode::startStream(const stream_index_pair& stream_index) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     ROS_WARN_STREAM("Cannot start stream when pipeline is enabled");
     return;
@@ -147,6 +151,7 @@ void OBCameraNode::startStream(const stream_index_pair& stream_index) {
 }
 
 void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     ROS_WARN_STREAM("Cannot stop stream when pipeline is enabled");
     return;

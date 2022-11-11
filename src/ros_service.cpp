@@ -325,6 +325,7 @@ bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
 bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
                                     std_srvs::SetBoolResponse& response) {
   (void)response;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     device_->setBoolProperty(OB_PROP_LASER_BOOL, request.data);
   } catch (const ob::Error& e) {
@@ -338,6 +339,7 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
 bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response) {
   (void)response;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     device_->setBoolProperty(OB_PROP_LDP_BOOL, request.data);
   } catch (const ob::Error& e) {
@@ -351,6 +353,7 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
 bool OBCameraNode::setFanCallback(std_srvs::SetBoolRequest& request,
                                   std_srvs::SetBoolResponse& response) {
   (void)response;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     device_->setBoolProperty(OB_PROP_FAN_WORK_MODE_INT, request.data);
   } catch (const ob::Error& e) {
@@ -363,6 +366,7 @@ bool OBCameraNode::setFanCallback(std_srvs::SetBoolRequest& request,
 
 bool OBCameraNode::setFloorCallback(std_srvs::SetBoolRequest& request,
                                     std_srvs::SetBoolResponse& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     device_->setBoolProperty(OB_PROP_FLOOD_BOOL, request.data);
   } catch (const ob::Error& e) {
@@ -376,6 +380,7 @@ bool OBCameraNode::setFloorCallback(std_srvs::SetBoolRequest& request,
 bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
                                          GetDeviceInfoResponse& response) {
   (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   auto device_info = device_->getDeviceInfo();
   response.info.name = device_info->name();
   response.info.pid = device_info->pid();
@@ -389,6 +394,7 @@ bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
 
 bool OBCameraNode::getSDKVersionCallback(GetStringRequest& request, GetStringResponse& response) {
   (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   auto device_info = device_->getDeviceInfo();
   nlohmann::json data;
   data["firmware_version"] = device_info->firmwareVersion();
@@ -481,6 +487,7 @@ bool OBCameraNode::getCameraParamsCallback(orbbec_camera::GetCameraParamsRequest
 
 bool OBCameraNode::getSerialNumberCallback(GetStringRequest& request, GetStringResponse& response) {
   (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     auto device_info = device_->getDeviceInfo();
     response.data = device_info->serialNumber();
@@ -494,6 +501,7 @@ bool OBCameraNode::getSerialNumberCallback(GetStringRequest& request, GetStringR
 
 bool OBCameraNode::getDeviceTypeCallback(GetStringRequest& request, GetStringResponse& response) {
   (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   auto device_info = device_->getDeviceInfo();
   response.data = device_info->name();
   response.success = true;
