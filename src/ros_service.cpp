@@ -10,31 +10,31 @@ void OBCameraNode::setupCameraCtrlServices() {
       continue;
     }
     auto stream_name = stream_name_[stream_index];
-    std::string service_name = "get_" + stream_name + "_exposure";
+    std::string service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_exposure";
     get_exposure_srv_[stream_index] = nh_.advertiseService<GetInt32Request, GetInt32Response>(
         service_name, [this, stream_index](GetInt32Request& request, GetInt32Response& response) {
           response.success = this->getExposureCallback(request, response, stream_index);
           return response.success;
         });
-    service_name = "set_" + stream_name + "_exposure";
+    service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_exposure";
     set_exposure_srv_[stream_index] = nh_.advertiseService<SetInt32Request, SetInt32Response>(
         service_name, [this, stream_index](SetInt32Request& request, SetInt32Response& response) {
           response.success = this->setExposureCallback(request, response, stream_index);
           return response.success;
         });
-    service_name = "get_" + stream_name + "_gain";
+    service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_gain";
     get_gain_srv_[stream_index] = nh_.advertiseService<GetInt32Request, GetInt32Response>(
         service_name, [this, stream_index](GetInt32Request& request, GetInt32Response& response) {
           response.success = this->getGainCallback(request, response, stream_index);
           return response.success;
         });
-    service_name = "set_" + stream_name + "_gain";
+    service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_gain";
     set_gain_srv_[stream_index] = nh_.advertiseService<SetInt32Request, SetInt32Response>(
         service_name, [this, stream_index](SetInt32Request& request, SetInt32Response& response) {
           response.success = this->setGainCallback(request, response, stream_index);
           return response.success;
         });
-    service_name = "set_" + stream_name + "_mirror";
+    service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_mirror";
     set_mirror_srv_[stream_index] =
         nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
             service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
@@ -42,7 +42,7 @@ void OBCameraNode::setupCameraCtrlServices() {
               response.success = this->setMirrorCallback(request, response, stream_index);
               return response.success;
             });
-    service_name = "set_" + stream_name + "_auto_exposure";
+    service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_auto_exposure";
     set_auto_exposure_srv_[stream_index] =
         nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
             service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
@@ -50,7 +50,7 @@ void OBCameraNode::setupCameraCtrlServices() {
               response.success = this->setAutoExposureCallback(request, response, stream_index);
               return response.success;
             });
-    service_name = "toggle_" + stream_name;
+    service_name = "/" + camera_name_ + "/" + "toggle_" + stream_name;
     toggle_sensor_srv_[stream_index] =
         nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
             service_name, [this, stream_index = stream_index](auto&& request, auto&& response) {
@@ -59,58 +59,81 @@ void OBCameraNode::setupCameraCtrlServices() {
             });
   }
   get_auto_white_balance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
-      "get_auto_white_balance", [this](GetInt32Request& request, GetInt32Response& response) {
+      "/" + camera_name_ + "/" + "get_auto_white_balance",
+      [this](GetInt32Request& request, GetInt32Response& response) {
         response.success = this->getAutoWhiteBalanceCallback(request, response);
         return response.success;
       });
   set_auto_white_balance_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
-      "set_auto_white_balance", [this](SetInt32Request& request, SetInt32Response& response) {
+      "/" + camera_name_ + "/" + "set_auto_white_balance",
+      [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->setAutoWhiteBalanceCallback(request, response);
         return response.success;
       });
   get_white_balance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
-      "get_white_balance", [this](GetInt32Request& request, GetInt32Response& response) {
+      "/" + camera_name_ + "/" + "get_white_balance",
+      [this](GetInt32Request& request, GetInt32Response& response) {
         response.success = this->getWhiteBalanceCallback(request, response);
         return response.success;
       });
   set_white_balance_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
-      "set_white_balance", [this](SetInt32Request& request, SetInt32Response& response) {
+      "/" + camera_name_ + "/" + "set_white_balance",
+      [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->setWhiteBalanceCallback(request, response);
         return response.success;
       });
   set_fan_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "set_fan", [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+      "/" + camera_name_ + "/" + "set_fan",
+      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
         response.success = this->setFanCallback(request, response);
         return response.success;
       });
   set_floor_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "set_floor", [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+      "/" + camera_name_ + "/" + "set_floor",
+      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
         response.success = this->setFloorCallback(request, response);
         return response.success;
       });
   set_laser_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "set_laser", [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+      "/" + camera_name_ + "/" + "set_laser",
+      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
         response.success = this->setLaserCallback(request, response);
         return response.success;
       });
   set_ldp_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "set_ldp", [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+      "/" + camera_name_ + "/" + "set_ldp",
+      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
         response.success = this->setLdpEnableCallback(request, response);
         return response.success;
       });
   get_device_info_srv_ = nh_.advertiseService<GetDeviceInfoRequest, GetDeviceInfoResponse>(
-      "get_device_info", [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
+      "/" + camera_name_ + "/" + "get_device_info",
+      [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
         response.success = this->getDeviceInfoCallback(request, response);
+        return response.success;
+      });
+  get_serial_number_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
+      "/" + camera_name_ + "/" + "get_serial_number",
+      [this](GetStringRequest& request, GetStringResponse& response) {
+        response.success = this->getSerialNumberCallback(request, response);
+        return response.success;
+      });
+  get_camera_params_srv_ = nh_.advertiseService<GetCameraParamsRequest, GetCameraParamsResponse>(
+      "/" + camera_name_ + "/" + "get_camera_params",
+      [this](GetCameraParamsRequest& request, GetCameraParamsResponse& response) {
+        response.success = this->getCameraParamsCallback(request, response);
         return response.success;
       });
 
   get_sdk_version_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
-      "get_sdk_version", [this](GetStringRequest& request, GetStringResponse& response) {
+      "/" + camera_name_ + "/" + "get_sdk_version",
+      [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->getSDKVersionCallback(request, response);
         return response.success;
       });
   save_images_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
-      "save_images", [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
+      "/" + camera_name_ + "/" + "save_images",
+      [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->saveImagesCallback(request, response);
       });
 }
@@ -290,21 +313,6 @@ bool OBCameraNode::setFloorCallback(std_srvs::SetBoolRequest& request,
   return true;
 }
 
-void OBCameraNode::setupPipelineConfig() {
-  if (pipeline_config_) {
-    pipeline_config_.reset();
-  }
-   pipeline_config_ = std::make_shared<ob::Config>();
-  if (depth_align_ && enable_[COLOR] && enable_[DEPTH]) {
-    pipeline_config_->setAlignMode(ALIGN_D2C_HW_MODE);
-  }
-  for (const auto& stream_index : IMAGE_STREAMS) {
-    if (enable_[stream_index]) {
-      pipeline_config_->enableStream(stream_profile_[stream_index]);
-    }
-  }
-}
-
 bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
                                          GetDeviceInfoResponse& response) {
   (void)request;
@@ -381,6 +389,41 @@ bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,
       ROS_WARN_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     }
   }
+  return true;
+}
+
+bool OBCameraNode::getCameraParamsCallback(orbbec_camera::GetCameraParamsRequest& request,
+                                           orbbec_camera::GetCameraParamsResponse& response) {
+  (void)request;
+  try {
+    auto camera_param = pipeline_->getCameraParam();
+    response.l_intr_p[0] = camera_param.depthIntrinsic.fx;
+    response.l_intr_p[1] = camera_param.depthIntrinsic.fy;
+    response.l_intr_p[2] = camera_param.depthIntrinsic.cx;
+    response.l_intr_p[3] = camera_param.depthIntrinsic.cy;
+    response.r_intr_p[0] = camera_param.rgbIntrinsic.fx;
+    response.r_intr_p[1] = camera_param.rgbIntrinsic.fy;
+    response.r_intr_p[2] = camera_param.rgbIntrinsic.cx;
+    response.r_intr_p[3] = camera_param.rgbIntrinsic.cy;
+    for (int i = 0; i < 9; i++) {
+      if (i < 3) {
+        response.r2l_t[i] = camera_param.transform.trans[i];
+      }
+      response.r2l_r[i] = camera_param.transform.rot[i];
+    }
+
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get camera params: " << e.getMessage());
+    return false;
+  }
+  return true;
+}
+
+bool OBCameraNode::getSerialNumberCallback(GetStringRequest& request, GetStringResponse& response) {
+  (void)request;
+  auto device_info = device_->getDeviceInfo();
+  response.data = device_info->serialNumber();
+  response.success = true;
   return true;
 }
 

@@ -72,6 +72,7 @@ add_service_files(
   GetBool.srv
   SetBool.srv
   GetCameraInfo.srv
+  GetCameraParams.srv
   GetDeviceInfo.srv
   GetInt32.srv
   GetString.srv

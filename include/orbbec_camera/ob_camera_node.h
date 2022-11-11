@@ -19,7 +19,7 @@
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
 #include "point_cloud_proc/point_cloud_proc.h"
-
+#include "orbbec_camera/GetCameraParams.h"
 
 namespace orbbec_camera {
 class OBCameraNode {
@@ -120,15 +120,13 @@ class OBCameraNode {
                                std_srvs::SetBoolResponse& response,
                                const stream_index_pair& stream_index);
 
-  bool setLaserCallback(std_srvs::SetBoolRequest& request,
-                              std_srvs::SetBoolResponse& response);
+  bool setLaserCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
   bool setLdpEnableCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
   bool setFanCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
-  bool setFloorCallback(std_srvs::SetBoolRequest& request,
-                              std_srvs::SetBoolResponse& response);
+  bool setFloorCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
   bool getDeviceInfoCallback(GetDeviceInfoRequest& request, GetDeviceInfoResponse& response);
 
@@ -139,6 +137,11 @@ class OBCameraNode {
   bool saveImagesCallback(std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response);
 
   bool toggleSensor(const stream_index_pair& stream_index, bool enabled, std::string& msg);
+
+  bool getCameraParamsCallback(orbbec_camera::GetCameraParamsRequest& request,
+                               orbbec_camera::GetCameraParamsResponse& response);
+
+  bool getSerialNumberCallback(GetStringRequest& request, GetStringResponse& response);
 
  private:
   ros::NodeHandle nh_;
@@ -193,6 +196,10 @@ class OBCameraNode {
   ros::ServiceServer get_white_balance_srv_;
   ros::ServiceServer set_white_balance_srv_;
   ros::ServiceServer save_images_srv_;
+  ros::ServiceServer get_serial_number_srv_;
+  ros::ServiceServer reset_ir_exposure_srv_;
+  ros::ServiceServer get_camera_params_srv_;
+
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
   std::shared_ptr<tf2_ros::TransformBroadcaster> dynamic_tf_broadcaster_ = nullptr;

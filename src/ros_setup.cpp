@@ -198,4 +198,19 @@ void OBCameraNode::setupCameraInfo() {
   }
 }
 
+void OBCameraNode::setupPipelineConfig() {
+  if (pipeline_config_) {
+    pipeline_config_.reset();
+  }
+  pipeline_config_ = std::make_shared<ob::Config>();
+  if (depth_align_ && enable_[COLOR] && enable_[DEPTH]) {
+    pipeline_config_->setAlignMode(ALIGN_D2C_HW_MODE);
+  }
+  for (const auto& stream_index : IMAGE_STREAMS) {
+    if (enable_[stream_index]) {
+      pipeline_config_->enableStream(stream_profile_[stream_index]);
+    }
+  }
+}
+
 }  // namespace orbbec_camera
