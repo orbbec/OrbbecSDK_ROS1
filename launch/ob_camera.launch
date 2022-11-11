@@ -2,12 +2,12 @@
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
     <!-- Hardware depth registration -->
-    <arg name="depth_align" default="true"/>
+    <arg name="depth_align" default="false"/>
     <arg name="serial_number" default=""/>
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default=""/>
     <arg name="enable_point_cloud" default="true"/>
-    <arg name="enable_point_cloud_xyzrgb" default="true"/>
+    <arg name="enable_point_cloud_xyzrgb" default="false"/>
     <arg name="connection_delay" default="1.0"/>
     <arg name="color_width" default="640"/>
     <arg name="color_height" default="480"/>
