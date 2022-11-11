@@ -126,7 +126,7 @@ void OBCameraNode::setupCameraCtrlServices() {
       });
 
   get_sdk_version_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
-      "/" + camera_name_ + "/" + "get_sdk_version",
+      "/" + camera_name_ + "/" + "get_version",
       [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->getSDKVersionCallback(request, response);
         return response.success;
