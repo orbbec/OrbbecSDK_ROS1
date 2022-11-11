@@ -136,6 +136,12 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->saveImagesCallback(request, response);
       });
+  get_device_type_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
+      "/" + camera_name_ + "/" + "get_device_type",
+      [this](GetStringRequest& request, GetStringResponse& response) {
+        response.success = this->getDeviceTypeCallback(request, response);
+        return response.success;
+      });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -423,6 +429,14 @@ bool OBCameraNode::getSerialNumberCallback(GetStringRequest& request, GetStringR
   (void)request;
   auto device_info = device_->getDeviceInfo();
   response.data = device_info->serialNumber();
+  response.success = true;
+  return true;
+}
+
+bool OBCameraNode::getDeviceTypeCallback(GetStringRequest& request, GetStringResponse& response) {
+  (void)request;
+  auto device_info = device_->getDeviceInfo();
+  response.data = device_info->name();
   response.success = true;
   return true;
 }

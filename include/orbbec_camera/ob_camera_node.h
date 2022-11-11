@@ -143,6 +143,8 @@ class OBCameraNode {
 
   bool getSerialNumberCallback(GetStringRequest& request, GetStringResponse& response);
 
+  bool getDeviceTypeCallback(GetStringRequest& request, GetStringResponse& response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -199,6 +201,7 @@ class OBCameraNode {
   ros::ServiceServer get_serial_number_srv_;
   ros::ServiceServer reset_ir_exposure_srv_;
   ros::ServiceServer get_camera_params_srv_;
+  ros::ServiceServer get_device_type_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
