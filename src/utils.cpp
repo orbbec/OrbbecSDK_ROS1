@@ -64,6 +64,16 @@ OBFormat OBFormatFromString(const std::string& format) {
     return OB_FORMAT_UNKNOWN;
   }
 }
+std::string ObDeviceTypeToString(const OBDeviceType& type) {
+  switch (type) {
+    case OBDeviceType::OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA:
+      return "structured light binocular camera";
+    case OBDeviceType::OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA:
+      return "structured light monocular camera";
+    case OBDeviceType::OB_TOF_CAMERA:
+      return "tof camera";
+  }
+}
 
 sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
                                             OBCameraDistortion distortion, int width) {

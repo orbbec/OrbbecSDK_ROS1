@@ -23,6 +23,8 @@
 namespace orbbec_camera {
 OBFormat OBFormatFromString(const std::string &format);
 
+std::string ObDeviceTypeToString(const OBDeviceType & type);
+
 sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
                                             OBCameraDistortion distortion, int width);
 

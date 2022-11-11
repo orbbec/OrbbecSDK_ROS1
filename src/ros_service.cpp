@@ -511,7 +511,7 @@ bool OBCameraNode::getDeviceTypeCallback(GetStringRequest& request, GetStringRes
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   auto device_info = device_->getDeviceInfo();
-  response.data = device_info->name();
+  response.data = ObDeviceTypeToString(device_info->deviceType());
   response.success = true;
   return true;
 }

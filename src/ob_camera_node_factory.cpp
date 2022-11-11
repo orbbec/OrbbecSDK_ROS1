@@ -15,7 +15,8 @@ OBCameraNodeFactory::~OBCameraNodeFactory() {
 void OBCameraNodeFactory::init() {
   is_alive_ = true;
   auto log_level = nh_private_.param<std::string>("log_level", "info");
-  ctx_->setLoggerSeverity(obLogSeverityFromString(log_level));
+  auto ob_log_level = obLogSeverityFromString(log_level);
+  ctx_->setLoggerSeverity(ob_log_level);
   serial_number_ = nh_private_.param<std::string>("serial_number", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 1.0);
   check_connection_timer_ = nh_.createWallTimer(
@@ -58,7 +59,11 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   }
   ob_camera_node_ = std::make_unique<OBCameraNode>(nh_, nh_private_, device_);
   device_connected_ = true;
-  ROS_INFO_STREAM("Device " << device_info_->serialNumber() << " connected");
+  ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
+  ROS_INFO_STREAM("Serial number: " << device_info_->serialNumber());
+  ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
+  ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
+  ROS_INFO_STREAM("device type: " << ObDeviceTypeToString(device_info_->deviceType()));
 }
 
 void OBCameraNodeFactory::checkConnectionTimer() {

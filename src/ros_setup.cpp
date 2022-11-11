@@ -166,14 +166,14 @@ void OBCameraNode::setupPublishers() {
       continue;
     }
     std::string name = stream_name_[stream_index];
-    std::string topic_name = name + "/image_raw";
+    std::string topic_name = "/" + camera_name_ + "/" + name + "/image_raw";
     ros::SubscriberStatusCallback image_subscribed_cb =
         boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
     ros::SubscriberStatusCallback image_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
     image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
-    topic_name = name + "/camera_info";
+    topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1);
   }
   extrinsics_publisher_ = nh_.advertise<Extrinsics>("extrinsic/depth_to_color", 1, true);
