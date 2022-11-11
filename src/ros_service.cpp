@@ -153,7 +153,13 @@ bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
     return response.success;
   }
   auto sensor = sensors_[stream_index];
-  sensor->setMirror(request.data);
+  try {
+    sensor->setMirror(request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to set mirror mode: " << e.getMessage());
+    response.success = false;
+    return response.success;
+  }
   return true;
 }
 
@@ -166,7 +172,13 @@ bool OBCameraNode::getExposureCallback(GetInt32Request& request, GetInt32Respons
     return false;
   }
   auto sensor = sensors_[stream_index];
-  response.data = sensor->getExposure();
+  try {
+    response.data = sensor->getExposure();
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get exposure: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
@@ -178,7 +190,13 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
     return false;
   }
   auto sensor = sensors_[stream_index];
-  sensor->setExposure(request.data);
+  try {
+    sensor->setExposure(request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to set exposure: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
@@ -191,7 +209,13 @@ bool OBCameraNode::getGainCallback(GetInt32Request& request, GetInt32Response& r
     return false;
   }
   auto sensor = sensors_[stream_index];
-  response.data = sensor->getGain();
+  try {
+    response.data = sensor->getGain();
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get gain: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
@@ -203,7 +227,13 @@ bool OBCameraNode::setGainCallback(SetInt32Request& request, SetInt32Response& r
     return false;
   }
   auto sensor = sensors_[stream_index];
-  sensor->setGain(request.data);
+  try {
+    sensor->setGain(request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to set gain: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
@@ -228,7 +258,13 @@ bool OBCameraNode::setAutoWhiteBalanceCallback(SetInt32Request& request,
     return false;
   }
   auto sensor = sensors_[COLOR];
-  sensor->setAutoWhiteBalance(request.data);
+  try {
+    sensor->setAutoWhiteBalance(request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to set auto white balance: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
@@ -240,7 +276,13 @@ bool OBCameraNode::getWhiteBalanceCallback(GetInt32Request& request, GetInt32Res
     return false;
   }
   auto sensor = sensors_[COLOR];
-  response.data = sensor->getWhiteBalance();
+  try {
+    response.data = sensor->getWhiteBalance();
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get white balance: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
@@ -251,7 +293,13 @@ bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Res
     return false;
   }
   auto sensor = sensors_[COLOR];
-  sensor->setWhiteBalance(request.data);
+  try {
+    sensor->setWhiteBalance(request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to set white balance: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
@@ -264,7 +312,13 @@ bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
     return false;
   }
   auto sensor = sensors_[stream_index];
-  sensor->setAutoExposure(request.data);
+  try {
+    sensor->setAutoExposure(request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to set auto exposure: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
@@ -427,8 +481,13 @@ bool OBCameraNode::getCameraParamsCallback(orbbec_camera::GetCameraParamsRequest
 
 bool OBCameraNode::getSerialNumberCallback(GetStringRequest& request, GetStringResponse& response) {
   (void)request;
-  auto device_info = device_->getDeviceInfo();
-  response.data = device_info->serialNumber();
+  try {
+    auto device_info = device_->getDeviceInfo();
+    response.data = device_info->serialNumber();
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get serial number: " << e.getMessage());
+    return false;
+  }
   response.success = true;
   return true;
 }
