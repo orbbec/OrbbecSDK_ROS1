@@ -254,7 +254,13 @@ bool OBCameraNode::getAutoWhiteBalanceCallback(GetInt32Request& request,
     return false;
   }
   auto sensor = sensors_[COLOR];
-  response.data = sensor->getAutoWhiteBalance();
+  try {
+    response.data = sensor->getAutoWhiteBalance();
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get auto white balance: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
