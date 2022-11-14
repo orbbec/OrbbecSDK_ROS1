@@ -79,6 +79,14 @@ class OBCameraNode {
 
   void imageUnsubscribedCallback(const stream_index_pair& stream_index);
 
+  void pointCloudXYZSubscribedCallback();
+
+  void pointCloudXYZUnsubscribedCallback();
+
+  void pointCloudXYZRGBSubscribedCallback();
+
+  void pointCloudXYZRGBUnsubscribedCallback();
+
   void calcAndPublishStaticTransform();
 
   void publishDynamicTransforms();

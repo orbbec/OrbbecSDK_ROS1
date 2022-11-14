@@ -177,9 +177,19 @@ void OBCameraNode::setupPublishers() {
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1);
   }
   extrinsics_publisher_ = nh_.advertise<Extrinsics>("extrinsic/depth_to_color", 1, true);
-  depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("depth/points", 1);
-  depth_registered_cloud_pub_ =
-      nh_.advertise<sensor_msgs::PointCloud2>("depth_registered/points", 1);
+  ros::SubscriberStatusCallback depth_cloud_subscribed_cb =
+      boost::bind(&OBCameraNode::pointCloudXYZSubscribedCallback, this);
+  ros::SubscriberStatusCallback depth_cloud_unsubscribed_cb =
+      boost::bind(&OBCameraNode::pointCloudXYZUnsubscribedCallback, this);
+  depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
+      "depth/points", 1, depth_cloud_subscribed_cb, depth_cloud_unsubscribed_cb);
+  ros::SubscriberStatusCallback depth_registered_cloud_subscribed_cb =
+      boost::bind(&OBCameraNode::pointCloudXYZSubscribedCallback, this);
+  ros::SubscriberStatusCallback depth_registered_cloud_unsubscribed_cb =
+      boost::bind(&OBCameraNode::pointCloudXYZUnsubscribedCallback, this);
+  depth_registered_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
+      "depth_registered/points", 1, depth_registered_cloud_subscribed_cb,
+      depth_registered_cloud_unsubscribed_cb);
 }
 
 void OBCameraNode::setupCameraInfo() {

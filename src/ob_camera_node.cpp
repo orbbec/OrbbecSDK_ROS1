@@ -435,6 +435,28 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
   }
 }
 
+void OBCameraNode::pointCloudXYZSubscribedCallback() {
+  ROS_INFO_STREAM("point cloud subscribed");
+  imageSubscribedCallback(DEPTH);
+}
+
+void OBCameraNode::pointCloudXYZUnsubscribedCallback() {
+  ROS_INFO_STREAM("point cloud unsubscribed");
+  imageUnsubscribedCallback(DEPTH);
+}
+
+void OBCameraNode::pointCloudXYZRGBSubscribedCallback() {
+  ROS_INFO_STREAM("rgb point cloud subscribed");
+  imageSubscribedCallback(DEPTH);
+  imageSubscribedCallback(COLOR);
+}
+
+void OBCameraNode::pointCloudXYZRGBUnsubscribedCallback() {
+  ROS_INFO_STREAM("point cloud unsubscribed");
+  imageUnsubscribedCallback(DEPTH);
+  imageUnsubscribedCallback(COLOR);
+}
+
 boost::optional<OBCameraParam> OBCameraNode::getCameraParam() {
   auto camera_params = device_->getCalibrationCameraParamList();
   for (size_t i = 0; i < camera_params->count(); i++) {
