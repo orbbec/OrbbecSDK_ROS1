@@ -161,7 +161,7 @@ void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
 
 void OBCameraNode::publishPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
   try {
-    if (depth_align_ && (format_[COLOR] == OB_FORMAT_YUYV || format_[COLOR] == OB_FORMAT_I420)) {
+    if (depth_align_) {
       if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
         publishColorPointCloud(frame_set);
       }
