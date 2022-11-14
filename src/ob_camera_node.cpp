@@ -295,7 +295,7 @@ void OBCameraNode::publishColorPointCloud(std::shared_ptr<ob::FrameSet> frame_se
   modifier.resize(valid_count);
   depth_registered_cloud_pub_.publish(cloud_msg_);
   if (save_point_cloud_xyzrgb_) {
-    save_point_cloud_xyz_ = false;
+    save_point_cloud_xyzrgb_ = false;
     auto now = std::time(nullptr);
     std::stringstream ss;
     ss << std::put_time(std::localtime(&now), "%Y%m%d_%H%M%S");
