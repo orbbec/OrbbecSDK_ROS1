@@ -127,6 +127,9 @@ class OBCameraNode {
                                std_srvs::SetBoolResponse& response,
                                const stream_index_pair& stream_index);
 
+  bool getAutoExposureCallback(GetBoolRequest& request, GetBoolResponse& response,
+                               const stream_index_pair& stream_index);
+
   bool setLaserCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
   bool setLdpEnableCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
@@ -202,6 +205,7 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::ServiceServer> set_mirror_srv_;
   std::map<stream_index_pair, ros::ServiceServer> toggle_sensor_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_auto_exposure_srv_;
+  std::map<stream_index_pair, ros::ServiceServer> get_auto_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> get_camera_info_srv_;
   std::map<stream_index_pair, ros::ServiceServer> save_images_srv_;
 

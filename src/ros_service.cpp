@@ -50,6 +50,12 @@ void OBCameraNode::setupCameraCtrlServices() {
               response.success = this->setAutoExposureCallback(request, response, stream_index);
               return response.success;
             });
+    service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_auto_exposure";
+    get_auto_exposure_srv_[stream_index] = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+        service_name, [this, stream_index](GetBoolRequest& request, GetBoolResponse& response) {
+          response.success = this->getAutoExposureCallback(request, response, stream_index);
+          return response.success;
+        });
     service_name = "/" + camera_name_ + "/" + "toggle_" + stream_name;
     toggle_sensor_srv_[stream_index] =
         nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
@@ -343,6 +349,25 @@ bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
     sensor->setAutoExposure(request.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set auto exposure: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
+  return true;
+}
+
+bool OBCameraNode::getAutoExposureCallback(GetBoolRequest& request, GetBoolResponse& response,
+                                           const stream_index_pair& stream_index) {
+  (void)request;
+  if (!enable_[stream_index]) {
+    ROS_ERROR_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
+    response.success = false;
+    return false;
+  }
+  auto sensor = sensors_[stream_index];
+  try {
+    response.data = sensor->getAutoExposure();
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get auto exposure: " << e.getMessage());
     response.success = false;
     return false;
   }

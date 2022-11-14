@@ -34,6 +34,8 @@ class ROSOBSensor {
 
   void setAutoExposure(bool data);
 
+  bool getAutoExposure();
+
   OBSensorType getSensorType();
 
   void setMirror(bool data);

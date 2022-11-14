@@ -152,6 +152,25 @@ void ROSOBSensor::setAutoExposure(bool data) {
   }
 }
 
+bool ROSOBSensor::getAutoExposure() {
+  bool data = false;
+  switch (sensor_->type()) {
+    case OB_SENSOR_DEPTH:
+      data = device_->getBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
+      break;
+    case OB_SENSOR_IR:
+      data = device_->getBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL);
+      break;
+    case OB_SENSOR_COLOR:
+      data = device_->getBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL);
+      break;
+    default:
+      ROS_ERROR_STREAM(name_ << " does not support set auto exposure");
+      break;
+  }
+  return data;
+}
+
 OBSensorType ROSOBSensor::getSensorType() { return sensor_->type(); }
 
 void ROSOBSensor::setMirror(bool data) { is_mirrored_ = data; }
