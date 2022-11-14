@@ -234,8 +234,6 @@ class OBCameraNode {
   std::atomic_bool pipeline_started_{false};
   bool enable_point_cloud_ = true;
   bool enable_point_cloud_xyzrgb_ = true;
-  std::unique_ptr<PointCloudXyzNode> point_cloud_xyz_node_ = nullptr;
-  std::unique_ptr<PointCloudXyzrgbNode> point_cloud_xyzrgb_node_ = nullptr;
 };
 
 }  // namespace orbbec_camera

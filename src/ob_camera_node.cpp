@@ -18,12 +18,6 @@ void OBCameraNode::init() {
   setupTopics();
   setupCameraCtrlServices();
   setupFrameCallback();
-  if (enable_point_cloud_) {
-    point_cloud_xyz_node_ = std::make_unique<PointCloudXyzNode>(nh_, nh_private_);
-  }
-  if (enable_point_cloud_xyzrgb_) {
-    point_cloud_xyzrgb_node_ = std::make_unique<PointCloudXyzrgbNode>(nh_, nh_private_);
-  }
 }
 
 OBCameraNode::~OBCameraNode() {
@@ -350,6 +344,23 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   image_msg->header.frame_id =
       depth_align_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
   image_publisher.publish(image_msg);
+  if (save_images_[stream_index]) {
+    auto now = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&now), "%Y%m%d_%H%M%S");
+    auto current_path = boost::filesystem::current_path().string();
+    auto fps = fps_[stream_index];
+    std::string filename = current_path + "/image/" + stream_name_[stream_index] + "_" +
+                           std::to_string(image_msg->width) + "x" +
+                           std::to_string(image_msg->height) + "_" + std::to_string(fps) + "hz_" +
+                           ss.str() + ".jpg";
+    if (!boost::filesystem::exists(current_path + "/image")) {
+      boost::filesystem::create_directory(current_path + "/image");
+    }
+    ROS_INFO_STREAM("Saving image to " << filename);
+    cv::imwrite(filename, image);
+    save_images_[stream_index] = false;
+  }
 }
 
 void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index) {
