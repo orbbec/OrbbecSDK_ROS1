@@ -55,7 +55,6 @@ void OBCameraNode::getParameters() {
     depth_aligned_frame_id_[stream_index] = optical_frame_id_[COLOR];
   }
   publish_tf_ = nh_private_.param<bool>("publish_tf", true);
-  enable_reconfigure_ = nh_private_.param<bool>("enable_reconfigure", false);
   depth_align_ = nh_private_.param<bool>("depth_align", false);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");
@@ -180,7 +179,7 @@ void OBCameraNode::publishPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
 }
 
 void OBCameraNode::publishDepthPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
-  if (depth_cloud_pub_.getNumSubscribers() == 0) {
+  if (depth_cloud_pub_.getNumSubscribers() == 0 || !enable_point_cloud_) {
     return;
   }
   auto camera_param = pipeline_->getCameraParam();
@@ -222,10 +221,23 @@ void OBCameraNode::publishDepthPointCloud(std::shared_ptr<ob::FrameSet> frame_se
   cloud_msg_.height = 1;
   modifier.resize(valid_count);
   depth_cloud_pub_.publish(cloud_msg_);
+  if (save_point_cloud_xyz_) {
+    save_point_cloud_xyz_ = false;
+    auto now = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&now), "%Y%m%d_%H%M%S");
+    auto current_path = boost::filesystem::current_path().string();
+    std::string filename = current_path + "/point_cloud/points_xyz_" + ss.str() + ".ply";
+    if (!boost::filesystem::exists(current_path + "/point_cloud")) {
+      boost::filesystem::create_directory(current_path + "/point_cloud");
+    }
+    ROS_INFO_STREAM("Saving point cloud to " << filename);
+    savePointsToPly(frame, filename);
+  }
 }
 
 void OBCameraNode::publishColorPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
-  if (depth_registered_cloud_pub_.getNumSubscribers() == 0) {
+  if (depth_registered_cloud_pub_.getNumSubscribers() == 0 || !enable_point_cloud_xyzrgb_) {
     return;
   }
   auto depth_frame = frame_set->depthFrame();
@@ -282,6 +294,19 @@ void OBCameraNode::publishColorPointCloud(std::shared_ptr<ob::FrameSet> frame_se
   cloud_msg_.height = 1;
   modifier.resize(valid_count);
   depth_registered_cloud_pub_.publish(cloud_msg_);
+  if (save_point_cloud_xyzrgb_) {
+    save_point_cloud_xyz_ = false;
+    auto now = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&now), "%Y%m%d_%H%M%S");
+    auto current_path = boost::filesystem::current_path().string();
+    std::string filename = current_path + "/point_cloud/points_xyzrgb_" + ss.str() + ".ply";
+    if (!boost::filesystem::exists(current_path + "/point_cloud")) {
+      boost::filesystem::create_directory(current_path + "/point_cloud");
+    }
+    ROS_INFO_STREAM("Saving point cloud to " << filename);
+    saveRGBPointsToPly(frame, filename);
+  }
 }
 
 void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set) {

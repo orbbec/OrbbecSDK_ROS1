@@ -119,67 +119,9 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
 
   return info;
 }
-void savePointToPly(sensor_msgs::PointCloud2::Ptr cloud, const std::string& filename) {
-  sensor_msgs::PointCloud out_point_cloud;
-  sensor_msgs::convertPointCloud2ToPointCloud(*cloud, out_point_cloud);
-  size_t point_size = 0;
-  FILE* fp = fopen(filename.c_str(), "wb+");
-  for (auto& point : out_point_cloud.points) {
-    if (!std::isnan(point.x) && !std::isnan(point.y) && !std::isnan(point.z)) {
-      point_size++;
-    }
-  }
-  ROS_INFO_STREAM("Point size: " << point_size);
-  fprintf(fp, "ply\n");
-  fprintf(fp, "format ascii 1.0\n");
-  fprintf(fp, "element vertex %zu\n", point_size);
-  fprintf(fp, "property float x\n");
-  fprintf(fp, "property float y\n");
-  fprintf(fp, "property float z\n");
-  fprintf(fp, "end_header\n");
-  for (const auto& point : out_point_cloud.points) {
-    if (!std::isnan(point.x) && !std::isnan(point.y) && !std::isnan(point.z)) {
-      fprintf(fp, "%.3f %.3f %.3f\n", point.x, point.y, point.z);
-    }
-  }
-  fflush(fp);
-  fclose(fp);
-}
-
-void saveRGBPointToPly(sensor_msgs::PointCloud2::Ptr cloud, const std::string& filename) {
-  sensor_msgs::PointCloud2Iterator<float> iter_x(*cloud, "x");
-  sensor_msgs::PointCloud2Iterator<float> iter_y(*cloud, "y");
-  sensor_msgs::PointCloud2Iterator<float> iter_z(*cloud, "z");
-  sensor_msgs::PointCloud2Iterator<uint8_t> iter_r(*cloud, "r");
-  sensor_msgs::PointCloud2Iterator<uint8_t> iter_g(*cloud, "g");
-  sensor_msgs::PointCloud2Iterator<uint8_t> iter_b(*cloud, "b");
-  size_t point_size = cloud->width * cloud->height;
-  std::vector<geometry_msgs::Point32> points;
-  std::vector<std::vector<uint8_t>> rgb;
-  for (size_t i = 0; i < point_size; i++) {
-    if (!std::isnan(*iter_x) && !std::isnan(*iter_y) && !std::isnan(*iter_z)) {
-      geometry_msgs::Point32 point;
-      point.x = *iter_x;
-      point.y = *iter_y;
-      point.z = *iter_z;
-      points.push_back(point);
-      std::vector<uint8_t> rgb_point;
-      rgb_point.push_back(*iter_r);
-      rgb_point.push_back(*iter_g);
-      rgb_point.push_back(*iter_b);
-      rgb.push_back(rgb_point);
-    }
-    ++iter_x;
-    ++iter_y;
-    ++iter_z;
-    ++iter_r;
-    ++iter_g;
-    ++iter_b;
-  }
-  point_size = points.size();
-  FILE* fp = fopen(filename.c_str(), "wb+");
-
-  ROS_INFO_STREAM("Point size: " << point_size);
+void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName) {
+  size_t point_size = frame->dataSize() / sizeof(OBColorPoint);
+  FILE* fp = fopen(fileName.c_str(), "wb+");
   fprintf(fp, "ply\n");
   fprintf(fp, "format ascii 1.0\n");
   fprintf(fp, "element vertex %zu\n", point_size);
@@ -191,10 +133,34 @@ void saveRGBPointToPly(sensor_msgs::PointCloud2::Ptr cloud, const std::string& f
   fprintf(fp, "property uchar blue\n");
   fprintf(fp, "end_header\n");
 
-  for (size_t i = 0; i < point_size; ++i) {
-    fprintf(fp, "%.3f %.3f %.3f %d %d %d\n", points[i].x, points[i].y, points[i].z, rgb[i][0],
-            rgb[i][1], rgb[i][2]);
+  auto* point = (OBColorPoint*)frame->data();
+  for (size_t i = 0; i < point_size; i++) {
+    fprintf(fp, "%.3f %.3f %.3f %d %d %d\n", point->x, point->y, point->z, (int)point->r,
+            (int)point->g, (int)point->b);
+    point++;
   }
+
+  fflush(fp);
+  fclose(fp);
+}
+
+void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName) {
+  size_t point_size = frame->dataSize() / sizeof(OBPoint);
+  FILE* fp = fopen(fileName.c_str(), "wb+");
+  fprintf(fp, "ply\n");
+  fprintf(fp, "format ascii 1.0\n");
+  fprintf(fp, "element vertex %zu\n", point_size);
+  fprintf(fp, "property float x\n");
+  fprintf(fp, "property float y\n");
+  fprintf(fp, "property float z\n");
+  fprintf(fp, "end_header\n");
+
+  auto* points = (OBPoint*)frame->data();
+  for (size_t i = 0; i < point_size; i++) {
+    fprintf(fp, "%.3f %.3f %.3f\n", points->x, points->y, points->z);
+    points++;
+  }
+
   fflush(fp);
   fclose(fp);
 }

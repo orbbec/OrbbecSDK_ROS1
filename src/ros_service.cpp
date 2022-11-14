@@ -65,6 +65,13 @@ void OBCameraNode::setupCameraCtrlServices() {
               response.success = this->getCameraInfoCallback(request, response, stream_index);
               return response.success;
             });
+    service_name = "/" + camera_name_ + "/" + "save_" + stream_name + "_image";
+    save_images_srv_[stream_index] =
+        nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+            service_name, [this, stream_index](std_srvs::EmptyRequest& request,
+                                               std_srvs::EmptyResponse& response) {
+              return this->saveImagesCallback(request, response);
+            });
   }
   get_auto_white_balance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
       "/" + camera_name_ + "/" + "get_auto_white_balance",
@@ -139,17 +146,23 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getSDKVersionCallback(request, response);
         return response.success;
       });
-  save_images_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
-      "/" + camera_name_ + "/" + "save_images",
-      [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
-        return this->saveImagesCallback(request, response);
-      });
   get_device_type_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
       "/" + camera_name_ + "/" + "get_device_type",
       [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->getDeviceTypeCallback(request, response);
         return response.success;
       });
+  save_point_cloud_xyz_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+      "/" + camera_name_ + "/" + "save_point_cloud_xyz",
+      [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
+        return this->savePointCloudXYZCallback(request, response);
+      });
+  save_point_cloud_xyzrgb_srv_ =
+      nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+          "/" + camera_name_ + "/" + "save_point_cloud_xyzrgb",
+          [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
+            return this->savePointCloudXYZRGBCallback(request, response);
+          });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -469,6 +482,22 @@ bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,
       ROS_WARN_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     }
   }
+  return true;
+}
+
+bool OBCameraNode::savePointCloudXYZCallback(std_srvs::EmptyRequest& request,
+                                             std_srvs::EmptyResponse& response) {
+  (void)request;
+  (void)response;
+  save_point_cloud_xyz_ = true;
+  return true;
+}
+
+bool OBCameraNode::savePointCloudXYZRGBCallback(std_srvs::EmptyRequest& request,
+                                                std_srvs::EmptyResponse& response) {
+  (void)request;
+  (void)response;
+  save_point_cloud_xyzrgb_ = true;
   return true;
 }
 

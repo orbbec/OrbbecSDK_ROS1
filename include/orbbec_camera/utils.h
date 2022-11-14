@@ -23,15 +23,14 @@
 namespace orbbec_camera {
 OBFormat OBFormatFromString(const std::string &format);
 
-std::string ObDeviceTypeToString(const OBDeviceType & type);
+std::string ObDeviceTypeToString(const OBDeviceType &type);
 
 sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
                                             OBCameraDistortion distortion, int width);
 
-void savePointToPly(sensor_msgs::PointCloud2::Ptr cloud, const std::string& filename);
+void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fileName);
 
-void saveRGBPointToPly(sensor_msgs::PointCloud2::Ptr cloud, const std::string& filename);
-
+void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName);
 
 tf2::Quaternion rotationMatrixToQuaternion(const float rotation[9]);
 

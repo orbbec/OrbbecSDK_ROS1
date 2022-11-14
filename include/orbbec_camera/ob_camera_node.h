@@ -18,7 +18,6 @@
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
-#include "point_cloud_proc/point_cloud_proc.h"
 #include "orbbec_camera/GetCameraParams.h"
 
 namespace orbbec_camera {
@@ -136,6 +135,12 @@ class OBCameraNode {
                             const stream_index_pair& stream_index);
   bool saveImagesCallback(std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response);
 
+  bool savePointCloudXYZCallback(std_srvs::EmptyRequest& request,
+                                 std_srvs::EmptyResponse& response);
+
+  bool savePointCloudXYZRGBCallback(std_srvs::EmptyRequest& request,
+                                    std_srvs::EmptyResponse& response);
+
   bool toggleSensor(const stream_index_pair& stream_index, bool enabled, std::string& msg);
 
   bool getCameraParamsCallback(orbbec_camera::GetCameraParamsRequest& request,
@@ -190,6 +195,7 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::ServiceServer> toggle_sensor_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_auto_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> get_camera_info_srv_;
+  std::map<stream_index_pair, ros::ServiceServer> save_images_srv_;
 
   ros::ServiceServer get_sdk_version_srv_;
   ros::ServiceServer get_device_info_srv_;
@@ -201,11 +207,12 @@ class OBCameraNode {
   ros::ServiceServer set_auto_white_balance_srv_;
   ros::ServiceServer get_white_balance_srv_;
   ros::ServiceServer set_white_balance_srv_;
-  ros::ServiceServer save_images_srv_;
   ros::ServiceServer get_serial_number_srv_;
   ros::ServiceServer reset_ir_exposure_srv_;
   ros::ServiceServer get_camera_params_srv_;
   ros::ServiceServer get_device_type_srv_;
+  ros::ServiceServer save_point_cloud_xyz_srv_;
+  ros::ServiceServer save_point_cloud_xyzrgb_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
@@ -216,7 +223,6 @@ class OBCameraNode {
   std::condition_variable tf_cv_;
   double tf_publish_rate_ = 10.0;
   bool depth_align_ = false;
-  bool enable_reconfigure_ = false;
   std::recursive_mutex device_lock_;
   std::unique_ptr<camera_info_manager::CameraInfoManager> color_camera_info_ = nullptr;
   std::unique_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_ = nullptr;
@@ -234,6 +240,8 @@ class OBCameraNode {
   std::atomic_bool pipeline_started_{false};
   bool enable_point_cloud_ = true;
   bool enable_point_cloud_xyzrgb_ = true;
+  std::atomic_bool save_point_cloud_xyz_{false};
+  std::atomic_bool save_point_cloud_xyzrgb_{false};
 };
 
 }  // namespace orbbec_camera

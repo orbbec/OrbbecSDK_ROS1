@@ -109,8 +109,6 @@ link_directories(${ORBBEC_LIBS}
   ${OpenCV_LIBS})
 
 add_library(${PROJECT_NAME}
-  src/point_cloud_proc/point_cloud_xyz.cpp
-  src/point_cloud_proc/point_cloud_xyzrgb.cpp
   src/d2c_viewer.cpp
   src/ob_camera_node.cpp
   src/ob_camera_node_factory.cpp
