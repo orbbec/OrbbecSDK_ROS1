@@ -313,10 +313,18 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   if (frame_set == nullptr) {
     return;
   }
-  onNewFrameCallback(frame_set->colorFrame(), COLOR);
-  onNewFrameCallback(frame_set->depthFrame(), DEPTH);
-  onNewFrameCallback(frame_set->irFrame(), INFRA0);
-  publishPointCloud(frame_set);
+  try {
+    onNewFrameCallback(frame_set->colorFrame(), COLOR);
+    onNewFrameCallback(frame_set->depthFrame(), DEPTH);
+    onNewFrameCallback(frame_set->irFrame(), INFRA0);
+    publishPointCloud(frame_set);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("onNewFrameSetCallback error: " << e.getMessage());
+  } catch (const std::exception& e) {
+    ROS_ERROR_STREAM("onNewFrameSetCallback error: " << e.what());
+  } catch (...) {
+    ROS_ERROR_STREAM("onNewFrameSetCallback error: unknown error");
+  }
 }
 
 void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
