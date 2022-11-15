@@ -80,8 +80,8 @@ void OBCameraNodeFactory::deviceConnectCallback(
   }
   ROS_INFO_STREAM("device connected");
   CHECK_NOTNULL(device_list.get());
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (!device_) {
-    std::lock_guard<decltype(device_lock_)> lock(device_lock_);
     startDevice(device_list);
   }
 }
@@ -96,6 +96,7 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
   CHECK_NOTNULL(device_list.get());
   for (size_t i = 0; i < device_list->deviceCount(); i++) {
     auto serial = device_list->serialNumber(i);
+    std::lock_guard<decltype(device_lock_)> lock(device_lock_);
     if (serial == device_info_->serialNumber()) {
       ob_camera_node_.reset();
       device_.reset();
@@ -120,10 +121,13 @@ OBLogSeverity OBCameraNodeFactory::obLogSeverityFromString(const std::string& lo
 }
 
 void OBCameraNodeFactory::queryDevice() {
-  while (is_alive_ && !device_) {
+  while (is_alive_ && ros::ok()) {
+    std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+    if (device_) {
+      break;
+    }
     auto list = ctx_->queryDeviceList();
     if (list->deviceCount() > 0) {
-      std::lock_guard<decltype(device_lock_)> lock(device_lock_);
       startDevice(list);
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
