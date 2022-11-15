@@ -146,11 +146,7 @@ class OBCameraNode {
                             const stream_index_pair& stream_index);
   bool saveImagesCallback(std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response);
 
-  bool savePointCloudXYZCallback(std_srvs::EmptyRequest& request,
-                                 std_srvs::EmptyResponse& response);
-
-  bool savePointCloudXYZRGBCallback(std_srvs::EmptyRequest& request,
-                                    std_srvs::EmptyResponse& response);
+  bool savePointCloudCallback(std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response);
 
   bool toggleSensor(const stream_index_pair& stream_index, bool enabled, std::string& msg);
 
@@ -207,8 +203,6 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::ServiceServer> set_auto_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> get_auto_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> get_camera_info_srv_;
-  std::map<stream_index_pair, ros::ServiceServer> save_images_srv_;
-
   ros::ServiceServer get_sdk_version_srv_;
   ros::ServiceServer get_device_info_srv_;
   ros::ServiceServer set_laser_srv_;
@@ -223,8 +217,8 @@ class OBCameraNode {
   ros::ServiceServer reset_ir_exposure_srv_;
   ros::ServiceServer get_camera_params_srv_;
   ros::ServiceServer get_device_type_srv_;
-  ros::ServiceServer save_point_cloud_xyz_srv_;
-  ros::ServiceServer save_point_cloud_xyzrgb_srv_;
+  ros::ServiceServer save_point_cloud_srv_;
+  ros::ServiceServer save_images_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
