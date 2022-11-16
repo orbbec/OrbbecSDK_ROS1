@@ -387,7 +387,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     std::string filename = current_path + "/image/" + stream_name_[stream_index] + "_" +
                            std::to_string(image_msg->width) + "x" +
                            std::to_string(image_msg->height) + "_" + std::to_string(fps) + "hz_" +
-                           ss.str() + ".jpg";
+                           ss.str() + ".png";
     if (!boost::filesystem::exists(current_path + "/image")) {
       boost::filesystem::create_directory(current_path + "/image");
     }
