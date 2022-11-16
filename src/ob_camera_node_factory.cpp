@@ -134,6 +134,7 @@ void OBCameraNodeFactory::queryDevice() {
       break;
     }
     auto list = ctx_->queryDeviceList();
+    CHECK_NOTNULL(list);
     if (list->deviceCount() > 0) {
       try {
         startDevice(list);

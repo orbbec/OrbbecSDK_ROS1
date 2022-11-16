@@ -371,6 +371,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   auto image_publisher = image_publishers_[stream_index];
   auto image_msg =
       cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], image).toImageMsg();
+  CHECK_NOTNULL(image_msg);
   image_msg->header.stamp = timestamp;
   image_msg->is_bigendian = false;
   image_msg->step = width * unit_step_size_[stream_index];
@@ -552,6 +553,7 @@ void OBCameraNode::publishDynamicTransforms() {
       for (auto& msg : static_tf_msgs_) {
         msg.header.stamp = t;
       }
+      CHECK_NOTNULL(dynamic_tf_broadcaster_);
       dynamic_tf_broadcaster_->sendTransform(static_tf_msgs_);
     }
   }
@@ -564,6 +566,7 @@ void OBCameraNode::publishStaticTransforms() {
   if (tf_publish_rate_ > 0) {
     tf_thread_ = std::make_shared<std::thread>([this]() { publishDynamicTransforms(); });
   } else {
+    CHECK_NOTNULL(static_tf_broadcaster_);
     static_tf_broadcaster_->sendTransform(static_tf_msgs_);
   }
 }
