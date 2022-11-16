@@ -244,8 +244,8 @@ class OBCameraNode {
   sensor_msgs::PointCloud2 cloud_msg_;
   ob::PointCloudFilter cloud_filter_;
   std::atomic_bool pipeline_started_{false};
-  bool enable_point_cloud_ = true;
-  bool enable_point_cloud_xyzrgb_ = true;
+  bool enable_point_cloud_ = false;
+  bool enable_point_cloud_xyzrgb_ = false;
   std::atomic_bool save_point_cloud_xyz_{false};
   std::atomic_bool save_point_cloud_xyzrgb_{false};
 };

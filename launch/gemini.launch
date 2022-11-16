@@ -23,7 +23,7 @@
     <arg name="ir_width" default="640"/>
     <arg name="ir_height" default="400"/>
     <arg name="ir_fps" default="30"/>
-    <arg name="enable_ir" default="false"/>
+    <arg name="enable_ir" default="true"/>
     <arg name="ir_format" default="Y10"/>
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>

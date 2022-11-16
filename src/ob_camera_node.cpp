@@ -392,7 +392,16 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
       boost::filesystem::create_directory(current_path + "/image");
     }
     ROS_INFO_STREAM("Saving image to " << filename);
-    cv::imwrite(filename, image);
+    if (stream_index.first == OB_STREAM_DEPTH) {
+      auto image_to_save = cv_bridge::toCvCopy(image_msg, encoding_[stream_index])->image;
+      cv::imwrite(filename, image_to_save);
+    } else if (stream_index.first == OB_STREAM_COLOR) {
+      auto image_to_save =
+          cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8)->image;
+      cv::imwrite(filename, image_to_save);
+    } else {
+      cv::imwrite(filename, image);
+    }
     save_images_[stream_index] = false;
   }
 }
