@@ -223,4 +223,52 @@ void OBCameraNode::setupPipelineConfig() {
   }
 }
 
+void OBCameraNode::readDefaultGain() {
+  for (const auto& stream_index : IMAGE_STREAMS) {
+    if (!enable_[stream_index]) {
+      continue;
+    }
+    try {
+      auto sensor = sensors_[stream_index];
+      CHECK_NOTNULL(sensor.get());
+      auto gain = sensor->getGain();
+      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " gain " << gain);
+      default_gain_[stream_index] = gain;
+    } catch (ob::Error& e) {
+      default_gain_[stream_index] = 0;
+      ROS_ERROR_STREAM("get gain error " << e.getMessage());
+    }
+  }
+}
+
+void OBCameraNode::readDefaultExposure() {
+  for (const auto& stream_index : IMAGE_STREAMS) {
+    if (!enable_[stream_index]) {
+      continue;
+    }
+    try {
+      auto sensor = sensors_[stream_index];
+      CHECK_NOTNULL(sensor.get());
+      auto exposure = sensor->getExposure();
+      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure);
+      default_exposure_[stream_index] = exposure;
+    } catch (ob::Error& e) {
+      default_exposure_[stream_index] = 0;
+      ROS_ERROR_STREAM("get exposure error " << e.getMessage());
+    }
+  }
+}
+
+void OBCameraNode::readDefaultWhiteBalance() {
+  try {
+    auto sensor = sensors_[COLOR];
+    CHECK_NOTNULL(sensor.get());
+    auto wb = sensor->getWhiteBalance();
+    ROS_INFO_STREAM("stream " << stream_name_[COLOR] << " wb " << wb);
+    default_white_balance_ = wb;
+  } catch (ob::Error& e) {
+    default_white_balance_ = 0;
+    ROS_ERROR_STREAM("get wb error " << e.getMessage());
+  }
+}
 }  // namespace orbbec_camera

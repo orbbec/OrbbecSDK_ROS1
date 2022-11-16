@@ -22,6 +22,13 @@ void OBCameraNode::setupCameraCtrlServices() {
           response.success = this->setExposureCallback(request, response, stream_index);
           return response.success;
         });
+    service_name = "/" + camera_name_ + "/" + "reset_" + stream_name + "_exposure";
+    reset_exposure_srv_[stream_index] =
+        nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+            service_name, [this, stream_index](std_srvs::EmptyRequest& request,
+                                               std_srvs::EmptyResponse& response) {
+              return this->resetCameraExposureCallback(request, response, stream_index);
+            });
     service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_gain";
     get_gain_srv_[stream_index] = nh_.advertiseService<GetInt32Request, GetInt32Response>(
         service_name, [this, stream_index](GetInt32Request& request, GetInt32Response& response) {
@@ -34,6 +41,13 @@ void OBCameraNode::setupCameraCtrlServices() {
           response.success = this->setGainCallback(request, response, stream_index);
           return response.success;
         });
+    service_name = "/" + camera_name_ + "/" + "reset_" + stream_name + "_gain";
+    reset_gain_srv_[stream_index] =
+        nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+            service_name, [this, stream_index](std_srvs::EmptyRequest& request,
+                                               std_srvs::EmptyResponse& response) {
+              return this->resetCameraGainCallback(request, response, stream_index);
+            });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_mirror";
     set_mirror_srv_[stream_index] =
         nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
@@ -95,6 +109,11 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->setWhiteBalanceCallback(request, response);
         return response.success;
+      });
+  reset_white_balance_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+      "/" + camera_name_ + "/" + "reset_white_balance",
+      [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
+        return this->resetCameraWhiteBalanceCallback(request, response);
       });
   set_fan_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
       "/" + camera_name_ + "/" + "set_fan",
@@ -579,6 +598,68 @@ bool OBCameraNode::getCameraInfoCallback(GetCameraInfoRequest& request,
     return false;
   }
   return true;
+}
+
+bool OBCameraNode::resetCameraGainCallback(std_srvs::EmptyRequest& request,
+                                           std_srvs::EmptyResponse& response,
+                                           const stream_index_pair& stream_index) {
+  (void)request;
+  (void)response;
+  auto data = default_gain_[stream_index];
+  auto sensor = sensors_[stream_index];
+  if (sensor) {
+    try {
+      sensor->setGain(data);
+      return true;
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to set gain: " << e.getMessage());
+      return false;
+    }
+  } else {
+    ROS_ERROR_STREAM("Failed to set gain: sensor is not initialized");
+    return false;
+  }
+}
+
+bool OBCameraNode::resetCameraExposureCallback(std_srvs::EmptyRequest& request,
+                                               std_srvs::EmptyResponse& response,
+                                               const stream_index_pair& stream_index) {
+  (void)request;
+  (void)response;
+  auto data = default_exposure_[stream_index];
+  auto sensor = sensors_[stream_index];
+  if (sensor) {
+    try {
+      sensor->setExposure(data);
+      return true;
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to set exposure: " << e.getMessage());
+      return false;
+    }
+  } else {
+    ROS_ERROR_STREAM("Failed to set exposure: sensor is not initialized");
+    return false;
+  }
+}
+
+bool OBCameraNode::resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& request,
+                                                   std_srvs::EmptyResponse& response) {
+  (void)request;
+  (void)response;
+  auto data = default_white_balance_;
+  auto sensor = sensors_[COLOR];
+  if (sensor) {
+    try {
+      sensor->setWhiteBalance(data);
+      return true;
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to set white balance: " << e.getMessage());
+      return false;
+    }
+  } else {
+    ROS_ERROR_STREAM("Failed to set white balance: sensor is not initialized");
+    return false;
+  }
 }
 
 }  // namespace orbbec_camera

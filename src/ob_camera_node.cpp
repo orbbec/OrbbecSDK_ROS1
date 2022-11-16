@@ -18,6 +18,9 @@ void OBCameraNode::init() {
   setupTopics();
   setupCameraCtrlServices();
   setupFrameCallback();
+  readDefaultExposure();
+  readDefaultGain();
+  readDefaultWhiteBalance();
 }
 
 OBCameraNode::~OBCameraNode() {

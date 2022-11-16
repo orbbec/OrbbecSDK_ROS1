@@ -44,6 +44,12 @@ class OBCameraNode {
 
   void setupFrameCallback();
 
+  void readDefaultGain();
+
+  void readDefaultExposure();
+
+  void readDefaultWhiteBalance();
+
   void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair& stream_index);
 
   void onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set);
@@ -160,6 +166,16 @@ class OBCameraNode {
   bool getCameraInfoCallback(GetCameraInfoRequest& request, GetCameraInfoResponse& response,
                              const stream_index_pair& stream_index);
 
+  bool resetCameraGainCallback(std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response,
+                               const stream_index_pair& stream_index);
+
+  bool resetCameraExposureCallback(std_srvs::EmptyRequest& request,
+                                   std_srvs::EmptyResponse& response,
+                                   const stream_index_pair& stream_index);
+
+  bool resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& request,
+                                       std_srvs::EmptyResponse& response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -191,13 +207,18 @@ class OBCameraNode {
   std::map<stream_index_pair, std::string> frame_id_;
   std::map<stream_index_pair, std::string> optical_frame_id_;
   std::map<stream_index_pair, std::string> depth_aligned_frame_id_;
+  std::map<stream_index_pair, int> default_gain_;
+  std::map<stream_index_pair, int> default_exposure_;
+  int  default_white_balance_ = 0;
   std::string camera_link_frame_id_ = "camera_link";
   std::string camera_name_ = "camera";
   std::string base_frame_id_ = "camera_link";
   std::map<stream_index_pair, ros::ServiceServer> get_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_exposure_srv_;
+  std::map<stream_index_pair, ros::ServiceServer> reset_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> get_gain_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_gain_srv_;
+  std::map<stream_index_pair, ros::ServiceServer> reset_gain_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_mirror_srv_;
   std::map<stream_index_pair, ros::ServiceServer> toggle_sensor_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_auto_exposure_srv_;
@@ -213,8 +234,8 @@ class OBCameraNode {
   ros::ServiceServer set_auto_white_balance_srv_;
   ros::ServiceServer get_white_balance_srv_;
   ros::ServiceServer set_white_balance_srv_;
+  ros::ServiceServer reset_white_balance_srv_;
   ros::ServiceServer get_serial_number_srv_;
-  ros::ServiceServer reset_ir_exposure_srv_;
   ros::ServiceServer get_camera_params_srv_;
   ros::ServiceServer get_device_type_srv_;
   ros::ServiceServer save_point_cloud_srv_;
