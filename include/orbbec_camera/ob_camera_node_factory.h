@@ -40,6 +40,6 @@ class OBCameraNodeFactory {
   int connection_delay_ = 1.0;
   std::shared_ptr<std::thread> query_thread_ = nullptr;
   std::recursive_mutex device_lock_;
-
+  size_t device_num_ = 1;
 };
 }  // namespace orbbec_camera

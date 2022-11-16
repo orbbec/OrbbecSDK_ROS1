@@ -1,4 +1,11 @@
 #include "orbbec_camera/ob_camera_node_factory.h"
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <semaphore.h>
+#include <sys/shm.h>
+
 namespace orbbec_camera {
 OBCameraNodeFactory::OBCameraNodeFactory(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
     : nh_(nh), nh_private_(nh_private), ctx_(std::make_unique<ob::Context>()) {
@@ -19,6 +26,7 @@ void OBCameraNodeFactory::init() {
   ctx_->setLoggerSeverity(ob_log_level);
   serial_number_ = nh_private_.param<std::string>("serial_number", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 1.0);
+  device_num_ = static_cast<size_t>(nh_private_.param<int>("device_num", 1));
   check_connection_timer_ = nh_.createWallTimer(
       ros::WallDuration(1.0), [this](const ros::WallTimerEvent&) { this->checkConnectionTimer(); });
   ctx_->setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removed_list,
@@ -43,24 +51,72 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
     ROS_INFO_STREAM("Connecting to the default device");
     device_ = list->getDevice(0);
   } else {
-    device_ = list->getDeviceBySN(serial_number_.c_str());
-    if (!device_) {
-      ROS_INFO_STREAM("No device found with serial number: " << serial_number_
-                                                             << " try lower case");
-      std::string lower_sn;
-      std::transform(serial_number_.begin(), serial_number_.end(), std::back_inserter(lower_sn),
-                     [](auto ch) { return isalpha(ch) ? tolower(ch) : static_cast<int>(ch); });
-      device_ = list->getDeviceBySN(lower_sn.c_str());
+    std::string lower_sn;
+    std::transform(serial_number_.begin(), serial_number_.end(), std::back_inserter(lower_sn),
+                   [](auto ch) { return isalpha(ch) ? tolower(ch) : static_cast<int>(ch); });
+    auto device_sem = sem_open(DEFAULT_SEM_NAME.c_str(), O_CREAT, 0644, 1);
+    if (device_sem == SEM_FAILED) {
+      ROS_ERROR_STREAM("Failed to open semaphore");
+      return;
     }
+    size_t num_of_connected_devices = 0;
+    int ret = sem_wait(device_sem);
+    if (!ret) {
+      for (size_t i = 0; i < list->deviceCount(); ++i) {
+        auto device = list->getDevice(i);
+        auto info = device->getDeviceInfo();
+        std::string serial = info->serialNumber();
+        if (serial == serial_number_ || serial == lower_sn) {
+          ROS_INFO_STREAM("Connecting to device " << serial);
+          device_ = device;
+          break;
+        }
+      }
+    } else {
+      ROS_ERROR_STREAM("Failed to wait semaphore " << strerror(errno));
+    }
+
     if (device_ == nullptr) {
       ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
       return;
+    } else {
+      // write connected device info to file
+      int shm_fd = shmget(DEFAULT_SEM_KEY, 1, 0666 | IPC_CREAT);
+      if (shm_fd == -1) {
+        ROS_ERROR_STREAM("Failed to create shared memory " << strerror(errno));
+      } else {
+        ROS_INFO_STREAM("Created shared memory");
+        auto shm_ptr = (int*)shmat(shm_fd, nullptr, 0);
+        if (shm_ptr == (void*)-1) {
+          ROS_ERROR_STREAM("Failed to attach shared memory " << strerror(errno));
+        } else {
+          ROS_INFO_STREAM("Attached shared memory");
+          num_of_connected_devices = *shm_ptr + 1;
+          ROS_INFO_STREAM("Current connected device " << num_of_connected_devices);
+          *shm_ptr = static_cast<int>(num_of_connected_devices);
+          ROS_INFO_STREAM("Wrote to shared memory");
+          shmdt(shm_ptr);
+          if (num_of_connected_devices == device_num_) {
+            ROS_INFO_STREAM("All devices connected, removing shared memory");
+            shmctl(shm_fd, IPC_RMID, nullptr);
+          }
+        }
+      }
+    }
+    ROS_INFO_STREAM("Release device semaphore");
+    sem_post(device_sem);
+    ROS_INFO_STREAM("Release device semaphore done");
+    if (num_of_connected_devices == device_num_) {
+      ROS_INFO_STREAM("All devices connected,  sem_unlink");
+      sem_destroy(device_sem);
+      sem_unlink(DEFAULT_SEM_NAME.c_str());
+      ROS_INFO_STREAM("All devices connected,  sem_unlink done..");
     }
   }
+  CHECK_NOTNULL(device_);
   if (ob_camera_node_) {
     ob_camera_node_.reset();
   }
-  CHECK_NOTNULL(device_);
   ob_camera_node_ = std::make_unique<OBCameraNode>(nh_, nh_private_, device_);
   device_connected_ = true;
   device_info_ = device_->getDeviceInfo();
