@@ -30,6 +30,7 @@ void OBCameraNodeFactory::init() {
 }
 
 void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& list) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (device_) {
     return;
   }
@@ -39,11 +40,13 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   }
   std::this_thread::sleep_for(std::chrono::seconds(connection_delay_));
   if (serial_number_.empty()) {
+    ROS_INFO_STREAM("Connecting to the default device");
     device_ = list->getDevice(0);
-    device_info_ = device_->getDeviceInfo();
   } else {
     device_ = list->getDeviceBySN(serial_number_.c_str());
     if (!device_) {
+      ROS_INFO_STREAM("No device found with serial number: " << serial_number_
+                                                             << " try lower case");
       std::string lower_sn;
       std::transform(serial_number_.begin(), serial_number_.end(), std::back_inserter(lower_sn),
                      [](auto ch) { return isalpha(ch) ? tolower(ch) : static_cast<int>(ch); });
@@ -57,8 +60,11 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   if (ob_camera_node_) {
     ob_camera_node_.reset();
   }
+  CHECK_NOTNULL(device_);
   ob_camera_node_ = std::make_unique<OBCameraNode>(nh_, nh_private_, device_);
   device_connected_ = true;
+  device_info_ = device_->getDeviceInfo();
+  CHECK_NOTNULL(device_info_);
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
   ROS_INFO_STREAM("Serial number: " << device_info_->serialNumber());
   ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
@@ -97,6 +103,7 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
   for (size_t i = 0; i < device_list->deviceCount(); i++) {
     auto serial = device_list->serialNumber(i);
     std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+    CHECK_NOTNULL(device_info_);
     if (serial == device_info_->serialNumber()) {
       ob_camera_node_.reset();
       device_.reset();
@@ -128,7 +135,15 @@ void OBCameraNodeFactory::queryDevice() {
     }
     auto list = ctx_->queryDeviceList();
     if (list->deviceCount() > 0) {
-      startDevice(list);
+      try {
+        startDevice(list);
+      } catch (const ob::Error& e) {
+        ROS_WARN_STREAM("Failed to start device: " << e.getMessage());
+      } catch (const std::exception& e) {
+        ROS_WARN_STREAM("Failed to start device: " << e.what());
+      } catch (...) {
+        ROS_WARN_STREAM("Failed to start device");
+      }
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
