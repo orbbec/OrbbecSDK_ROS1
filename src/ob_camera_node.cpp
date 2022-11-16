@@ -399,8 +399,10 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
       auto image_to_save =
           cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8)->image;
       cv::imwrite(filename, image_to_save);
-    } else {
+    } else if (stream_index.first == OB_STREAM_IR) {
       cv::imwrite(filename, image);
+    } else {
+      ROS_ERROR_STREAM("Unsupported stream type: " << stream_index.first);
     }
     save_images_[stream_index] = false;
   }
