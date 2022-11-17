@@ -163,6 +163,7 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
     if (device_info_ != nullptr && serial == device_info_->serialNumber()) {
       ob_camera_node_.reset();
       device_.reset();
+      device_connected_ = false;
     }
   }
 }
