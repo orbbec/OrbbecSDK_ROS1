@@ -25,7 +25,7 @@
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="ir_info_uri" default=""/>
     <arg name="color_info_uri" default=""/>
-    <arg name="log_level" default="info"/>
+    <arg name="log_level" default="none"/>
     <arg name="enable_pipeline" default="true"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
