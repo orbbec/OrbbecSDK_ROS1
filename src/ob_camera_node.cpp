@@ -66,7 +66,7 @@ void OBCameraNode::getParameters() {
   enable_d2c_viewer_ = nh_private_.param<bool>("enable_d2c_viewer", false);
   enable_pipeline_ = nh_private_.param<bool>("enable_pipeline", false);
   enable_point_cloud_ = nh_private_.param<bool>("enable_point_cloud", true);
-  enable_point_cloud_xyzrgb_ = nh_private_.param<bool>("enable_point_cloud_xyzrgb", true);
+  enable_point_cloud_xyzrgb_ = nh_private_.param<bool>("enable_point_cloud_xyzrgb", false);
 }
 
 void OBCameraNode::startStreams() {
@@ -561,7 +561,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
   std::vector<float> zero_trans = {0, 0, 0};
   auto camera_param = getCameraParam();
-  if (camera_param) {
+  if (camera_param && extrinsics_publisher_) {
     auto ex = camera_param->transform;
     Q = rotationMatrixToQuaternion(ex.rot);
     Q = quaternion_optical * Q * quaternion_optical.inverse();
