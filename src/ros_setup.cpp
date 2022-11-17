@@ -262,6 +262,10 @@ void OBCameraNode::readDefaultExposure() {
 void OBCameraNode::readDefaultWhiteBalance() {
   try {
     auto sensor = sensors_[COLOR];
+    if (!sensor) {
+      ROS_INFO_STREAM("does not have color sensor");
+      return;
+    }
     CHECK_NOTNULL(sensor.get());
     auto wb = sensor->getWhiteBalance();
     ROS_INFO_STREAM("stream " << stream_name_[COLOR] << " wb " << wb);
