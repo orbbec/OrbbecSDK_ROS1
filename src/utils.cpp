@@ -73,6 +73,7 @@ std::string ObDeviceTypeToString(const OBDeviceType& type) {
     case OBDeviceType::OB_TOF_CAMERA:
       return "tof camera";
   }
+  return "unknown technology camera";
 }
 
 sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
