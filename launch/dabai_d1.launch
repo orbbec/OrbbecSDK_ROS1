@@ -33,7 +33,7 @@
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <param name="camera_name" value="$(arg camera_name)"/>
             <param name="depth_align" value="$(arg depth_align)"/>
-            <param name="serial_number" value="$(arg serial_number)"/>
+            <param name="serial_number" type="string" value="$(arg serial_number)"/>
             <param name="vendor_id" value="$(arg vendor_id)"/>
             <param name="product_id" value="$arg product_id)"/>
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
