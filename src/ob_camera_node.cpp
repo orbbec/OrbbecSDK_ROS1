@@ -317,9 +317,12 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     return;
   }
   try {
-    onNewFrameCallback(frame_set->colorFrame(), COLOR);
-    onNewFrameCallback(frame_set->depthFrame(), DEPTH);
-    onNewFrameCallback(frame_set->irFrame(), INFRA0);
+    auto color_frame = std::dynamic_pointer_cast<ob::Frame>(frame_set->colorFrame());
+    auto depth_frame = std::dynamic_pointer_cast<ob::Frame>(frame_set->depthFrame());
+    auto ir_frame = std::dynamic_pointer_cast<ob::Frame>(frame_set->irFrame());
+    onNewFrameCallback(color_frame, COLOR);
+    onNewFrameCallback(depth_frame, DEPTH);
+    onNewFrameCallback(ir_frame, INFRA0);
     publishPointCloud(frame_set);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("onNewFrameSetCallback error: " << e.getMessage());
@@ -341,7 +344,12 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
       ROS_ERROR_STREAM("Unsupported color format: " << frame->format());
       return;
     }
-    video_frame = format_convert_filter_.process(frame)->as<ob::ColorFrame>();
+    auto covert_frame = format_convert_filter_.process(frame);
+    if (covert_frame == nullptr) {
+      ROS_ERROR_STREAM("Format " << frame->format() << "convert to RGB888 failed");
+      return;
+    }
+    video_frame = covert_frame->as<ob::ColorFrame>();
   } else if (frame->type() == OB_FRAME_COLOR) {
     video_frame = frame->as<ob::ColorFrame>();
   } else if (frame->type() == OB_FRAME_DEPTH) {
