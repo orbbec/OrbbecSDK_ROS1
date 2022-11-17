@@ -121,9 +121,11 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
   return info;
 }
 void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName) {
+  CHECK_NOTNULL(frame);
   size_t point_size = frame->dataSize() / sizeof(OBColorPoint);
   FILE* fp = fopen(fileName.c_str(), "wb+");
   fprintf(fp, "ply\n");
+  CHECK_NOTNULL(fp);
   fprintf(fp, "format ascii 1.0\n");
   fprintf(fp, "element vertex %zu\n", point_size);
   fprintf(fp, "property float x\n");
@@ -135,6 +137,7 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fil
   fprintf(fp, "end_header\n");
 
   auto* point = (OBColorPoint*)frame->data();
+  CHECK_NOTNULL(point);
   for (size_t i = 0; i < point_size; i++) {
     fprintf(fp, "%.3f %.3f %.3f %d %d %d\n", point->x, point->y, point->z, (int)point->r,
             (int)point->g, (int)point->b);
@@ -148,6 +151,7 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fil
 void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName) {
   size_t point_size = frame->dataSize() / sizeof(OBPoint);
   FILE* fp = fopen(fileName.c_str(), "wb+");
+  CHECK_NOTNULL(fp);
   fprintf(fp, "ply\n");
   fprintf(fp, "format ascii 1.0\n");
   fprintf(fp, "element vertex %zu\n", point_size);
@@ -157,6 +161,7 @@ void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileNa
   fprintf(fp, "end_header\n");
 
   auto* points = (OBPoint*)frame->data();
+  CHECK_NOTNULL(points);
   for (size_t i = 0; i < point_size; i++) {
     fprintf(fp, "%.3f %.3f %.3f\n", points->x, points->y, points->z);
     points++;
