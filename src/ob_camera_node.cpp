@@ -59,7 +59,7 @@ void OBCameraNode::getParameters() {
   for (const auto& stream_index : IMAGE_STREAMS) {
     depth_aligned_frame_id_[stream_index] = optical_frame_id_[COLOR];
   }
-  publish_tf_ = nh_private_.param<bool>("publish_tf", true);
+  publish_tf_ = nh_private_.param<bool>("publish_tf", false);
   depth_align_ = nh_private_.param<bool>("depth_align", false);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");

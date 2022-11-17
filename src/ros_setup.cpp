@@ -176,10 +176,10 @@ void OBCameraNode::setupPublishers() {
     topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1);
   }
-  if(enable_[DEPTH] && enable_[COLOR]) {
+  if (enable_[DEPTH] && enable_[COLOR]) {
     extrinsics_publisher_ = nh_.advertise<Extrinsics>("extrinsic/depth_to_color", 1, true);
   }
-  if(enable_point_cloud_) {
+  if (enable_point_cloud_) {
     ros::SubscriberStatusCallback depth_cloud_subscribed_cb =
         boost::bind(&OBCameraNode::pointCloudXYZSubscribedCallback, this);
     ros::SubscriberStatusCallback depth_cloud_unsubscribed_cb =
@@ -187,7 +187,7 @@ void OBCameraNode::setupPublishers() {
     depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth/points", 1, depth_cloud_subscribed_cb, depth_cloud_unsubscribed_cb);
   }
-  if(enable_point_cloud_xyzrgb_) {
+  if (enable_point_cloud_xyzrgb_) {
     ros::SubscriberStatusCallback depth_registered_cloud_subscribed_cb =
         boost::bind(&OBCameraNode::pointCloudXYZSubscribedCallback, this);
     ros::SubscriberStatusCallback depth_registered_cloud_unsubscribed_cb =
