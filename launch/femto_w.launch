@@ -15,16 +15,19 @@
     <arg name="color_fps" default="30"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
+    <arg name="flip_color" default="false"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="480"/>
     <arg name="depth_fps" default="30"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="Y16"/>
+    <arg name="flip_depth" default="false"/>
     <arg name="ir_width" default="640"/>
     <arg name="ir_height" default="480"/>
     <arg name="ir_fps" default="30"/>
     <arg name="enable_ir" default="false"/>
     <arg name="ir_format" default="Y16"/>
+    <arg name="flip_ir" default="false"/>
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="ir_info_uri" default=""/>
@@ -47,16 +50,19 @@
             <param name="color_fps" value="$(arg color_fps)"/>
             <param name="enable_color" value="$(arg enable_color)"/>
             <param name="color_format" value="$(arg color_format)"/>
+            <param name="flip_color" value="$(arg flip_color)"/>
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
             <param name="depth_fps" value="$(arg depth_fps)"/>
             <param name="enable_depth" value="$(arg enable_depth)"/>
             <param name="depth_format" value="$(arg depth_format)"/>
+            <param name="flip_depth" value="$(arg flip_depth)"/>
             <param name="ir_width" value="$(arg ir_width)"/>
             <param name="ir_height" value="$(arg ir_height)"/>
             <param name="ir_fps" value="$(arg ir_fps)"/>
             <param name="enable_ir" value="$(arg enable_ir)"/>
             <param name="ir_format" value="$(arg ir_format)"/>
+            <param name="flip_ir" value="$(arg flip_ir)"/>
             <param name="publish_tf" value="$(arg publish_tf)"/>
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="ir_info_uri" value="$(arg ir_info_uri)"/>

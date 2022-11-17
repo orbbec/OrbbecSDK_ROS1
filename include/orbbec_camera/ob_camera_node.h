@@ -199,6 +199,7 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::Publisher> camera_info_publishers_;
   std::map<stream_index_pair, ob::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
+  std::map<stream_index_pair, bool> flip_images_;
   std::map<stream_index_pair, bool> stream_started_;
   std::vector<int> compression_params_;
   ob::FormatConvertFilter format_convert_filter_;
@@ -209,7 +210,7 @@ class OBCameraNode {
   std::map<stream_index_pair, std::string> depth_aligned_frame_id_;
   std::map<stream_index_pair, int> default_gain_;
   std::map<stream_index_pair, int> default_exposure_;
-  int  default_white_balance_ = 0;
+  int default_white_balance_ = 0;
   std::string camera_link_frame_id_ = "camera_link";
   std::string camera_name_ = "camera";
   std::string base_frame_id_ = "camera_link";

@@ -49,6 +49,8 @@ void OBCameraNode::getParameters() {
     fps_[stream_index] = nh_private_.param<int>(param_name, IMAGE_FPS);
     param_name = "enable_" + stream_name_[stream_index];
     enable_[stream_index] = nh_private_.param<bool>(param_name, false);
+    param_name = "flip_" + stream_name_[stream_index];
+    flip_images_[stream_index] = nh_private_.param<bool>(param_name, false);
     param_name = stream_name_[stream_index] + "_format";
     format_str_[stream_index] =
         nh_private_.param<std::string>(param_name, format_str_[stream_index]);
@@ -388,7 +390,21 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   image_msg->step = width * unit_step_size_[stream_index];
   image_msg->header.frame_id =
       depth_align_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
-  image_publisher.publish(image_msg);
+  if (!flip_images_[stream_index]) {
+    image_publisher.publish(image_msg);
+  } else {
+    cv::Mat flipped_image;
+    cv::flip(image, flipped_image, 1);
+    auto flipped_image_msg =
+        cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], flipped_image).toImageMsg();
+    CHECK_NOTNULL(flipped_image_msg);
+    flipped_image_msg->header.stamp = timestamp;
+    flipped_image_msg->is_bigendian = false;
+    flipped_image_msg->step = width * unit_step_size_[stream_index];
+    flipped_image_msg->header.frame_id =
+        depth_align_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
+    image_publisher.publish(flipped_image_msg);
+  }
   if (save_images_[stream_index]) {
     auto now = std::time(nullptr);
     std::stringstream ss;
