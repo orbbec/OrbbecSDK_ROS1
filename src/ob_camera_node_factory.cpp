@@ -159,8 +159,7 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
   for (size_t i = 0; i < device_list->deviceCount(); i++) {
     auto serial = device_list->serialNumber(i);
     std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-    CHECK_NOTNULL(device_info_);
-    if (serial == device_info_->serialNumber()) {
+    if (device_info_ != nullptr && serial == device_info_->serialNumber()) {
       ob_camera_node_.reset();
       device_.reset();
     }
