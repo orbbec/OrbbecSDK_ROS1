@@ -14,6 +14,7 @@ OBCameraNodeFactory::OBCameraNodeFactory(ros::NodeHandle& nh, ros::NodeHandle& n
 
 OBCameraNodeFactory::~OBCameraNodeFactory() {
   is_alive_ = false;
+  sem_unlink(DEFAULT_SEM_NAME.c_str());
   if (query_thread_ && query_thread_->joinable()) {
     query_thread_->join();
   }
