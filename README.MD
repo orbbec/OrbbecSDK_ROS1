@@ -224,8 +224,8 @@ roslaunch orbbec_camera multi_camera.launch
 ## Frequently Asked Questions
 
 - No image when  multiple cameras
-  - Maybe the the power supply is not sufficient, consider to connect the camera with a powered USB hub.
-  - Maybe the the resolution is too high, lower the resolution to test
+  - Maybe the power supply is not sufficient, consider to connect the camera with a powered USB hub.
+  - Maybe the resolution is too high, lower the resolution to test
 - Hot-plug image anomaly
   - The `reconnection_delay` parameter can be set to bigger, as some devices take longer time to initialize and may not have completed the initialization of the device.
 - No image when hot-plugging
