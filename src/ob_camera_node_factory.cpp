@@ -15,6 +15,10 @@ OBCameraNodeFactory::OBCameraNodeFactory(ros::NodeHandle& nh, ros::NodeHandle& n
 OBCameraNodeFactory::~OBCameraNodeFactory() {
   is_alive_ = false;
   sem_unlink(DEFAULT_SEM_NAME.c_str());
+  int shm_id = shmget(DEFAULT_SEM_KEY, 1, 0666 | IPC_CREAT);
+  if (shm_id != -1) {
+    shmctl(shm_id, IPC_RMID, nullptr);
+  }
   if (query_thread_ && query_thread_->joinable()) {
     query_thread_->join();
   }
@@ -82,12 +86,12 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
       return;
     } else {
       // write connected device info to file
-      int shm_fd = shmget(DEFAULT_SEM_KEY, 1, 0666 | IPC_CREAT);
-      if (shm_fd == -1) {
+      int shm_id = shmget(DEFAULT_SEM_KEY, 1, 0666 | IPC_CREAT);
+      if (shm_id == -1) {
         ROS_ERROR_STREAM("Failed to create shared memory " << strerror(errno));
       } else {
         ROS_INFO_STREAM("Created shared memory");
-        auto shm_ptr = (int*)shmat(shm_fd, nullptr, 0);
+        auto shm_ptr = (int*)shmat(shm_id, nullptr, 0);
         if (shm_ptr == (void*)-1) {
           ROS_ERROR_STREAM("Failed to attach shared memory " << strerror(errno));
         } else {
@@ -99,7 +103,7 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
           shmdt(shm_ptr);
           if (num_of_connected_devices == device_num_) {
             ROS_INFO_STREAM("All devices connected, removing shared memory");
-            shmctl(shm_fd, IPC_RMID, nullptr);
+            shmctl(shm_id, IPC_RMID, nullptr);
           }
         }
       }
