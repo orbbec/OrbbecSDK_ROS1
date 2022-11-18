@@ -212,7 +212,7 @@ roslaunch orbbec_camera multi_camera.launch
 - `enable_pointcloud`, Whether to enable point cloud.
 - `enable_pointcloud_xyzrgb`, Whether to enable RGB point cloud.
 - `enable_d2c_viewer`, Publish D2C overlay image.
-- `number_of_devices`,The number of devices, You need to fill in the number of devices when you need multiple cameras.
+- `device_num`,The number of devices, You need to fill in the number of devices when you need multiple cameras.
 - `color_width`， `color_height`， `color_fps`， color stream resolution and frame rate.
 - `ir_width`， `ir_height`， `ir_fps`，IR stream resolution and frame rate
 - `depth_width`， `depth_height`， `depth_fps` depth stream resolution and frame rate
