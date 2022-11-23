@@ -65,7 +65,12 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
       return;
     }
     size_t num_of_connected_devices = 0;
+    ROS_INFO_STREAM("Connecting to device with serial number: " << serial_number_);
+    int sem_value = 0;
+    sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
+    ROS_INFO_STREAM("semaphore value: " << sem_value);
     int ret = sem_wait(device_sem);
+    ROS_INFO_STREAM("sem_wait ret: " << ret);
     if (!ret) {
       for (size_t i = 0; i < list->deviceCount(); ++i) {
         auto device = list->getDevice(i);
@@ -83,6 +88,12 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
 
     if (device_ == nullptr) {
       ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
+      ROS_INFO_STREAM("Release device semaphore");
+      sem_post(device_sem);
+      sem_value = 0;
+      sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
+      ROS_INFO_STREAM("semaphore value: " << sem_value);
+      ROS_INFO_STREAM("Release device semaphore done");
       return;
     } else {
       // write connected device info to file
@@ -101,7 +112,7 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
           *shm_ptr = static_cast<int>(num_of_connected_devices);
           ROS_INFO_STREAM("Wrote to shared memory");
           shmdt(shm_ptr);
-          if (num_of_connected_devices == device_num_) {
+          if (num_of_connected_devices >= device_num_) {
             ROS_INFO_STREAM("All devices connected, removing shared memory");
             shmctl(shm_id, IPC_RMID, nullptr);
           }
@@ -110,6 +121,9 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
     }
     ROS_INFO_STREAM("Release device semaphore");
     sem_post(device_sem);
+    sem_value = 0;
+    sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
+    ROS_INFO_STREAM("semaphore value: " << sem_value);
     ROS_INFO_STREAM("Release device semaphore done");
     if (num_of_connected_devices == device_num_) {
       ROS_INFO_STREAM("All devices connected,  sem_unlink");
@@ -135,7 +149,7 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
 
 void OBCameraNodeFactory::checkConnectionTimer() {
   if (!device_connected_) {
-    ROS_INFO_STREAM("wait for device " << serial_number_ << " to be connected");
+    // ROS_INFO_STREAM("wait for device " << serial_number_ << " to be connected");
   }
 }
 
@@ -150,6 +164,8 @@ void OBCameraNodeFactory::deviceConnectCallback(
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (!device_) {
     startDevice(device_list);
+  } else {
+    ROS_INFO_STREAM("device already connected");
   }
 }
 
@@ -165,9 +181,12 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
     auto serial = device_list->serialNumber(i);
     std::lock_guard<decltype(device_lock_)> lock(device_lock_);
     if (device_info_ != nullptr && serial == device_info_->serialNumber()) {
+      ROS_INFO_STREAM("Device " << serial << " disconnected");
       ob_camera_node_.reset();
       device_.reset();
+      device_info_.reset();
       device_connected_ = false;
+      break;
     }
   }
 }
