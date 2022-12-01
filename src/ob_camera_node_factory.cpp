@@ -163,7 +163,15 @@ void OBCameraNodeFactory::deviceConnectCallback(
   CHECK_NOTNULL(device_list.get());
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (!device_) {
-    startDevice(device_list);
+    try {
+      startDevice(device_list);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("startDevice error " << e.getMessage());
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM("startDevice error " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("startDevice unknown error");
+    }
   } else {
     ROS_INFO_STREAM("device already connected");
   }
