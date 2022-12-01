@@ -174,7 +174,8 @@ void OBCameraNode::setupPublishers() {
     image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
-    camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1);
+    camera_info_publishers_[stream_index] =
+        nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1, true);
   }
   if (enable_[DEPTH] && enable_[COLOR]) {
     extrinsics_publisher_ = nh_.advertise<Extrinsics>("extrinsic/depth_to_color", 1, true);

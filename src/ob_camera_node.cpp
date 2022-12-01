@@ -374,12 +374,15 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   }
   image.data = (uchar*)video_frame->data();
   auto timestamp = frameTimeStampToROSTime(video_frame->systemTimeStamp());
-  if (camera_infos_.count(stream_index)) {
-    auto camera_info = camera_infos_[stream_index];
-    auto camera_info_publisher = camera_info_publishers_[stream_index];
-    camera_info.header.stamp = timestamp;
-    camera_info_publisher.publish(camera_info);
-  }
+  auto camera_param = pipeline_->getCameraParam();
+  auto& intrinsic = stream_index == COLOR ? camera_param.rgbIntrinsic : camera_param.depthIntrinsic;
+  auto& distortion =
+      stream_index == COLOR ? camera_param.rgbDistortion : camera_param.depthDistortion;
+  auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
+  CHECK(camera_info_publishers_.count(stream_index) > 0);
+  auto camera_info_publisher = camera_info_publishers_[stream_index];
+  camera_info.header.stamp = timestamp;
+  camera_info_publisher.publish(camera_info);
   CHECK(image_publishers_.count(stream_index));
   auto image_publisher = image_publishers_[stream_index];
   auto image_msg =
