@@ -190,9 +190,9 @@ void OBCameraNode::setupPublishers() {
   }
   if (enable_point_cloud_xyzrgb_) {
     ros::SubscriberStatusCallback depth_registered_cloud_subscribed_cb =
-        boost::bind(&OBCameraNode::pointCloudXYZSubscribedCallback, this);
+        boost::bind(&OBCameraNode::pointCloudXYZRGBSubscribedCallback, this);
     ros::SubscriberStatusCallback depth_registered_cloud_unsubscribed_cb =
-        boost::bind(&OBCameraNode::pointCloudXYZUnsubscribedCallback, this);
+        boost::bind(&OBCameraNode::pointCloudXYZRGBUnsubscribedCallback, this);
     depth_registered_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth_registered/points", 1, depth_registered_cloud_subscribed_cb,
         depth_registered_cloud_unsubscribed_cb);
