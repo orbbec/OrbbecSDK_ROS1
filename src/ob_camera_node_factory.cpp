@@ -173,7 +173,8 @@ void OBCameraNodeFactory::deviceConnectCallback(
       ROS_ERROR_STREAM("startDevice unknown error");
     }
   } else {
-    ROS_INFO_STREAM("device already connected");
+    CHECK_NOTNULL(device_info_);
+    ROS_INFO_STREAM("device " << device_info_->serialNumber() << " already connected");
   }
 }
 
