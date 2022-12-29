@@ -33,10 +33,7 @@ find_package(Boost REQUIRED)
 find_package(Boost REQUIRED)
 
 find_package(PkgConfig REQUIRED)
-pkg_search_module(LIBUVC REQUIRED libuvc)
-if (NOT LIBUVC_FOUND)
-  message(FATAL_ERROR "libuvc is not found")
-endif ()
+
 pkg_search_module(GLOG REQUIRED libglog)
 
 if (NOT GLOG_FOUND)
