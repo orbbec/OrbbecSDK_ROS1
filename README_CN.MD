@@ -19,7 +19,8 @@ Orbbec Sensor SDK 的ROS封装，支持ROS Kinetic, Melodic 和 Noetic 版本
   ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev
   ```
 
-  Build
+- 获取源码, 在[奥比中光3D开发者社区](https://developer.orbbec.com.cn/download.html)下载
+- Build
 
 ```bash
 cd ~/ros_ws
