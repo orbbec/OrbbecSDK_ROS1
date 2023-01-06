@@ -17,8 +17,6 @@ class OBCameraNodeFactory {
 
   void checkConnectionTimer();
 
-  void deviceConnectCallback(const std::shared_ptr<ob::DeviceList>& device_list);
-
   void deviceDisconnectCallback(const std::shared_ptr<ob::DeviceList>& device_list);
 
   static OBLogSeverity obLogSeverityFromString(const std::string& log_level);
