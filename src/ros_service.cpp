@@ -525,8 +525,8 @@ bool OBCameraNode::savePointCloudCallback(std_srvs::EmptyRequest& request,
                                           std_srvs::EmptyResponse& response) {
   (void)request;
   (void)response;
-  save_point_cloud_xyz_ = true;
-  save_point_cloud_xyzrgb_ = true;
+  save_point_cloud_ = true;
+  save_colored_point_cloud_ = true;
   return true;
 }
 

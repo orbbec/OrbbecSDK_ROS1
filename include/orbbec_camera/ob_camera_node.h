@@ -58,7 +58,7 @@ class OBCameraNode {
 
   void publishDepthPointCloud(std::shared_ptr<ob::FrameSet> frame_set);
 
-  void publishColorPointCloud(std::shared_ptr<ob::FrameSet> frame_set);
+  void publishColoredPointCloud(std::shared_ptr<ob::FrameSet> frame_set);
 
   bool setupFormatConvertType(OBFormat type);
 
@@ -85,13 +85,13 @@ class OBCameraNode {
 
   void imageUnsubscribedCallback(const stream_index_pair& stream_index);
 
-  void pointCloudXYZSubscribedCallback();
+  void pointCloudSubscribedCallback();
 
-  void pointCloudXYZUnsubscribedCallback();
+  void pointCloudUnsubscribedCallback();
 
-  void pointCloudXYZRGBSubscribedCallback();
+  void coloredPointCloudSubscribedCallback();
 
-  void pointCloudXYZRGBUnsubscribedCallback();
+  void coloredPointCloudUnsubscribedCallback();
 
   void calcAndPublishStaticTransform();
 
@@ -267,9 +267,9 @@ class OBCameraNode {
   ob::PointCloudFilter cloud_filter_;
   std::atomic_bool pipeline_started_{false};
   bool enable_point_cloud_ = false;
-  bool enable_point_cloud_xyzrgb_ = false;
-  std::atomic_bool save_point_cloud_xyz_{false};
-  std::atomic_bool save_point_cloud_xyzrgb_{false};
+  bool enable_colored_point_cloud_ = false;
+  std::atomic_bool save_point_cloud_{false};
+  std::atomic_bool save_colored_point_cloud_{false};
 };
 
 }  // namespace orbbec_camera

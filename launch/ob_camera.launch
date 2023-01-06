@@ -8,7 +8,7 @@
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default=""/>
     <arg name="enable_point_cloud" default="true"/>
-    <arg name="enable_point_cloud_xyzrgb" default="false"/>
+    <arg name="enable_colored_point_cloud" default="false"/>
     <arg name="connection_delay" default="1.0"/>
     <arg name="color_width" default="640"/>
     <arg name="color_height" default="480"/>
@@ -40,7 +40,7 @@
             <param name="vendor_id" value="$(arg vendor_id)"/>
             <param name="product_id" value="$arg product_id)"/>
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
-            <param name="enable_point_cloud_xyzrgb" value="$(arg enable_point_cloud_xyzrgb)"/>
+            <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
             <param name="color_width" value="$(arg color_width)"/>
             <param name="color_height" value="$(arg color_height)"/>

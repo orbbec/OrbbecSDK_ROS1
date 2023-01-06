@@ -66,7 +66,7 @@ void OBCameraNode::getParameters() {
   enable_d2c_viewer_ = nh_private_.param<bool>("enable_d2c_viewer", false);
   enable_pipeline_ = nh_private_.param<bool>("enable_pipeline", false);
   enable_point_cloud_ = nh_private_.param<bool>("enable_point_cloud", true);
-  enable_point_cloud_xyzrgb_ = nh_private_.param<bool>("enable_point_cloud_xyzrgb", false);
+  enable_colored_point_cloud_ = nh_private_.param<bool>("enable_colored_point_cloud", false);
 }
 
 void OBCameraNode::startStreams() {
@@ -168,7 +168,7 @@ void OBCameraNode::publishPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
   try {
     if (depth_align_) {
       if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
-        publishColorPointCloud(frame_set);
+        publishColoredPointCloud(frame_set);
       }
     }
     if (frame_set->depthFrame() != nullptr) {
@@ -226,13 +226,13 @@ void OBCameraNode::publishDepthPointCloud(std::shared_ptr<ob::FrameSet> frame_se
   cloud_msg_.height = 1;
   modifier.resize(valid_count);
   depth_cloud_pub_.publish(cloud_msg_);
-  if (save_point_cloud_xyz_) {
-    save_point_cloud_xyz_ = false;
+  if (save_point_cloud_) {
+    save_point_cloud_ = false;
     auto now = std::time(nullptr);
     std::stringstream ss;
     ss << std::put_time(std::localtime(&now), "%Y%m%d_%H%M%S");
     auto current_path = boost::filesystem::current_path().string();
-    std::string filename = current_path + "/point_cloud/points_xyz_" + ss.str() + ".ply";
+    std::string filename = current_path + "/point_cloud/points_" + ss.str() + ".ply";
     if (!boost::filesystem::exists(current_path + "/point_cloud")) {
       boost::filesystem::create_directory(current_path + "/point_cloud");
     }
@@ -241,8 +241,8 @@ void OBCameraNode::publishDepthPointCloud(std::shared_ptr<ob::FrameSet> frame_se
   }
 }
 
-void OBCameraNode::publishColorPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
-  if (depth_registered_cloud_pub_.getNumSubscribers() == 0 || !enable_point_cloud_xyzrgb_) {
+void OBCameraNode::publishColoredPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
+  if (depth_registered_cloud_pub_.getNumSubscribers() == 0 || !enable_colored_point_cloud_) {
     return;
   }
   auto depth_frame = frame_set->depthFrame();
@@ -299,13 +299,13 @@ void OBCameraNode::publishColorPointCloud(std::shared_ptr<ob::FrameSet> frame_se
   cloud_msg_.height = 1;
   modifier.resize(valid_count);
   depth_registered_cloud_pub_.publish(cloud_msg_);
-  if (save_point_cloud_xyzrgb_) {
-    save_point_cloud_xyzrgb_ = false;
+  if (save_colored_point_cloud_) {
+    save_colored_point_cloud_ = false;
     auto now = std::time(nullptr);
     std::stringstream ss;
     ss << std::put_time(std::localtime(&now), "%Y%m%d_%H%M%S");
     auto current_path = boost::filesystem::current_path().string();
-    std::string filename = current_path + "/point_cloud/points_xyzrgb_" + ss.str() + ".ply";
+    std::string filename = current_path + "/point_cloud/colored_points_" + ss.str() + ".ply";
     if (!boost::filesystem::exists(current_path + "/point_cloud")) {
       boost::filesystem::create_directory(current_path + "/point_cloud");
     }
@@ -485,23 +485,23 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
   }
 }
 
-void OBCameraNode::pointCloudXYZSubscribedCallback() {
+void OBCameraNode::pointCloudSubscribedCallback() {
   ROS_INFO_STREAM("point cloud subscribed");
   imageSubscribedCallback(DEPTH);
 }
 
-void OBCameraNode::pointCloudXYZUnsubscribedCallback() {
+void OBCameraNode::pointCloudUnsubscribedCallback() {
   ROS_INFO_STREAM("point cloud unsubscribed");
   imageUnsubscribedCallback(DEPTH);
 }
 
-void OBCameraNode::pointCloudXYZRGBSubscribedCallback() {
+void OBCameraNode::coloredPointCloudSubscribedCallback() {
   ROS_INFO_STREAM("rgb point cloud subscribed");
   imageSubscribedCallback(DEPTH);
   imageSubscribedCallback(COLOR);
 }
 
-void OBCameraNode::pointCloudXYZRGBUnsubscribedCallback() {
+void OBCameraNode::coloredPointCloudUnsubscribedCallback() {
   ROS_INFO_STREAM("point cloud unsubscribed");
   imageUnsubscribedCallback(DEPTH);
   imageUnsubscribedCallback(COLOR);
