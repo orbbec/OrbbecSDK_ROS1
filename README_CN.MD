@@ -221,7 +221,7 @@ roslaunch orbbec_camera multi_camera.launch
 
 - `depth_align`, 开启硬件对齐，如果需要彩色点云和深度对齐，需要打开，默认关闭。
 - `enable_point_cloud`, 是否开启点云.
-- `enable_point_cloud_xyzrgb`, 是否开启RGB点云
+- `enable_colored_point_cloud`, 是否开启RGB点云
 - `enable_d2c_viewer`, 发布彩色对齐到深度的图像.
 - `device_num`,相机数量，如果是多相机，需要设置为相机数量.
 - `color_width`， `color_height`， `color_fps`， 彩色图像分辨率和帧率.

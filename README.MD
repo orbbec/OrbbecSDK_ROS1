@@ -221,8 +221,8 @@ roslaunch orbbec_camera multi_camera.launch
 `connection_delay`, The delay time for reopening the device in seconds. Some devices would take longer time to initialize, such as Astra mini, so reopening the device immediately would causes firmware crashes when hot plug.
 
 - `depth_align`, Enables hardware depth to color alignment, requires RGB point cloud to open
-- `enable_pointcloud`, Whether to enable point cloud.
-- `enable_pointcloud_xyzrgb`, Whether to enable RGB point cloud.
+- `enable_point_cloud`, Whether to enable point cloud.
+- `enable_colored_point_cloud`, Whether to enable RGB point cloud.
 - `enable_d2c_viewer`, Publish D2C overlay image.
 - `device_num`,The number of devices, You need to fill in the number of devices when you need multiple cameras.
 - `color_width`， `color_height`， `color_fps`， color stream resolution and frame rate.
