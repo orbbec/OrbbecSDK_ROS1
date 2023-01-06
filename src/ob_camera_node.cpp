@@ -55,6 +55,13 @@ void OBCameraNode::getParameters() {
     format_str_[stream_index] =
         nh_private_.param<std::string>(param_name, format_str_[stream_index]);
     format_[stream_index] = OBFormatFromString(format_str_[stream_index]);
+    if (format_[stream_index] == OB_FORMAT_Y8) {
+      CHECK_NE(stream_index.first, OB_STREAM_COLOR);
+      image_format_[stream_index] = CV_8UC1;
+      encoding_[stream_index] = stream_index.first == OB_STREAM_DEPTH
+                                    ? sensor_msgs::image_encodings::TYPE_8UC1
+                                    : sensor_msgs::image_encodings::MONO8;
+    }
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     depth_aligned_frame_id_[stream_index] = optical_frame_id_[COLOR];
