@@ -171,7 +171,7 @@ void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
   ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " stopped.");
 }
 
-void OBCameraNode::publishPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
+void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
   try {
     if (depth_align_) {
       if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
@@ -190,7 +190,7 @@ void OBCameraNode::publishPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
   }
 }
 
-void OBCameraNode::publishDepthPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
+void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (depth_cloud_pub_.getNumSubscribers() == 0 || !enable_point_cloud_) {
     return;
   }
@@ -248,7 +248,7 @@ void OBCameraNode::publishDepthPointCloud(std::shared_ptr<ob::FrameSet> frame_se
   }
 }
 
-void OBCameraNode::publishColoredPointCloud(std::shared_ptr<ob::FrameSet> frame_set) {
+void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (depth_registered_cloud_pub_.getNumSubscribers() == 0 || !enable_colored_point_cloud_) {
     return;
   }
@@ -270,8 +270,8 @@ void OBCameraNode::publishColoredPointCloud(std::shared_ptr<ob::FrameSet> frame_
   cloud_msg_.width = color_frame->width();
   cloud_msg_.height = color_frame->height();
   std::string format_str = "rgb";
-  cloud_msg_.point_step = addPointField(cloud_msg_, format_str.c_str(), 1,
-                                        sensor_msgs::PointField::FLOAT32, cloud_msg_.point_step);
+  cloud_msg_.point_step = addPointField(cloud_msg_, format_str, 1, sensor_msgs::PointField::FLOAT32,
+                                        cloud_msg_.point_step);
   cloud_msg_.row_step = cloud_msg_.width * cloud_msg_.point_step;
   cloud_msg_.data.resize(cloud_msg_.height * cloud_msg_.row_step);
   sensor_msgs::PointCloud2Iterator<float> iter_x(cloud_msg_, "x");
@@ -324,7 +324,7 @@ void OBCameraNode::publishColoredPointCloud(std::shared_ptr<ob::FrameSet> frame_
   }
 }
 
-void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set) {
+void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (frame_set == nullptr) {
     return;
   }
@@ -345,7 +345,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   }
 }
 
-void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
+void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                                       const stream_index_pair& stream_index) {
   if (frame == nullptr) {
     return;

@@ -51,15 +51,16 @@ class OBCameraNode {
 
   void readDefaultWhiteBalance();
 
-  void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair& stream_index);
+  void onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
+                          const stream_index_pair& stream_index);
 
-  void onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set);
+  void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set);
 
-  void publishPointCloud(std::shared_ptr<ob::FrameSet> frame_set);
+  void publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
 
-  void publishDepthPointCloud(std::shared_ptr<ob::FrameSet> frame_set);
+  void publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
 
-  void publishColoredPointCloud(std::shared_ptr<ob::FrameSet> frame_set);
+  void publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
 
   bool setupFormatConvertType(OBFormat type);
 
