@@ -19,6 +19,7 @@
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
 #include "orbbec_camera/GetCameraParams.h"
+#include <boost/optional.hpp>
 
 namespace orbbec_camera {
 class OBCameraNode {
@@ -270,6 +271,7 @@ class OBCameraNode {
   bool enable_colored_point_cloud_ = false;
   std::atomic_bool save_point_cloud_{false};
   std::atomic_bool save_colored_point_cloud_{false};
+  boost::optional<OBCameraParam> camera_params_;
 };
 
 }  // namespace orbbec_camera

@@ -254,8 +254,11 @@ void OBCameraNode::publishColoredPointCloud(std::shared_ptr<ob::FrameSet> frame_
   }
   auto depth_frame = frame_set->depthFrame();
   auto color_frame = frame_set->colorFrame();
-  auto camera_param = pipeline_->getCameraParam();
-  cloud_filter_.setCameraParam(camera_param);
+  CHECK_NOTNULL(pipeline_);
+  if (!camera_params_) {
+    camera_params_ = pipeline_->getCameraParam();
+  }
+  cloud_filter_.setCameraParam(*camera_params_);
   cloud_filter_.setCreatePointFormat(OB_FORMAT_RGB_POINT);
   auto frame = cloud_filter_.process(frame_set);
   size_t point_size = frame->dataSize() / sizeof(OBColorPoint);
@@ -381,10 +384,13 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   }
   image.data = (uchar*)video_frame->data();
   auto timestamp = frameTimeStampToROSTime(video_frame->systemTimeStamp());
-  auto camera_param = pipeline_->getCameraParam();
-  auto& intrinsic = stream_index == COLOR ? camera_param.rgbIntrinsic : camera_param.depthIntrinsic;
+  if (!camera_params_) {
+    camera_params_ = pipeline_->getCameraParam();
+  }
+  auto& intrinsic =
+      stream_index == COLOR ? camera_params_->rgbIntrinsic : camera_params_->depthIntrinsic;
   auto& distortion =
-      stream_index == COLOR ? camera_param.rgbDistortion : camera_param.depthDistortion;
+      stream_index == COLOR ? camera_params_->rgbDistortion : camera_params_->depthDistortion;
   auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
   CHECK(camera_info_publishers_.count(stream_index) > 0);
   auto camera_info_publisher = camera_info_publishers_[stream_index];
