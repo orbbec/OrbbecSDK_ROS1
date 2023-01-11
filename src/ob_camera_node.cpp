@@ -56,7 +56,7 @@ void OBCameraNode::getParameters() {
         nh_private_.param<std::string>(param_name, format_str_[stream_index]);
     format_[stream_index] = OBFormatFromString(format_str_[stream_index]);
     if (format_[stream_index] == OB_FORMAT_Y8) {
-      CHECK_NE(stream_index.first, OB_STREAM_COLOR);
+      CHECK(stream_index.first != OB_STREAM_COLOR);
       image_format_[stream_index] = CV_8UC1;
       encoding_[stream_index] = stream_index.first == OB_STREAM_DEPTH
                                     ? sensor_msgs::image_encodings::TYPE_8UC1
@@ -84,7 +84,7 @@ void OBCameraNode::startStreams() {
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
         CHECK_NOTNULL(frame_set);
-        this->onNewFrameSetCallback(std::move(frame_set));
+        this->onNewFrameSetCallback(frame_set);
       });
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("failed to start pipeline: " << e.getMessage()
@@ -93,7 +93,7 @@ void OBCameraNode::startStreams() {
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
         CHECK_NOTNULL(frame_set);
-        this->onNewFrameSetCallback(std::move(frame_set));
+        this->onNewFrameSetCallback(frame_set);
       });
     }
     pipeline_started_ = true;
@@ -271,7 +271,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   cloud_msg_.height = color_frame->height();
   std::string format_str = "rgb";
   cloud_msg_.point_step = addPointField(cloud_msg_, format_str, 1, sensor_msgs::PointField::FLOAT32,
-                                        cloud_msg_.point_step);
+                                        static_cast<int>(cloud_msg_.point_step));
   cloud_msg_.row_step = cloud_msg_.width * cloud_msg_.point_step;
   cloud_msg_.data.resize(cloud_msg_.height * cloud_msg_.row_step);
   sensor_msgs::PointCloud2Iterator<float> iter_x(cloud_msg_, "x");
