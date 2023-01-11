@@ -194,8 +194,10 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   if (depth_cloud_pub_.getNumSubscribers() == 0 || !enable_point_cloud_) {
     return;
   }
-  auto camera_param = pipeline_->getCameraParam();
-  cloud_filter_.setCameraParam(camera_param);
+  if (!camera_params_) {
+    camera_params_ = pipeline_->getCameraParam();
+  }
+  cloud_filter_.setCameraParam(*camera_params_);
   cloud_filter_.setCreatePointFormat(OB_FORMAT_POINT);
   auto depth_frame = frame_set->depthFrame();
   auto frame = cloud_filter_.process(frame_set);
