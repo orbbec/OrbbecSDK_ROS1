@@ -173,7 +173,7 @@ void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
 
 void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
   try {
-    if (depth_align_) {
+    if (depth_align_ || enable_colored_point_cloud_) {
       if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
         publishColoredPointCloud(frame_set);
       }

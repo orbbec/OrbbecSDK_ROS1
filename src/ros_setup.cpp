@@ -142,7 +142,7 @@ void OBCameraNode::setupProfiles() {
                                << ", fps: " << fps_[stream_index] << ", "
                                << "Format: " << selected_profile->format());
   }
-  if (!enable_pipeline_ && depth_align_) {
+  if (!enable_pipeline_ && (depth_align_ || enable_colored_point_cloud_)) {
     int index = getCameraParamIndex();
     try {
       device_->setIntProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_MODE_INT, index);
