@@ -38,7 +38,7 @@
             <param name="depth_align" value="$(arg depth_align)"/>
             <param name="serial_number" type="string" value="$(arg serial_number)"/>
             <param name="vendor_id" value="$(arg vendor_id)"/>
-            <param name="product_id" value="$arg product_id)"/>
+            <param name="product_id" value="$(arg product_id)"/>
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
             <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
