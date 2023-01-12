@@ -58,7 +58,7 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   }
   std::this_thread::sleep_for(std::chrono::seconds(connection_delay_));
   size_t connected_device_num = 0;
-  sem_t* device_sem = NULL;
+  sem_t* device_sem = nullptr;
   std::shared_ptr<int> sem_guard(nullptr, [&](int*) {
     if (device_num_ > 1 && device_sem) {
       ROS_INFO_STREAM("Release device semaphore");

@@ -181,6 +181,28 @@ target_link_libraries(list_devices_node
   -L${ORBBEC_LIBS}
   )
 
+add_executable(ob_cleanup_shm_node
+  src/ob_cleanup_shm.cpp
+  )
+
+target_include_directories(ob_cleanup_shm_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${OpenCV_INCLUDED_DIRS}
+  )
+
+target_link_libraries(ob_cleanup_shm_node
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${OpenCV_LIBS}
+  ${GLOG_LIBRARIES}
+  -lOrbbecSDK
+  -L${ORBBEC_LIBS}
+  )
 add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_generate_messages_cpp)
 
@@ -188,6 +210,7 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 install(TARGETS ${PROJECT_NAME}
   ${PROJECT_NAME}_node
   list_devices_node
+  ob_cleanup_shm_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -198,15 +221,15 @@ install(DIRECTORY include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
   )
 
-  install(DIRECTORY
-    ${ORBBEC_INCLUDE_DIR}
-    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
+install(DIRECTORY
+  ${ORBBEC_INCLUDE_DIR}
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
   )
 
 
 install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+  )
 install(DIRECTORY
   ${ORBBEC_LIBS}/
   DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/
