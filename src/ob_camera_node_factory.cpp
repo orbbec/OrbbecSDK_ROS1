@@ -17,7 +17,7 @@ OBCameraNodeFactory::~OBCameraNodeFactory() {
   if (query_thread_ && query_thread_->joinable()) {
     query_thread_->join();
   }
-  if(device_num_ > 1) {
+  if (device_num_ > 1) {
     sem_unlink(DEFAULT_SEM_NAME.c_str());
     int shm_id = shmget(DEFAULT_SEM_KEY, 1, 0666 | IPC_CREAT);
     if (shm_id != -1) {
@@ -96,16 +96,17 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
       ROS_ERROR_STREAM("Failed to wait semaphore " << strerror(errno));
       return;
     }
-    for (size_t i = 0; i < list->deviceCount(); ++i) {
-      auto device = list->getDevice(i);
-      auto info = device->getDeviceInfo();
-      std::string serial = info->serialNumber();
-      if (serial == serial_number_ || serial == lower_sn) {
-        ROS_INFO_STREAM("Connecting to device " << serial);
-        device_ = device;
-        break;
-      }
+    try {
+      auto device = list->getDeviceBySN(serial_number_.c_str());
+      device_ = device;
+    } catch (ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
+    } catch (std::exception& e) {
+      ROS_ERROR_STREAM("Failed to get device info " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("Failed to get device info");
     }
+
     if (device_ == nullptr) {
       ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
       device_connected_ = false;
