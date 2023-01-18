@@ -78,9 +78,11 @@ typedef enum {
         91, /**< \if English D2C preprocessing switch (such as RGB cropping), 0: off, 1: on \else  D2C前处理开关（如RGB裁剪），0:关闭，1:打开 \endif */
     OB_PROP_RGB_CUSTOM_CROP_BOOL = 94, /**< \if English Custom RGB cropping switch, 0 is off, 1 is on custom cropping, and the ROI cropping area is issued \else
                                           自定义RGB裁剪开关，0为关闭，1为开启自定义裁剪，下发ROI裁剪区域\endif */
-    OB_PROP_DEVICE_WORK_MODE_INT          = 95, /**< \if English Device operating mode (power consumption) \else  设备工作模式（功耗） \endif */
-    OB_PROP_DEVICE_COMMUNICATION_TYPE_INT = 97, /**< 设备通信方式 0: USB; 1: Ethernet(RTSP)*/
-    OB_PROP_SWITCH_IR_MODE_INT            = 98, /**< 切换IR模式，0为主动IR模式,1为被动IR模式*/
+    OB_PROP_DEVICE_WORK_MODE_INT          = 95,  /**< \if English Device operating mode (power consumption) \else  设备工作模式（功耗） \endif */
+    OB_PROP_DEVICE_COMMUNICATION_TYPE_INT = 97,  /**< 设备通信方式 0: USB; 1: Ethernet(RTSP)*/
+    OB_PROP_SWITCH_IR_MODE_INT            = 98,  /**< 切换IR模式，0为主动IR模式,1为被动IR模式*/
+    OB_PROP_USB_POWER_STATE_INT           = 121, /**< USB供电状态，状态值枚举: OBUSBPowerState */
+    OB_PROP_DC_POWER_STATE_INT            = 122, /**< DC供电状态,状态值枚举: OBDCPowerState */
 
     OB_STRUCT_BASELINE_CALIBRATION_PARAM     = 1002, /**< \if English Baseline calibration parameters \else  基线标定参数 \endif */
     OB_STRUCT_DEVICE_TEMPERATURE             = 1003, /**< \if English Device temperature information \else  设备温度信息 \endif */
@@ -119,17 +121,12 @@ typedef enum {
                                        红外相机曝光调节（某些型号设备下会同步设置深度相机） \endif */
     OB_PROP_IR_GAIN_INT = 2027, /**< \if English Infrared camera gain adjustment (the depth camera will be set synchronously under some models of devices) \else
                                    红外相机增益调节（某些型号设备下会同步设置深度相机） \endif */
-    OB_PROP_IR_SWITCH_INT = 2028,
-    /**< 双目红外相机左右IR切换 */  // todo: id有冲突@千手修罗
+    OB_PROP_IR_SWITCH_INT = 2028, /**< \if English Binocular IR camera left and right IR switching \else  双目红外相机左右IR切换 \endif */
 
-    OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL = 3004, /**< 视差转深度 */
-    OB_PROP_SDK_DEPTH_FRAME_UNPACK_BOOL = 3007, /**< Depth数据解包功能开关(每次开流都会默认打开，支持RLE/Y10/Y11/Y12/Y14格式) */
-    OB_PROP_SDK_IR_FRAME_UNPACK_BOOL    = 3008, /**< Ir数据解包功能开关(每次开流都会默认打开，支持RLE/Y10/Y11/Y12/Y14格式) */
-
-    OB_RAW_DATA_CAMERA_CALIB_JSON_FILE   = 4029, /**< 从设备端读取的标定Json文件(Femto Mega, read only)*/
-    OB_RAW_DATA_D2C_ROT_LUT_FILE         = 4030, /**< D2C初始化表文件(Femto Mega)*/
-    OB_STRUCT_DEBUG_SENSOR_EXPOSURE_TIME = 5504, /**< \if English LDP status \else  曝光时间读写 \endif */
-
+    OB_PROP_SDK_DEPTH_FRAME_UNPACK_BOOL = 3007, /**< \if English Depth data unpacking function switch (each open stream will be turned on by default, support RLE/Y10/Y11/Y12/Y14 format) \else  Depth数据解包功能开关(每次开流都会默认打开，支持RLE/Y10/Y11/Y12/Y14格式) \endif */
+    OB_PROP_SDK_IR_FRAME_UNPACK_BOOL    = 3008, /**< \if English IR data unpacking function switch (each current will be turned on by default, support RLE/Y10/Y11/Y12/Y14 format) \else  Ir数据解包功能开关(每次开流都会默认打开，支持RLE/Y10/Y11/Y12/Y14格式) \endif */
+    OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL = 3009, /**< Accel数据转换功能开关(默认打开) */
+    OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL  = 3010, /**< Gyro数据转换功能开关(默认打开) */
 } OBPropertyID,
     ob_property_id;
 

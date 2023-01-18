@@ -385,6 +385,7 @@ ob_rect ob_get_d2c_range_valid_area(ob_pipeline *pipeline, uint32_t minimum_dist
  */
 void ob_pipeline_start_record(ob_pipeline *pipeline, const char *file_name, ob_error **error);
 
+
 /**
  * \if English
  * @brief Turn off recording
@@ -398,6 +399,7 @@ void ob_pipeline_start_record(ob_pipeline *pipeline, const char *file_name, ob_e
  * @param[out] error 记录错误信息
  * \endif
  */
+
 void ob_pipeline_stop_record(ob_pipeline *pipeline, ob_error **error);
 
 /**
@@ -514,10 +516,10 @@ void ob_config_set_align_mode(ob_config *config, ob_align_mode mode, ob_error **
 
 /**
  * \if English
- * @brief Whether scale depth frame after D2C
+ * @brief Whether the depth needs to be scaled after setting D2C
  *
  * @param[in] config config object
- * @param[in] enable Scale or not
+ * @param[in] enable Whether scaling is required
  * @param[out] error Log error messages
  * \else
  * @brief 设置D2C后是否需要缩放深度
@@ -531,11 +533,12 @@ void ob_config_set_depth_scale_require(ob_config *config,bool enable,ob_error **
 
 /**
  * \if English
- * @brief 
+ * @brief  Set the D2C target resolution, which is applicable to cases where the Color stream is not enabled using the OrbbecSDK and the depth needs to be D2C
+ * Note: When you use OrbbecSDK to enable the Color stream, you also use this interface to set the D2C target resolution. The configuration of the enabled Color stream is preferred for D2C
  *
  * @param[in] config config object
- * @param[in] d2c_target_width D2C target width
- * @param[in] d2c_target_height D2C target height
+ * @param[in] d2c_target_width The D2C target has a wide resolution
+ * @param[in] d2c_target_height The D2C targets has a high resolution
  * @param[out] error Log error messages
  * \else
  * @brief 设置D2C目标分辨率，适用于未使用OrbbecSDK开启Color流，且需要对深度进行D2C的情况

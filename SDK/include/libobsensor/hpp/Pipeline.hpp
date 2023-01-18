@@ -347,9 +347,9 @@ public:
 
     /**
 	 * \if English
-	 * @brief Whether scale depth frame after D2C
+	 * @brief Whether the depth needs to be scaled after setting D2C
      *
-     * @param enable Scale or not
+     * @param enable Whether scaling is required
 	 * \else
      * @brief 设置D2C后是否需要缩放深度
      *
@@ -360,10 +360,10 @@ public:
 
     /**
 	 * \if English
-	 * @brief
-     *
-     * @param d2cTargetWidth  D2C target width
-     * @param d2cTargetHeight D2C target height
+	 * @brief Set the D2C target resolution, which is applicable to cases where the Color stream is not enabled using the OrbbecSDK and the depth needs to be D2C
+     * Note: When you use OrbbecSDK to enable the Color stream, you also use this interface to set the D2C target resolution. The configuration of the enabled Color stream is preferred for D2C.
+     * @param d2cTargetWidth  The D2C target has a wide resolution
+     * @param d2cTargetHeight The D2C target has a high resolutio
 	 * \else
      * @brief 设置D2C目标分辨率，适用于未使用OrbbecSDK开启Color流，且需要对深度进行D2C的情况
      * 注意:当使用OrbbecSDK开启Color流时，同时使用了此接口设置了D2C目标分辨率时。优先使用开启的Color流的配置进行D2C。

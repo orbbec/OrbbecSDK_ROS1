@@ -232,14 +232,17 @@ typedef enum {
     OB_FORMAT_POINT     = 19, /**< \if English xyz 3D coordinate point format \else 纯x-y-z三维坐标点格式  \endif */
     OB_FORMAT_RGB_POINT = 20, /**< \if English xyz 3D coordinate point format with RGB information \else 带RGB信息的x-y-z三维坐标点格式 \endif */
     OB_FORMAT_RLE = 21, /**< \if English RLE pressure test format (SDK will be unpacked into Y16 by default) \else RLE压测格式(SDK默认会解包成Y16) \endif */
-    OB_FORMAT_RGB888 = 22,    /**< \if English RGB888 format \else RGB888格式  \endif */
-    OB_FORMAT_BGR    = 23,    /**< \if English BGR format (actual BRG888) \else BGR格式(实际BRG888) \endif */
-    OB_FORMAT_Y14    = 24,    /**< \if English Y14 format, single channel 14bit depth (SDK will unpack into Y16 by default) \else
+    OB_FORMAT_RGB = 22,       /**< \if English RGB format (actual BRG888)  \else RGB888格式(实际RGB888)  \endif */
+    OB_FORMAT_BGR = 23,       /**< \if English BGR format (actual BRG888) \else BGR格式(实际BRG888) \endif */
+    OB_FORMAT_Y14 = 24,       /**< \if English Y14 format, single channel 14bit depth (SDK will unpack into Y16 by default) \else
                                  Y14格式，单通道14bit深度(SDK默认会解包成Y16) \endif */
     OB_FORMAT_BGRA    = 25,   /**< BGRA */
+    OB_FORMAT_COMPRESSED = 26,
     OB_FORMAT_UNKNOWN = 0xff, /**< \if English unknown format \else 未知格式 \endif */
 } OBFormat,
     ob_format;
+
+#define OB_FORMAT_RGB888 OB_FORMAT_RGB  // 别名，用于兼容旧版本命名
 
 /**
  * \if English
@@ -312,7 +315,7 @@ typedef enum {
  * \endif
  */
 typedef struct {
-    void    *data;    ///< \if English current block data pointer \else 当前块数据指针 \endif
+    void *   data;    ///< \if English current block data pointer \else 当前块数据指针 \endif
     uint32_t size;    ///< \if English Current block data length \else 当前块数据长度 \endif
     uint32_t offset;  ///< \if English The offset of the current data block relative to the complete data \else 当前数据块相对完整数据的偏移 \endif
     uint32_t fullDataSize;  ///< \if English full data size \else 完整数据大小 \endif
@@ -465,13 +468,14 @@ typedef enum {
     FORMAT_I420_TO_RGB888,     /**< \if English I420 to RGB888 \else I420转换为RGB888 \endif */
     FORMAT_NV21_TO_RGB888,     /**< \if English NV21 to RGB888 \else NV21转换为RGB888 \endif */
     FORMAT_NV12_TO_RGB888,     /**< \if English NV12 to RGB888 \else NV12转换为RGB888 \endif */
-    FORMAT_MJPG_TO_I420,      /**< \if English MJPG to I420 \else MJPG转换为I420\endif */
+    FORMAT_MJPG_TO_I420,       /**< \if English MJPG to I420 \else MJPG转换为I420\endif */
     FORMAT_RGB888_TO_BGR,      /**< \if English RGB888 to BGR \else RGB888转换为BGR \endif */
-    FORMAT_MJPG_TO_NV21,      /**< \if English MJPG to NV21 \else MJPG转换为NV21 \endif */
-    FORMAT_MJPG_TO_RGB888,    /**< \if English MJPG to RGB888 \else MJPG转换为RGB888 \endif */
-    FORMAT_MJPG_TO_BGR888,    /**< \if English MJPG to BGR888 \else MJPG转换为BGR888 \endif */
-    FORMAT_MJPG_TO_BGRA,      /**< \if English MJPG to BGRA \else MJPG转换为BGRA \endif */
+    FORMAT_MJPG_TO_NV21,       /**< \if English MJPG to NV21 \else MJPG转换为NV21 \endif */
+    FORMAT_MJPG_TO_RGB888,     /**< \if English MJPG to RGB888 \else MJPG转换为RGB888 \endif */
+    FORMAT_MJPG_TO_BGR888,     /**< \if English MJPG to BGR888 \else MJPG转换为BGR888 \endif */
+    FORMAT_MJPG_TO_BGRA,       /**< \if English MJPG to BGRA \else MJPG转换为BGRA \endif */
     FORMAT_UYVY_TO_RGB888,     /**< \if English UYVY to RGB888 \else MJPG转换为RGB888 \endif */
+    FORMAT_BGR_TO_RGB,         /**< \if English BGR to RGB \else BGR 转换为RGB \endif */
 } OBConvertFormat,
     ob_convert_format;
 
@@ -520,7 +524,6 @@ typedef enum {
     OB_GYRO_FS_31dps,     /**< \if English 31 degrees per second \else 31度每秒 \endif */
     OB_GYRO_FS_62dps,     /**< \if English 62 degrees per second \else 62度每秒 \endif */
     OB_GYRO_FS_125dps,    /**< \if English 125 degrees per second \else 125度每秒 \endif */
-    OB_GYRO_FS_245dps,    /**< \if English 245 degrees per second \else 245度每秒 \endif */
     OB_GYRO_FS_250dps,    /**< \if English 250 degrees per second \else 250度每秒 \endif */
     OB_GYRO_FS_500dps,    /**< \if English 500 degrees per second \else 500度每秒 \endif */
     OB_GYRO_FS_1000dps,   /**< \if English 1000 degrees per second \else 1000度每秒 \endif */
@@ -557,7 +560,11 @@ typedef struct {
 } OBAccelValue, OBGyroValue, ob_accel_value, ob_gyro_value;
 
 /**
+ * \if English
+ * @brief Device state
+ * \else
  * @brief 设备状态码
+ * \endif
  */
 typedef uint64_t OBDeviceState, ob_device_state;
 
@@ -724,6 +731,15 @@ typedef enum {
 } OBSyncMode,
     ob_sync_mode, OB_SYNC_MODE;
 
+typedef enum {
+    OB_COMPRESSION_LOSSLESS = 0,
+    OB_COMPRESSION_LOSSY    = 1,
+} OBCompressionMode, ob_compression_mode, OB_COMPRESSION_MODE;
+
+typedef struct  {
+    int threshold;
+}OBCompressionParams, ob_compression_params, OB_COMPRESSION_PARAMS;
+
 /**
  * \if English
  * @brief TOF Exposure Threshold
@@ -773,6 +789,20 @@ typedef enum {
     OB_COMM_NET = 0x01, /**< 网络 */
 } OBCommunicationType,
     ob_communication_type, OB_COMMUNICATION_TYPE;
+
+typedef enum {
+    OB_USB_POWER_NO_PLUGIN = 0,
+    OB_USB_POWER_5V_0A9    = 1,
+    OB_USB_POWER_5V_1A5    = 2,
+    OB_USB_POWER_5V_3A0    = 3,
+} OBUSBPowerState,
+    ob_usb_power_state;
+
+typedef enum {
+    OB_DC_POWER_NO_PLUGIN = 0,
+    OB_DC_POWER_PLUGIN    = 1,
+} OBDCPowerState,
+    ob_dc_power_state;
 
 /**
  * \if English
@@ -909,10 +939,15 @@ typedef void (*ob_frame_callback)(ob_frame *frame, void *user_data);
 typedef void (*ob_frameset_callback)(ob_frame *frameset, void *user_data);
 
 /**
+ * \if English
+ * @brief Customize the delete callback,当引用计数为0时主动调用
+ * @param buffer Data that needs to be deleted
+ * @param context user-defined data
+ * \else
  * @brief 自定义删除回调，当引用计数为0时主动调用
  * @param buffer 需要被删除的数据
  * @param context 用户传入的数据
- *
+ * \endif
  */
 typedef void(ob_frame_destroy_callback)(void *buffer, void *context);
 

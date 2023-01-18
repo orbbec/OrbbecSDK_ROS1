@@ -282,7 +282,7 @@ public:
      * \if English
      * @brief Get the value scale of the depth frame, the unit is mm/step,
      *        such as valueScale=0.1, and a certain coordinate pixel value is pixelValue=10000,
-     *        then the depth value value = pixelValue*valueScale = 10000*0.1=1000mm.
+     *        then the depth value is: value = pixelValue*valueScale = 10000*0.1=1000mm.
      *
      * @return float
      * \else

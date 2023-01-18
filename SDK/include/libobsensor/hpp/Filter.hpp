@@ -124,9 +124,9 @@ public:
 
     /**
 	 * \if English
-	 * @brief  Set point cloud position data scale ratio
+	 * @brief  Set the point cloud coordinate data zoom factor
      *
-     * @param scale scale ratio
+     * @param scale Zoom factor
 	 * \else
      * @brief  设置点云坐标数据缩放比例
      *
@@ -139,7 +139,7 @@ public:
 	 * \if English
 	 * @brief  Set point cloud color data normalization
      *
-     * @param state Whether to normalize
+     * @param state Whether normalization is required
 	 * \else
      * @brief  设置点云颜色数据归一化
      *
@@ -165,4 +165,29 @@ public:
      */
     void setFormatConvertType(OBConvertFormat type);
 };
+
+class OB_EXTENSION_API CompressionFilter : public Filter {
+public:
+    CompressionFilter();
+    /**
+     * \if English
+     * @brief Set compression params
+     *
+     * @param mode Compression mode OB_COMPRESSION_LOSSLESS or OB_COMPRESSION_LOSSY
+     * @param params Compression params, when mode is OB_COMPRESSION_LOSSLESS, params is NULL
+     * \else
+     * @brief 设置压缩参数
+     *
+     * @param mode 压缩模式 OB_COMPRESSION_LOSSLESS or OB_COMPRESSION_LOSSY
+     * @param params 压缩参数, 当mode为OB_COMPRESSION_LOSSLESS时，params为NULL
+     * \endif
+     */
+    void setCompressionParams(OBCompressionMode mode, void * params);
+};
+
+class OB_EXTENSION_API DecompressionFilter : public Filter {
+public:
+    DecompressionFilter();
+};
+
 }  // namespace ob
