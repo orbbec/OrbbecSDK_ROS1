@@ -1,11 +1,14 @@
 <launch>
     <arg name="camera_name" default="ob_camera"/>
-    <arg name="3d_sensor" default="astra_adv"/>
+    <arg name="3d_sensor" default="gemini_e"/>
     <arg name="camera1_prefix" default="01"/>
     <arg name="camera2_prefix" default="02"/>
-    <arg name="camera1_serila_number" default="BY1VC10004B"/>
-    <arg name="camera2_serila_number" default="BY1N42200CZ"/>
-    <arg name="device_num" default="2"/>
+    <arg name="camera3_prefix" default="03"/>
+    <arg name="camera1_serila_number" default="CH264200034"/>
+    <arg name="camera2_serila_number" default="CH264200040"/>
+    <arg name="camera3_serila_number" default="CH25921008R"/>
+
+    <arg name="device_num" default="3"/>
     <node name="camera" pkg="orbbec_camera" type="ob_cleanup_shm_node" output="screen"/>
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
@@ -18,6 +21,10 @@
         <arg name="serial_number" value="$(arg camera2_serila_number)"/>
         <arg name="device_num" value="$(arg device_num)"/>
     </include>
-    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf"
-          args="0 0 0 0 0 0 camera01_link camera02_link"/>
+    <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
+        <arg name="camera_name" value="$(arg camera_name)_$(arg camera3_prefix)"/>
+        <arg name="serial_number" value="$(arg camera3_serila_number)"/>
+        <arg name="device_num" value="$(arg device_num)"/>
+    </include>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf" args="0 0 0 0 0 0 camera01_link camera02_link"/>
 </launch>
