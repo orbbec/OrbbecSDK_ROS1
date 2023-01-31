@@ -123,28 +123,34 @@ public:
     void setFrameAlignState(bool state);
 
     /**
-	 * \if English
-	 * @brief  Set the point cloud coordinate data zoom factor
+     * \if English
+     * @brief  Set the point cloud coordinate data zoom factor
+     *
+     * @attention Calling this function to set the scale will change the point coordinate scaling factor of the output point cloud frame: posScale = posScale /
+     * scale.The point coordinate scaling factor for the output point cloud frame can be obtained via @ref PointsFrame::getPositionValueScale function
      *
      * @param scale Zoom factor
-	 * \else
+     * \else
      * @brief  设置点云坐标数据缩放比例
      *
+     * @attention 调用该函数设置缩放比例会改变输出点云帧的点坐标缩放系数：posScale = posScale / scale;
+     *  输出点云帧的点坐标缩放系数可通过 @ref PointsFrame::getPositionValueScale 函数获取
+     *
      * @param scale 缩放比例
-	 * \endif
+     * \endif
      */
     void setPositionDataScaled(float scale);
 
     /**
-	 * \if English
-	 * @brief  Set point cloud color data normalization
+     * \if English
+     * @brief  Set point cloud color data normalization
      *
      * @param state Whether normalization is required
-	 * \else
+     * \else
      * @brief  设置点云颜色数据归一化
      *
      * @param state 是否需要归一化
-	 * \endif
+     * \endif
      */
     void setColorDataNormalization(bool state);
 };
@@ -182,7 +188,7 @@ public:
      * @param params 压缩参数, 当mode为OB_COMPRESSION_LOSSLESS时，params为NULL
      * \endif
      */
-    void setCompressionParams(OBCompressionMode mode, void * params);
+    void setCompressionParams(OBCompressionMode mode, void *params);
 };
 
 class OB_EXTENSION_API DecompressionFilter : public Filter {
