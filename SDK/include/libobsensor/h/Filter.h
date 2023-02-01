@@ -85,17 +85,11 @@ void ob_pointcloud_filter_set_frame_align_state(ob_filter *filter, bool state, o
 /**
  * \if English
  * @brief  Set the point cloud data scaling factor
- * @attention Calling this function to set the scale will change the point coordinate scaling factor of the output point cloud frame: posScale = posScale /
- * scale.The point coordinate scaling factor for the output point cloud frame can be obtained via @ref ob_points_frame_get_position_value_scale function
  * @param[in] filter object
  * @param[in] scale Set the point cloud coordinate data zoom factor
  * @param[out] error Log error messages
  * \else
  * @brief  设置点云数据缩放比例
- *
- * @attention 调用该函数设置缩放比例会改变输出点云帧的点坐标缩放系数：posScale = posScale / scale;
- *  输出点云帧的点坐标缩放系数可通过 @ref ob_points_frame_get_position_value_scale 函数获取
- *
  * @param[in] filter pointcloud_filter对象
  * @param[in] scale 设置点云坐标数据缩放比例
  * @param[out] error 记录错误信息

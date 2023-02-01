@@ -136,14 +136,14 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
       }
     }
   }
-  CHECK_NOTNULL(device_);
+  CHECK_NOTNULL(device_.get());
   if (ob_camera_node_) {
     ob_camera_node_.reset();
   }
   ob_camera_node_ = std::make_unique<OBCameraNode>(nh_, nh_private_, device_);
   device_connected_ = true;
   device_info_ = device_->getDeviceInfo();
-  CHECK_NOTNULL(device_info_);
+  CHECK_NOTNULL(device_info_.get());
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
   ROS_INFO_STREAM("Serial number: " << device_info_->serialNumber());
   ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
@@ -203,7 +203,7 @@ void OBCameraNodeFactory::queryDevice() {
     if (!device_connected_) {
       ROS_INFO_STREAM_THROTTLE(1, "query device");
       auto list = ctx_->queryDeviceList();
-      CHECK_NOTNULL(list);
+      CHECK_NOTNULL(list.get());
       if (list->deviceCount() > 0) {
         try {
           startDevice(list);

@@ -366,7 +366,7 @@ ob_rect ob_get_d2c_valid_area(ob_pipeline *pipeline, uint32_t distance, ob_error
  * @return ob_rect 返回在工作距离下D2C后有效的区域信息
  * \endif
  */
-ob_rect ob_get_d2c_range_valid_area(ob_pipeline *pipeline, uint32_t minimum_distance, uint32_t maximum_distance, ob_error **error);
+ob_rect ob_get_d2c_range_valid_area(ob_pipeline *pipeline, uint32_t minimum_distance,uint32_t maximum_distance, ob_error **error);
 
 /**
  * \if English
@@ -384,6 +384,7 @@ ob_rect ob_get_d2c_range_valid_area(ob_pipeline *pipeline, uint32_t minimum_dist
  * \endif
  */
 void ob_pipeline_start_record(ob_pipeline *pipeline, const char *file_name, ob_error **error);
+
 
 /**
  * \if English
@@ -512,6 +513,7 @@ void ob_config_disable_all_stream(ob_config *config, ob_error **error);
  */
 void ob_config_set_align_mode(ob_config *config, ob_align_mode mode, ob_error **error);
 
+
 /**
  * \if English
  * @brief Whether the depth needs to be scaled after setting D2C
@@ -527,13 +529,12 @@ void ob_config_set_align_mode(ob_config *config, ob_align_mode mode, ob_error **
  * @param[out] error 记录错误信息
  * \endif
  */
-void ob_config_set_depth_scale_require(ob_config *config, bool enable, ob_error **error);
+void ob_config_set_depth_scale_require(ob_config *config,bool enable,ob_error **error);
 
 /**
  * \if English
  * @brief  Set the D2C target resolution, which is applicable to cases where the Color stream is not enabled using the OrbbecSDK and the depth needs to be D2C
- * Note: When you use OrbbecSDK to enable the Color stream, you also use this interface to set the D2C target resolution. The configuration of the enabled Color
- * stream is preferred for D2C
+ * Note: When you use OrbbecSDK to enable the Color stream, you also use this interface to set the D2C target resolution. The configuration of the enabled Color stream is preferred for D2C
  *
  * @param[in] config config object
  * @param[in] d2c_target_width The D2C target has a wide resolution
@@ -549,7 +550,7 @@ void ob_config_set_depth_scale_require(ob_config *config, bool enable, ob_error 
  * @param[out] error 记录错误信息
  * \endif
  */
-void ob_config_set_d2c_target_resolution(ob_config *config, uint32_t d2c_target_width, uint32_t d2c_target_height, ob_error **error);
+void ob_config_set_d2c_target_resolution(ob_config *config,uint32_t d2c_target_width,uint32_t d2c_target_height,ob_error **error);
 
 #ifdef __cplusplus
 }

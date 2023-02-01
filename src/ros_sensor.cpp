@@ -6,7 +6,7 @@ namespace orbbec_camera {
 ROSOBSensor::ROSOBSensor(std::shared_ptr<ob::Device> device, std::shared_ptr<ob::Sensor> sensor,
                          std::string name)
     : device_(std::move(device)), sensor_(std::move(sensor)), name_(std::move(name)) {
-  CHECK_NOTNULL(sensor_);
+  CHECK_NOTNULL(sensor_.get());
 }
 
 ROSOBSensor::~ROSOBSensor() { stopStream(); }
@@ -16,7 +16,7 @@ void ROSOBSensor::startStream(std::shared_ptr<ob::StreamProfile> profile,
   if (is_started_) {
     return;
   }
-  CHECK_NOTNULL(profile);
+  CHECK_NOTNULL(profile.get());
   sensor_->start(profile, std::move(callback));
   profile_ = profile;
   is_started_ = true;

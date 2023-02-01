@@ -121,7 +121,7 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
   return info;
 }
 void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName) {
-  CHECK_NOTNULL(frame);
+  CHECK_NOTNULL(frame.get());
   size_t point_size = frame->dataSize() / sizeof(OBColorPoint);
   FILE* fp = fopen(fileName.c_str(), "wb+");
   fprintf(fp, "ply\n");

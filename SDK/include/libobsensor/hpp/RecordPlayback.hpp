@@ -1,6 +1,5 @@
 /**
  * \if English
- *
  * @file RecordPlayback.hpp
  * @brief For recording and playback functions
  * \else

@@ -8,7 +8,7 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
 
 void OBCameraNode::init() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-  CHECK_NOTNULL(device_);
+  CHECK_NOTNULL(device_.get());
   is_running_ = true;
   setupConfig();
   getParameters();
@@ -83,7 +83,7 @@ void OBCameraNode::startStreams() {
     try {
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
-        CHECK_NOTNULL(frame_set);
+        CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
       });
     } catch (const ob::Error& e) {
@@ -92,7 +92,7 @@ void OBCameraNode::startStreams() {
       enable_[INFRA0] = false;
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
-        CHECK_NOTNULL(frame_set);
+        CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
       });
     }
@@ -109,7 +109,7 @@ void OBCameraNode::startStreams() {
 void OBCameraNode::stopStreams() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
-    CHECK_NOTNULL(pipeline_);
+    CHECK_NOTNULL(pipeline_.get());
     pipeline_->stop();
     pipeline_started_ = false;
   } else {
@@ -256,7 +256,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   }
   auto depth_frame = frame_set->depthFrame();
   auto color_frame = frame_set->colorFrame();
-  CHECK_NOTNULL(pipeline_);
+  CHECK_NOTNULL(pipeline_.get());
   if (!camera_params_) {
     camera_params_ = pipeline_->getCameraParam();
   }
@@ -402,7 +402,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   auto image_publisher = image_publishers_[stream_index];
   auto image_msg =
       cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], image).toImageMsg();
-  CHECK_NOTNULL(image_msg);
+  CHECK_NOTNULL(image_msg.get());
   image_msg->header.stamp = timestamp;
   image_msg->is_bigendian = false;
   image_msg->step = width * unit_step_size_[stream_index];
@@ -415,7 +415,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     cv::flip(image, flipped_image, 1);
     auto flipped_image_msg =
         cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], flipped_image).toImageMsg();
-    CHECK_NOTNULL(flipped_image_msg);
+    CHECK_NOTNULL(flipped_image_msg.get());
     flipped_image_msg->header.stamp = timestamp;
     flipped_image_msg->is_bigendian = false;
     flipped_image_msg->step = width * unit_step_size_[stream_index];
@@ -609,7 +609,7 @@ void OBCameraNode::publishDynamicTransforms() {
       for (auto& msg : static_tf_msgs_) {
         msg.header.stamp = t;
       }
-      CHECK_NOTNULL(dynamic_tf_broadcaster_);
+      CHECK_NOTNULL(dynamic_tf_broadcaster_.get());
       dynamic_tf_broadcaster_->sendTransform(static_tf_msgs_);
     }
   }
@@ -622,7 +622,7 @@ void OBCameraNode::publishStaticTransforms() {
   if (tf_publish_rate_ > 0) {
     tf_thread_ = std::make_shared<std::thread>([this]() { publishDynamicTransforms(); });
   } else {
-    CHECK_NOTNULL(static_tf_broadcaster_);
+    CHECK_NOTNULL(static_tf_broadcaster_.get());
     static_tf_broadcaster_->sendTransform(static_tf_msgs_);
   }
 }
