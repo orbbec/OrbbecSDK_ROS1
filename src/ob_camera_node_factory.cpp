@@ -56,7 +56,7 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   if (device_) {
     device_.reset();
   }
-  std::this_thread::sleep_for(std::chrono::milliseconds (connection_delay_));
+  std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
   size_t connected_device_num = 0;
   sem_t* device_sem = nullptr;
   std::shared_ptr<int> sem_guard(nullptr, [&](int*) {
@@ -79,9 +79,6 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
     ROS_INFO_STREAM("Connecting to the default device");
     device_ = list->getDevice(0);
   } else {
-    std::string lower_sn;
-    std::transform(serial_number_.begin(), serial_number_.end(), std::back_inserter(lower_sn),
-                   [](auto ch) { return isalpha(ch) ? tolower(ch) : static_cast<int>(ch); });
     device_sem = sem_open(DEFAULT_SEM_NAME.c_str(), O_CREAT, 0644, 1);
     if (device_sem == SEM_FAILED) {
       ROS_ERROR_STREAM("Failed to open semaphore");
@@ -98,6 +95,18 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
     }
     try {
       auto device = list->getDeviceBySN(serial_number_.c_str());
+      if (device == nullptr) {
+        for (size_t i = 0; i < list->deviceCount(); i++) {
+          auto dev = list->getDevice(i);
+          if (dev != nullptr) {
+            std::string sn = dev->getDeviceInfo()->serialNumber();
+            if (sn == serial_number_) {
+              device = dev;
+              break;
+            }
+          }
+        }
+      }
       device_ = device;
     } catch (ob::Error& e) {
       ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
