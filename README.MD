@@ -185,33 +185,37 @@ NOTE: The images are saved under ~/.ros/image and are only available when the se
 - Go to the `orbbec-ros-sdk/launch/multi_xxx.launch` file and modify the serial number. Currently, different cameras can
   only be distinguished by their serial number.
 
-  ```xml
-  <launch>
-      <!-- unique camera name-->
-      <arg name="camera_name" default="camera"/>
-      <!-- Hardware depth registration -->
-      <arg name="3d_sensor" default="astra"/>
-      <!-- stereo_s_u3, astrapro, astra -->
-      <arg name="camera1_prefix" default="01"/>
-      <arg name="camera2_prefix" default="02"/>
-      <arg name="camera1_serila_number" default="AU094930073"/> <-->Change serial number here </-->
-      <arg name="camera2_serila_number" default="AU1D41100NH"/> <-->Change serial number here </-->
-      <arg name="device_num" default="2"/
-      <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
-          <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
-          <arg name="serial_number" value="$(arg camera1_serila_number)"/>
-          <arg name="device_num" default="$(arg device_num)"/
+```XML
+<launch>
+    <!-- unique camera name-->
+    <arg name="camera_name" default="camera"/>
+    <!-- Hardware depth registration -->
+    <arg name="3d_sensor" default="astra"/>
+    <!-- stereo_s_u3, astrapro, astra -->
+    <arg name="camera1_prefix" default="01"/>
+    <arg name="camera2_prefix" default="02"/>
+    <arg name="camera1_serila_number" default="AU094930073"/>
+    -->Change serial number here -->
+    <arg name="camera2_serila_number" default="AU1D41100NH"/>
+    -->Change serial number here -->
+    <arg name="device_num" default="2"/>
+    <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
+        <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
+        <arg name="serial_number" value="$(arg camera1_serila_number)"/>
+        <arg name="device_num" default="$(arg device_num)"/>
 
-      </include>
-  
-      <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
-          <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
-          <arg name="serial_number" value="$(arg camera2_serila_number)"/>
-          <arg name="device_num" default="$(arg device_num)"/>
-      </include>
-      <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf" args="0 0 0 0 0 0 camera01_link camera02_link"/>
-  </launch>
-  ```
+    </include>
+
+    <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
+        <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
+        <arg name="serial_number" value="$(arg camera2_serila_number)"/>
+        <arg name="device_num" default="$(arg device_num)"/>
+    </include>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf"
+          args="0 0 0 0 0 0 camera01_link camera02_link"/>
+</launch>
+
+ ```
 
 - Launch
 
@@ -259,7 +263,7 @@ Why are there so many launch files here
 
 ## License
 
-Copyright 2022 Orbbec Ltd.
+Copyright 2023 Orbbec Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with
 the License. You may obtain a copy of the License at
