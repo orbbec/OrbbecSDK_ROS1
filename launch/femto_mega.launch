@@ -10,20 +10,20 @@
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="false"/>
     <arg name="connection_delay" default="100"/>
-    <arg name="color_width" default="640"/>
-    <arg name="color_height" default="480"/>
+    <arg name="color_width" default="1280"/>
+    <arg name="color_height" default="720"/>
     <arg name="color_fps" default="30"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
     <arg name="depth_width" default="640"/>
-    <arg name="depth_height" default="480"/>
+    <arg name="depth_height" default="576"/>
     <arg name="depth_fps" default="30"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="Y16"/>
     <arg name="flip_depth" default="false"/>
     <arg name="ir_width" default="640"/>
-    <arg name="ir_height" default="480"/>
+    <arg name="ir_height" default="576"/>
     <arg name="ir_fps" default="30"/>
     <arg name="enable_ir" default="true"/>
     <arg name="ir_format" default="Y16"/>
