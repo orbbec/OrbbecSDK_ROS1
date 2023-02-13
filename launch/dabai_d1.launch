@@ -2,7 +2,7 @@
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
     <!-- Hardware depth registration -->
-    <arg name="depth_align" default="false"/>
+    <arg name="depth_registration" default="false"/>
     <arg name="serial_number" default=""/>
     <arg name="device_num" default="1"/>
     <arg name="vendor_id" default="0x2bc5"/>
@@ -32,7 +32,7 @@
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <param name="camera_name" value="$(arg camera_name)"/>
-            <param name="depth_align" value="$(arg depth_align)"/>
+            <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="serial_number" type="string" value="$(arg serial_number)"/>
             <param name="vendor_id" value="$(arg vendor_id)"/>
             <param name="product_id" value="$(arg product_id)"/>

@@ -54,13 +54,13 @@ void OBCameraNode::setupDevices() {
       sensors_[sip] = std::make_shared<ROSOBSensor>(device_, sensor, stream_name_[sip]);
     }
   }
-  for (const auto& item : enable_) {
+  for (const auto& item : enable_stream_) {
     auto stream_index = item.first;
     auto enable = item.second;
     if (enable && sensors_.find(stream_index) == sensors_.end()) {
       ROS_INFO_STREAM(stream_name_[stream_index]
                       << "sensor isn't supported by current device! -- Skipping...");
-      enable_[stream_index] = false;
+      enable_stream_[stream_index] = false;
     }
   }
   if (enable_d2c_viewer_) {
@@ -73,7 +73,7 @@ void OBCameraNode::setupDevices() {
 
 void OBCameraNode::setupFrameCallback() {
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (enable_[stream_index]) {
+    if (enable_stream_[stream_index]) {
       auto callback = [this, stream_index = stream_index](std::shared_ptr<ob::Frame> frame) {
         this->onNewFrameCallback(frame, stream_index);
       };
@@ -107,7 +107,7 @@ bool OBCameraNode::setupFormatConvertType(OBFormat type) {
 
 void OBCameraNode::setupProfiles() {
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (!enable_[stream_index]) {
+    if (!enable_stream_[stream_index]) {
       continue;
     }
     auto profile_list = sensors_[stream_index]->getStreamProfileList();
@@ -129,7 +129,7 @@ void OBCameraNode::setupProfiles() {
       } else {
         ROS_WARN_STREAM(" NO default_profile found , Stream: " << stream_index.first
                                                                << " will be disable");
-        enable_[stream_index] = false;
+        enable_stream_[stream_index] = false;
         continue;
       }
     }
@@ -142,11 +142,11 @@ void OBCameraNode::setupProfiles() {
                                << ", fps: " << fps_[stream_index] << ", "
                                << "Format: " << selected_profile->format());
   }
-  if (!enable_pipeline_ && (depth_align_ || enable_colored_point_cloud_)) {
+  if (!enable_pipeline_ && (depth_registration_ || enable_colored_point_cloud_)) {
     int index = getCameraParamIndex();
     try {
       device_->setIntProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_MODE_INT, index);
-      device_->setBoolProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, depth_align_);
+      device_->setBoolProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, depth_registration_);
     } catch (ob::Error& e) {
       ROS_ERROR_STREAM("set d2c error " << e.getMessage());
     }
@@ -162,7 +162,7 @@ void OBCameraNode::setupTopics() {
 
 void OBCameraNode::setupPublishers() {
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (!enable_[stream_index]) {
+    if (!enable_stream_[stream_index]) {
       continue;
     }
     std::string name = stream_name_[stream_index];
@@ -177,7 +177,7 @@ void OBCameraNode::setupPublishers() {
     camera_info_publishers_[stream_index] =
         nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1, true);
   }
-  if (enable_[DEPTH] && enable_[COLOR]) {
+  if (enable_stream_[DEPTH] && enable_stream_[COLOR]) {
     extrinsics_publisher_ = nh_.advertise<Extrinsics>("extrinsic/depth_to_color", 1, true);
   }
   if (enable_point_cloud_) {
@@ -220,11 +220,11 @@ void OBCameraNode::setupPipelineConfig() {
     pipeline_config_.reset();
   }
   pipeline_config_ = std::make_shared<ob::Config>();
-  if (depth_align_ && enable_[COLOR] && enable_[DEPTH]) {
+  if (depth_registration_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
     pipeline_config_->setAlignMode(ALIGN_D2C_HW_MODE);
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (enable_[stream_index]) {
+    if (enable_stream_[stream_index]) {
       pipeline_config_->enableStream(stream_profile_[stream_index]);
     }
   }
@@ -232,7 +232,7 @@ void OBCameraNode::setupPipelineConfig() {
 
 void OBCameraNode::readDefaultGain() {
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (!enable_[stream_index]) {
+    if (!enable_stream_[stream_index]) {
       continue;
     }
     try {
@@ -250,7 +250,7 @@ void OBCameraNode::readDefaultGain() {
 
 void OBCameraNode::readDefaultExposure() {
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (!enable_[stream_index]) {
+    if (!enable_stream_[stream_index]) {
       continue;
     }
     try {

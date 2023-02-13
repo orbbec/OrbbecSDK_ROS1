@@ -48,7 +48,7 @@ void OBCameraNode::getParameters() {
     param_name = stream_name_[stream_index] + "_fps";
     fps_[stream_index] = nh_private_.param<int>(param_name, IMAGE_FPS);
     param_name = "enable_" + stream_name_[stream_index];
-    enable_[stream_index] = nh_private_.param<bool>(param_name, false);
+    enable_stream_[stream_index] = nh_private_.param<bool>(param_name, false);
     param_name = "flip_" + stream_name_[stream_index];
     flip_images_[stream_index] = nh_private_.param<bool>(param_name, false);
     param_name = stream_name_[stream_index] + "_format";
@@ -67,7 +67,7 @@ void OBCameraNode::getParameters() {
     depth_aligned_frame_id_[stream_index] = optical_frame_id_[COLOR];
   }
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
-  depth_align_ = nh_private_.param<bool>("depth_align", false);
+  depth_registration_ = nh_private_.param<bool>("depth_registration", false);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");
   enable_d2c_viewer_ = nh_private_.param<bool>("enable_d2c_viewer", false);
@@ -89,7 +89,7 @@ void OBCameraNode::startStreams() {
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("failed to start pipeline: " << e.getMessage()
                                                     << " try to disable ir stream try again");
-      enable_[INFRA0] = false;
+      enable_stream_[INFRA0] = false;
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
         CHECK_NOTNULL(frame_set.get());
@@ -99,7 +99,7 @@ void OBCameraNode::startStreams() {
     pipeline_started_ = true;
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
-      if (enable_[stream_index] && !stream_started_[stream_index]) {
+      if (enable_stream_[stream_index] && !stream_started_[stream_index]) {
         startStream(stream_index);
       }
     }
@@ -127,7 +127,7 @@ void OBCameraNode::startStream(const stream_index_pair& stream_index) {
     ROS_WARN_STREAM("Cannot start stream when pipeline is enabled");
     return;
   }
-  if (!enable_[stream_index]) {
+  if (!enable_stream_[stream_index]) {
     ROS_WARN_STREAM("Stream " << stream_name_[stream_index] << " is not enabled, cannot start it.");
     return;
   }
@@ -173,7 +173,7 @@ void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
 
 void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
   try {
-    if (depth_align_ || enable_colored_point_cloud_) {
+    if (depth_registration_ || enable_colored_point_cloud_) {
       if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
         publishColoredPointCloud(frame_set);
       }
@@ -407,7 +407,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   image_msg->is_bigendian = false;
   image_msg->step = width * unit_step_size_[stream_index];
   image_msg->header.frame_id =
-      depth_align_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
+      depth_registration_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
   if (!flip_images_[stream_index]) {
     image_publisher.publish(image_msg);
   } else {
@@ -419,8 +419,8 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     flipped_image_msg->header.stamp = timestamp;
     flipped_image_msg->is_bigendian = false;
     flipped_image_msg->step = width * unit_step_size_[stream_index];
-    flipped_image_msg->header.frame_id =
-        depth_align_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
+    flipped_image_msg->header.frame_id = depth_registration_ ? depth_aligned_frame_id_[stream_index]
+                                                             : optical_frame_id_[stream_index];
     image_publisher.publish(flipped_image_msg);
   }
   if (save_images_[stream_index]) {

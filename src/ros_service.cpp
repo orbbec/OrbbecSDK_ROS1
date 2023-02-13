@@ -5,7 +5,7 @@ namespace orbbec_camera {
 void OBCameraNode::setupCameraCtrlServices() {
   using std_srvs::SetBool;
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (!enable_[stream_index]) {
+    if (!enable_stream_[stream_index]) {
       ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " is disabled.");
       continue;
     }
@@ -185,7 +185,7 @@ void OBCameraNode::setupCameraCtrlServices() {
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
                                      std_srvs::SetBoolResponse& response,
                                      const stream_index_pair& stream_index) {
-  if (!enable_[stream_index]) {
+  if (!enable_stream_[stream_index]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     response.success = false;
     return response.success;
@@ -204,7 +204,7 @@ bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
 bool OBCameraNode::getExposureCallback(GetInt32Request& request, GetInt32Response& response,
                                        const stream_index_pair& stream_index) {
   (void)request;
-  if (!enable_[stream_index]) {
+  if (!enable_stream_[stream_index]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     response.success = false;
     return false;
@@ -222,7 +222,7 @@ bool OBCameraNode::getExposureCallback(GetInt32Request& request, GetInt32Respons
 
 bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Response& response,
                                        const stream_index_pair& stream_index) {
-  if (!enable_[stream_index]) {
+  if (!enable_stream_[stream_index]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     response.success = false;
     return false;
@@ -241,7 +241,7 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
 bool OBCameraNode::getGainCallback(GetInt32Request& request, GetInt32Response& response,
                                    const stream_index_pair& stream_index) {
   (void)request;
-  if (!enable_[stream_index]) {
+  if (!enable_stream_[stream_index]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     response.success = false;
     return false;
@@ -259,7 +259,7 @@ bool OBCameraNode::getGainCallback(GetInt32Request& request, GetInt32Response& r
 
 bool OBCameraNode::setGainCallback(SetInt32Request& request, SetInt32Response& response,
                                    const stream_index_pair& stream_index) {
-  if (!enable_[stream_index]) {
+  if (!enable_stream_[stream_index]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     response.success = false;
     return false;
@@ -278,7 +278,7 @@ bool OBCameraNode::setGainCallback(SetInt32Request& request, SetInt32Response& r
 bool OBCameraNode::getAutoWhiteBalanceCallback(GetInt32Request& request,
                                                GetInt32Response& response) {
   (void)request;
-  if (!enable_[COLOR]) {
+  if (!enable_stream_[COLOR]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[COLOR] << " is not enabled.");
     response.success = false;
     return false;
@@ -296,7 +296,7 @@ bool OBCameraNode::getAutoWhiteBalanceCallback(GetInt32Request& request,
 
 bool OBCameraNode::setAutoWhiteBalanceCallback(SetInt32Request& request,
                                                SetInt32Response& response) {
-  if (!enable_[COLOR]) {
+  if (!enable_stream_[COLOR]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[COLOR] << " is not enabled.");
     response.success = false;
     return false;
@@ -314,7 +314,7 @@ bool OBCameraNode::setAutoWhiteBalanceCallback(SetInt32Request& request,
 
 bool OBCameraNode::getWhiteBalanceCallback(GetInt32Request& request, GetInt32Response& response) {
   (void)request;
-  if (!enable_[COLOR]) {
+  if (!enable_stream_[COLOR]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[COLOR] << " is not enabled.");
     response.success = false;
     return false;
@@ -331,7 +331,7 @@ bool OBCameraNode::getWhiteBalanceCallback(GetInt32Request& request, GetInt32Res
 }
 
 bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Response& response) {
-  if (!enable_[COLOR]) {
+  if (!enable_stream_[COLOR]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[COLOR] << " is not enabled.");
     response.success = false;
     return false;
@@ -350,7 +350,7 @@ bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Res
 bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
                                            std_srvs::SetBoolResponse& response,
                                            const stream_index_pair& stream_index) {
-  if (!enable_[stream_index]) {
+  if (!enable_stream_[stream_index]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     response.success = false;
     return false;
@@ -369,7 +369,7 @@ bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
 bool OBCameraNode::getAutoExposureCallback(GetBoolRequest& request, GetBoolResponse& response,
                                            const stream_index_pair& stream_index) {
   (void)request;
-  if (!enable_[stream_index]) {
+  if (!enable_stream_[stream_index]) {
     ROS_ERROR_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     response.success = false;
     return false;
@@ -478,12 +478,12 @@ bool OBCameraNode::toggleSensorCallback(std_srvs::SetBoolRequest& request,
                                         const stream_index_pair& stream_index) {
   std::string msg;
   if (request.data) {
-    if (enable_[stream_index]) {
+    if (enable_stream_[stream_index]) {
       msg = stream_name_[stream_index] + " Already ON";
     }
     ROS_INFO_STREAM("toggling sensor " << stream_name_[stream_index] << " ON");
   } else {
-    if (!enable_[stream_index]) {
+    if (!enable_stream_[stream_index]) {
       msg = stream_name_[stream_index] + " Already OFF";
     }
     ROS_INFO_STREAM("toggling sensor " << stream_name_[stream_index] << " OFF");
@@ -502,7 +502,7 @@ bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enab
                                 std::string& msg) {
   (void)msg;
   stopStreams();
-  enable_[stream_index] = enabled;
+  enable_stream_[stream_index] = enabled;
   startStreams();
   return true;
 }
@@ -512,7 +512,7 @@ bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,
   (void)request;
   (void)response;
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (enable_[stream_index]) {
+    if (enable_stream_[stream_index]) {
       save_images_[stream_index] = true;
     } else {
       ROS_WARN_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");

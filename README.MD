@@ -19,7 +19,7 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev
   ```
 
- Build
+Build
 
 ```bash
 cd ~/ros_ws
@@ -75,7 +75,8 @@ rostopic echo /camera/extrinsic/depth_to_color
 rosservice call /camera/get_camera_params "{}"
 ```
 
-- Check camera parameter, please refer to the ROS documentation for the meaning of the specific fields of the camera parameter [camera info](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html)
+- Check camera parameter, please refer to the ROS documentation for the meaning of the specific fields of the camera
+  parameter [camera info](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html)
 
 ```bash
 rostopic echo /camera/depth/camera_info
@@ -173,14 +174,16 @@ NOTE: The images are saved under ~/.ros/image and are only available when the se
 
 ### **Multiple cameras**
 
-- First, you need to enumerate the serial number of the cameras. Plug them in and run the following command in the terminal:
+- First, you need to enumerate the serial number of the cameras. Plug them in and run the following command in the
+  terminal:
 
   ```bash
   rosrun orbbec_camera list_devices_node 
   ```
 
 - Set the `device_num` parameter to the number of cameras you have.
-- Go to the `orbbec-ros-sdk/launch/multi_xxx.launch` file and modify the serial number. Currently, different cameras can only be distinguished by their serial number.
+- Go to the `orbbec-ros-sdk/launch/multi_xxx.launch` file and modify the serial number. Currently, different cameras can
+  only be distinguished by their serial number.
 
   ```xml
   <launch>
@@ -234,7 +237,8 @@ The following are the launch parameters available:
 - `enable_color`: Enables the RGB camera.
 - `enable_depth`: Enables the depth camera.
 - `enable_ir`: Enables the IR camera.
-- `depth_registration`: Enables hardware alignment of depth and color. This requires the RGB point cloud to be open.
+- `depth_registration`: Enables hardware alignment the depth frame to color frame. This field is required when
+  the `enable_colored_point_cloud` is set to `true`.
 - `enable_publish_extrinsic`: Enables the publishing of camera extrinsic information.
 
 ## Frequently Asked Questions
@@ -257,10 +261,13 @@ Why are there so many launch files here
 
 Copyright 2022 Orbbec Ltd.
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with the License. You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with
+the License. You may obtain a copy of the License at
 
 [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "
+AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+language governing permissions and limitations under the License.
 
 *Other names and brands may be claimed as the property of others*

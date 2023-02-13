@@ -192,7 +192,7 @@ class OBCameraNode {
   std::map<stream_index_pair, cv::Mat> images_;
   std::map<stream_index_pair, int> image_format_;  // for cv_bridge
   std::map<stream_index_pair, int> unit_step_size_;
-  std::map<stream_index_pair, bool> enable_;
+  std::map<stream_index_pair, bool> enable_stream_;
   std::map<stream_index_pair, std::shared_ptr<ob::StreamProfile>> stream_profile_;
   std::map<stream_index_pair, std::shared_ptr<ob::StreamProfileList>> supported_profiles_;
   std::map<stream_index_pair, std::string> stream_name_;
@@ -252,7 +252,7 @@ class OBCameraNode {
   std::shared_ptr<std::thread> tf_thread_ = nullptr;
   std::condition_variable tf_cv_;
   double tf_publish_rate_ = 10.0;
-  bool depth_align_ = false;
+  bool depth_registration_ = false;
   std::recursive_mutex device_lock_;
   std::unique_ptr<camera_info_manager::CameraInfoManager> color_camera_info_ = nullptr;
   std::unique_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_ = nullptr;
