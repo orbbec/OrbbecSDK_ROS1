@@ -1,6 +1,7 @@
 # Orbbec ROS SDK
 
-Orbbec Sensor SDK ROS wrapper This package supports ROS Kinetic, Melodic and Noetic distributions
+Orbbec ROS SDK is a wrapper for OrbbecSDK that supports ROS Kinetic, Melodic, and Noetic distributions.
+It enables smooth integration of Orbbec 3D cameras into ROS projects.
 
 ## Install dependencies
 
@@ -172,15 +173,14 @@ NOTE: The images are saved under ~/.ros/image and are only available when the se
 
 ### **Multiple cameras**
 
-- First, you need to enumerate the serial number of the camera, plug in the cameras and run
+- First, you need to enumerate the serial number of the cameras. Plug them in and run the following command in the terminal:
 
   ```bash
   rosrun orbbec_camera list_devices_node 
   ```
 
-**Set the parameter `number_of_devices` to the number of cameras**
-
-- Go to the `orbbec-ros-sdk/launch/multi_xxx.launch`   and  change the serial number. Currently, different cameras can only be distinguished by the serial number,
+- Set the `device_num` parameter to the number of cameras you have.
+- Go to the `orbbec-ros-sdk/launch/multi_xxx.launch` file and modify the serial number. Currently, different cameras can only be distinguished by their serial number.
 
   ```xml
   <launch>
@@ -218,36 +218,40 @@ roslaunch orbbec_camera multi_camera.launch
 
 ## Launch parameters
 
-`connection_delay`, The delay time for reopening the device in seconds. Some devices would take longer time to initialize, such as Astra mini, so reopening the device immediately would causes firmware crashes when hot plug.
+The following are the launch parameters available:
 
-- `depth_align`, Enables hardware depth to color alignment, requires RGB point cloud to open
-- `enable_point_cloud`, Whether to enable point cloud.
-- `enable_colored_point_cloud`, Whether to enable RGB point cloud.
-- `enable_d2c_viewer`, Publish D2C overlay image.
-- `device_num`,The number of devices, You need to fill in the number of devices when you need multiple cameras.
-- `color_width`， `color_height`， `color_fps`， color stream resolution and frame rate.
-- `ir_width`， `ir_height`， `ir_fps`，IR stream resolution and frame rate
-- `depth_width`， `depth_height`， `depth_fps` depth stream resolution and frame rate
-- `enable_color`， Whether to enable  RGB camera, this parameter has no effect when the RGB camera is UVC protocol
-- `enable_depth` , Whether to enable depth camera
-- `enable_ir`, Whether to enable IR camera
-- `flip_[color|ir|depth]` Publish Mirror of origin image
+- `connection_delay`: The delay time in milliseconds for reopening the device.
+  Some devices, such as Astra mini, require a longer time to initialize and
+  reopening the device immediately can cause
+  firmware crashes when hot plugging.
+- `enable_point_cloud`: Enables the point cloud.
+- `enable_colored_point_cloud`: Enables the RGB point cloud.
+- `enable_d2c_viewer`: Publishes the D2C overlay image (for testing only).
+- `device_num`: The number of devices. This must be filled in if multiple cameras are required.
+- `color_width`, `color_height`, `color_fps`: The resolution and frame rate of the color stream.
+- `ir_width`, `ir_height`, `ir_fps`: The resolution and frame rate of the IR stream.
+- `depth_width`, `depth_height`, `depth_fps`: The resolution and frame rate of the depth stream.
+- `enable_color`: Enables the RGB camera.
+- `enable_depth`: Enables the depth camera.
+- `enable_ir`: Enables the IR camera.
+- `depth_registration`: Enables hardware alignment of depth and color. This requires the RGB point cloud to be open.
+- `enable_publish_extrinsic`: Enables the publishing of camera extrinsic information.
 
 ## Frequently Asked Questions
 
-- No image when  multiple cameras
-  - Maybe the power supply is not sufficient, consider to connect the camera with a powered USB hub.
-  - Maybe the resolution is too high, lower the resolution to test
-- Hot-plug image anomaly
-  - The `connection_delay` parameter can be set to bigger, as some devices take longer time to initialize and may not have completed the initialization of the device.
-- No image when hot-plugging
-  - Check if the data cable is plugged in well
-  - Try to connect to a powered usb hub, the ARM development board may have unstable power supply causing the device fail to repoen.
-- The frame rate of a point cloud is very low, Consideration increased by adding an udp buffer
+No Picture from Multiple Cameras
 
-   ```bash
-    sudo sysctl -w net.core.rmem_max=8388608 net.core.rmem_default=8388608
-   ```
+- it's possible that the power supply is insufficient.
+  To avoid this, do not connect all cameras to the same hub and use a powered hub instead.
+
+- It's also possible that the resolution is too high.
+  To resolve this, try lowering the resolution.
+
+Why are there so many launch files here
+
+- The reason for the presence of multiple launch
+  files is due to the fact that the default resolutions and image formats of different cameras vary.
+  To make it easier to use, the launch files have been separated for each camera.
 
 ## License
 
