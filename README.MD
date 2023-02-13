@@ -245,6 +245,8 @@ The following are the launch parameters available:
 - `depth_registration`: Enables hardware alignment the depth frame to color frame. This field is required when
   the `enable_colored_point_cloud` is set to `true`.
 - `enable_publish_extrinsic`: Enables the publishing of camera extrinsic information.
+- `log_level`: The log level for OrbbecSDK, with optional values of `none`, `info`, `debug`, `warn`, and `fatal`.
+  The log file can be found in the ROS runtime directory, and the default location is `~/.ros/Log`.
 
 ## Frequently Asked Questions
 
