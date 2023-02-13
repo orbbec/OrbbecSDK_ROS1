@@ -32,7 +32,7 @@ void OBCameraNodeFactory::init() {
   auto ob_log_level = obLogSeverityFromString(log_level);
   ctx_->setLoggerSeverity(ob_log_level);
   serial_number_ = nh_private_.param<std::string>("serial_number", "");
-  connection_delay_ = nh_private_.param<int>("connection_delay", 1.0);
+  connection_delay_ = nh_private_.param<int>("connection_delay", 100);
   device_num_ = static_cast<size_t>(nh_private_.param<int>("device_num", 1));
   check_connection_timer_ = nh_.createWallTimer(
       ros::WallDuration(1.0), [this](const ros::WallTimerEvent&) { this->checkConnectionTimer(); });
