@@ -152,8 +152,9 @@ rosservice call /camera/set_laser '{data: false}' # Turn off
 - Turn on/off LDP
 
 ```bash
-ros2 service call /camera/set_ldp '{data: true}'
-ros2 service call /camera/set_ldp '{data: false}'
+ros2 service call /camera/set_ldp '{data: true}'  # Turn on
+ros2 service call /camera/set_ldp '{data: false}' # Turn off
+
 ```
 
 - Turn on/off sensors
@@ -186,6 +187,7 @@ NOTE: The images are saved under ~/.ros/image and are only available when the se
   only be distinguished by their serial number.
 
 ```XML
+
 <launch>
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
@@ -229,8 +231,7 @@ The following are the launch parameters available:
 
 - `connection_delay`: The delay time in milliseconds for reopening the device.
   Some devices, such as Astra mini, require a longer time to initialize and
-  reopening the device immediately can cause
-  firmware crashes when hot plugging.
+  reopening the device immediately can cause firmware crashes when hot plugging.
 - `enable_point_cloud`: Enables the point cloud.
 - `enable_colored_point_cloud`: Enables the RGB point cloud.
 - `enable_d2c_viewer`: Publishes the D2C overlay image (for testing only).
