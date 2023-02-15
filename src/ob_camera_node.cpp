@@ -394,7 +394,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     camera_params_ = pipeline_->getCameraParam();
   } else if (!camera_params_ && stream_index == COLOR) {
     camera_params_ = getCameraColorParam();
-  } else {
+  } else if(!camera_params_){
     camera_params_ = getCameraDepthParam();
   }
   if (camera_params_) {
