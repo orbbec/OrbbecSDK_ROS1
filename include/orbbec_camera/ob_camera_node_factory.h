@@ -34,6 +34,7 @@ class OBCameraNodeFactory {
   std::atomic_bool device_connected_{false};
   std::atomic_bool is_alive_{false};
   std::string serial_number_;
+  std::string device_uid_;
   std::string log_level_;
   int connection_delay_ = 1.0;
   std::shared_ptr<std::thread> query_thread_ = nullptr;

@@ -152,6 +152,7 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   ob_camera_node_ = std::make_unique<OBCameraNode>(nh_, nh_private_, device_);
   device_connected_ = true;
   device_info_ = device_->getDeviceInfo();
+  device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_info_.get());
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
   ROS_INFO_STREAM("Serial number: " << device_info_->serialNumber());
@@ -178,14 +179,15 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
   }
   CHECK_NOTNULL(device_list.get());
   for (size_t i = 0; i < device_list->deviceCount(); i++) {
-    std::string serial = device_list->serialNumber(i);
-    ROS_INFO_STREAM("Device " << serial << " disconnected");
+    std::string device_uid = device_list->uid(i);
+    ROS_INFO_STREAM("Device with uid " << device_uid << " disconnected");
     std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-    if (device_info_ != nullptr && serial == device_info_->serialNumber()) {
+    if (device_uid == device_uid_) {
       ob_camera_node_.reset();
       device_.reset();
       device_info_.reset();
       device_connected_ = false;
+      device_uid_.clear();
       break;
     }
   }
