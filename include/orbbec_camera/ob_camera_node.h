@@ -103,6 +103,10 @@ class OBCameraNode {
 
   boost::optional<OBCameraParam> getCameraParam();
 
+  boost::optional<OBCameraParam> getCameraDepthParam();
+
+  boost::optional<OBCameraParam> getCameraColorParam();
+
   int getCameraParamIndex();
 
   void setupCameraInfo();

@@ -194,8 +194,10 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   if (depth_cloud_pub_.getNumSubscribers() == 0 || !enable_point_cloud_) {
     return;
   }
-  if (!camera_params_) {
+  if (!camera_params_ && depth_registration_) {
     camera_params_ = pipeline_->getCameraParam();
+  } else if (!camera_params_) {
+    camera_params_ = getCameraDepthParam();
   }
   cloud_filter_.setCameraParam(*camera_params_);
   cloud_filter_.setCreatePointFormat(OB_FORMAT_POINT);
@@ -215,12 +217,13 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   sensor_msgs::PointCloud2Iterator<float> iter_y(cloud_msg_, "y");
   sensor_msgs::PointCloud2Iterator<float> iter_z(cloud_msg_, "z");
   size_t valid_count = 0;
+  double depth_scale = depth_frame->getValueScale();
   for (size_t point_idx = 0; point_idx < point_size; point_idx++, points++) {
     bool valid_pixel(points->z > 0);
     if (valid_pixel) {
-      *iter_x = static_cast<float>(points->x / 1000.0);
-      *iter_y = -static_cast<float>(points->y / 1000.0);
-      *iter_z = static_cast<float>(points->z / 1000.0);
+      *iter_x = static_cast<float>((points->x * depth_scale) / 1000.0);
+      *iter_y = -static_cast<float>((points->y * depth_scale) / 1000.0);
+      *iter_z = static_cast<float>((points->z * depth_scale) / 1000.0);
       ++iter_x;
       ++iter_y;
       ++iter_z;
@@ -260,6 +263,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   if (!camera_params_) {
     camera_params_ = pipeline_->getCameraParam();
   }
+  CHECK(camera_params_);
   cloud_filter_.setCameraParam(*camera_params_);
   cloud_filter_.setCreatePointFormat(OB_FORMAT_RGB_POINT);
   auto frame = cloud_filter_.process(frame_set);
@@ -386,18 +390,26 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   }
   image.data = (uchar*)video_frame->data();
   auto timestamp = frameTimeStampToROSTime(video_frame->systemTimeStamp());
-  if (!camera_params_) {
+  if (!camera_params_ && depth_registration_) {
     camera_params_ = pipeline_->getCameraParam();
+  } else if (!camera_params_ && stream_index == COLOR) {
+    camera_params_ = getCameraColorParam();
+  } else {
+    camera_params_ = getCameraDepthParam();
   }
-  auto& intrinsic =
-      stream_index == COLOR ? camera_params_->rgbIntrinsic : camera_params_->depthIntrinsic;
-  auto& distortion =
-      stream_index == COLOR ? camera_params_->rgbDistortion : camera_params_->depthDistortion;
-  auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
-  CHECK(camera_info_publishers_.count(stream_index) > 0);
-  auto camera_info_publisher = camera_info_publishers_[stream_index];
-  camera_info.header.stamp = timestamp;
-  camera_info_publisher.publish(camera_info);
+  if (camera_params_) {
+    auto& intrinsic =
+        stream_index == COLOR ? camera_params_->rgbIntrinsic : camera_params_->depthIntrinsic;
+    auto& distortion =
+        stream_index == COLOR ? camera_params_->rgbDistortion : camera_params_->depthDistortion;
+    auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
+    CHECK(camera_info_publishers_.count(stream_index) > 0);
+    auto camera_info_publisher = camera_info_publishers_[stream_index];
+    camera_info.width = width;
+    camera_info.height = height;
+    camera_info.header.stamp = timestamp;
+    camera_info_publisher.publish(camera_info);
+  }
   CHECK(image_publishers_.count(stream_index));
   auto image_publisher = image_publishers_[stream_index];
   auto image_msg =
@@ -532,6 +544,32 @@ boost::optional<OBCameraParam> OBCameraNode::getCameraParam() {
     int color_h = param.rgbIntrinsic.height;
     if ((depth_w * height_[DEPTH] == depth_h * width_[DEPTH]) &&
         (color_w * height_[COLOR] == color_h * width_[COLOR])) {
+      return param;
+    }
+  }
+  return {};
+}
+
+boost::optional<OBCameraParam> OBCameraNode::getCameraDepthParam() {
+  auto camera_params = device_->getCalibrationCameraParamList();
+  for (size_t i = 0; i < camera_params->count(); i++) {
+    auto param = camera_params->getCameraParam(i);
+    int depth_w = param.depthIntrinsic.width;
+    int depth_h = param.depthIntrinsic.height;
+    if (depth_w * height_[DEPTH] == depth_h * width_[DEPTH]) {
+      return param;
+    }
+  }
+  return {};
+}
+
+boost::optional<OBCameraParam> OBCameraNode::getCameraColorParam() {
+  auto camera_params = device_->getCalibrationCameraParamList();
+  for (size_t i = 0; i < camera_params->count(); i++) {
+    auto param = camera_params->getCameraParam(i);
+    int color_w = param.rgbIntrinsic.width;
+    int color_h = param.rgbIntrinsic.height;
+    if (color_w * height_[COLOR] == color_h * width_[COLOR]) {
       return param;
     }
   }

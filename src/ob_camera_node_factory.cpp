@@ -178,7 +178,7 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
   }
   CHECK_NOTNULL(device_list.get());
   for (size_t i = 0; i < device_list->deviceCount(); i++) {
-    auto serial = device_list->serialNumber(i);
+    std::string serial = device_list->serialNumber(i);
     ROS_INFO_STREAM("Device " << serial << " disconnected");
     std::lock_guard<decltype(device_lock_)> lock(device_lock_);
     if (device_info_ != nullptr && serial == device_info_->serialNumber()) {
