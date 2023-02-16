@@ -45,6 +45,7 @@ void OBCameraNodeFactory::init() {
 }
 
 void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& list) {
+  CHECK_NOTNULL(list);
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (device_connected_) {
     return;
@@ -93,28 +94,41 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
       ROS_ERROR_STREAM("Failed to wait semaphore " << strerror(errno));
       return;
     }
-    try {
-      auto device = list->getDeviceBySN(serial_number_.c_str());
-      if (device == nullptr) {
-        for (size_t i = 0; i < list->deviceCount(); i++) {
+
+    // auto device = list->getDeviceBySN(serial_number_.c_str());
+    std::shared_ptr<ob::Device> device = nullptr;
+    for (size_t i = 0; i < list->deviceCount(); i++) {
+      try {
+        auto pid = list->pid(i);
+        if ((pid >= OPENNI_START_PID && pid <= OPENNI_END_PID) || pid == ASTRA_MINI_PID ||
+            pid == ASTRA_MINI_S_PID) {
+          // openNI device
           auto dev = list->getDevice(i);
-          if (dev != nullptr) {
-            std::string sn = dev->getDeviceInfo()->serialNumber();
-            if (sn == serial_number_) {
-              device = dev;
-              break;
-            }
+          auto device_info = dev->getDeviceInfo();
+          if (device_info->serialNumber() == serial_number_) {
+            ROS_INFO_STREAM("Device serial number <<" << device_info->serialNumber() << " matched");
+            device = dev;
+            break;
+          }
+        } else {
+          std::string sn = list->serialNumber(i);
+          ROS_INFO_STREAM("Device serial number: " << sn);
+          if (sn == serial_number_) {
+            ROS_INFO_STREAM("Device serial number <<" << sn << " matched");
+            auto dev = list->getDevice(i);
+            device = dev;
+            break;
           }
         }
+      } catch (ob::Error& e) {
+        ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
+      } catch (std::exception& e) {
+        ROS_ERROR_STREAM("Failed to get device info " << e.what());
+      } catch (...) {
+        ROS_ERROR_STREAM("Failed to get device info");
       }
-      device_ = device;
-    } catch (ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
-    } catch (std::exception& e) {
-      ROS_ERROR_STREAM("Failed to get device info " << e.what());
-    } catch (...) {
-      ROS_ERROR_STREAM("Failed to get device info");
     }
+    device_ = device;
 
     if (device_ == nullptr) {
       ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
@@ -159,6 +173,7 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
   ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
   ROS_INFO_STREAM("device type: " << ObDeviceTypeToString(device_info_->deviceType()));
+  ROS_INFO_STREAM("device uid: " << device_info_->uid());
 }
 
 void OBCameraNodeFactory::checkConnectionTimer() {

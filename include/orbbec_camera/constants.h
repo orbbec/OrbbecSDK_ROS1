@@ -98,6 +98,9 @@ const int32_t ASTRA_PLUS_PID = 0x0636;
 const int32_t ASTRA_PLUS_S_PID = 0x0637;
 const int32_t OPENNI_START_PID = 0x0601;
 const int32_t OPENNI_END_PID = 0x06FF;
+const int32_t ASTRA_MINI_PID = 0x0404;
+const int32_t ASTRA_MINI_S_PID = 0x0407;
+
 const std::string DEFAULT_SEM_NAME = "orbbec_device_sem";
 const key_t DEFAULT_SEM_KEY = 0x0401;
 }  // namespace orbbec_camera
