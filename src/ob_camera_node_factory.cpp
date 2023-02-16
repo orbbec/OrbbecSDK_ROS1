@@ -95,7 +95,6 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
       return;
     }
 
-    // auto device = list->getDeviceBySN(serial_number_.c_str());
     std::shared_ptr<ob::Device> device = nullptr;
     for (size_t i = 0; i < list->deviceCount(); i++) {
       try {
@@ -106,7 +105,7 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
           auto dev = list->getDevice(i);
           auto device_info = dev->getDeviceInfo();
           if (device_info->serialNumber() == serial_number_) {
-            ROS_INFO_STREAM("Device serial number <<" << device_info->serialNumber() << " matched");
+            ROS_INFO_STREAM("Device serial number " << device_info->serialNumber() << " matched");
             device = dev;
             break;
           }
@@ -184,6 +183,7 @@ void OBCameraNodeFactory::checkConnectionTimer() {
 
 void OBCameraNodeFactory::deviceDisconnectCallback(
     const std::shared_ptr<ob::DeviceList>& device_list) {
+  CHECK_NOTNULL(device_list.get());
   if (device_list->deviceCount() == 0) {
     ROS_WARN_STREAM("device list is empty");
     return;
@@ -192,7 +192,6 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
   if (device_info_ != nullptr) {
     ROS_INFO_STREAM("current node serial " << device_info_->serialNumber());
   }
-  CHECK_NOTNULL(device_list.get());
   for (size_t i = 0; i < device_list->deviceCount(); i++) {
     std::string device_uid = device_list->uid(i);
     ROS_INFO_STREAM("Device with uid " << device_uid << " disconnected");
