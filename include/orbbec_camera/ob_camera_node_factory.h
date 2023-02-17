@@ -13,6 +13,14 @@ class OBCameraNodeFactory {
  private:
   void init();
 
+  std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
+
+  std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
+      const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number);
+
+  void initializeDevice(const std::shared_ptr<ob::Device>& device);
+
+
   void startDevice(const std::shared_ptr<ob::DeviceList>& list);
 
   void checkConnectionTimer();

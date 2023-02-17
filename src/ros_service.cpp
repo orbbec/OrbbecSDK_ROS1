@@ -430,6 +430,7 @@ bool OBCameraNode::getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse
     response.success = false;
     return false;
   }
+  return true;
 }
 
 bool OBCameraNode::setFanWorkModeCallback(std_srvs::SetBoolRequest& request,

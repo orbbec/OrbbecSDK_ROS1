@@ -44,22 +44,19 @@ void OBCameraNodeFactory::init() {
   query_thread_ = std::make_shared<std::thread>([this]() { queryDevice(); });
 }
 
-void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& list) {
-  CHECK_NOTNULL(list);
-  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-  if (device_connected_) {
-    return;
+std::shared_ptr<ob::Device> OBCameraNodeFactory::selectDevice(
+    const std::shared_ptr<ob::DeviceList>& list) {
+  if (device_num_ == 1) {
+    ROS_INFO_STREAM("Connecting to the default device");
+    return list->getDevice(0);
   }
-  if (list->deviceCount() == 0) {
-    ROS_WARN("No device found");
-    return;
+
+  sem_t* device_sem = sem_open(DEFAULT_SEM_NAME.c_str(), O_CREAT, 0644, 1);
+  if (device_sem == SEM_FAILED) {
+    ROS_ERROR_STREAM("Failed to open semaphore");
+    return nullptr;
   }
-  if (device_) {
-    device_.reset();
-  }
-  std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
-  size_t connected_device_num = 0;
-  sem_t* device_sem = nullptr;
+
   std::shared_ptr<int> sem_guard(nullptr, [&](int*) {
     if (device_num_ > 1 && device_sem) {
       ROS_INFO_STREAM("Release device semaphore");
@@ -68,96 +65,66 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
       sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
       ROS_INFO_STREAM("semaphore value: " << sem_value);
       ROS_INFO_STREAM("Release device semaphore done");
-      if (connected_device_num >= device_num_) {
-        ROS_INFO_STREAM("All devices connected,  sem_unlink");
-        sem_destroy(device_sem);
-        sem_unlink(DEFAULT_SEM_NAME.c_str());
-        ROS_INFO_STREAM("All devices connected,  sem_unlink done..");
-      }
     }
   });
-  if (device_num_ == 1) {
-    ROS_INFO_STREAM("Connecting to the default device");
-    device_ = list->getDevice(0);
-  } else {
-    device_sem = sem_open(DEFAULT_SEM_NAME.c_str(), O_CREAT, 0644, 1);
-    if (device_sem == SEM_FAILED) {
-      ROS_ERROR_STREAM("Failed to open semaphore");
-      return;
-    }
-    ROS_INFO_STREAM("Connecting to device with serial number: " << serial_number_);
-    int sem_value = 0;
-    sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
-    ROS_INFO_STREAM("semaphore value: " << sem_value);
-    int ret = sem_wait(device_sem);
-    if (ret != 0) {
-      ROS_ERROR_STREAM("Failed to wait semaphore " << strerror(errno));
-      return;
-    }
 
-    std::shared_ptr<ob::Device> device = nullptr;
-    for (size_t i = 0; i < list->deviceCount(); i++) {
-      try {
-        auto pid = list->pid(i);
-        if ((pid >= OPENNI_START_PID && pid <= OPENNI_END_PID) || pid == ASTRA_MINI_PID ||
-            pid == ASTRA_MINI_S_PID) {
-          // openNI device
-          auto dev = list->getDevice(i);
-          auto device_info = dev->getDeviceInfo();
-          if (device_info->serialNumber() == serial_number_) {
-            ROS_INFO_STREAM("Device serial number " << device_info->serialNumber() << " matched");
-            device = dev;
-            break;
-          }
-        } else {
-          std::string sn = list->serialNumber(i);
-          ROS_INFO_STREAM("Device serial number: " << sn);
-          if (sn == serial_number_) {
-            ROS_INFO_STREAM("Device serial number <<" << sn << " matched");
-            auto dev = list->getDevice(i);
-            device = dev;
-            break;
-          }
+  ROS_INFO_STREAM("Connecting to device with serial number: " << serial_number_);
+
+  int sem_value = 0;
+  sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
+  ROS_INFO_STREAM("semaphore value: " << sem_value);
+
+  int ret = sem_wait(device_sem);
+  if (ret != 0) {
+    ROS_ERROR_STREAM("Failed to wait semaphore " << strerror(errno));
+    return nullptr;
+  }
+
+  std::shared_ptr<ob::Device> device = selectDeviceBySerialNumber(list, serial_number_);
+  if (device == nullptr) {
+    ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
+    device_connected_ = false;
+    return nullptr;
+  }
+
+  return device;
+}
+
+std::shared_ptr<ob::Device> OBCameraNodeFactory::selectDeviceBySerialNumber(
+    const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number) {
+  for (size_t i = 0; i < list->deviceCount(); i++) {
+    try {
+      auto pid = list->pid(i);
+      if ((pid >= OPENNI_START_PID && pid <= OPENNI_END_PID) || pid == ASTRA_MINI_PID ||
+          pid == ASTRA_MINI_S_PID) {
+        // openNI device
+        auto dev = list->getDevice(i);
+        auto device_info = dev->getDeviceInfo();
+        if (device_info->serialNumber() == serial_number) {
+          ROS_INFO_STREAM("Device serial number " << device_info->serialNumber() << " matched");
+          return dev;
         }
-      } catch (ob::Error& e) {
-        ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
-      } catch (std::exception& e) {
-        ROS_ERROR_STREAM("Failed to get device info " << e.what());
-      } catch (...) {
-        ROS_ERROR_STREAM("Failed to get device info");
-      }
-    }
-    device_ = device;
-
-    if (device_ == nullptr) {
-      ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
-      device_connected_ = false;
-      return;
-    } else {
-      // write connected device info to file
-      int shm_id = shmget(DEFAULT_SEM_KEY, 1, 0666 | IPC_CREAT);
-      if (shm_id == -1) {
-        ROS_ERROR_STREAM("Failed to create shared memory " << strerror(errno));
       } else {
-        ROS_INFO_STREAM("Created shared memory");
-        auto shm_ptr = (int*)shmat(shm_id, nullptr, 0);
-        if (shm_ptr == (void*)-1) {
-          ROS_ERROR_STREAM("Failed to attach shared memory " << strerror(errno));
-        } else {
-          ROS_INFO_STREAM("Attached shared memory");
-          connected_device_num = *shm_ptr + 1;
-          ROS_INFO_STREAM("Current connected device " << connected_device_num);
-          *shm_ptr = static_cast<int>(connected_device_num);
-          ROS_INFO_STREAM("Wrote to shared memory");
-          shmdt(shm_ptr);
-          if (connected_device_num >= device_num_) {
-            ROS_INFO_STREAM("All devices connected, removing shared memory");
-            shmctl(shm_id, IPC_RMID, nullptr);
-          }
+        std::string sn = list->serialNumber(i);
+        ROS_INFO_STREAM("Device serial number: " << sn);
+        if (sn == serial_number) {
+          ROS_INFO_STREAM("Device serial number <<" << sn << " matched");
+          return list->getDevice(i);
         }
       }
+    } catch (ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
+    } catch (std::exception& e) {
+      ROS_ERROR_STREAM("Failed to get device info " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("Failed to get device info");
     }
   }
+  return nullptr;
+}
+
+void OBCameraNodeFactory::initializeDevice(const std::shared_ptr<ob::Device>& device) {
+  device_ = device;
   CHECK_NOTNULL(device_.get());
   if (ob_camera_node_) {
     ob_camera_node_.reset();
@@ -173,6 +140,29 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
   ROS_INFO_STREAM("device type: " << ObDeviceTypeToString(device_info_->deviceType()));
   ROS_INFO_STREAM("device uid: " << device_info_->uid());
+}
+
+void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& list) {
+  CHECK_NOTNULL(list);
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  if (device_connected_) {
+    return;
+  }
+  if (list->deviceCount() == 0) {
+    ROS_WARN("No device found");
+    return;
+  }
+  if (device_) {
+    device_.reset();
+  }
+  std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
+  auto device = selectDevice(list);
+  if (device == nullptr) {
+    ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
+    device_connected_ = false;
+    return;
+  }
+  initializeDevice(device);
 }
 
 void OBCameraNodeFactory::checkConnectionTimer() {
