@@ -173,7 +173,74 @@ rosservice call /camera/save_images "{}"
 
 NOTE: The images are saved under ~/.ros/image and are only available when the sensor is on.
 
-### **Multiple cameras**
+### All available service for camera control
+
+The name of the following service already expresses its function.
+However, it should be noted that the corresponding `set_[ir|depth|color]*`
+and `get[ir|depth|color]*` **services are only available if you set** `enable[ir|depth|color]`
+to `true` in the stream that corresponds to the argument of the launch file.
+
+- `/camera/get_auto_white_balance`
+- `/camera/get_camera_params`
+- `/camera/get_color_auto_exposure`
+- `/camera/get_color_camera_info`
+- `/camera/get_color_exposure`
+- `/camera/get_color_gain`
+- `/camera/get_depth_auto_exposure`
+- `/camera/get_depth_camera_info`
+- `/camera/get_depth_exposure`
+- `/camera/get_depth_gain`
+- `/camera/get_device_info`
+- `/camera/get_device_type`
+- `/camera/get_ir_auto_exposure`
+- `/camera/get_ir_camera_info`
+- `/camera/get_ir_exposure`
+- `/camera/get_ir_gain`
+- `/camera/get_serial`
+- `/camera/get_sdk_version`
+- `/camera/get_white_balance`
+- `/camera/reset_color_exposure`
+- `/camera/reset_color_gain`
+- `/camera/reset_depth_exposure`
+- `/camera/reset_depth_gain`
+- `/camera/reset_ir_exposure`
+- `/camera/reset_ir_gain`
+- `/camera/reset_white_balance`
+- `/camera/save_images`
+- `/camera/save_point_cloud`
+- `/camera/set_auto_white_balance`
+- `/camera/set_color_auto_exposure`
+- `/camera/set_color_exposure`
+- `/camera/set_color_gain`
+- `/camera/set_color_mirror`
+- `/camera/set_depth_auto_exposure`
+- `/camera/set_depth_exposure`
+- `/camera/set_depth_gain`
+- `/camera/set_depth_mirror`
+- `/camera/set_fan_work_mode`
+- `/camera/set_floor`
+- `/camera/set_ir_auto_exposure`
+- `/camera/set_ir_exposure`
+- `/camera/set_ir_gain`
+- `/camera/set_ir_mirror`
+- `/camera/set_laser`
+- `/camera/set_ldp`
+- `/camera/set_white_balance`
+- `/camera/toggle_color`
+- `/camera/toggle_depth`
+- `/camera/toggle_ir`
+
+### All available topics
+- `/camera/color/camera_info` : The color camera info.
+- `/camera/color/image_raw`: The color stream image.
+- `/camera/depth/camera_info`: The depth stream image.
+- `/camera/depth/image_raw`: The depth stream image
+- `/camera/depth/points` : The point cloud,  only available when  `enable_point_cloud` is `true`.
+- `/camera/depth_registered/points`: The colored point cloud,  only available when  `enable_colored_point_cloud` is `true`.
+- `/camera/ir/camera_info`:  The IR camera info.
+- `/camera/ir/image_raw`: The IR stream image
+
+### Multiple cameras
 
 - First, you need to enumerate the serial number of the cameras. Plug them in and run the following command in the
   terminal:

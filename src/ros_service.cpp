@@ -115,12 +115,13 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->resetCameraWhiteBalanceCallback(request, response);
       });
-  set_fan_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_fan_work_mode",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setFanCallback(request, response);
-        return response.success;
-      });
+  set_fan_work_mode_srv_ =
+      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+          "/" + camera_name_ + "/" + "set_fan_work_mode",
+          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+            response.success = this->setFanWorkModeCallback(request, response);
+            return response.success;
+          });
   set_floor_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
       "/" + camera_name_ + "/" + "set_floor",
       [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
@@ -137,6 +138,12 @@ void OBCameraNode::setupCameraCtrlServices() {
       "/" + camera_name_ + "/" + "set_ldp",
       [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
         response.success = this->setLdpEnableCallback(request, response);
+        return response.success;
+      });
+  get_ldp_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+      "/" + camera_name_ + "/" + "get_ldp_status",
+      [this](GetBoolRequest& request, GetBoolResponse& response) {
+        response.success = this->getLdpStatusCallback(request, response);
         return response.success;
       });
   get_device_info_srv_ = nh_.advertiseService<GetDeviceInfoRequest, GetDeviceInfoResponse>(
@@ -159,7 +166,7 @@ void OBCameraNode::setupCameraCtrlServices() {
       });
 
   get_sdk_version_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
-      "/" + camera_name_ + "/" + "get_version",
+      "/" + camera_name_ + "/" + "get_sdk_version",
       [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->getSDKVersionCallback(request, response);
         return response.success;
@@ -413,8 +420,20 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
   return true;
 }
 
-bool OBCameraNode::setFanCallback(std_srvs::SetBoolRequest& request,
-                                  std_srvs::SetBoolResponse& response) {
+bool OBCameraNode::getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    response.data = device_->getBoolProperty(OB_PROP_LDP_BOOL);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get LDP status: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
+}
+
+bool OBCameraNode::setFanWorkModeCallback(std_srvs::SetBoolRequest& request,
+                                          std_srvs::SetBoolResponse& response) {
   (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {

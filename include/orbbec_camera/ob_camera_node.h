@@ -146,7 +146,9 @@ class OBCameraNode {
 
   bool setLdpEnableCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
-  bool setFanCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
+  bool getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse& response);
+
+  bool setFanWorkModeCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
   bool setFloorCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
@@ -236,7 +238,8 @@ class OBCameraNode {
   ros::ServiceServer set_laser_srv_;
   ros::ServiceServer set_floor_srv_;
   ros::ServiceServer set_ldp_srv_;
-  ros::ServiceServer set_fan_srv_;
+  ros::ServiceServer get_ldp_status_srv_;
+  ros::ServiceServer set_fan_work_mode_srv_;
   ros::ServiceServer get_auto_white_balance_srv_;
   ros::ServiceServer set_auto_white_balance_srv_;
   ros::ServiceServer get_white_balance_srv_;
