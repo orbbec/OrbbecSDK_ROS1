@@ -116,7 +116,7 @@ void OBCameraNode::setupCameraCtrlServices() {
         return this->resetCameraWhiteBalanceCallback(request, response);
       });
   set_fan_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_fan",
+      "/" + camera_name_ + "/" + "set_fan_work_mode",
       [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
         response.success = this->setFanCallback(request, response);
         return response.success;
