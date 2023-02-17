@@ -287,13 +287,13 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   sensor_msgs::PointCloud2Iterator<uint8_t> iter_g(cloud_msg_, "g");
   sensor_msgs::PointCloud2Iterator<uint8_t> iter_b(cloud_msg_, "b");
   size_t valid_count = 0;
-
+  double depth_scale = depth_frame->getValueScale();
   for (size_t point_idx = 0; point_idx < point_size; point_idx += 1) {
     bool valid_pixel((points + point_idx)->z > 0);
     if (valid_pixel) {
-      *iter_x = static_cast<float>((points + point_idx)->x / 1000.0);
-      *iter_y = -static_cast<float>((points + point_idx)->y / 1000.0);
-      *iter_z = static_cast<float>((points + point_idx)->z / 1000.0);
+      *iter_x = static_cast<float>(depth_scale * (points + point_idx)->x / 1000.0);
+      *iter_y = -static_cast<float>(depth_scale * (points + point_idx)->y / 1000.0);
+      *iter_z = static_cast<float>(depth_scale * (points + point_idx)->z / 1000.0);
       *iter_r = static_cast<uint8_t>((points + point_idx)->r);
       *iter_g = static_cast<uint8_t>((points + point_idx)->g);
       *iter_b = static_cast<uint8_t>((points + point_idx)->b);
@@ -394,7 +394,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     camera_params_ = pipeline_->getCameraParam();
   } else if (!camera_params_ && stream_index == COLOR) {
     camera_params_ = getCameraColorParam();
-  } else if(!camera_params_){
+  } else if (!camera_params_) {
     camera_params_ = getCameraDepthParam();
   }
   if (camera_params_) {
@@ -435,10 +435,15 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                                                              : optical_frame_id_[stream_index];
     image_publisher.publish(flipped_image_msg);
   }
+  saveImageToFile(stream_index, image, image_msg);
+}
+
+void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const cv::Mat& image,
+                                   const sensor_msgs::ImagePtr& image_msg) {
   if (save_images_[stream_index]) {
-    auto now = std::time(nullptr);
+    auto now = time(nullptr);
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&now), "%Y%m%d_%H%M%S");
+    ss << std::put_time(localtime(&now), "%Y%m%d_%H%M%S");
     auto current_path = boost::filesystem::current_path().string();
     auto fps = fps_[stream_index];
     std::string filename = current_path + "/image/" + stream_name_[stream_index] + "_" +

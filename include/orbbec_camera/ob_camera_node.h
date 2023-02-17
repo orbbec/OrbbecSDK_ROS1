@@ -280,6 +280,8 @@ class OBCameraNode {
   std::atomic_bool save_point_cloud_{false};
   std::atomic_bool save_colored_point_cloud_{false};
   boost::optional<OBCameraParam> camera_params_;
+  void saveImageToFile(const stream_index_pair& stream_index, const cv::Mat& image,
+                       const sensor_msgs::ImagePtr& image_msg);
 };
 
 }  // namespace orbbec_camera
