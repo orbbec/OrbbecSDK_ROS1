@@ -5,7 +5,7 @@
     <arg name="camera2_prefix" default="02"/>
     <arg name="camera3_prefix" default="03"/>
     <arg name="camera1_serila_number" default="AY3JB20003C"/>
-    <arg name="camera2_serila_number" default="ADAX91301LB"/>
+    <arg name="camera2_serila_number" default="CH26420001B"/>
     <arg name="camera3_serila_number" default="CH25921008R"/>
 
     <arg name="device_num" default="2"/>

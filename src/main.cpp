@@ -7,5 +7,6 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh_private("~");
   orbbec_camera::OBCameraNodeDriver ob_camera_node_factory(nh, nh_private);
   ros::spin();
+  ros::shutdown();
   return 0;
 }

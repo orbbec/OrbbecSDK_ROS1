@@ -14,6 +14,9 @@ OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle& nh, ros::NodeHandle& nh_
 
 OBCameraNodeDriver::~OBCameraNodeDriver() {
   is_alive_ = false;
+  if (device_count_update_thread_ && device_count_update_thread_->joinable()) {
+    device_count_update_thread_->join();
+  }
   if (query_thread_ && query_thread_->joinable()) {
     query_thread_->join();
   }
@@ -26,6 +29,48 @@ OBCameraNodeDriver::~OBCameraNodeDriver() {
   }
 }
 
+void OBCameraNodeDriver::releaseDeviceSemaphore(sem_t* device_sem, int& num_devices_connected) {
+  ROS_INFO_STREAM_THROTTLE(1.0, "Release device semaphore");
+  sem_post(device_sem);
+  int sem_value = 0;
+  sem_getvalue(device_sem, &sem_value);
+  ROS_INFO_STREAM_THROTTLE(1.0, "semaphore value: " << sem_value);
+  ROS_INFO_STREAM_THROTTLE(1.0, "Release device semaphore done");
+  if (num_devices_connected >= device_num_) {
+    sem_destroy(device_sem);
+    sem_unlink(DEFAULT_SEM_NAME.c_str());
+  }
+}
+
+void OBCameraNodeDriver::updateConnectedDeviceCount(int& num_devices_connected,
+                                                    DeviceConnectionEvent connection_event) {
+  int shm_id = shmget(DEFAULT_SEM_KEY, 1, 0666 | IPC_CREAT);
+  if (shm_id == -1) {
+    ROS_ERROR_STREAM("Failed to create shared memory " << strerror(errno));
+    return;
+  }
+  auto shm_ptr = (int*)shmat(shm_id, nullptr, 0);
+  if (shm_ptr == (void*)-1) {
+    ROS_ERROR_STREAM("Failed to attach shared memory " << strerror(errno));
+    return;
+  }
+  if (connection_event == DeviceConnectionEvent::kDeviceConnected) {
+    num_devices_connected = *shm_ptr + 1;
+  } else if (connection_event == DeviceConnectionEvent::kDeviceDisconnected && *shm_ptr > 0) {
+    num_devices_connected = *shm_ptr - 1;
+  } else {
+    num_devices_connected = *shm_ptr;
+  }
+  ROS_DEBUG_STREAM_THROTTLE(1.0, "Current connected device " << num_devices_connected);
+  *shm_ptr = static_cast<int>(num_devices_connected);
+  shmdt(shm_ptr);
+  if (connection_event == DeviceConnectionEvent::kDeviceDisconnected &&
+      num_devices_connected == 0) {
+    shmctl(shm_id, IPC_RMID, nullptr);
+    sem_unlink(DEFAULT_SEM_NAME.c_str());
+  }
+}
+
 void OBCameraNodeDriver::init() {
   is_alive_ = true;
   auto log_level = nh_private_.param<std::string>("log_level", "info");
@@ -33,7 +78,7 @@ void OBCameraNodeDriver::init() {
   ctx_->setLoggerSeverity(ob_log_level);
   serial_number_ = nh_private_.param<std::string>("serial_number", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 100);
-  device_num_ = static_cast<size_t>(nh_private_.param<int>("device_num", 1));
+  device_num_ = static_cast<int>(nh_private_.param<int>("device_num", 1));
   check_connection_timer_ = nh_.createWallTimer(
       ros::WallDuration(1.0), [this](const ros::WallTimerEvent&) { this->checkConnectionTimer(); });
   ctx_->setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removed_list,
@@ -42,6 +87,7 @@ void OBCameraNodeDriver::init() {
     deviceDisconnectCallback(removed_list);
   });
   query_thread_ = std::make_shared<std::thread>([this]() { queryDevice(); });
+  device_count_update_thread_ = std::make_shared<std::thread>([this]() { deviceCountUpdate(); });
 }
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
@@ -56,33 +102,29 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
     ROS_ERROR_STREAM("Failed to open semaphore");
     return nullptr;
   }
-
-  std::shared_ptr<int> sem_guard(nullptr, [&](int*) {
-    if (device_num_ > 1 && device_sem) {
-      ROS_INFO_STREAM("Release device semaphore");
-      sem_post(device_sem);
-      int sem_value = 0;
-      sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
-      ROS_INFO_STREAM("semaphore value: " << sem_value);
-      ROS_INFO_STREAM("Release device semaphore done");
-    }
-  });
-
-  ROS_INFO_STREAM("Connecting to device with serial number: " << serial_number_);
+  ROS_INFO_STREAM_THROTTLE(1.0, "Connecting to device with serial number: " << serial_number_);
 
   int sem_value = 0;
   sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
-  ROS_INFO_STREAM("semaphore value: " << sem_value);
+  ROS_INFO_STREAM_THROTTLE(1.0, "semaphore value: " << sem_value);
 
   int ret = sem_wait(device_sem);
   if (ret != 0) {
     ROS_ERROR_STREAM("Failed to wait semaphore " << strerror(errno));
+    releaseDeviceSemaphore(device_sem, num_devices_connected_);
     return nullptr;
   }
 
   std::shared_ptr<ob::Device> device = selectDeviceBySerialNumber(list, serial_number_);
+  std::shared_ptr<int> sem_guard(nullptr, [&, device](int*) {
+    auto connect_event = device != nullptr ? DeviceConnectionEvent::kDeviceConnected
+                                           : DeviceConnectionEvent::kOtherDeviceConnected;
+    updateConnectedDeviceCount(num_devices_connected_, connect_event);
+
+    releaseDeviceSemaphore(device_sem, num_devices_connected_);
+  });
   if (device == nullptr) {
-    ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
+    ROS_WARN_THROTTLE(1.0, "Device with serial number %s not found", serial_number_.c_str());
     device_connected_ = false;
     return nullptr;
   }
@@ -158,7 +200,7 @@ void OBCameraNodeDriver::startDevice(const std::shared_ptr<ob::DeviceList>& list
   std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
   auto device = selectDevice(list);
   if (device == nullptr) {
-    ROS_WARN("Device with serial number %s not found", serial_number_.c_str());
+    ROS_WARN_THROTTLE(1.0, "Device with serial number %s not found", serial_number_.c_str());
     device_connected_ = false;
     return;
   }
@@ -182,6 +224,7 @@ void OBCameraNodeDriver::deviceDisconnectCallback(
   if (device_info_ != nullptr) {
     ROS_INFO_STREAM("current node serial " << device_info_->serialNumber());
   }
+  bool current_device_disconnected = false;
   for (size_t i = 0; i < device_list->deviceCount(); i++) {
     std::string device_uid = device_list->uid(i);
     ROS_INFO_STREAM("Device with uid " << device_uid << " disconnected");
@@ -191,10 +234,15 @@ void OBCameraNodeDriver::deviceDisconnectCallback(
       device_.reset();
       device_info_.reset();
       device_connected_ = false;
+      current_device_disconnected = true;
       device_uid_.clear();
       break;
     }
   }
+  auto connect_event = current_device_disconnected
+                           ? DeviceConnectionEvent::kDeviceDisconnected
+                           : DeviceConnectionEvent::kOtherDeviceDisconnected;
+  updateConnectedDeviceCount(num_devices_connected_, connect_event);
 }
 
 OBLogSeverity OBCameraNodeDriver::obLogSeverityFromString(const std::string& log_level) {
@@ -236,4 +284,10 @@ void OBCameraNodeDriver::queryDevice() {
   }
 }
 
+void OBCameraNodeDriver::deviceCountUpdate() {
+  while (is_alive_ && ros::ok()) {
+    updateConnectedDeviceCount(num_devices_connected_, DeviceConnectionEvent::kDeviceCountUpdate);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
+}
 }  // namespace orbbec_camera
