@@ -73,7 +73,8 @@ void OBCameraNode::setupCameraCtrlServices() {
     service_name = "/" + camera_name_ + "/" + "toggle_" + stream_name;
     toggle_sensor_srv_[stream_index] =
         nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-            service_name, [this, stream_index = stream_index](auto&& request, auto&& response) {
+            service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
+                                               std_srvs::SetBoolResponse& response) {
               response.success = this->toggleSensorCallback(request, response, stream_index);
               return response.success;
             });
@@ -187,9 +188,9 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->saveImagesCallback(request, response);
       });
-  switch_ir_mode_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+  switch_ir_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "switch_ir_mode",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+      [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->switchIRModeCallback(request, response);
         return response.success;
       });

@@ -265,14 +265,14 @@ class OBCameraNode {
   double tf_publish_rate_ = 10.0;
   bool depth_registration_ = false;
   std::recursive_mutex device_lock_;
-  std::unique_ptr<camera_info_manager::CameraInfoManager> color_camera_info_ = nullptr;
-  std::unique_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_ = nullptr;
+  std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_ = nullptr;
+  std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_ = nullptr;
   std::string ir_info_uri_;
   std::string color_info_uri_;
   bool enable_d2c_viewer_ = false;
-  std::unique_ptr<D2CViewer> d2c_viewer_ = nullptr;
+  std::shared_ptr<D2CViewer> d2c_viewer_ = nullptr;
   bool enable_pipeline_ = false;
-  std::unique_ptr<ob::Pipeline> pipeline_ = nullptr;
+  std::shared_ptr<ob::Pipeline> pipeline_ = nullptr;
   std::shared_ptr<ob::Config> pipeline_config_ = nullptr;
   ros::Publisher depth_cloud_pub_;
   ros::Publisher depth_registered_cloud_pub_;

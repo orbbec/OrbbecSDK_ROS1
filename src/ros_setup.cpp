@@ -64,17 +64,17 @@ void OBCameraNode::setupDevices() {
     }
   }
   if (enable_d2c_viewer_) {
-    d2c_viewer_ = std::make_unique<D2CViewer>(nh_, nh_private_);
+    d2c_viewer_ = std::make_shared<D2CViewer>(nh_, nh_private_);
   }
   if (enable_pipeline_) {
-    pipeline_ = std::make_unique<ob::Pipeline>(device_);
+    pipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
 }
 
 void OBCameraNode::setupFrameCallback() {
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
-      auto callback = [this, stream_index = stream_index](std::shared_ptr<ob::Frame> frame) {
+      auto callback = [this, stream_index](std::shared_ptr<ob::Frame> frame) {
         this->onNewFrameCallback(frame, stream_index);
       };
       frame_callback_[stream_index] = callback;

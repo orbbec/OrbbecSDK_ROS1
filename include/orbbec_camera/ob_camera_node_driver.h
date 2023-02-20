@@ -50,8 +50,8 @@ class OBCameraNodeDriver {
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
-  std::unique_ptr<ob::Context> ctx_ = nullptr;
-  std::unique_ptr<OBCameraNode> ob_camera_node_ = nullptr;
+  std::shared_ptr<ob::Context> ctx_ = nullptr;
+  std::shared_ptr<OBCameraNode> ob_camera_node_ = nullptr;
   std::shared_ptr<ob::Device> device_ = nullptr;
   std::shared_ptr<ob::DeviceInfo> device_info_ = nullptr;
   ros::WallTimer check_connection_timer_;

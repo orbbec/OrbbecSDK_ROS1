@@ -8,7 +8,7 @@
 
 namespace orbbec_camera {
 OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
-    : nh_(nh), nh_private_(nh_private), ctx_(std::make_unique<ob::Context>()) {
+    : nh_(nh), nh_private_(nh_private), ctx_(std::make_shared<ob::Context>()) {
   init();
 }
 
@@ -171,7 +171,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& dev
   if (ob_camera_node_) {
     ob_camera_node_.reset();
   }
-  ob_camera_node_ = std::make_unique<OBCameraNode>(nh_, nh_private_, device_);
+  ob_camera_node_ = std::make_shared<OBCameraNode>(nh_, nh_private_, device_);
   device_connected_ = true;
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
