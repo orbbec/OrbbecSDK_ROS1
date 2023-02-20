@@ -187,6 +187,12 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->saveImagesCallback(request, response);
       });
+  switch_ir_mode_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+      "/" + camera_name_ + "/" + "switch_ir_mode",
+      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+        response.success = this->switchIRModeCallback(request, response);
+        return response.success;
+      });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -682,4 +688,16 @@ bool OBCameraNode::resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& reque
   }
 }
 
+bool OBCameraNode::switchIRModeCallback(SetInt32Request& request, SetInt32Response& response) {
+  try {
+    device_->setIntProperty(OB_PROP_SWITCH_IR_MODE_INT, request.data);
+    return true;
+  } catch (const ob::Error& e) {
+    std::stringstream ss;
+    ss << "Failed to switch IR mode: " << e.getMessage();
+    ROS_ERROR_STREAM(ss.str());
+    response.message = ss.str();
+    return false;
+  }
+}
 }  // namespace orbbec_camera

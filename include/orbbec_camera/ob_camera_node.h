@@ -148,7 +148,8 @@ class OBCameraNode {
 
   bool getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse& response);
 
-  bool setFanWorkModeCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
+  bool setFanWorkModeCallback(std_srvs::SetBoolRequest& request,
+                              std_srvs::SetBoolResponse& response);
 
   bool setFloorCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
@@ -183,6 +184,8 @@ class OBCameraNode {
 
   bool resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& request,
                                        std_srvs::EmptyResponse& response);
+
+  bool switchIRModeCallback(SetInt32Request& request, SetInt32Response& response);
 
  private:
   ros::NodeHandle nh_;
@@ -250,6 +253,7 @@ class OBCameraNode {
   ros::ServiceServer get_device_type_srv_;
   ros::ServiceServer save_point_cloud_srv_;
   ros::ServiceServer save_images_srv_;
+  ros::ServiceServer switch_ir_mode_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
