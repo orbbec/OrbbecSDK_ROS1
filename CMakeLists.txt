@@ -108,7 +108,7 @@ link_directories(${ORBBEC_LIBS}
 add_library(${PROJECT_NAME}
   src/d2c_viewer.cpp
   src/ob_camera_node.cpp
-  src/ob_camera_node_factory.cpp
+  src/ob_camera_node_driver.cpp
   src/ros_sensor.cpp
   src/ros_service.cpp
   src/utils.cpp

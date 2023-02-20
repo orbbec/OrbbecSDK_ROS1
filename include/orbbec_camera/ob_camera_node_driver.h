@@ -4,11 +4,11 @@
 #include <mutex>
 
 namespace orbbec_camera {
-class OBCameraNodeFactory {
+class OBCameraNodeDriver {
  public:
-  explicit OBCameraNodeFactory(ros::NodeHandle& nh, ros::NodeHandle& nh_private);
+  explicit OBCameraNodeDriver(ros::NodeHandle& nh, ros::NodeHandle& nh_private);
 
-  ~OBCameraNodeFactory();
+  ~OBCameraNodeDriver();
 
  private:
   void init();

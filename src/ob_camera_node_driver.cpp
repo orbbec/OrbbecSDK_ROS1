@@ -1,4 +1,4 @@
-#include "orbbec_camera/ob_camera_node_factory.h"
+#include "orbbec_camera/ob_camera_node_driver.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -7,12 +7,12 @@
 #include <sys/shm.h>
 
 namespace orbbec_camera {
-OBCameraNodeFactory::OBCameraNodeFactory(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
+OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
     : nh_(nh), nh_private_(nh_private), ctx_(std::make_unique<ob::Context>()) {
   init();
 }
 
-OBCameraNodeFactory::~OBCameraNodeFactory() {
+OBCameraNodeDriver::~OBCameraNodeDriver() {
   is_alive_ = false;
   if (query_thread_ && query_thread_->joinable()) {
     query_thread_->join();
@@ -26,7 +26,7 @@ OBCameraNodeFactory::~OBCameraNodeFactory() {
   }
 }
 
-void OBCameraNodeFactory::init() {
+void OBCameraNodeDriver::init() {
   is_alive_ = true;
   auto log_level = nh_private_.param<std::string>("log_level", "info");
   auto ob_log_level = obLogSeverityFromString(log_level);
@@ -44,7 +44,7 @@ void OBCameraNodeFactory::init() {
   query_thread_ = std::make_shared<std::thread>([this]() { queryDevice(); });
 }
 
-std::shared_ptr<ob::Device> OBCameraNodeFactory::selectDevice(
+std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
     const std::shared_ptr<ob::DeviceList>& list) {
   if (device_num_ == 1) {
     ROS_INFO_STREAM("Connecting to the default device");
@@ -90,7 +90,7 @@ std::shared_ptr<ob::Device> OBCameraNodeFactory::selectDevice(
   return device;
 }
 
-std::shared_ptr<ob::Device> OBCameraNodeFactory::selectDeviceBySerialNumber(
+std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceBySerialNumber(
     const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number) {
   for (size_t i = 0; i < list->deviceCount(); i++) {
     try {
@@ -123,7 +123,7 @@ std::shared_ptr<ob::Device> OBCameraNodeFactory::selectDeviceBySerialNumber(
   return nullptr;
 }
 
-void OBCameraNodeFactory::initializeDevice(const std::shared_ptr<ob::Device>& device) {
+void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& device) {
   device_ = device;
   CHECK_NOTNULL(device_.get());
   if (ob_camera_node_) {
@@ -142,7 +142,7 @@ void OBCameraNodeFactory::initializeDevice(const std::shared_ptr<ob::Device>& de
   ROS_INFO_STREAM("device uid: " << device_info_->uid());
 }
 
-void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& list) {
+void OBCameraNodeDriver::startDevice(const std::shared_ptr<ob::DeviceList>& list) {
   CHECK_NOTNULL(list);
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (device_connected_) {
@@ -165,13 +165,13 @@ void OBCameraNodeFactory::startDevice(const std::shared_ptr<ob::DeviceList>& lis
   initializeDevice(device);
 }
 
-void OBCameraNodeFactory::checkConnectionTimer() {
+void OBCameraNodeDriver::checkConnectionTimer() {
   if (!device_connected_) {
     ROS_INFO_STREAM("wait for device " << serial_number_ << " to be connected");
   }
 }
 
-void OBCameraNodeFactory::deviceDisconnectCallback(
+void OBCameraNodeDriver::deviceDisconnectCallback(
     const std::shared_ptr<ob::DeviceList>& device_list) {
   CHECK_NOTNULL(device_list.get());
   if (device_list->deviceCount() == 0) {
@@ -197,7 +197,7 @@ void OBCameraNodeFactory::deviceDisconnectCallback(
   }
 }
 
-OBLogSeverity OBCameraNodeFactory::obLogSeverityFromString(const std::string& log_level) {
+OBLogSeverity OBCameraNodeDriver::obLogSeverityFromString(const std::string& log_level) {
   if (log_level == "debug") {
     return OBLogSeverity::OB_LOG_SEVERITY_DEBUG;
   } else if (log_level == "warn") {
@@ -213,7 +213,7 @@ OBLogSeverity OBCameraNodeFactory::obLogSeverityFromString(const std::string& lo
   }
 }
 
-void OBCameraNodeFactory::queryDevice() {
+void OBCameraNodeDriver::queryDevice() {
   while (is_alive_ && ros::ok()) {
     if (!device_connected_) {
       ROS_INFO_STREAM_THROTTLE(1, "query device");
