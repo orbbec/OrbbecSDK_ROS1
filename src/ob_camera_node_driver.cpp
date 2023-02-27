@@ -185,7 +185,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& dev
 }
 
 void OBCameraNodeDriver::startDevice(const std::shared_ptr<ob::DeviceList>& list) {
-  CHECK_NOTNULL(list);
+  CHECK_NOTNULL(list.get());
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (device_connected_) {
     return;
