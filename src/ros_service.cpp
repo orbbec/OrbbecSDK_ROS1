@@ -194,6 +194,12 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->switchIRModeCallback(request, response);
         return response.success;
       });
+  switch_ir_data_source_channel_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+      "/" + camera_name_ + "/" + "switch_ir",
+      [this](SetStringRequest& request, SetStringResponse& response) {
+        response.success = this->switchIRDataSourceChannelCallback(request, response);
+        return response.success;
+      });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -700,5 +706,25 @@ bool OBCameraNode::switchIRModeCallback(SetInt32Request& request, SetInt32Respon
     response.message = ss.str();
     return false;
   }
+}
+
+bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
+                                                     SetStringResponse& response) {
+  if (request.data != "left" && request.data != "right") {
+    ROS_ERROR_STREAM("Failed to switch IR data source channel: invalid channel name(left/right)");
+    return false;
+  }
+  try {
+    int data = request.data == "left" ? 0 : 1;
+    device_->setIntProperty(OB_PROP_IR_CHANNEL_DATA_SOURCE_INT, data);
+    return true;
+  } catch (const ob::Error& e) {
+    std::stringstream ss;
+    ss << "Failed to switch IR data source channel: " << e.getMessage();
+    ROS_ERROR_STREAM(ss.str());
+    response.message = ss.str();
+    return false;
+  }
+  return false;
 }
 }  // namespace orbbec_camera

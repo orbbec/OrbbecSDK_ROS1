@@ -190,6 +190,8 @@ class OBCameraNode {
 
   bool switchIRModeCallback(SetInt32Request& request, SetInt32Response& response);
 
+  bool switchIRDataSourceChannelCallback(SetStringRequest & request, SetStringResponse & response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -257,6 +259,7 @@ class OBCameraNode {
   ros::ServiceServer save_point_cloud_srv_;
   ros::ServiceServer save_images_srv_;
   ros::ServiceServer switch_ir_mode_srv_;
+  ros::ServiceServer switch_ir_data_source_channel_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
