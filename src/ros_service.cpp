@@ -567,7 +567,17 @@ bool OBCameraNode::getCameraParamsCallback(orbbec_camera::GetCameraParamsRequest
                                            orbbec_camera::GetCameraParamsResponse& response) {
   (void)request;
   try {
-    auto camera_param = pipeline_->getCameraParam();
+    OBCameraParam camera_param{};
+    auto default_param = getCameraParam();
+    if (depth_registration_ && pipeline_started_ && pipeline_ != nullptr) {
+      camera_param = pipeline_->getCameraParam();
+    } else if (default_param) {
+      camera_param = *default_param;
+    } else {
+      ROS_ERROR_STREAM("get camera param failed");
+      response.message = "get camera param failed";
+      return false;
+    }
     response.l_intr_p[0] = camera_param.depthIntrinsic.fx;
     response.l_intr_p[1] = camera_param.depthIntrinsic.fy;
     response.l_intr_p[2] = camera_param.depthIntrinsic.cx;
