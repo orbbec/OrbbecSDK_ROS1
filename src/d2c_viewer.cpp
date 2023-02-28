@@ -29,7 +29,7 @@ void D2CViewer::messageCallback(const sensor_msgs::ImageConstPtr& rgb_msg,
   cv::Mat gray_depth, depth_img, d2c_img;
   depth_img_ptr->image.convertTo(gray_depth, CV_8UC1);
   cv::cvtColor(gray_depth, depth_img, cv::COLOR_GRAY2RGB);
-  if (CV_MAJOR_VERSION == 4) {
+  if (CV_MAJOR_VERSION >= 4) {
     depth_img.setTo(cv::Scalar(255, 255, 0), depth_img);
   }
   cv::bitwise_or(rgb_img_ptr->image, depth_img, d2c_img);
