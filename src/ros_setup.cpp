@@ -67,10 +67,10 @@ void OBCameraNode::setupDevices() {
     d2c_viewer_ = std::make_shared<D2CViewer>(nh_, nh_private_);
   }
   CHECK_NOTNULL(device_info_.get());
-  if (enable_pipeline_ && device_info_->pid() == GEMINI2_PID) {
+  if (enable_pipeline_) {
     pipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
-  if (enable_hardware_d2d_) {
+  if (enable_hardware_d2d_ && &&device_info_->pid() == GEMINI2_PID) {
     device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
   }
 }
