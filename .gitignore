@@ -763,6 +763,8 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 .obj-x86_64-linux-gnu/*
+obj-x86_64-linux-gnu/*
+obj-aarch64-linux-gnu/*
 debian/*
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
