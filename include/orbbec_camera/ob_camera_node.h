@@ -197,6 +197,7 @@ class OBCameraNode {
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
   std::shared_ptr<ob::Device> device_ = nullptr;
+  std::shared_ptr<ob::DeviceInfo> device_info_ = nullptr;
   std::atomic_bool is_running_{false};
   std::map<stream_index_pair, std::shared_ptr<ROSOBSensor>> sensors_;
   std::map<stream_index_pair, int> width_;
@@ -292,6 +293,8 @@ class OBCameraNode {
   std::atomic_bool save_colored_point_cloud_{false};
   boost::optional<OBCameraParam> camera_params_;
   bool is_initialized_ = false;
+  // Only for Gemini2 device
+  bool enable_hardware_d2d_ = true;
 };
 
 }  // namespace orbbec_camera

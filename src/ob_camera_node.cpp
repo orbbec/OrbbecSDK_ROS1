@@ -2,7 +2,10 @@
 namespace orbbec_camera {
 OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
                            std::shared_ptr<ob::Device> device)
-    : nh_(nh), nh_private_(nh_private), device_(std::move(device)) {
+    : nh_(nh),
+      nh_private_(nh_private),
+      device_(std::move(device)),
+      device_info_(device_->getDeviceInfo()) {
   init();
 }
 
@@ -77,6 +80,7 @@ void OBCameraNode::getParameters() {
   enable_pipeline_ = nh_private_.param<bool>("enable_pipeline", false);
   enable_point_cloud_ = nh_private_.param<bool>("enable_point_cloud", true);
   enable_colored_point_cloud_ = nh_private_.param<bool>("enable_colored_point_cloud", false);
+  enable_hardware_d2d_ = nh_private_.param<bool>("enable_hardware_d2d", true);
 }
 
 void OBCameraNode::startStreams() {
