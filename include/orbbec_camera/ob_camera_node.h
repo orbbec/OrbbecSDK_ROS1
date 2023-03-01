@@ -31,6 +31,7 @@ class OBCameraNode {
   OBCameraNode(OBCameraNode&&) = delete;
   OBCameraNode& operator=(OBCameraNode&&) = delete;
   ~OBCameraNode();
+  bool isInitialized() const;
 
  private:
   void init();
@@ -190,7 +191,7 @@ class OBCameraNode {
 
   bool switchIRModeCallback(SetInt32Request& request, SetInt32Response& response);
 
-  bool switchIRDataSourceChannelCallback(SetStringRequest & request, SetStringResponse & response);
+  bool switchIRDataSourceChannelCallback(SetStringRequest& request, SetStringResponse& response);
 
  private:
   ros::NodeHandle nh_;
@@ -290,6 +291,7 @@ class OBCameraNode {
   std::atomic_bool save_point_cloud_{false};
   std::atomic_bool save_colored_point_cloud_{false};
   boost::optional<OBCameraParam> camera_params_;
+  bool is_initialized_ = false;
 };
 
 }  // namespace orbbec_camera

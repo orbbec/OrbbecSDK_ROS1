@@ -21,7 +21,10 @@ void OBCameraNode::init() {
   readDefaultExposure();
   readDefaultGain();
   readDefaultWhiteBalance();
+  is_initialized_ = true;
 }
+
+bool OBCameraNode::isInitialized() const { return is_initialized_; }
 
 OBCameraNode::~OBCameraNode() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
@@ -478,7 +481,15 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
       ROS_WARN_STREAM("pipe line already started");
       return;
     }
-    startStreams();
+    try {
+      startStreams();
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to start streams: " << e.getMessage());
+      return;
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM("Failed to start streams: " << e.what());
+      return;
+    }
   } else {
     if (stream_started_[stream_index]) {
       ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " is already started.");

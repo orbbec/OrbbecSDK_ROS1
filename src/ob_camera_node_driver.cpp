@@ -172,7 +172,13 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& dev
     ob_camera_node_.reset();
   }
   ob_camera_node_ = std::make_shared<OBCameraNode>(nh_, nh_private_, device_);
-  device_connected_ = true;
+  if (ob_camera_node_ && ob_camera_node_->isInitialized()) {
+    device_connected_ = true;
+  } else {
+    device_connected_ = false;
+    ob_camera_node_.reset();
+    return;
+  }
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_info_.get());
@@ -210,6 +216,8 @@ void OBCameraNodeDriver::startDevice(const std::shared_ptr<ob::DeviceList>& list
 void OBCameraNodeDriver::checkConnectionTimer() {
   if (!device_connected_) {
     ROS_INFO_STREAM("wait for device " << serial_number_ << " to be connected");
+  } else if (!ob_camera_node_) {
+    device_connected_ = false;
   }
 }
 
