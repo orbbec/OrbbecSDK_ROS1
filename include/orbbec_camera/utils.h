@@ -40,4 +40,7 @@ Extrinsics obExtrinsicsToMsg(const OBD2CTransform &extrinsics, const std::string
 
 ros::Time frameTimeStampToROSTime(uint64_t ms);
 
+bool isOpenNIDevice(int pid);
+
+
 }  // namespace orbbec_camera

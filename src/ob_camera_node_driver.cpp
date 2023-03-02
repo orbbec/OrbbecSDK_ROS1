@@ -137,8 +137,7 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceBySerialNumber(
   for (size_t i = 0; i < list->deviceCount(); i++) {
     try {
       auto pid = list->pid(i);
-      if ((pid >= OPENNI_START_PID && pid <= OPENNI_END_PID) || pid == ASTRA_MINI_PID ||
-          pid == ASTRA_MINI_S_PID) {
+      if (isOpenNIDevice(pid)) {
         // openNI device
         auto dev = list->getDevice(i);
         auto device_info = dev->getDeviceInfo();
