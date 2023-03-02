@@ -275,17 +275,21 @@ void OBCameraNodeDriver::queryDevice() {
       ROS_INFO_STREAM_THROTTLE(1, "query device");
       auto list = ctx_->queryDeviceList();
       CHECK_NOTNULL(list.get());
-      if (list->deviceCount() > 0) {
-        try {
-          startDevice(list);
-        } catch (const ob::Error& e) {
-          ROS_WARN_STREAM("Failed to start device: " << e.getMessage());
-        } catch (const std::exception& e) {
-          ROS_WARN_STREAM("Failed to start device: " << e.what());
-        } catch (...) {
-          ROS_WARN_STREAM("Failed to start device");
-        }
+      if (list->deviceCount() == 0) {
+        ROS_WARN_STREAM_THROTTLE(1, "No device found");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        continue;
       }
+      try {
+        startDevice(list);
+      } catch (const ob::Error& e) {
+        ROS_WARN_STREAM("Failed to start device: " << e.getMessage());
+      } catch (const std::exception& e) {
+        ROS_WARN_STREAM("Failed to start device: " << e.what());
+      } catch (...) {
+        ROS_WARN_STREAM("Failed to start device");
+      }
+
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
