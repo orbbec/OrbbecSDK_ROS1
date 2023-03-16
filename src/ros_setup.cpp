@@ -76,6 +76,7 @@ void OBCameraNode::setupDevices() {
   if (!depth_work_mode_.empty()) {
     device_->switchDepthWorkMode(depth_work_mode_.c_str());
   }
+  device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
 }
 
 void OBCameraNode::setupFrameCallback() {

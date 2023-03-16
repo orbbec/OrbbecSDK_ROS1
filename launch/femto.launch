@@ -35,6 +35,7 @@
     <arg name="log_level" default="none"/>
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_pipeline" default="true"/>
+    <arg name="enable_soft_filter" default="true"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -71,6 +72,7 @@
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
             <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="device_num" value="$(arg device_num)"/>
+            <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>

@@ -82,6 +82,7 @@ void OBCameraNode::getParameters() {
   enable_colored_point_cloud_ = nh_private_.param<bool>("enable_colored_point_cloud", false);
   enable_hardware_d2d_ = nh_private_.param<bool>("enable_hardware_d2d", true);
   depth_work_mode_ = nh_private_.param<std::string>("depth_work_mode", "");
+  enable_soft_filter_ = nh_private_.param<bool>("enable_soft_filter", true);
   if (enable_colored_point_cloud_) {
     depth_registration_ = true;
   }

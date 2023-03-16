@@ -293,6 +293,7 @@ class OBCameraNode {
   std::atomic_bool save_colored_point_cloud_{false};
   boost::optional<OBCameraParam> camera_params_;
   bool is_initialized_ = false;
+  bool enable_soft_filter_ = true;
   // Only for Gemini2 device
   bool enable_hardware_d2d_ = true;
   std::string depth_work_mode_;
