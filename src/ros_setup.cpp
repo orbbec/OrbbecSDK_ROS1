@@ -73,6 +73,9 @@ void OBCameraNode::setupDevices() {
   if (enable_hardware_d2d_ && device_info_->pid() == GEMINI2_PID) {
     device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
   }
+  if (!depth_work_mode_.empty()) {
+    device_->switchDepthWorkMode(depth_work_mode_.c_str());
+  }
 }
 
 void OBCameraNode::setupFrameCallback() {

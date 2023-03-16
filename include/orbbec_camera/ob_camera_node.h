@@ -295,6 +295,7 @@ class OBCameraNode {
   bool is_initialized_ = false;
   // Only for Gemini2 device
   bool enable_hardware_d2d_ = true;
+  std::string depth_work_mode_;
 };
 
 }  // namespace orbbec_camera
