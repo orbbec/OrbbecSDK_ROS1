@@ -70,13 +70,21 @@ void OBCameraNode::setupDevices() {
   if (enable_pipeline_) {
     pipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
-  if (enable_hardware_d2d_ && device_info_->pid() == GEMINI2_PID) {
-    device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
+  try {
+    if (enable_hardware_d2d_ && device_info_->pid() == GEMINI2_PID) {
+      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
+    }
+    if (!depth_work_mode_.empty()) {
+      device_->switchDepthWorkMode(depth_work_mode_.c_str());
+    }
+    device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+    device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
+    device_->setBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
+  } catch (const std::exception& e) {
+    ROS_ERROR_STREAM("Failed to setup devices: " << e.what());
   }
-  if (!depth_work_mode_.empty()) {
-    device_->switchDepthWorkMode(depth_work_mode_.c_str());
-  }
-  device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
 }
 
 void OBCameraNode::setupFrameCallback() {

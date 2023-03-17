@@ -294,6 +294,8 @@ class OBCameraNode {
   boost::optional<OBCameraParam> camera_params_;
   bool is_initialized_ = false;
   bool enable_soft_filter_ = true;
+  bool enable_color_auto_exposure_ = true;
+  bool enable_ir_auto_exposure_ = true;
   // Only for Gemini2 device
   bool enable_hardware_d2d_ = true;
   std::string depth_work_mode_;
