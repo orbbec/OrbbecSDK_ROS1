@@ -41,4 +41,8 @@ const stream_index_pair ACCEL{OB_STREAM_ACCEL, 0};
 const std::vector<stream_index_pair> IMAGE_STREAMS = {DEPTH, INFRA0, COLOR};
 
 const std::vector<stream_index_pair> HID_STREAMS = {GYRO, ACCEL};
+const std::map<std::string, OBDepthPrecisionLevel> DEPTH_PRECISION_STR2ENUM = {
+    {"1mm", OB_PRECISION_1MM},    {"0.8mm", OB_PRECISION_0MM8}, {"0.4mm", OB_PRECISION_0MM4},
+    {"0.2mm", OB_PRECISION_0MM2}, {"0.1mm", OB_PRECISION_0MM1},
+};
 }  // namespace orbbec_camera

@@ -85,6 +85,12 @@ void OBCameraNode::setupDevices() {
       sync_config.deviceTriggerSignalOutDelay = device_trigger_signal_out_delay_;
       device_->setSyncConfig(sync_config);
     }
+    if (device_info_->pid() == GEMINI2_PID) {
+      auto default_precision_level = device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT);
+      if (default_precision_level != depth_precision_) {
+        device_->setIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT, depth_precision_);
+      }
+    }
 
     device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
     device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);

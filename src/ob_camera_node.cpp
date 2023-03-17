@@ -91,6 +91,8 @@ void OBCameraNode::getParameters() {
   ir_trigger_signal_in_delay_ = nh_private_.param<int>("ir_trigger_signal_in_delay", 0);
   rgb_trigger_signal_in_delay_ = nh_private_.param<int>("rgb_trigger_signal_in_delay", 0);
   device_trigger_signal_out_delay_ = nh_private_.param<int>("device_trigger_signal_out_delay", 0);
+  depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "0.8mm");
+  depth_precision_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
   if (enable_colored_point_cloud_) {
     depth_registration_ = true;
   }
