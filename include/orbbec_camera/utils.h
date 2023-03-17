@@ -30,7 +30,7 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
 
 void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fileName);
 
-void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName);
+void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fileName);
 
 tf2::Quaternion rotationMatrixToQuaternion(const float rotation[9]);
 
@@ -42,5 +42,6 @@ ros::Time frameTimeStampToROSTime(uint64_t ms);
 
 bool isOpenNIDevice(int pid);
 
+OBSyncMode OBSyncModeFromString(const std::string &mode);
 
 }  // namespace orbbec_camera

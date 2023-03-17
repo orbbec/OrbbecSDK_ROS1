@@ -85,6 +85,12 @@ void OBCameraNode::getParameters() {
   enable_soft_filter_ = nh_private_.param<bool>("enable_soft_filter", true);
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
+  sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "close");
+  std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(), ::toupper);
+  sync_mode_ = OBSyncModeFromString(sync_mode_str_);
+  ir_trigger_signal_in_delay_ = nh_private_.param<int>("ir_trigger_signal_in_delay", 0);
+  rgb_trigger_signal_in_delay_ = nh_private_.param<int>("rgb_trigger_signal_in_delay", 0);
+  device_trigger_signal_out_delay_ = nh_private_.param<int>("device_trigger_signal_out_delay", 0);
   if (enable_colored_point_cloud_) {
     depth_registration_ = true;
   }

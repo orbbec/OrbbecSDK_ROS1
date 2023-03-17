@@ -238,4 +238,25 @@ bool isOpenNIDevice(int pid) {
   return false;
 }
 
+OBSyncMode OBSyncModeFromString(const std::string& mode) {
+  if (mode == "CLOSE") {
+    return OBSyncMode::OB_SYNC_MODE_CLOSE;
+  } else if (mode == "STANDALONE") {
+    return OBSyncMode::OB_SYNC_MODE_STANDALONE;
+  } else if (mode == "SECONDARY") {
+    return OBSyncMode::OB_SYNC_MODE_SECONDARY;
+  } else if (mode == "PRIMARY_MCU_TRIGGER") {
+    return OBSyncMode::OB_SYNC_MODE_PRIMARY_MCU_TRIGGER;
+  } else if (mode == "PRIMARY_IR_TRIGGER") {
+    return OBSyncMode::OB_SYNC_MODE_PRIMARY_IR_TRIGGER;
+  } else if (mode == "PRIMARY_SOFT_TRIGGER") {
+    return OBSyncMode::OB_SYNC_MODE_PRIMARY_SOFT_TRIGGER;
+  } else if (mode == "SECONDARY_SOFT_TRIGGER") {
+    return OBSyncMode::OB_SYNC_MODE_SECONDARY_SOFT_TRIGGER;
+  } else {
+    ROS_ERROR_STREAM("Unknown OBSyncMode: " << mode);
+    return OBSyncMode::OB_SYNC_MODE_CLOSE;
+  }
+}
+
 }  // namespace orbbec_camera

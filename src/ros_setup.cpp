@@ -77,6 +77,15 @@ void OBCameraNode::setupDevices() {
     if (!depth_work_mode_.empty()) {
       device_->switchDepthWorkMode(depth_work_mode_.c_str());
     }
+    if (sync_mode_ != OB_SYNC_MODE_CLOSE) {
+      OBDeviceSyncConfig sync_config;
+      sync_config.syncMode = sync_mode_;
+      sync_config.irTriggerSignalInDelay = ir_trigger_signal_in_delay_;
+      sync_config.rgbTriggerSignalInDelay = rgb_trigger_signal_in_delay_;
+      sync_config.deviceTriggerSignalOutDelay = device_trigger_signal_out_delay_;
+      device_->setSyncConfig(sync_config);
+    }
+
     device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
     device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     device_->setBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);

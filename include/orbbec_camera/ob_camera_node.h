@@ -299,6 +299,11 @@ class OBCameraNode {
   // Only for Gemini2 device
   bool enable_hardware_d2d_ = true;
   std::string depth_work_mode_;
+  OBSyncMode sync_mode_ = OBSyncMode::OB_SYNC_MODE_CLOSE;
+  std::string sync_mode_str_;
+  int ir_trigger_signal_in_delay_ = 0;
+  int rgb_trigger_signal_in_delay_ = 0;
+  int device_trigger_signal_out_delay_ = 0;
 };
 
 }  // namespace orbbec_camera
