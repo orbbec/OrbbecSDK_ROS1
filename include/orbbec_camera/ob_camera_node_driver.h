@@ -4,7 +4,6 @@
 #include <mutex>
 #include <semaphore.h>
 
-
 namespace orbbec_camera {
 enum DeviceConnectionEvent {
   kDeviceConnected = 0,
@@ -26,7 +25,7 @@ class OBCameraNodeDriver {
   void releaseDeviceSemaphore(sem_t* device_sem, int& num_devices_connected);
 
   static void updateConnectedDeviceCount(int& num_devices_connected,
-                                  DeviceConnectionEvent connection_event);
+                                         DeviceConnectionEvent connection_event);
 
   std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
 
@@ -50,6 +49,7 @@ class OBCameraNodeDriver {
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
+  std::string config_path_;
   std::shared_ptr<ob::Context> ctx_ = nullptr;
   std::shared_ptr<OBCameraNode> ob_camera_node_ = nullptr;
   std::shared_ptr<ob::Device> device_ = nullptr;

@@ -5,10 +5,14 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <sys/shm.h>
+#include <ros/package.h>
 
 namespace orbbec_camera {
 OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
-    : nh_(nh), nh_private_(nh_private), ctx_(std::make_shared<ob::Context>()) {
+    : nh_(nh),
+      nh_private_(nh_private),
+      config_path_(ros::package::getPath("orbbec_camera") + "/config/OrbbecSDKConfig_v1.0.xml"),
+      ctx_(std::make_shared<ob::Context>(config_path_.c_str())) {
   init();
 }
 
