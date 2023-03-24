@@ -227,9 +227,21 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   cloud_filter_.setCameraParam(*camera_params_);
   cloud_filter_.setCreatePointFormat(OB_FORMAT_POINT);
   auto depth_frame = frame_set->depthFrame();
+  if (!depth_frame) {
+    ROS_ERROR_STREAM("depth frame is null");
+    return;
+  }
   auto frame = cloud_filter_.process(frame_set);
+  if (!frame) {
+    ROS_ERROR_STREAM("cloud frame is null");
+    return;
+  }
   size_t point_size = frame->dataSize() / sizeof(OBPoint);
   auto* points = (OBPoint*)frame->data();
+  if (!points) {
+    ROS_ERROR_STREAM("cloud frame data is null");
+    return;
+  }
   CHECK_NOTNULL(points);
   sensor_msgs::PointCloud2Modifier modifier(cloud_msg_);
   modifier.setPointCloud2FieldsByString(1, "xyz");
@@ -284,6 +296,9 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   }
   auto depth_frame = frame_set->depthFrame();
   auto color_frame = frame_set->colorFrame();
+  if (!depth_frame || !color_frame) {
+    return;
+  }
   CHECK_NOTNULL(pipeline_.get());
   if (!camera_params_) {
     camera_params_ = pipeline_->getCameraParam();
@@ -292,8 +307,16 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   cloud_filter_.setCameraParam(*camera_params_);
   cloud_filter_.setCreatePointFormat(OB_FORMAT_RGB_POINT);
   auto frame = cloud_filter_.process(frame_set);
+  if (!frame) {
+    ROS_ERROR_STREAM("Failed to create point cloud");
+    return;
+  }
   size_t point_size = frame->dataSize() / sizeof(OBColorPoint);
   auto* points = (OBColorPoint*)frame->data();
+  if (!points) {
+    ROS_ERROR_STREAM("Failed to create point cloud");
+    return;
+  }
   CHECK_NOTNULL(points);
   sensor_msgs::PointCloud2Modifier modifier(cloud_msg_);
   modifier.setPointCloud2FieldsByString(1, "xyz");
@@ -389,7 +412,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     }
     auto covert_frame = format_convert_filter_.process(frame);
     if (covert_frame == nullptr) {
-      ROS_ERROR_STREAM("Format " << frame->format() << "convert to RGB888 failed");
+      ROS_ERROR_STREAM("Format " << frame->format() << " convert to RGB888 failed");
       return;
     }
     video_frame = covert_frame->as<ob::ColorFrame>();
