@@ -308,13 +308,13 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   cloud_filter_.setCreatePointFormat(OB_FORMAT_RGB_POINT);
   auto frame = cloud_filter_.process(frame_set);
   if (!frame) {
-    ROS_ERROR_STREAM("Failed to create point cloud");
+    ROS_ERROR_STREAM("cloud filter process failed");
     return;
   }
   size_t point_size = frame->dataSize() / sizeof(OBColorPoint);
   auto* points = (OBColorPoint*)frame->data();
   if (!points) {
-    ROS_ERROR_STREAM("Failed to create point cloud");
+    ROS_ERROR_STREAM("cloud point data is null");
     return;
   }
   CHECK_NOTNULL(points);
