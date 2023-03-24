@@ -95,6 +95,16 @@ void OBCameraNode::setupDevices() {
     device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
     device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     device_->setBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
+    auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
+    if (soft_filter_max_diff_ != -1 && default_soft_filter_max_diff != soft_filter_max_diff_) {
+      device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
+    }
+    auto default_soft_filter_speckle_size =
+        device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+    if (soft_filter_speckle_size_ != -1 &&
+        default_soft_filter_speckle_size != soft_filter_speckle_size_) {
+      device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
   } catch (const std::exception& e) {

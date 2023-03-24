@@ -96,6 +96,9 @@ void OBCameraNode::getParameters() {
   if (enable_colored_point_cloud_) {
     depth_registration_ = true;
   }
+  enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
+  soft_filter_max_diff_ = nh_private_.param<int>("soft_filter_max_diff", -1);
+  soft_filter_speckle_size_ = nh_private_.param<int>("soft_filter_speckle_size", -1);
 }
 
 void OBCameraNode::startStreams() {
