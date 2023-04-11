@@ -13,7 +13,7 @@
   <arg name="color_width" default="320"/>
   <arg name="color_height" default="240"/>
   <arg name="color_fps" default="30"/>
-  <arg name="enable_color" default="true"/>
+  <arg name="enable_color" default="false"/>
   <arg name="color_format" default="MJPG"/>
   <arg name="flip_color" default="false"/>
   <arg name="enable_color_auto_exposure" default="true"/>
