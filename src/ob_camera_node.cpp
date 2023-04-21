@@ -560,6 +560,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
     for (auto& item : image_publishers_) {
       if (item.second.getNumSubscribers() > 0) {
         all_stream_no_subscriber = false;
+        break;
       }
     }
     if (all_stream_no_subscriber) {
@@ -584,6 +585,9 @@ void OBCameraNode::pointCloudSubscribedCallback() {
 
 void OBCameraNode::pointCloudUnsubscribedCallback() {
   ROS_INFO_STREAM("point cloud unsubscribed");
+  if (depth_cloud_pub_.getNumSubscribers() > 0) {
+    return;
+  }
   imageUnsubscribedCallback(DEPTH);
 }
 
@@ -595,6 +599,9 @@ void OBCameraNode::coloredPointCloudSubscribedCallback() {
 
 void OBCameraNode::coloredPointCloudUnsubscribedCallback() {
   ROS_INFO_STREAM("point cloud unsubscribed");
+  if (depth_registered_cloud_pub_.getNumSubscribers() > 0) {
+    return;
+  }
   imageUnsubscribedCallback(DEPTH);
   imageUnsubscribedCallback(COLOR);
 }
