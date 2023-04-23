@@ -319,6 +319,10 @@ roslaunch orbbec_camera multi_camera.launch
 - 存在多个启动文件的原因是因为不同相机的默认分辨率和图像格式不同。
 为了方便使用，启动文件已针对每个相机进行了分离
 
+为什么IR数据没有输出
+
+- 如果你用的是Astra/Astra mini相机，是不能同时打开IR和RGB的， 请在对应的launch文件把`enable_color`改成false关闭彩色相机
+
 ## License
 
 Copyright 2023 Orbbec Ltd.

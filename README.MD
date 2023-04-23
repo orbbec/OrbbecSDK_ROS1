@@ -331,6 +331,10 @@ Why are there so many launch files here
   files is due to the fact that the default resolutions and image formats of different cameras vary.
   To make it easier to use, the launch files have been separated for each camera.
 
+Why IR stream No data output
+
+- If you are using Astra/Astra mini / astra mini S camera, you cannot turn on IR and RGB at the same time, please change `enable_color` to false in the corresponding launch file to turn off color camera.
+
 ## License
 
 Copyright 2023 Orbbec Ltd.
