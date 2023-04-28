@@ -346,6 +346,9 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
       *iter_r = static_cast<uint8_t>((points + point_idx)->r);
       *iter_g = static_cast<uint8_t>((points + point_idx)->g);
       *iter_b = static_cast<uint8_t>((points + point_idx)->b);
+      if (std::isnan(*iter_x) || std::isnan(*iter_y) || std::isnan(*iter_z)) {
+        continue;
+      }
 
       ++iter_x;
       ++iter_y;
@@ -355,6 +358,11 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
       ++iter_b;
       ++valid_count;
     }
+  }
+  if (valid_count == 0) {
+    ROS_ERROR_STREAM(
+        "no valid point cloud data, Maybe depth resolution can not align to color resolution");
+    return;
   }
   auto timestamp = frameTimeStampToROSTime(depth_frame->systemTimeStamp());
   cloud_msg_.header.stamp = timestamp;
