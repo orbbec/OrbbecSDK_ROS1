@@ -308,6 +308,7 @@ class OBCameraNode {
   int ir_trigger_signal_in_delay_ = 0;
   int rgb_trigger_signal_in_delay_ = 0;
   int device_trigger_signal_out_delay_ = 0;
+  bool trigger_signal_out_ = false;
   std::string depth_precision_str_;
   OB_DEPTH_PRECISION_LEVEL depth_precision_ = OB_PRECISION_0MM8;
 };
