@@ -321,7 +321,7 @@ void OBCameraNode::readDefaultWhiteBalance() {
     default_white_balance_ = wb;
   } catch (ob::Error& e) {
     default_white_balance_ = 0;
-    ROS_ERROR_STREAM("get wb error " << e.getMessage());
+    ROS_WARN_STREAM("get white balance error " << e.getMessage());
   }
 }
 }  // namespace orbbec_camera
