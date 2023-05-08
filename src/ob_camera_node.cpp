@@ -702,7 +702,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
     auto ex = camera_param->transform;
     Q = rotationMatrixToQuaternion(ex.rot);
     Q = quaternion_optical * Q * quaternion_optical.inverse();
-    extrinsics_publisher_.publish(obExtrinsicsToMsg(ex, "depth_to_color_extrinsics"));
+    // extrinsics_publisher_.publish(obExtrinsicsToMsg(ex, "depth_to_color_extrinsics"));
   } else {
     Q.setRPY(0, 0, 0);
   }

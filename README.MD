@@ -63,12 +63,6 @@ rosservice list
 rosparam list
 ```
 
-- Check camera extrinsic parameter(from depth to color)
-
-```bash
-rostopic echo /camera/extrinsic/depth_to_color
-```
-
 - Get camera parameter, *MUST* start stream first.
 
 ```bash

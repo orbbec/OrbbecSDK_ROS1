@@ -62,12 +62,6 @@ rosservice list
 rosparam list
 ```
 
-- 检查相机外参（从深度到彩色）
-
-```bash
-rostopic echo /camera/extrinsic/depth_to_color
-```
-
 - 获取相机参数，**必须** 先开流
 
 ```bash

@@ -220,7 +220,7 @@ void OBCameraNode::setupPublishers() {
         nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1, true);
   }
   if (enable_stream_[DEPTH] && enable_stream_[COLOR]) {
-    extrinsics_publisher_ = nh_.advertise<Extrinsics>("extrinsic/depth_to_color", 1, true);
+    // extrinsics_publisher_ = nh_.advertise<Extrinsics>("extrinsic/depth_to_color", 1, true);
   }
   if (enable_point_cloud_) {
     ros::SubscriberStatusCallback depth_cloud_subscribed_cb =
