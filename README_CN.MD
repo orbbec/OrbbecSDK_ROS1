@@ -18,6 +18,21 @@ Orbbec ROS SDK 是 OrbbecSDK 的 ROS wrapper，支持 Kinetic, Melodic, 和 Noet
   ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev
 ```
 
+创建ROS的工作空间（如果你事先没有）
+
+```bash
+mkdir -p ~/ros_ws/src
+```
+
+把代码放到 ROS 工作空间
+
+```bash
+cd ~/ros_ws/src/
+git clone gitlab@code.orbbec.com.cn:OrbbecSDK/orbbec-ros-sdk.git # Orbbec 开发者
+```
+
+或者您可以从[Orbbec 开发者社区](https://developer.orbbec.com.cn/download.html)下载
+
 构建
 
 ```bash

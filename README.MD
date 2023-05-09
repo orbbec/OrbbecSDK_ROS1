@@ -19,6 +19,21 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev
   ```
 
+Create ROS workspace(if you don't have one)
+
+```bash
+mkdir -p ~/ros_ws/src
+```
+
+Get Source code
+
+```bash
+cd ~/ros_ws/src/
+git clone gitlab@code.orbbec.com.cn:OrbbecSDK/orbbec-ros-sdk.git # Orbbec developer
+```
+
+Or you can download from [Orbbec developer community](https://developer.orbbec.com.cn/download.html)
+
 Build
 
 ```bash
@@ -225,6 +240,7 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/toggle_ir`
 
 ### All available topics
+
 - `/camera/color/camera_info` : The color camera info.
 - `/camera/color/image_raw`: The color stream image.
 - `/camera/depth/camera_info`: The depth stream image.
