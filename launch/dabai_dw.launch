@@ -22,7 +22,7 @@
     <arg name="enable_ir" default="true"/>
     <arg name="ir_format" default="Y10"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
-    <arg name="publish_tf" default="false"/>
+    <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="ir_info_uri" default=""/>
     <arg name="color_info_uri" default=""/>
