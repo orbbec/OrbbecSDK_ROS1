@@ -29,7 +29,7 @@ Get Source code
 
 ```bash
 cd ~/ros_ws/src/
-git clone gitlab@code.orbbec.com.cn:OrbbecSDK/orbbec-ros-sdk.git # Orbbec developer
+git clone https://github.com/OrbbecDeveloper/OrbbecSDK_ROS1.git
 ```
 
 Or you can download from [Orbbec developer community](https://developer.orbbec.com.cn/download.html)
