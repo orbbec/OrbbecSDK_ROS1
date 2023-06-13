@@ -698,22 +698,28 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
   std::vector<float> zero_trans = {0, 0, 0};
   auto camera_param = getCameraParam();
-  if (camera_param && extrinsics_publisher_) {
+  if (camera_param) {
     auto ex = camera_param->transform;
     Q = rotationMatrixToQuaternion(ex.rot);
     Q = quaternion_optical * Q * quaternion_optical.inverse();
-    // extrinsics_publisher_.publish(obExtrinsicsToMsg(ex, "depth_to_color_extrinsics"));
+    for (int i = 0; i < 3; i++) {
+      trans[i] = ex.trans[i];
+    }
   } else {
     Q.setRPY(0, 0, 0);
   }
   auto tf_timestamp = ros::Time::now();
 
-  publishStaticTF(tf_timestamp, trans, Q, frame_id_[DEPTH], frame_id_[COLOR]);
   publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[COLOR],
                   optical_frame_id_[COLOR]);
   publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[DEPTH],
                   optical_frame_id_[DEPTH]);
+  publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[INFRA0],
+                  optical_frame_id_[INFRA0]);
+
   publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_, frame_id_[DEPTH]);
+  publishStaticTF(tf_timestamp, trans, Q, camera_link_frame_id_, frame_id_[COLOR]);
+  publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_, frame_id_[INFRA0]);
 }
 
 void OBCameraNode::publishDynamicTransforms() {
