@@ -67,6 +67,7 @@ void OBCameraNode::getParameters() {
       encoding_[stream_index] = stream_index.first == OB_STREAM_DEPTH
                                     ? sensor_msgs::image_encodings::TYPE_8UC1
                                     : sensor_msgs::image_encodings::MONO8;
+      unit_step_size_[stream_index] = sizeof(uint8_t);
     }
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
