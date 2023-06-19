@@ -161,8 +161,8 @@ rosservice call /camera/set_laser '{data: false}' # Turn off
 - Turn on/off LDP
 
 ```bash
-ros2 service call /camera/set_ldp '{data: true}'  # Turn on
-ros2 service call /camera/set_ldp '{data: false}' # Turn off
+rosservice  call /camera/set_ldp '{data: true}'  # Turn on
+rosservice  call /camera/set_ldp '{data: false}' # Turn off
 
 ```
 
