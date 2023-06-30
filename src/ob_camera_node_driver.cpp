@@ -6,6 +6,7 @@
 #include <semaphore.h>
 #include <sys/shm.h>
 #include <ros/package.h>
+#include <regex>
 
 namespace orbbec_camera {
 OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
@@ -185,9 +186,9 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
         auto dev = list->getDevice(i);
         auto device_info = dev->getDeviceInfo();
         std::string uid = device_info->uid();
-        ROS_INFO_STREAM("Device usb port: " << device_info->uid());
-        if (uid == usb_port) {
-          ROS_INFO_STREAM("Device serial number " << device_info->uid() << " matched");
+        auto port_id = parseUsbPort(uid);
+        if (port_id == usb_port) {
+          ROS_INFO_STREAM("Device port id " << port_id << " matched");
           return dev;
         }
       } else {
@@ -350,5 +351,25 @@ void OBCameraNodeDriver::deviceCountUpdate() {
     updateConnectedDeviceCount(num_devices_connected_, DeviceConnectionEvent::kDeviceCountUpdate);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
+}
+
+std::string OBCameraNodeDriver::parseUsbPort(const std::string& line) {
+  std::string port_id;
+  std::regex self_regex("(?:[^ ]+/usb[0-9]+[0-9./-]*/){0,1}([0-9.-]+)(:){0,1}[^ ]*",
+                        std::regex_constants::ECMAScript);
+  std::smatch base_match;
+  bool found = std::regex_match(line, base_match, self_regex);
+  if (found) {
+    port_id = base_match[1].str();
+    if (base_match[2].str().empty())  // This is libuvc string. Remove counter is exists.
+    {
+      std::regex end_regex = std::regex(".+(-[0-9]+$)", std::regex_constants::ECMAScript);
+      bool found_end = std::regex_match(port_id, base_match, end_regex);
+      if (found_end) {
+        port_id = port_id.substr(0, port_id.size() - base_match[1].str().size());
+      }
+    }
+  }
+  return port_id;
 }
 }  // namespace orbbec_camera

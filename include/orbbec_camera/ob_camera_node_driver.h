@@ -49,6 +49,8 @@ class OBCameraNodeDriver {
 
   void deviceCountUpdate();
 
+  static std::string parseUsbPort(const std::string& line);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
