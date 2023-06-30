@@ -32,6 +32,9 @@ class OBCameraNodeDriver {
   std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
       const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number);
 
+  std::shared_ptr<ob::Device> selectDeviceByUSBPort(const std::shared_ptr<ob::DeviceList>& list,
+                                                const std::string& usb_port);
+
   void initializeDevice(const std::shared_ptr<ob::Device>& device);
 
   void startDevice(const std::shared_ptr<ob::DeviceList>& list);
@@ -60,6 +63,7 @@ class OBCameraNodeDriver {
   std::string serial_number_;
   std::string device_uid_;
   std::string log_level_;
+  std::string usb_port_;
   int connection_delay_ = 1.0;
   std::shared_ptr<std::thread> query_thread_ = nullptr;
   std::shared_ptr<std::thread> device_count_update_thread_ = nullptr;

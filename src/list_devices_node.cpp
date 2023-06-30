@@ -7,7 +7,9 @@ int main() {
   auto list = context->queryDeviceList();
   for (size_t i = 0; i < list->deviceCount(); i++) {
     auto serial = list->getDevice(i)->getDeviceInfo()->serialNumber();
+    auto uid = list->getDevice(i)->getDeviceInfo()->uid();
     ROS_INFO_STREAM("serial: " << serial);
+    ROS_INFO_STREAM("uid: " << uid);
   }
   return 0;
 }

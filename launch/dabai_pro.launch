@@ -4,6 +4,7 @@
     <!-- Hardware depth registration -->
     <arg name="depth_registration" default="false"/>
     <arg name="serial_number" default=""/>
+    <arg name="usb_port" default=""/>
     <arg name="device_num" default="1"/>
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default=""/>
@@ -34,6 +35,7 @@
             <param name="camera_name" value="$(arg camera_name)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="serial_number" type="string" value="$(arg serial_number)"/>
+            <param name="usb_port" type="string" value="$(arg usb_port)"/>
             <param name="vendor_id" value="$(arg vendor_id)"/>
             <param name="product_id" value="$(arg product_id)"/>
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>

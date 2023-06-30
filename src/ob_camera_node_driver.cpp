@@ -81,6 +81,7 @@ void OBCameraNodeDriver::init() {
   auto ob_log_level = obLogSeverityFromString(log_level);
   ctx_->setLoggerSeverity(ob_log_level);
   serial_number_ = nh_private_.param<std::string>("serial_number", "");
+  usb_port_ = nh_private_.param<std::string>("usb_port", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 100);
   device_num_ = static_cast<int>(nh_private_.param<int>("device_num", 1));
   check_connection_timer_ = nh_.createWallTimer(
@@ -106,7 +107,6 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
     ROS_ERROR_STREAM("Failed to open semaphore");
     return nullptr;
   }
-  ROS_INFO_STREAM_THROTTLE(1.0, "Connecting to device with serial number: " << serial_number_);
 
   int sem_value = 0;
   sem_getvalue(device_sem, reinterpret_cast<int*>(&sem_value));
@@ -118,8 +118,15 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
     releaseDeviceSemaphore(device_sem, num_devices_connected_);
     return nullptr;
   }
+  std::shared_ptr<ob::Device> device = nullptr;
+  if (!serial_number_.empty()) {
+    ROS_INFO_STREAM_THROTTLE(1.0, "Connecting to device with serial number: " << serial_number_);
+    device = selectDeviceBySerialNumber(list, serial_number_);
+  } else if (!usb_port_.empty()) {
+    ROS_INFO_STREAM_THROTTLE(1.0, "Connecting to device with usb port: " << usb_port_);
+    device = selectDeviceByUSBPort(list, usb_port_);
+  }
 
-  std::shared_ptr<ob::Device> device = selectDeviceBySerialNumber(list, serial_number_);
   std::shared_ptr<int> sem_guard(nullptr, [&, device](int*) {
     auto connect_event = device != nullptr ? DeviceConnectionEvent::kDeviceConnected
                                            : DeviceConnectionEvent::kOtherDeviceConnected;
@@ -154,6 +161,40 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceBySerialNumber(
         ROS_INFO_STREAM("Device serial number: " << sn);
         if (sn == serial_number) {
           ROS_INFO_STREAM("Device serial number <<" << sn << " matched");
+          return list->getDevice(i);
+        }
+      }
+    } catch (ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
+    } catch (std::exception& e) {
+      ROS_ERROR_STREAM("Failed to get device info " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("Failed to get device info");
+    }
+  }
+  return nullptr;
+}
+
+std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
+    const std::shared_ptr<ob::DeviceList>& list, const std::string& usb_port) {
+  for (size_t i = 0; i < list->deviceCount(); i++) {
+    try {
+      auto pid = list->pid(i);
+      if (isOpenNIDevice(pid)) {
+        // openNI device
+        auto dev = list->getDevice(i);
+        auto device_info = dev->getDeviceInfo();
+        std::string uid = device_info->uid();
+        ROS_INFO_STREAM("Device usb port: " << device_info->uid());
+        if (uid == usb_port) {
+          ROS_INFO_STREAM("Device serial number " << device_info->uid() << " matched");
+          return dev;
+        }
+      } else {
+        std::string uid = list->uid(i);
+        ROS_INFO_STREAM("Device usb port: " << uid);
+        if (uid == usb_port) {
+          ROS_INFO_STREAM("Device usb port <<" << uid << " matched");
           return list->getDevice(i);
         }
       }
@@ -209,7 +250,11 @@ void OBCameraNodeDriver::startDevice(const std::shared_ptr<ob::DeviceList>& list
   std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
   auto device = selectDevice(list);
   if (device == nullptr) {
-    ROS_WARN_THROTTLE(1.0, "Device with serial number %s not found", serial_number_.c_str());
+    if (!serial_number_.empty()) {
+      ROS_WARN_THROTTLE(1.0, "Device with serial number %s not found", serial_number_.c_str());
+    } else if (!usb_port_.empty()) {
+      ROS_WARN_THROTTLE(1.0, "Device with usb port %s not found", usb_port_.c_str());
+    }
     device_connected_ = false;
     return;
   }
