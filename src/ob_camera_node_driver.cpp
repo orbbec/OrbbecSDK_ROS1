@@ -193,8 +193,9 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
         }
       } else {
         std::string uid = list->uid(i);
+        auto port_id = parseUsbPort(uid);
         ROS_INFO_STREAM("Device usb port: " << uid);
-        if (uid == usb_port) {
+        if (port_id == usb_port) {
           ROS_INFO_STREAM("Device usb port <<" << uid << " matched");
           return list->getDevice(i);
         }

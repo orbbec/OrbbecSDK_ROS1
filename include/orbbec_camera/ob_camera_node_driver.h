@@ -29,11 +29,10 @@ class OBCameraNodeDriver {
 
   std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
 
-  std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
+  static std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
       const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number);
-
-  std::shared_ptr<ob::Device> selectDeviceByUSBPort(const std::shared_ptr<ob::DeviceList>& list,
-                                                const std::string& usb_port);
+  static std::shared_ptr<ob::Device> selectDeviceByUSBPort(
+      const std::shared_ptr<ob::DeviceList>& list, const std::string& usb_port);
 
   void initializeDevice(const std::shared_ptr<ob::Device>& device);
 
