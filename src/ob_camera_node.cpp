@@ -109,7 +109,7 @@ void OBCameraNode::startStreams() {
     CHECK_NOTNULL(pipeline_.get());
     try {
       setupPipelineConfig();
-      pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
+      pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
         CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
       });
@@ -118,7 +118,7 @@ void OBCameraNode::startStreams() {
                                                     << " try to disable ir stream try again");
       enable_stream_[INFRA0] = false;
       setupPipelineConfig();
-      pipeline_->start(pipeline_config_, [this](std::shared_ptr<ob::FrameSet> frame_set) {
+      pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
         CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
       });

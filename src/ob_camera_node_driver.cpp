@@ -1,7 +1,5 @@
 #include "orbbec_camera/ob_camera_node_driver.h"
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <semaphore.h>
 #include <sys/shm.h>
@@ -34,7 +32,8 @@ OBCameraNodeDriver::~OBCameraNodeDriver() {
   }
 }
 
-void OBCameraNodeDriver::releaseDeviceSemaphore(sem_t* device_sem, int& num_devices_connected) {
+void OBCameraNodeDriver::releaseDeviceSemaphore(sem_t* device_sem,
+                                                int& num_devices_connected) const {
   ROS_INFO_STREAM_THROTTLE(1.0, "Release device semaphore");
   sem_post(device_sem);
   int sem_value = 0;
@@ -87,8 +86,8 @@ void OBCameraNodeDriver::init() {
   device_num_ = static_cast<int>(nh_private_.param<int>("device_num", 1));
   check_connection_timer_ = nh_.createWallTimer(
       ros::WallDuration(1.0), [this](const ros::WallTimerEvent&) { this->checkConnectionTimer(); });
-  ctx_->setDeviceChangedCallback([this](std::shared_ptr<ob::DeviceList> removed_list,
-                                        std::shared_ptr<ob::DeviceList> added_list) {
+  ctx_->setDeviceChangedCallback([this](const std::shared_ptr<ob::DeviceList>& removed_list,
+                                        const std::shared_ptr<ob::DeviceList>& added_list) {
     (void)added_list;
     deviceDisconnectCallback(removed_list);
   });

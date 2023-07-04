@@ -22,7 +22,7 @@ class OBCameraNodeDriver {
  private:
   void init();
 
-  void releaseDeviceSemaphore(sem_t* device_sem, int& num_devices_connected);
+  void releaseDeviceSemaphore(sem_t* device_sem, int& num_devices_connected) const;
 
   static void updateConnectedDeviceCount(int& num_devices_connected,
                                          DeviceConnectionEvent connection_event);
