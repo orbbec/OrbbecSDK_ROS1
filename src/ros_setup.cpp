@@ -84,7 +84,10 @@ void OBCameraNode::setupDevices() {
       sync_config.rgbTriggerSignalInDelay = rgb_trigger_signal_in_delay_;
       sync_config.deviceTriggerSignalOutDelay = device_trigger_signal_out_delay_;
       device_->setSyncConfig(sync_config);
-      // TODO: set up trigger_signal_out
+      if (device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
+                                       OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, sync_signal_trigger_out_);
+      }
     }
     if (device_info_->pid() == GEMINI2_PID) {
       auto default_precision_level = device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT);
