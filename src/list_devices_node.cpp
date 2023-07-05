@@ -23,11 +23,13 @@ std::string parseUsbPort(const std::string& line) {
 }
 int main() {
   auto context = std::make_shared<ob::Context>();
-  context->setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_NONE);
+  context->setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_INFO);
   auto list = context->queryDeviceList();
   for (size_t i = 0; i < list->deviceCount(); i++) {
-    auto serial = list->getDevice(i)->getDeviceInfo()->serialNumber();
-    auto uid = list->getDevice(i)->getDeviceInfo()->uid();
+    auto device = list->getDevice(i);
+    auto device_info = device->getDeviceInfo();
+    std::string serial = device_info->serialNumber();
+    std::string uid = device_info->uid();
     auto port_id = parseUsbPort(uid);
     ROS_INFO_STREAM("serial: " << serial);
     ROS_INFO_STREAM("port id : " << port_id);
