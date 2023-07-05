@@ -345,6 +345,38 @@ Why IR stream No data output
 
 - If you are using Astra/Astra mini / astra mini S camera, you cannot turn on IR and RGB at the same time, please change `enable_color` to false in the corresponding launch file to turn off color camera.
 
+Why do I get the following error when running the launch file
+
+```text
+Failed to start device: usbEnumerator createUsbDevice failed!
+```
+
+- The current device does not have permission to access the device， check the PID of the current device
+
+```bash
+lsusb | grep 2bc5
+```
+
+Your output should look like this
+
+```text
+Bus 002 Device 007: ID 2bc5:your_pid_here
+```
+
+Edit`/etc/udev/rules.d/99-obsensor-libusb.rules`，add the following line
+
+```bash
+SUBSYSTEM=="usb", ATTR{idProduct}=="your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root"  GROUP:="video", SYMLINK+="you_device_name_here"
+```
+
+`you_device_name_here` is the name of the device you want to create, for example `Astra`.
+
+Then restart the udev service
+
+```bash
+sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
+```
+
 ## License
 
 Copyright 2023 Orbbec Ltd.

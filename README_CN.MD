@@ -332,6 +332,38 @@ roslaunch orbbec_camera multi_camera.launch
 
 - 如果你用的是Astra/Astra mini相机，是不能同时打开IR和RGB的， 请在对应的launch文件把`enable_color`改成false关闭彩色相机
 
+运行时报错
+
+```text
+Failed to start device: usbEnumerator createUsbDevice failed!
+```
+
+- 当前设备没有权限访问，需要添加udev规则，以便让当前用户有权限访问。运行：
+
+```bash
+lsusb | grep 2bc5
+```
+
+你的设备pid应该是`your_pid_here`
+
+```text
+Bus 002 Device 007: ID 2bc5:your_pid_here
+```
+
+编辑`/etc/udev/rules.d/99-obsensor-libusb.rules`文件，添加如下内容
+
+```bash
+SUBSYSTEM=="usb", ATTR{idProduct}=="your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root"  GROUP:="video", SYMLINK+="you_device_name_here"
+```
+
+`you_device_name_here`是你的设备名称，比如`Astra`,`dabai`等。
+
+重启udev服务
+
+```bash
+sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
+```
+
 ## License
 
 Copyright 2023 Orbbec Ltd.
