@@ -83,7 +83,8 @@ rosparam list
 rosservice call /camera/get_camera_params "{}"
 ```
 
-- 检查相机参数，请参考 ROS 文档以了解相机参数中具体字段的含义 [camera info](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html)
+- 检查相机参数，请参考 ROS
+  文档以了解相机参数中具体字段的含义 [camera info](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html)
 
 ```bash
 rostopic echo /camera/depth/camera_info
@@ -259,6 +260,7 @@ rosservice call /camera/save_images "{}"
 - 打开 `orbbec-ros-sdk/launch/multi_xxx.launch` 文件并修改序列号。目前，不同的相机只能通过其序列号进行区分。
 
 ```XML
+
 <launch>
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
@@ -313,7 +315,34 @@ roslaunch orbbec_camera multi_camera.launch
 - `enable_ir`: 启用红外相机。
 - `depth_registration`: 启用硬件对准将深度帧对准到彩色帧。当 `enable_colored_point_cloud` 设置为 `true` 时需要此字段。
 - `enable_publish_extrinsic`: 启用相机外参信息的publisher。
-- `log_level`: `OrbbecSDK` 的日志级别，可选值为 `none`、`info`、`debug`、`warn` 和 `fatal`。日志文件可以在 ROS 运行时目录中找到，其默认位置为`~/.ros/Log`。
+- `log_level`: `OrbbecSDK` 的日志级别，可选值为 `none`、`info`、`debug`、`warn` 和 `fatal`。日志文件可以在 ROS
+  运行时目录中找到，其默认位置为`~/.ros/Log`。
+
+## 启动文件
+
+| product serials     | launch file           |
+|---------------------|-----------------------|
+| asta+               | astra_adv.launch      |
+| astra mini          | astra_mini.launch     |
+| astra mini pro      | astra_mini_pro.launch |
+| astra pro           | astra_pro.launch      |
+| astra stereo s      | stereo_s_u3.launch    |
+| dabai               | dabai.launch          |
+| dabai d1            | dabai_d1.launch       |
+| dabai dcw           | dabai_dcw.launch      |
+| dabai dw            | dabai_dw.launch       |
+| dabai pro           | dabai_pro.launch      |
+| deeya               | deeya.launch          |
+| femto               | femto.launch          |
+| femto mega          | femto_mega.launch     |
+| femto w             | femto_w.launch        |
+| gemini              | gemini.launch         |
+| gemini              | gemini.launch         |
+| gemini2 / dabai DCL | gemini2.launch        |
+| gemini e            | gemini_e.launch       |
+| gemini e lite       | gemini_e_lite.launch  |
+
+实际上所有启动文件几乎都是相同的，只是有的相机默认参数不同，请根据自己的相机选择对应的启动文件，并根据你的需要调整。
 
 ## 常见问题
 
@@ -326,7 +355,7 @@ roslaunch orbbec_camera multi_camera.launch
 为什么这里有这么多启动文件？
 
 - 存在多个启动文件的原因是因为不同相机的默认分辨率和图像格式不同。
-为了方便使用，启动文件已针对每个相机进行了分离
+  为了方便使用，启动文件已针对每个相机进行了分离
 
 为什么IR数据没有输出
 

@@ -245,8 +245,9 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/color/image_raw`: The color stream image.
 - `/camera/depth/camera_info`: The depth stream image.
 - `/camera/depth/image_raw`: The depth stream image
-- `/camera/depth/points` : The point cloud,  only available when  `enable_point_cloud` is `true`.
-- `/camera/depth_registered/points`: The colored point cloud,  only available when  `enable_colored_point_cloud` is `true`.
+- `/camera/depth/points` : The point cloud, only available when  `enable_point_cloud` is `true`.
+- `/camera/depth_registered/points`: The colored point cloud, only available when  `enable_colored_point_cloud`
+  is `true`.
 - `/camera/ir/camera_info`:  The IR camera info.
 - `/camera/ir/image_raw`: The IR stream image
 
@@ -325,6 +326,32 @@ The following are the launch parameters available:
 - `log_level`: The log level for OrbbecSDK, with optional values of `none`, `info`, `debug`, `warn`, and `fatal`.
   The log file can be found in the ROS runtime directory, and the default location is `~/.ros/Log`.
 
+## Launch files
+
+| product serials     | launch file           |
+|---------------------|-----------------------|
+| asta+               | astra_adv.launch      |
+| astra mini          | astra_mini.launch     |
+| astra mini pro      | astra_mini_pro.launch |
+| astra pro           | astra_pro.launch      |
+| astra stereo s      | stereo_s_u3.launch    |
+| dabai               | dabai.launch          |
+| dabai d1            | dabai_d1.launch       |
+| dabai dcw           | dabai_dcw.launch      |
+| dabai dw            | dabai_dw.launch       |
+| dabai pro           | dabai_pro.launch      |
+| deeya               | deeya.launch          |
+| femto               | femto.launch          |
+| femto mega          | femto_mega.launch     |
+| femto w             | femto_w.launch        |
+| gemini              | gemini.launch         |
+| gemini              | gemini.launch         |
+| gemini2 / dabai DCL | gemini2.launch        |
+| gemini e            | gemini_e.launch       |
+| gemini e lite       | gemini_e_lite.launch  |
+
+Actually, All launch files all most the same, the only difference is the default value of the parameters.
+
 ## Frequently Asked Questions
 
 No Picture from Multiple Cameras
@@ -343,7 +370,8 @@ Why are there so many launch files here
 
 Why IR stream No data output
 
-- If you are using Astra/Astra mini / astra mini S camera, you cannot turn on IR and RGB at the same time, please change `enable_color` to false in the corresponding launch file to turn off color camera.
+- If you are using Astra/Astra mini / astra mini S camera, you cannot turn on IR and RGB at the same time, please
+  change `enable_color` to false in the corresponding launch file to turn off color camera.
 
 Why do I get the following error when running the launch file
 
