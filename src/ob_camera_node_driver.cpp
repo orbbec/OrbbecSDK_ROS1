@@ -23,6 +23,9 @@ OBCameraNodeDriver::~OBCameraNodeDriver() {
   if (query_thread_ && query_thread_->joinable()) {
     query_thread_->join();
   }
+  if (sync_time_thread_ && sync_time_thread_->joinable()) {
+    sync_time_thread_->join();
+  }
   if (device_num_ > 1) {
     sem_unlink(DEFAULT_SEM_NAME.c_str());
     int shm_id = shmget(DEFAULT_SEM_KEY, 1, 0666 | IPC_CREAT);
@@ -93,6 +96,7 @@ void OBCameraNodeDriver::init() {
   });
   query_thread_ = std::make_shared<std::thread>([this]() { queryDevice(); });
   device_count_update_thread_ = std::make_shared<std::thread>([this]() { deviceCountUpdate(); });
+  sync_time_thread_ = std::make_shared<std::thread>([this]() { syncTimeThread(); });
 }
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
@@ -224,6 +228,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& dev
     ob_camera_node_.reset();
     return;
   }
+  ctx_->enableMultiDeviceSync(0);
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_info_.get());
@@ -350,6 +355,13 @@ void OBCameraNodeDriver::deviceCountUpdate() {
   while (is_alive_ && ros::ok()) {
     updateConnectedDeviceCount(num_devices_connected_, DeviceConnectionEvent::kDeviceCountUpdate);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
+}
+
+void OBCameraNodeDriver::syncTimeThread() {
+  while (is_alive_ && ros::ok()) {
+    ctx_->enableMultiDeviceSync(0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
   }
 }
 
