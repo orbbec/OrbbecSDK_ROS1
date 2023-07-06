@@ -347,6 +347,7 @@ The following are the launch parameters available:
 | gemini              | gemini.launch         |
 | gemini              | gemini.launch         |
 | gemini2 / dabai DCL | gemini2.launch        |
+| gemini2L            | gemini2L.launch       |
 | gemini e            | gemini_e.launch       |
 | gemini e lite       | gemini_e_lite.launch  |
 
