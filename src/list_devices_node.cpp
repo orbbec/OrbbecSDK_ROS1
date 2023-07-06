@@ -23,7 +23,7 @@ std::string parseUsbPort(const std::string& line) {
 }
 int main() {
   auto context = std::make_shared<ob::Context>();
-  context->setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_INFO);
+  context->setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
   auto list = context->queryDeviceList();
   for (size_t i = 0; i < list->deviceCount(); i++) {
     auto device = list->getDevice(i);
