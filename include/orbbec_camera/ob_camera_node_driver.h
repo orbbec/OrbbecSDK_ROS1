@@ -50,6 +50,8 @@ class OBCameraNodeDriver {
 
   void syncTimeThread();
 
+  void resetDeviceThread();
+
   static std::string parseUsbPort(const std::string& line);
 
  private:
@@ -74,5 +76,9 @@ class OBCameraNodeDriver {
   int device_num_ = 1;
   int num_devices_connected_ = 0;
   std::shared_ptr<std::thread> sync_time_thread_ = nullptr;
+  std::shared_ptr<std::thread> reset_device_thread_ = nullptr;
+  std::condition_variable reset_device_cv_;
+  std::atomic_bool reset_device_{false};
+  std::mutex reset_device_lock_;
 };
 }  // namespace orbbec_camera

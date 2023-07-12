@@ -20,6 +20,10 @@ OBCameraNodeDriver::~OBCameraNodeDriver() {
   if (device_count_update_thread_ && device_count_update_thread_->joinable()) {
     device_count_update_thread_->join();
   }
+  if (reset_device_thread_ && reset_device_thread_->joinable()) {
+    reset_device_cv_.notify_all();
+    reset_device_thread_->join();
+  }
   if (query_thread_ && query_thread_->joinable()) {
     query_thread_->join();
   }
@@ -97,6 +101,7 @@ void OBCameraNodeDriver::init() {
   query_thread_ = std::make_shared<std::thread>([this]() { queryDevice(); });
   device_count_update_thread_ = std::make_shared<std::thread>([this]() { deviceCountUpdate(); });
   sync_time_thread_ = std::make_shared<std::thread>([this]() { syncTimeThread(); });
+  reset_device_thread_ = std::make_shared<std::thread>([this]() { resetDeviceThread(); });
 }
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
@@ -292,12 +297,10 @@ void OBCameraNodeDriver::deviceDisconnectCallback(
     ROS_INFO_STREAM("Device with uid " << device_uid << " disconnected");
     std::lock_guard<decltype(device_lock_)> lock(device_lock_);
     if (device_uid == device_uid_) {
-      ob_camera_node_.reset();
-      device_.reset();
-      device_info_.reset();
-      device_connected_ = false;
+      std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
+      reset_device_ = true;
+      reset_device_cv_.notify_all();
       current_device_disconnected = true;
-      device_uid_.clear();
       break;
     }
   }
@@ -365,6 +368,21 @@ void OBCameraNodeDriver::syncTimeThread() {
   }
 }
 
+void OBCameraNodeDriver::resetDeviceThread() {
+  while (is_alive_ && ros::ok()) {
+    std::unique_lock<decltype(reset_device_lock_)> lock(reset_device_lock_);
+    reset_device_cv_.wait(lock, [this]() { return !is_alive_ || reset_device_; });
+    if (!is_alive_) {
+      break;
+    }
+    ob_camera_node_.reset();
+    device_.reset();
+    device_info_.reset();
+    device_connected_ = false;
+    device_uid_.clear();
+    reset_device_ = false;
+  }
+}
 std::string OBCameraNodeDriver::parseUsbPort(const std::string& line) {
   std::string port_id;
   std::regex self_regex("(?:[^ ]+/usb[0-9]+[0-9./-]*/){0,1}([0-9.-]+)(:){0,1}[^ ]*",
