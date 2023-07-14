@@ -674,17 +674,16 @@ int OBCameraNode::getCameraParamIndex() {
   return -1;
 }
 
-void OBCameraNode::publishStaticTF(const ros::Time& t, const std::vector<float>& trans,
+void OBCameraNode::publishStaticTF(const ros::Time& t, const tf2::Vector3& trans,
                                    const tf2::Quaternion& q, const std::string& from,
                                    const std::string& to) {
-  CHECK_EQ(trans.size(), 3u);
   geometry_msgs::TransformStamped msg;
   msg.header.stamp = t;
   msg.header.frame_id = from;
   msg.child_frame_id = to;
-  msg.transform.translation.x = trans.at(2) / 1000.0;
-  msg.transform.translation.y = -trans.at(0) / 1000.0;
-  msg.transform.translation.z = -trans.at(1) / 1000.0;
+  msg.transform.translation.x = trans[2] / 1000.0;
+  msg.transform.translation.y = -trans[0] / 1000.0;
+  msg.transform.translation.z = -trans[1] / 1000.0;
   msg.transform.rotation.x = q.getX();
   msg.transform.rotation.y = q.getY();
   msg.transform.rotation.z = q.getZ();
@@ -694,23 +693,26 @@ void OBCameraNode::publishStaticTF(const ros::Time& t, const std::vector<float>&
 
 void OBCameraNode::calcAndPublishStaticTransform() {
   tf2::Quaternion quaternion_optical, zero_rot, Q;
-  std::vector<float> trans(3, 0);
   zero_rot.setRPY(0.0, 0.0, 0.0);
   quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
-  std::vector<float> zero_trans = {0, 0, 0};
-  auto camera_param = getCameraParam();
-  if (camera_param) {
-    auto ex = camera_param->transform;
-    Q = rotationMatrixToQuaternion(ex.rot);
-    Q = quaternion_optical * Q * quaternion_optical.inverse();
-    for (int i = 0; i < 3; i++) {
-      trans[i] = ex.trans[i];
-    }
-  } else {
-    Q.setRPY(0, 0, 0);
+  tf2::Vector3 zero_trans(0, 0, 0);
+  tf2::Vector3 trans(0, 0, 0);
+  startStreams();
+  CHECK_NOTNULL(pipeline_);
+  auto camera_param = pipeline_->getCameraParam();
+  auto ex = camera_param.transform;
+  Q = rotationMatrixToQuaternion(ex.rot);
+  Q = quaternion_optical * Q * quaternion_optical.inverse();
+  for (int i = 0; i < 3; i++) {
+    trans[i] = ex.trans[i];
   }
-  auto tf_timestamp = ros::Time::now();
+  stopStreams();
 
+  auto tf_timestamp = ros::Time::now();
+  tf2::Transform transform(Q, trans);
+  transform = transform.inverse();
+  Q = transform.getRotation();
+  trans = transform.getOrigin();
   publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[COLOR],
                   optical_frame_id_[COLOR]);
   publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[DEPTH],
