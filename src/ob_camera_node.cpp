@@ -698,7 +698,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   tf2::Vector3 zero_trans(0, 0, 0);
   tf2::Vector3 trans(0, 0, 0);
   startStreams();
-  CHECK_NOTNULL(pipeline_);
+  CHECK_NOTNULL(pipeline_.get());
   auto camera_param = pipeline_->getCameraParam();
   auto ex = camera_param.transform;
   Q = rotationMatrixToQuaternion(ex.rot);
