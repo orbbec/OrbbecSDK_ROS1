@@ -269,21 +269,22 @@ rosservice call /camera/save_images "{}"
     <!-- stereo_s_u3, astrapro, astra -->
     <arg name="camera1_prefix" default="01"/>
     <arg name="camera2_prefix" default="02"/>
-    <arg name="camera1_serila_number" default="AU094930073"/>
-    -->Change serial number here -->
-    <arg name="camera2_serila_number" default="AU1D41100NH"/>
+    <!-- TODO: change to your usb port -->
+    <arg name="camera1_usb_port" default="1-4.2.1"/>
+
+    <arg name="camera2_usb_port" default="1-4.2.2"/>
     -->Change serial number here -->
     <arg name="device_num" default="2"/>
     <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
-        <arg name="serial_number" value="$(arg camera1_serila_number)"/>
+        <arg name="usb_port" value="$(arg camera1_usb_port)"/>
         <arg name="device_num" default="$(arg device_num)"/>
 
     </include>
 
     <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
-        <arg name="serial_number" value="$(arg camera2_serila_number)"/>
+        <arg name="usb_port" value="$(arg camera2_usb_port)"/>
         <arg name="device_num" default="$(arg device_num)"/>
     </include>
     <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf"
@@ -317,13 +318,15 @@ roslaunch orbbec_camera multi_camera.launch
 - `enable_publish_extrinsic`: 启用相机外参信息的publisher。
 - `log_level`: `OrbbecSDK` 的日志级别，可选值为 `none`、`info`、`debug`、`warn` 和 `fatal`。日志文件可以在 ROS
   运行时目录中找到，其默认位置为`~/.ros/Log`。
+- `usb_port` : USB端口号，当使用多个相机时，这是必需的。
 
 ## 启动文件
 
 | product serials     | launch file           |
 |---------------------|-----------------------|
-| asta+               | astra_adv.launch      |
-| asta                | astra.launch          |
+| astra+              | astra_adv.launch      |
+| astra               | astra.launch          |
+| astra2              | astra2.launch         |
 | astra mini          | astra_mini.launch     |
 | astra mini pro      | astra_mini_pro.launch |
 | astra pro           | astra_pro.launch      |

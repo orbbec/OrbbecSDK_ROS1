@@ -253,7 +253,7 @@ to `true` in the stream that corresponds to the argument of the launch file.
 
 ### Multiple cameras
 
-- First, you need to enumerate the serial number of the cameras. Plug them in and run the following command in the
+- First, you need to enumerate the `usb_port` of the cameras. Plug them in and run the following command in the
   terminal:
 
   ```bash
@@ -261,8 +261,7 @@ to `true` in the stream that corresponds to the argument of the launch file.
   ```
 
 - Set the `device_num` parameter to the number of cameras you have.
-- Go to the `orbbec-ros-sdk/launch/multi_xxx.launch` file and modify the serial number. Currently, different cameras can
-  only be distinguished by their serial number.
+- Go to the `orbbec-ros-sdk/launch/multi_xxx.launch` file and modify the `usb_port`.
 
 ```XML
 
@@ -274,21 +273,22 @@ to `true` in the stream that corresponds to the argument of the launch file.
     <!-- stereo_s_u3, astrapro, astra -->
     <arg name="camera1_prefix" default="01"/>
     <arg name="camera2_prefix" default="02"/>
-    <arg name="camera1_serila_number" default="AU094930073"/>
-    -->Change serial number here -->
-    <arg name="camera2_serila_number" default="AU1D41100NH"/>
+    <!-- TODO: change to your usb port -->
+    <arg name="camera1_usb_port" default="1-4.2.1"/>
+
+    <arg name="camera2_usb_port" default="1-4.2.2"/>
     -->Change serial number here -->
     <arg name="device_num" default="2"/>
     <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
-        <arg name="serial_number" value="$(arg camera1_serila_number)"/>
+        <arg name="usb_port" value="$(arg camera1_usb_port)"/>
         <arg name="device_num" default="$(arg device_num)"/>
 
     </include>
 
     <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
-        <arg name="serial_number" value="$(arg camera2_serila_number)"/>
+        <arg name="usb_port" value="$(arg camera2_usb_port)"/>
         <arg name="device_num" default="$(arg device_num)"/>
     </include>
     <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf"
@@ -330,7 +330,7 @@ The following are the launch parameters available:
 
 | product serials     | launch file           |
 |---------------------|-----------------------|
-| asta+               | astra_adv.launch      |
+| astra+              | astra_adv.launch      |
 | astra mini          | astra_mini.launch     |
 | astra mini pro      | astra_mini_pro.launch |
 | astra pro           | astra_pro.launch      |
