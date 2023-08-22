@@ -25,7 +25,9 @@ find_package(catkin REQUIRED
   std_srvs
   tf2
   tf2_ros
-  )
+  pluginlib
+  nodelet
+)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -134,6 +136,35 @@ target_link_libraries(${PROJECT_NAME}
   -L${ORBBEC_LIBS}
   )
 
+add_library(${PROJECT_NAME}_nodelet
+  src/ob_camera_node.cpp
+  src/ob_camera_node_driver.cpp
+  src/ros_sensor.cpp
+  src/ros_service.cpp
+  src/utils.cpp
+  src/ros_setup.cpp
+  src/ros_nodelet.cpp
+)
+
+target_include_directories(${PROJECT_NAME}_nodelet PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${OpenCV_INCLUDED_DIRS}
+  ${ORBBEC_INCLUDE_DIR}
+)
+
+target_link_libraries(${PROJECT_NAME}_nodelet
+  ${catkin_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${OpenCV_LIBS}
+  ${GLOG_LIBRARIES}
+  -lOrbbecSDK
+  -L${ORBBEC_LIBS}
+)
+
 add_executable(${PROJECT_NAME}_node
   src/main.cpp
   )
@@ -231,6 +262,7 @@ add_dependencies(${PROJECT_NAME}
 
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 install(TARGETS ${PROJECT_NAME}
+  ${PROJECT_NAME}_nodelet
   ${PROJECT_NAME}_node
   list_devices_node
   ob_cleanup_shm_node
@@ -258,6 +290,10 @@ install(DIRECTORY launch
 install(DIRECTORY config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   )
+
+install(FILES nodelet_plugins.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 install(DIRECTORY
   ${ORBBEC_LIBS}/
