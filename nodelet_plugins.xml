@@ -1,0 +1,7 @@
+<library path="liborbbec_camera_nodelet">
+    <class name="orbbec_camera/OBCameraNodelet" type="orbbec_camera::OBCameraNodelet" base_class_type="nodelet::Nodelet">
+        <description>
+            Example camera nodelet using the Orbbec Gemini2 camera.
+        </description>
+    </class>
+</library>
