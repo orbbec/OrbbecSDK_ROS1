@@ -250,10 +250,30 @@ rosservice call /camera/save_images "{}"
 
 ### 多相机
 
-- 首先，您需要枚举相机的序列号。将相机连接并在终端中运行以下命令:
+- 首先，您需要枚举相机的序列号。将相机连接并在终端中运行以下命令,请注意运行之前确保没有相机被打开:
 
 ```bash
   rosrun orbbec_camera list_devices_node 
+```
+或者你可以使用以下脚本来获取序列号和usb端口号，把以下脚本保存为`list_ob_devices.sh`，`chmod +x list_ob_devices.sh`，然后运行`./list_ob_devices.sh`。
+
+```bash
+#!/bin/bash
+
+VID="2bc5"
+
+for dev in /sys/bus/usb/devices/*; do
+  if [ -e "$dev/idVendor" ]; then
+    vid=$(cat "$dev/idVendor")
+    if [ "$vid" == "${VID}" ]; then
+      port=$(basename $dev)
+      product=$(cat "$dev/product" 2>/dev/null) # product name
+      serial=$(cat "$dev/serial" 2>/dev/null) # serial number
+      echo "Found Orbbec device $product, usb port $port, serial number $serial"
+    fi
+  fi
+done
+
 ```
 
 - 将 `device_num` 参数设置为您拥有的相机数量。

@@ -252,13 +252,30 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/ir/image_raw`: The IR stream image
 
 ### Multiple cameras
-
 - First, you need to enumerate the `usb_port` of the cameras. Plug them in and run the following command in the
-  terminal:
+  terminal, please make sure no camera is open before running:
 
   ```bash
   rosrun orbbec_camera list_devices_node 
   ```
+
+or you can use the following script to get the serial number and usb port number, save the following script as `list_ob_devices.sh`, `chmod +x list_ob_devices.sh`, and then run `./list_ob_devices.sh`.
+
+```bash
+VID="2bc5"
+
+for dev in /sys/bus/usb/devices/*; do
+  if [ -e "$dev/idVendor" ]; then
+    vid=$(cat "$dev/idVendor")
+    if [ "$vid" == "${VID}" ]; then
+      port=$(basename $dev)
+      product=$(cat "$dev/product" 2>/dev/null) # product name
+      serial=$(cat "$dev/serial" 2>/dev/null) # serial number
+      echo "Found Orbbec device $product, usb port $port, serial number $serial"
+    fi
+  fi
+done
+```
 
 - Set the `device_num` parameter to the number of cameras you have.
 - Go to the `orbbec-ros-sdk/launch/multi_xxx.launch` file and modify the `usb_port`.
