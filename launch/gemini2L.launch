@@ -31,6 +31,14 @@
     <arg name="ir_format" default="Y8"/>
     <arg name="flip_ir" default="false"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
+    <arg name="enable_accel" default="false"/>
+    <arg name="accel_rate" default="100hz"/>
+    <arg name="accel_range" default="4g"/>
+    <arg name="enable_gyro" default="false"/>
+    <arg name="gyro_rate" default="100hz"/>
+    <arg name="gyro_range" default="1000dps"/>
+    <arg name="liner_accel_cov" default="0.01"/>
+    <arg name="angular_vel_cov" default="0.01"/>
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="ir_info_uri" default=""/>
@@ -78,6 +86,14 @@
             <param name="ir_format" value="$(arg ir_format)"/>
             <param name="flip_ir" value="$(arg flip_ir)"/>
             <param name="enable_ir_auto_exposure" value="$(arg enable_ir_auto_exposure)"/>
+            <param name="enable_accel" value="$(arg enable_accel)"/>
+            <param name="accel_rate" value="$(arg accel_rate)"/>
+            <param name="accel_range" value="$(arg accel_range)"/>
+            <param name="enable_gyro" value="$(arg enable_gyro)"/>
+            <param name="gyro_rate" value="$(arg gyro_rate)"/>
+            <param name="gyro_range" value="$(arg gyro_range)"/>
+            <param name="liner_accel_cov" value="$(arg liner_accel_cov)"/>
+            <param name="angular_vel_cov" value="$(arg angular_vel_cov)"/>
             <param name="publish_tf" value="$(arg publish_tf)"/>
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="ir_info_uri" value="$(arg ir_info_uri)"/>

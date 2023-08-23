@@ -48,10 +48,12 @@ void OBCameraNode::setupDevices() {
     for (size_t j = 0; j < profiles->count(); j++) {
       auto profile = profiles->getProfile(j);
       stream_index_pair sip{profile->type(), 0};
-      if (sensors_.find(sip) != sensors_.end()) {
-        continue;
+      if (sensors_.find(sip) == sensors_.end()) {
+        sensors_[sip] = std::make_shared<ROSOBSensor>(device_, sensor, stream_name_[sip]);
       }
-      sensors_[sip] = std::make_shared<ROSOBSensor>(device_, sensor, stream_name_[sip]);
+      if (imu_sensor_.find(sip) == imu_sensor_.end()) {
+        imu_sensor_[sip] = sensor;
+      }
     }
   }
   for (const auto& item : enable_stream_) {
@@ -225,9 +227,6 @@ void OBCameraNode::setupPublishers() {
     camera_info_publishers_[stream_index] =
         nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1, true);
   }
-  if (enable_stream_[DEPTH] && enable_stream_[COLOR]) {
-    // extrinsics_publisher_ = nh_.advertise<Extrinsics>("extrinsic/depth_to_color", 1, true);
-  }
   if (enable_point_cloud_) {
     ros::SubscriberStatusCallback depth_cloud_subscribed_cb =
         boost::bind(&OBCameraNode::pointCloudSubscribedCallback, this);
@@ -244,6 +243,18 @@ void OBCameraNode::setupPublishers() {
     depth_registered_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth_registered/points", 1, depth_registered_cloud_subscribed_cb,
         depth_registered_cloud_unsubscribed_cb);
+  }
+  for (const auto& stream_index : HID_STREAMS) {
+    if (!enable_stream_[stream_index]) {
+      continue;
+    }
+    std::string topic_name = stream_name_[stream_index] + "/sample";
+    ros::SubscriberStatusCallback imu_subscribed_cb =
+        boost::bind(&OBCameraNode::imuSubscribedCallback, this, stream_index);
+    ros::SubscriberStatusCallback imu_unsubscribed_cb =
+        boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, stream_index);
+    imu_publishers_[stream_index] =
+        nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
   }
 }
 

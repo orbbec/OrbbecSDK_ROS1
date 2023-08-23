@@ -8,7 +8,7 @@
 #include "ros/ros.h"
 
 namespace orbbec_camera {
-OBFormat OBFormatFromString(const std::string& format) {
+OBFormat OBFormatFromString(const std::string &format) {
   std::string fixed_format;
   std::transform(format.begin(), format.end(), std::back_inserter(fixed_format),
                  [](const char ch) { return std::isalpha(ch) ? toupper(ch) : ch; });
@@ -64,7 +64,8 @@ OBFormat OBFormatFromString(const std::string& format) {
     return OB_FORMAT_UNKNOWN;
   }
 }
-std::string ObDeviceTypeToString(const OBDeviceType& type) {
+
+std::string ObDeviceTypeToString(const OBDeviceType &type) {
   switch (type) {
     case OBDeviceType::OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA:
       return "structured light binocular camera";
@@ -120,10 +121,11 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
 
   return info;
 }
-void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName) {
+
+void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fileName) {
   CHECK_NOTNULL(frame.get());
   size_t point_size = frame->dataSize() / sizeof(OBColorPoint);
-  FILE* fp = fopen(fileName.c_str(), "wb+");
+  FILE *fp = fopen(fileName.c_str(), "wb+");
   fprintf(fp, "ply\n");
   CHECK_NOTNULL(fp);
   fprintf(fp, "format ascii 1.0\n");
@@ -136,7 +138,7 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fil
   fprintf(fp, "property uchar blue\n");
   fprintf(fp, "end_header\n");
 
-  auto* point = (OBColorPoint*)frame->data();
+  auto *point = (OBColorPoint *)frame->data();
   CHECK_NOTNULL(point);
   for (size_t i = 0; i < point_size; i++) {
     fprintf(fp, "%.3f %.3f %.3f %d %d %d\n", point->x, point->y, point->z, (int)point->r,
@@ -148,9 +150,9 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fil
   fclose(fp);
 }
 
-void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileName) {
+void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fileName) {
   size_t point_size = frame->dataSize() / sizeof(OBPoint);
-  FILE* fp = fopen(fileName.c_str(), "wb+");
+  FILE *fp = fopen(fileName.c_str(), "wb+");
   CHECK_NOTNULL(fp);
   fprintf(fp, "ply\n");
   fprintf(fp, "format ascii 1.0\n");
@@ -160,7 +162,7 @@ void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string& fileNa
   fprintf(fp, "property float z\n");
   fprintf(fp, "end_header\n");
 
-  auto* points = (OBPoint*)frame->data();
+  auto *points = (OBPoint *)frame->data();
   CHECK_NOTNULL(points);
   for (size_t i = 0; i < point_size; i++) {
     fprintf(fp, "%.3f %.3f %.3f\n", points->x, points->y, points->z);
@@ -181,7 +183,7 @@ tf2::Quaternion rotationMatrixToQuaternion(const float rotation[9]) {
   return {q.x(), q.y(), q.z(), q.w()};
 }
 
-std::ostream& operator<<(std::ostream& os, const OBCameraParam& rhs) {
+std::ostream &operator<<(std::ostream &os, const OBCameraParam &rhs) {
   auto depth_intrinsic = rhs.depthIntrinsic;
   auto rgb_intrinsic = rhs.rgbIntrinsic;
   os << "=====depth intrinsic=====\n";
@@ -201,7 +203,7 @@ std::ostream& operator<<(std::ostream& os, const OBCameraParam& rhs) {
   return os;
 }
 
-Extrinsics obExtrinsicsToMsg(const OBD2CTransform& extrinsics, const std::string& frame_id) {
+Extrinsics obExtrinsicsToMsg(const OBD2CTransform &extrinsics, const std::string &frame_id) {
   Extrinsics msg;
   for (int i = 0; i < 9; ++i) {
     msg.rotation[i] = extrinsics.rot[i];
@@ -230,7 +232,7 @@ bool isOpenNIDevice(int pid) {
       0x063a, 0x0650, 0x0651, 0x0654, 0x0655, 0x0656, 0x0657, 0x0658, 0x0659, 0x065a,
       0x065b, 0x065c, 0x065d, 0x0698, 0x0699, 0x069a, 0x055c};
 
-  for (const auto& pid_openni : OPENNI_DEVICE_PIDS) {
+  for (const auto &pid_openni : OPENNI_DEVICE_PIDS) {
     if (pid == pid_openni) {
       return true;
     }
@@ -238,7 +240,7 @@ bool isOpenNIDevice(int pid) {
   return false;
 }
 
-OBSyncMode OBSyncModeFromString(const std::string& mode) {
+OBSyncMode OBSyncModeFromString(const std::string &mode) {
   if (mode == "CLOSE") {
     return OBSyncMode::OB_SYNC_MODE_CLOSE;
   } else if (mode == "STANDALONE") {
@@ -256,6 +258,162 @@ OBSyncMode OBSyncModeFromString(const std::string& mode) {
   } else {
     ROS_ERROR_STREAM("Unknown OBSyncMode: " << mode);
     return OBSyncMode::OB_SYNC_MODE_CLOSE;
+  }
+}
+
+OB_SAMPLE_RATE sampleRateFromString(std::string &sample_rate) {
+  // covert to lower case
+  std::transform(sample_rate.begin(), sample_rate.end(), sample_rate.begin(), ::tolower);
+  if (sample_rate == "1.5625hz") {
+    return OB_SAMPLE_RATE_1_5625_HZ;
+  } else if (sample_rate == "3.125hz") {
+    return OB_SAMPLE_RATE_3_125_HZ;
+  } else if (sample_rate == "6.25hz") {
+    return OB_SAMPLE_RATE_6_25_HZ;
+  } else if (sample_rate == "12.5hz") {
+    return OB_SAMPLE_RATE_12_5_HZ;
+  } else if (sample_rate == "25hz") {
+    return OB_SAMPLE_RATE_25_HZ;
+  } else if (sample_rate == "50hz") {
+    return OB_SAMPLE_RATE_50_HZ;
+  } else if (sample_rate == "100hz") {
+    return OB_SAMPLE_RATE_100_HZ;
+  } else if (sample_rate == "200hz") {
+    return OB_SAMPLE_RATE_200_HZ;
+  } else if (sample_rate == "500hz") {
+    return OB_SAMPLE_RATE_500_HZ;
+  } else if (sample_rate == "1khz") {
+    return OB_SAMPLE_RATE_1_KHZ;
+  } else if (sample_rate == "2khz") {
+    return OB_SAMPLE_RATE_2_KHZ;
+  } else if (sample_rate == "4khz") {
+    return OB_SAMPLE_RATE_4_KHZ;
+  } else if (sample_rate == "8khz") {
+    return OB_SAMPLE_RATE_8_KHZ;
+  } else if (sample_rate == "16khz") {
+    return OB_SAMPLE_RATE_16_KHZ;
+  } else if (sample_rate == "32khz") {
+    return OB_SAMPLE_RATE_32_KHZ;
+  } else {
+    ROS_ERROR_STREAM("Unknown OB_SAMPLE_RATE: " << sample_rate);
+    return OB_SAMPLE_RATE_100_HZ;
+  }
+}
+
+std::string sampleRateToString(const OB_SAMPLE_RATE &sample_rate) {
+  switch (sample_rate) {
+    case OB_SAMPLE_RATE_1_5625_HZ:
+      return "1.5625Hz";
+    case OB_SAMPLE_RATE_3_125_HZ:
+      return "3.125Hz";
+    case OB_SAMPLE_RATE_6_25_HZ:
+      return "6.25Hz";
+    case OB_SAMPLE_RATE_12_5_HZ:
+      return "12.5Hz";
+    case OB_SAMPLE_RATE_25_HZ:
+      return "25Hz";
+    case OB_SAMPLE_RATE_50_HZ:
+      return "50Hz";
+    case OB_SAMPLE_RATE_100_HZ:
+      return "100Hz";
+    case OB_SAMPLE_RATE_200_HZ:
+      return "200Hz";
+    case OB_SAMPLE_RATE_500_HZ:
+      return "500Hz";
+    case OB_SAMPLE_RATE_1_KHZ:
+      return "1kHz";
+    case OB_SAMPLE_RATE_2_KHZ:
+      return "2kHz";
+    case OB_SAMPLE_RATE_4_KHZ:
+      return "4kHz";
+    case OB_SAMPLE_RATE_8_KHZ:
+      return "8kHz";
+    case OB_SAMPLE_RATE_16_KHZ:
+      return "16kHz";
+    case OB_SAMPLE_RATE_32_KHZ:
+      return "32kHz";
+    default:
+      return "100Hz";
+  }
+}
+
+OB_GYRO_FULL_SCALE_RANGE fullGyroScaleRangeFromString(std::string &full_scale_range) {
+  std::transform(full_scale_range.begin(), full_scale_range.end(), full_scale_range.begin(),
+                 ::tolower);
+  if (full_scale_range == "16dps") {
+    return OB_GYRO_FS_16dps;
+  } else if (full_scale_range == "31dps") {
+    return OB_GYRO_FS_31dps;
+  } else if (full_scale_range == "62dps") {
+    return OB_GYRO_FS_62dps;
+  } else if (full_scale_range == "125dps") {
+    return OB_GYRO_FS_125dps;
+  } else if (full_scale_range == "250dps") {
+    return OB_GYRO_FS_250dps;
+  } else if (full_scale_range == "500dps") {
+    return OB_GYRO_FS_500dps;
+  } else if (full_scale_range == "1000dps") {
+    return OB_GYRO_FS_1000dps;
+  } else if (full_scale_range == "2000dps") {
+    return OB_GYRO_FS_2000dps;
+  } else {
+    ROS_ERROR_STREAM("Unknown OB_GYRO_FULL_SCALE_RANGE: " << full_scale_range);
+    return OB_GYRO_FS_2000dps;
+  }
+}
+
+std::string fullGyroScaleRangeToString(const OB_GYRO_FULL_SCALE_RANGE &full_scale_range) {
+  switch (full_scale_range) {
+    case OB_GYRO_FS_16dps:
+      return "16dps";
+    case OB_GYRO_FS_31dps:
+      return "31dps";
+    case OB_GYRO_FS_62dps:
+      return "62dps";
+    case OB_GYRO_FS_125dps:
+      return "125dps";
+    case OB_GYRO_FS_250dps:
+      return "250dps";
+    case OB_GYRO_FS_500dps:
+      return "500dps";
+    case OB_GYRO_FS_1000dps:
+      return "1000dps";
+    case OB_GYRO_FS_2000dps:
+      return "2000dps";
+    default:
+      return "16dps";
+  }
+}
+
+OBAccelFullScaleRange fullAccelScaleRangeFromString(std::string &full_scale_range) {
+  std::transform(full_scale_range.begin(), full_scale_range.end(), full_scale_range.begin(),
+                 ::tolower);
+  if (full_scale_range == "2g") {
+    return OB_ACCEL_FS_2g;
+  } else if (full_scale_range == "4g") {
+    return OB_ACCEL_FS_4g;
+  } else if (full_scale_range == "8g") {
+    return OB_ACCEL_FS_8g;
+  } else if (full_scale_range == "16g") {
+    return OB_ACCEL_FS_16g;
+  } else {
+    ROS_ERROR_STREAM("Unknown OB_ACCEL_FULL_SCALE_RANGE: " << full_scale_range);
+    return OB_ACCEL_FS_16g;
+  }
+}
+
+std::string fullAccelScaleRangeToString(const OBAccelFullScaleRange &full_scale_range) {
+  switch (full_scale_range) {
+    case OB_ACCEL_FS_2g:
+      return "2g";
+    case OB_ACCEL_FS_4g:
+      return "4g";
+    case OB_ACCEL_FS_8g:
+      return "8g";
+    case OB_ACCEL_FS_16g:
+      return "16g";
+    default:
+      return "2g";
   }
 }
 

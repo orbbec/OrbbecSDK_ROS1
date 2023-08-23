@@ -8,6 +8,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/distortion_models.h>
+#include <sensor_msgs/Imu.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
@@ -36,6 +37,16 @@ class OBCameraNode {
   bool isInitialized() const;
 
  private:
+  struct IMUData {
+    IMUData() = default;
+    IMUData(stream_index_pair stream, Eigen::Vector3d data, double timestamp)
+        : stream_(std::move(stream)), data_(std::move(data)), timestamp_(timestamp) {}
+    bool isSet() const { return timestamp_ >= 0; }
+    stream_index_pair stream_{};
+    Eigen::Vector3d data_{};
+    double timestamp_ = -1;  // in nanoseconds
+  };
+
   void init();
 
   void setupCameraCtrlServices();
@@ -56,6 +67,9 @@ class OBCameraNode {
 
   void onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                           const stream_index_pair& stream_index);
+
+  void onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
+                             const stream_index_pair& stream_index);
 
   void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set);
 
@@ -80,7 +94,24 @@ class OBCameraNode {
 
   void startStreams();
 
+  void startAccel();
+
+  void startGyro();
+
+  void startIMU(const stream_index_pair& stream_index);
+
+
+  void startIMU();
+
   void stopStreams();
+
+  void stopIMU(const stream_index_pair& stream_index);
+
+  void stopIMU();
+
+  void setDefaultIMUMessage(sensor_msgs::Imu& imu_msg);
+
+  sensor_msgs::Imu createUnitIMUMessage(const IMUData& accel_data, const IMUData& gyro_data);
 
   void startStream(const stream_index_pair& stream_index);
 
@@ -88,7 +119,11 @@ class OBCameraNode {
 
   void imageSubscribedCallback(const stream_index_pair& stream_index);
 
+  void imuSubscribedCallback(const stream_index_pair& stream_index);
+
   void imageUnsubscribedCallback(const stream_index_pair& stream_index);
+
+  void imuUnsubscribedCallback(const stream_index_pair& stream_index);
 
   void pointCloudSubscribedCallback();
 
@@ -269,7 +304,6 @@ class OBCameraNode {
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
   std::shared_ptr<tf2_ros::TransformBroadcaster> dynamic_tf_broadcaster_ = nullptr;
   std::vector<geometry_msgs::TransformStamped> static_tf_msgs_;
-  ros::Publisher extrinsics_publisher_;
   std::shared_ptr<std::thread> tf_thread_ = nullptr;
   std::condition_variable tf_cv_;
   double tf_publish_rate_ = 10.0;
@@ -313,6 +347,18 @@ class OBCameraNode {
   bool sync_signal_trigger_out_ = false;
   std::string depth_precision_str_;
   OB_DEPTH_PRECISION_LEVEL depth_precision_ = OB_PRECISION_0MM8;
+  // IMU
+
+  std::map<stream_index_pair, ros::Publisher> imu_publishers_;
+  std::map<stream_index_pair, std::string> imu_rate_;
+  std::map<stream_index_pair, std::string> imu_range_;
+  std::map<stream_index_pair, std::string> imu_qos_;
+  std::map<stream_index_pair, bool> imu_started_;
+  std::map<stream_index_pair, std::shared_ptr<ob::Sensor>> imu_sensor_;
+  double liner_accel_cov_ = 0.0001;
+  double angular_vel_cov_ = 0.0001;
+  std::deque<IMUData> imu_history_;
+  IMUData accel_data_{ACCEL, {0, 0, 0}, -1.0};
 };
 
 }  // namespace orbbec_camera

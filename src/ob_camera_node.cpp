@@ -6,6 +6,12 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
       nh_private_(nh_private),
       device_(std::move(device)),
       device_info_(device_->getDeviceInfo()) {
+  stream_name_[COLOR] = "color";
+  stream_name_[DEPTH] = "depth";
+  stream_name_[INFRA0] = "ir";
+  stream_name_[INFRA1] = "ir2";
+  stream_name_[ACCEL] = "accel";
+  stream_name_[GYRO] = "gyro";
   init();
 }
 
@@ -101,6 +107,23 @@ void OBCameraNode::getParameters() {
   enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
   soft_filter_max_diff_ = nh_private_.param<int>("soft_filter_max_diff", -1);
   soft_filter_speckle_size_ = nh_private_.param<int>("soft_filter_speckle_size", -1);
+  for (const auto& stream_index : HID_STREAMS) {
+    std::string param_name = "enable_" + stream_name_[stream_index];
+    enable_stream_[stream_index] = nh_private_.param<bool>(param_name, false);
+    param_name = stream_name_[stream_index] + "_rate";
+    imu_rate_[stream_index] = nh_private_.param<std::string>(param_name, "");
+    param_name = stream_name_[stream_index] + "_range";
+    imu_range_[stream_index] = nh_private_.param<std::string>(param_name, "");
+    param_name = camera_name_ + "_" + stream_name_[stream_index] + "_frame_id";
+    std::string default_frame_id = camera_name_ + "_" + stream_name_[stream_index] + "_frame";
+    frame_id_[stream_index] = nh_private_.param<std::string>(param_name, default_frame_id);
+    std::string default_optical_frame_id =
+        camera_name_ + "_" + stream_name_[stream_index] + "_optical_frame";
+    param_name = stream_name_[stream_index] + "_optical_frame_id";
+    optical_frame_id_[stream_index] =
+        nh_private_.param<std::string>(param_name, default_optical_frame_id);
+    depth_aligned_frame_id_[stream_index] = stream_name_[COLOR] + "_optical_frame";
+  }
 }
 
 void OBCameraNode::startStreams() {
@@ -133,6 +156,127 @@ void OBCameraNode::startStreams() {
   }
 }
 
+void OBCameraNode::startAccel() {
+  const stream_index_pair stream_index = ACCEL;
+  if (!enable_stream_[stream_index]) {
+    return;
+  }
+  if (!sensors_[stream_index] || !imu_sensor_[stream_index]) {
+    ROS_ERROR_STREAM("accel sensor is null");
+    return;
+  }
+  auto profile_list = sensors_[ACCEL]->getStreamProfileList();
+  for (size_t i = 0; i < profile_list->count(); i++) {
+    auto item = profile_list->getProfile(i);
+    auto profile = item->as<ob::AccelStreamProfile>();
+    auto accel_rate = sampleRateFromString(imu_rate_[stream_index]);
+    auto accel_range = fullAccelScaleRangeFromString(imu_range_[stream_index]);
+    if (profile->fullScaleRange() == accel_range && profile->sampleRate() == accel_rate) {
+      imu_sensor_[stream_index]->start(
+          profile, [this, stream_index](const std::shared_ptr<ob::Frame>& frame) {
+            onNewIMUFrameCallback(frame, stream_index);
+          });
+      imu_started_[stream_index] = true;
+      ROS_INFO_STREAM("start accel stream with " << fullAccelScaleRangeToString(accel_range)
+                                                 << " range and " << sampleRateToString(accel_rate)
+                                                 << " rate");
+    }
+  }
+  if (enable_stream_[stream_index] && !imu_started_[stream_index]) {
+    ROS_INFO_STREAM("Failed to start IMU stream: "
+                    << stream_name_[stream_index]
+                    << ", please check the imu_rate and imu_range parameters");
+  }
+}
+
+void OBCameraNode::startGyro() {
+  const stream_index_pair stream_index = GYRO;
+  if (!enable_stream_[stream_index]) {
+    return;
+  }
+  if (!sensors_[stream_index] || !imu_sensor_[stream_index]) {
+    ROS_ERROR_STREAM("gyro sensor is null");
+  }
+  auto profile_list = sensors_[GYRO]->getStreamProfileList();
+  for (size_t i = 0; i < profile_list->count(); i++) {
+    auto item = profile_list->getProfile(i);
+    auto profile = item->as<ob::GyroStreamProfile>();
+    auto gyro_rate = sampleRateFromString(imu_rate_[stream_index]);
+    auto gyro_range = fullGyroScaleRangeFromString(imu_range_[stream_index]);
+    if (profile->fullScaleRange() == gyro_range && profile->sampleRate() == gyro_rate) {
+      imu_sensor_[stream_index]->start(
+          profile, [this, stream_index](const std::shared_ptr<ob::Frame>& frame) {
+            onNewIMUFrameCallback(frame, stream_index);
+          });
+      imu_started_[stream_index] = true;
+      ROS_INFO_STREAM("start gyro stream with " << fullGyroScaleRangeToString(gyro_range)
+                                                << " range and " << sampleRateToString(gyro_rate)
+                                                << " rate");
+    }
+  }
+  if (enable_stream_[stream_index] && !imu_started_[stream_index]) {
+    ROS_INFO_STREAM("Failed to start IMU stream: "
+                    << stream_name_[stream_index]
+                    << ", please check the imu_rate and imu_range parameters");
+  }
+}
+
+void OBCameraNode::startIMU(const stream_index_pair& stream_index) {
+  if (stream_index == ACCEL) {
+    startAccel();
+  } else if (stream_index == GYRO) {
+    startGyro();
+  }
+}
+void OBCameraNode::startIMU() {
+  for (const auto& stream_index : HID_STREAMS) {
+    if (enable_stream_[stream_index]) {
+      CHECK(sensors_.count(stream_index));
+      CHECK(imu_sensor_.count(stream_index));
+      auto profile_list = sensors_[stream_index]->getStreamProfileList();
+      for (size_t i = 0; i < profile_list->count(); i++) {
+        auto item = profile_list->getProfile(i);
+        if (stream_index == ACCEL) {
+          auto profile = item->as<ob::AccelStreamProfile>();
+          auto accel_rate = sampleRateFromString(imu_rate_[stream_index]);
+          auto accel_range = fullAccelScaleRangeFromString(imu_range_[stream_index]);
+          if (profile->fullScaleRange() == accel_range && profile->sampleRate() == accel_rate) {
+            imu_sensor_[stream_index]->start(
+                profile, [this, stream_index](const std::shared_ptr<ob::Frame>& frame) {
+                  onNewIMUFrameCallback(frame, stream_index);
+                });
+            imu_started_[stream_index] = true;
+            ROS_INFO_STREAM("start accel stream with "
+                            << fullAccelScaleRangeToString(accel_range) << " range and "
+                            << sampleRateToString(accel_rate) << " rate");
+          }
+        } else if (stream_index == GYRO) {
+          auto profile = item->as<ob::GyroStreamProfile>();
+          auto gyro_rate = sampleRateFromString(imu_rate_[stream_index]);
+          auto gyro_range = fullGyroScaleRangeFromString(imu_range_[stream_index]);
+          if (profile->fullScaleRange() == gyro_range && profile->sampleRate() == gyro_rate) {
+            imu_sensor_[stream_index]->start(
+                profile, [this, stream_index](const std::shared_ptr<ob::Frame>& frame) {
+                  onNewIMUFrameCallback(frame, stream_index);
+                });
+            ROS_INFO_STREAM("start gyro stream with " << fullGyroScaleRangeToString(gyro_range)
+                                                      << " range and "
+                                                      << sampleRateToString(gyro_rate) << " rate");
+            imu_started_[stream_index] = true;
+          }
+        }
+      }
+    }
+  }
+  for (const auto& stream_index : HID_STREAMS) {
+    if (enable_stream_[stream_index] && !imu_started_[stream_index]) {
+      ROS_INFO_STREAM("Failed to start IMU stream: "
+                      << stream_name_[stream_index]
+                      << ", please check the imu_rate and imu_range parameters");
+    }
+  }
+}
+
 void OBCameraNode::stopStreams() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
@@ -144,6 +288,23 @@ void OBCameraNode::stopStreams() {
       if (stream_started_[stream_index]) {
         stopStream(stream_index);
       }
+    }
+  }
+}
+
+void OBCameraNode::stopIMU(const orbbec_camera::stream_index_pair& stream_index) {
+  if (imu_started_[stream_index]) {
+    CHECK(sensors_.count(stream_index));
+    ROS_INFO_STREAM("stop " << stream_name_[stream_index] << " stream");
+    imu_sensor_[stream_index]->stop();
+    imu_started_[stream_index] = false;
+  }
+}
+
+void OBCameraNode::stopIMU() {
+  for (const auto& stream_index : HID_STREAMS) {
+    if (imu_started_[stream_index]) {
+      stopIMU(stream_index);
     }
   }
 }
@@ -388,6 +549,69 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   }
 }
 
+void OBCameraNode::setDefaultIMUMessage(sensor_msgs::Imu& imu_msg) {
+  imu_msg.header.frame_id = "imu_link";
+  imu_msg.orientation.x = 0.0;
+  imu_msg.orientation.y = 0.0;
+  imu_msg.orientation.z = 0.0;
+  imu_msg.orientation.w = 0.0;
+
+  imu_msg.orientation_covariance = {-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  imu_msg.linear_acceleration_covariance = {
+      liner_accel_cov_, 0.0, 0.0, 0.0, liner_accel_cov_, 0.0, 0.0, 0.0, liner_accel_cov_};
+  imu_msg.angular_velocity_covariance = {
+      angular_vel_cov_, 0.0, 0.0, 0.0, angular_vel_cov_, 0.0, 0.0, 0.0, angular_vel_cov_};
+}
+
+sensor_msgs::Imu OBCameraNode::createUnitIMUMessage(const IMUData& accel_data,
+                                                    const IMUData& gyro_data) {
+  sensor_msgs::Imu imu_msg;
+  ros::Time timestamp = ros::Time::now();
+  imu_msg.header.stamp = timestamp;
+  imu_msg.angular_velocity.x = gyro_data.data_.x();
+  imu_msg.angular_velocity.y = gyro_data.data_.y();
+  imu_msg.angular_velocity.z = gyro_data.data_.z();
+
+  imu_msg.linear_acceleration.x = accel_data.data_.x();
+  imu_msg.linear_acceleration.y = accel_data.data_.y();
+  imu_msg.linear_acceleration.z = accel_data.data_.z();
+  return imu_msg;
+}
+
+void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
+                                         const stream_index_pair& stream_index) {
+  if (!imu_publishers_.count(stream_index)) {
+    ROS_ERROR_STREAM("stream " << stream_name_[stream_index] << " publisher not initialized");
+    return;
+  }
+  auto subscriber_count = imu_publishers_[stream_index].getNumSubscribers();
+  if (subscriber_count == 0) {
+    return;
+  }
+  auto imu_msg = sensor_msgs::Imu();
+  setDefaultIMUMessage(imu_msg);
+  imu_msg.header.frame_id = optical_frame_id_[stream_index];
+  auto timestamp = frameTimeStampToROSTime(frame->systemTimeStamp());
+  imu_msg.header.stamp = timestamp;
+  if (frame->type() == OB_FRAME_GYRO) {
+    auto gyro_frame = frame->as<ob::GyroFrame>();
+    auto data = gyro_frame->value();
+    imu_msg.angular_velocity.x = data.x;
+    imu_msg.angular_velocity.y = data.y;
+    imu_msg.angular_velocity.z = data.z;
+  } else if (frame->type() == OB_FRAME_ACCEL) {
+    auto accel_frame = frame->as<ob::AccelFrame>();
+    auto data = accel_frame->value();
+    imu_msg.linear_acceleration.x = data.x;
+    imu_msg.linear_acceleration.y = data.y;
+    imu_msg.linear_acceleration.z = data.z;
+  } else {
+    ROS_ERROR("Unsupported IMU frame type");
+    return;
+  }
+  imu_publishers_[stream_index].publish(imu_msg);
+}
+
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (frame_set == nullptr) {
     return;
@@ -558,6 +782,24 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
   }
 }
 
+void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair& stream_index) {
+  ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " subscribed");
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    if (imu_started_[stream_index]) {
+      ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " is already started.");
+      return;
+    }
+    startIMU(stream_index);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to start streams: " << e.getMessage());
+    return;
+  } catch (const std::exception& e) {
+    ROS_ERROR_STREAM("Failed to start streams: " << e.what());
+    return;
+  }
+}
+
 void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_index) {
   ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " unsubscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
@@ -586,6 +828,12 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       stopStream(stream_index);
     }
   }
+}
+
+void OBCameraNode::imuUnsubscribedCallback(const stream_index_pair& stream_index) {
+  ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " unsubscribed");
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  stopIMU(stream_index);
 }
 
 void OBCameraNode::pointCloudSubscribedCallback() {
