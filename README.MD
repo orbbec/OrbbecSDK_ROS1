@@ -369,7 +369,8 @@ The following are the launch parameters available:
 | gemini e lite       | gemini_e_lite.launch  |
 
 Actually, All launch files all most the same, the only difference is the default value of the parameters.
-
+## Use Nodelet
+For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 ## Supported hardware products
 
 | **SDK version** | **products list** | **firmware version**        |

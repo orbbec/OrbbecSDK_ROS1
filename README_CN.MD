@@ -419,6 +419,8 @@ roslaunch orbbec_camera multi_camera.launch
 | v1.1.6          | Astra+            | 1.0.20/1.0.19               |
 |                 | *Femto            | 1.5.1                       |
 | v1.0.2          | Astra+            | 1.0.19                      |
+## 使用Nodelet
+对于需要使用Nodelet的用户，请参考`gemini2_nodelet.launch`
 
 ## 常见问题
 
