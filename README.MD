@@ -342,6 +342,20 @@ The following are the launch parameters available:
 - `enable_publish_extrinsic`: Enables the publishing of camera extrinsic information.
 - `log_level`: The log level for OrbbecSDK, with optional values of `none`, `info`, `debug`, `warn`, and `fatal`.
   The log file can be found in the ROS runtime directory, and the default location is `~/.ros/Log`.
+- `enable_accel` : Enables the accelerometer.
+- `accel_rate`: The frequency of the accelerometer, the optional values are `1.5625hz`,`3.125hz`,`6.25hz`,`12.5hz`,`25hz`,`50hz`,
+`100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`. The specific value depends on the current camera.
+- `accel_range` : The range of the accelerometer, the optional values are `2g`,`4g`,`8g`,`16g`. The specific value depends on the current camera.
+- `enable_gyro`: Whether to enable the gyroscope.
+- `gyro_rate` : The frequency of the gyroscope, the optional values are `1.5625hz`,`3.125hz`,`6.25hz`,`12.5hz`,`25hz`,`50hz`,
+`100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`. The specific value depends on the current camera.
+- `gyro_range` : The range of the gyroscope, the optional values are `16dps`,`31dps`,`62dps`,`125dps`,`250dps`,`500dps`,`1000dps`,`2000dps`. The specific value depends on the current camera.
+
+## Check which profiles the camera supports
+  
+  ```bash
+  rosrun orbbec_camera list_camera_profile_mode_node
+  ```
 
 ## Launch files
 

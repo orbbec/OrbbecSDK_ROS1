@@ -339,6 +339,21 @@ roslaunch orbbec_camera multi_camera.launch
 - `log_level`: `OrbbecSDK` 的日志级别，可选值为 `none`、`info`、`debug`、`warn` 和 `fatal`。日志文件可以在 ROS
   运行时目录中找到，其默认位置为`~/.ros/Log`。
 - `usb_port` : USB端口号，当使用多个相机时，这是必需的。
+- `enable_accel`: 是否启用加速度计。
+- `accel_rate` : 加速度计的频率， 可选值为`1.5625hz`,`3.125hz`,`6.25hz`,`12.5hz`,`25hz`,`50hz`,
+`100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`。具体的值取决于当前的相机型号。
+- `accel_range` : 加速度计的量程, 可选值为`2g`,`4g`,`8g`,`16g`。具体的值取决于当前的相机型号。
+- `enable_gyro` : 是否启用陀螺仪。
+- `gyro_rate` : 陀螺仪的频率, 可选值为`1.5625hz`,`3.125hz`,`6.25hz`,`12.5hz`,`25hz`,`50hz`,
+`100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`。具体的值取决于当前的相机型号。
+- `gyro_range` : 陀螺仪的量程, 可选值为`16dps`,`31dps`,`62dps`,`125dps`,`250dps`,`500dps`,`1000dps`,`2000dps`。具体的值取决于当前的相机型号。
+
+
+## 查看相机支持那些Profile
+  
+  ```bash
+  rosrun orbbec_camera list_camera_profile_mode_node
+  ```
 
 ## 启动文件
 

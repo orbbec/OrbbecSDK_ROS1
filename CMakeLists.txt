@@ -257,6 +257,30 @@ target_link_libraries(list_depth_work_mode_node
   -lOrbbecSDK
   -L${ORBBEC_LIBS}
   )
+
+add_executable(list_camera_profile_mode_node
+  src/list_camera_profile.cpp
+)
+
+target_include_directories(list_camera_profile_mode_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${OpenCV_INCLUDED_DIRS}
+)
+
+target_link_libraries(list_camera_profile_mode_node
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${OpenCV_LIBS}
+  ${GLOG_LIBRARIES}
+  -lOrbbecSDK
+  -L${ORBBEC_LIBS}
+)
+
 add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_generate_messages_cpp)
 
@@ -267,6 +291,7 @@ install(TARGETS ${PROJECT_NAME}
   list_devices_node
   ob_cleanup_shm_node
   list_depth_work_mode_node
+  list_camera_profile_mode_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
