@@ -8,8 +8,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -fPIC -g3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -g3")
 set(CMAKE_BUILD_TYPE "Release")
+option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" ON)
+
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra )
+  add_compile_options(-Wall -Wextra)
 endif ()
 
 find_package(catkin REQUIRED
@@ -42,6 +44,12 @@ if (NOT GLOG_FOUND)
   message(FATAL_ERROR "glog is not found")
 endif ()
 
+if (USE_RK_HW_DECODER)
+  pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
+  if (NOT RK_MPP_FOUND)
+    message(FATAL_ERROR "rockchip_mpp is not found")
+  endif ()
+endif ()
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
 execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
 message(STATUS "ORRBEC Machine : ${MACHINES}")
@@ -58,6 +66,15 @@ endif ()
 
 set(ORBBEC_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
 set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
+if (USE_RK_HW_DECODER)
+  set(RGA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/librga/include/)
+  set(RGA_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/librga/lib/${HOST_PLATFORM})
+else ()
+  set(RGA_INCLUDE_DIR "")
+  set(RGA_LIB_DIR "")
+endif ()
+
+message(STATUS "RGA Lib Dir : ${RGA_LIB_DIR}")
 
 add_message_files(
   FILES
@@ -107,7 +124,7 @@ link_directories(${ORBBEC_LIBS}
   ${catkin_LINK_DIRS}
   ${OpenCV_LIBS})
 
-add_library(${PROJECT_NAME}
+set(SOURCE_FILES
   src/d2c_viewer.cpp
   src/ob_camera_node.cpp
   src/ob_camera_node_driver.cpp
@@ -115,9 +132,16 @@ add_library(${PROJECT_NAME}
   src/ros_service.cpp
   src/utils.cpp
   src/ros_setup.cpp
-  )
+  src/mjpeg_decoder.cpp
+)
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+if (USE_RK_HW_DECODER)
+  add_definitions(-DUSE_RK_HW_DECODER)
+  list(APPEND SOURCE_FILES src/rk_mpp_decoder.cpp)
+endif ()
+
+
+set(INCLUDE_DIRS
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
@@ -125,196 +149,77 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   ${Boost_INCLUDE_DIRS}
   ${OpenCV_INCLUDED_DIRS}
   ${ORBBEC_INCLUDE_DIR}
-  )
-
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${OpenCV_LIBS}
-  ${GLOG_LIBRARIES}
-  -lOrbbecSDK
-  -L${ORBBEC_LIBS}
-  )
-
-add_library(${PROJECT_NAME}_nodelet
-  src/ob_camera_node.cpp
-  src/ob_camera_node_driver.cpp
-  src/ros_sensor.cpp
-  src/ros_service.cpp
-  src/utils.cpp
-  src/ros_setup.cpp
-  src/ros_nodelet.cpp
+  ${RK_MPP_INCLUDE_DIRS}
+  ${RGA_INCLUDE_DIR}
 )
 
-target_include_directories(${PROJECT_NAME}_nodelet PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${OpenCV_INCLUDED_DIRS}
-  ${ORBBEC_INCLUDE_DIR}
+set(LINK_LIBRARIES
+  ${catkin_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${OpenCV_LIBS}
+  ${GLOG_LIBRARIES}
+  -lOrbbecSDK
+  -L${ORBBEC_LIBS}
+  ${RK_MPP_LIBRARIES}
 )
 
-target_link_libraries(${PROJECT_NAME}_nodelet
-  ${catkin_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${OpenCV_LIBS}
-  ${GLOG_LIBRARIES}
-  -lOrbbecSDK
-  -L${ORBBEC_LIBS}
-)
+add_library(${PROJECT_NAME} ${SOURCE_FILES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})
 
-add_executable(${PROJECT_NAME}_node
-  src/main.cpp
-  )
+add_library(${PROJECT_NAME}_nodelet ${SOURCE_FILES} src/ros_nodelet.cpp)
+target_include_directories(${PROJECT_NAME}_nodelet PUBLIC ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}_nodelet ${LINK_LIBRARIES})
 
-target_include_directories(${PROJECT_NAME}_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${OpenCV_INCLUDED_DIRS}
-  ${ORBBEC_INCLUDE_DIR}
-  )
-
-target_link_libraries(${PROJECT_NAME}_node
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${OpenCV_LIBS}
-  ${GLOG_LIBRARIES}
-  -lOrbbecSDK
-  -L${ORBBEC_LIBS}
-  )
-
-add_executable(list_devices_node
-  src/list_devices_node.cpp
-  )
-
-target_include_directories(list_devices_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${OpenCV_INCLUDED_DIRS}
-  )
-
-target_link_libraries(list_devices_node
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${OpenCV_LIBS}
-  ${GLOG_LIBRARIES}
-  -lOrbbecSDK
-  -L${ORBBEC_LIBS}
-  )
-
-add_executable(ob_cleanup_shm_node
-  src/ob_cleanup_shm.cpp
-  )
-
-target_include_directories(ob_cleanup_shm_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${OpenCV_INCLUDED_DIRS}
-  )
-
-target_link_libraries(ob_cleanup_shm_node
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${OpenCV_LIBS}
-  ${GLOG_LIBRARIES}
-  -lOrbbecSDK
-  -L${ORBBEC_LIBS}
-  )
-
-add_executable(list_depth_work_mode_node
-  src/list_depth_work_mode.cpp
-  )
-
-target_include_directories(list_depth_work_mode_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${OpenCV_INCLUDED_DIRS}
-  )
-
-target_link_libraries(list_depth_work_mode_node
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${OpenCV_LIBS}
-  ${GLOG_LIBRARIES}
-  -lOrbbecSDK
-  -L${ORBBEC_LIBS}
-  )
-
-add_executable(list_camera_profile_mode_node
-  src/list_camera_profile.cpp
-)
-
-target_include_directories(list_camera_profile_mode_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${OpenCV_INCLUDED_DIRS}
-)
-
-target_link_libraries(list_camera_profile_mode_node
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${OpenCV_LIBS}
-  ${GLOG_LIBRARIES}
-  -lOrbbecSDK
-  -L${ORBBEC_LIBS}
-)
-
-add_dependencies(${PROJECT_NAME}
-  ${PROJECT_NAME}_generate_messages_cpp)
-
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-install(TARGETS ${PROJECT_NAME}
-  ${PROJECT_NAME}_nodelet
+set(EXECUTABLES
   ${PROJECT_NAME}_node
   list_devices_node
   ob_cleanup_shm_node
   list_depth_work_mode_node
   list_camera_profile_mode_node
+)
+
+foreach (EXEC ${EXECUTABLES})
+  add_executable(${EXEC} src/${EXEC}.cpp)
+  target_include_directories(${EXEC} PUBLIC ${INCLUDE_DIRS})
+  target_link_libraries(${EXEC} ${PROJECT_NAME} ${LINK_LIBRARIES})
+  if (USE_RK_HW_DECODER)
+    target_link_libraries(${EXEC}
+      -lrga
+      -L${RGA_LIB_DIR}
+    )
+  endif ()
+endforeach ()
+
+add_dependencies(${PROJECT_NAME}
+  ${PROJECT_NAME}_generate_messages_cpp)
+
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+
+install(TARGETS ${PROJECT_NAME}
+  ${PROJECT_NAME}_nodelet
+  ${EXECUTABLES}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  )
-
+)
 
 install(DIRECTORY include
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
-  )
+)
 
 install(DIRECTORY
   ${ORBBEC_INCLUDE_DIR}
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
-  )
-
+)
 
 install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  )
+)
 
 install(DIRECTORY config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  )
+)
 
 install(FILES nodelet_plugins.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
@@ -325,4 +230,11 @@ install(DIRECTORY
   DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/
   FILES_MATCHING PATTERN "*.so"
   PATTERN "*.so.*"
-  )
+)
+
+install(DIRECTORY
+  ${RGA_LIB_DIR}/
+  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/
+  FILES_MATCHING PATTERN "*.so"
+  PATTERN "*.so.*"
+)
