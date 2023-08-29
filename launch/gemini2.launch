@@ -56,6 +56,9 @@
     <arg name="rgb_trigger_signal_in_delay" default="0"/>
     <arg name="device_trigger_signal_out_delay" default="0"/>
     <arg name="sync_signal_trigger_out" default="false"/>
+    <arg name="jpeg_decoder" default="avdec_mjpeg"/>
+    <arg name="jpeg_parse" default="jpegparse"/>
+    <arg name="video_convert" default="videoconvert"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -114,6 +117,9 @@
             <param name="device_trigger_signal_out_delay"
                    value="$(arg device_trigger_signal_out_delay)"/>
             <param name="sync_signal_trigger_out" value="$(arg sync_signal_trigger_out)"/>
+            <param name="jpeg_decoder" value="$(arg jpeg_decoder)"/>
+            <param name="jpeg_parse" value="$(arg jpeg_parse)"/>
+            <param name="video_convert" value="$(arg video_convert)"/>
             <remap from="/$(arg camera_name)/depth/color/points"
                    to="/$(arg camera_name)/depth_registered/points"/>
         </node>

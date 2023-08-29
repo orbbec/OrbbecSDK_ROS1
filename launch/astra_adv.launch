@@ -39,6 +39,9 @@
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_pipeline" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
+    <arg name="jpeg_decoder" default="avdec_mjpeg"/>
+    <arg name="jpeg_parse" default="jpegparse"/>
+    <arg name="video_convert" default="videoconvert"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -79,6 +82,9 @@
             <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
+            <param name="jpeg_decoder" value="$(arg jpeg_decoder)"/>
+            <param name="jpeg_parse" value="$(arg jpeg_parse)"/>
+            <param name="video_convert" value="$(arg video_convert)"/>
             <remap from="/$(arg camera_name)/depth/color/points"
                    to="/$(arg camera_name)/depth_registered/points"/>
         </node>
