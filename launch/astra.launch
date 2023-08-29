@@ -16,7 +16,7 @@
     <arg name="color_fps" default="30"/>
     <arg name="enable_color" default="true"/>
     <arg name="flip_color" default="false"/>
-    <arg name="color_format" default="RGB888"/>
+    <arg name="color_format" default="RGB"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="480"/>

@@ -1,6 +1,8 @@
 #include "orbbec_camera/ob_camera_node.h"
 #if defined(USE_RK_HW_DECODER)
 #include "orbbec_camera/rk_mpp_decoder.h"
+#elif defined(USE_GST_HW_DECODER)
+#include "orbbec_camera/gst_decoder.h"
 #endif
 
 namespace orbbec_camera {
@@ -35,6 +37,12 @@ void OBCameraNode::init() {
   readDefaultGain();
   readDefaultWhiteBalance();
   is_initialized_ = true;
+#if defined(USE_RK_HW_DECODER)
+  mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
+#elif defined(USE_GST_HW_DECODER)
+  mjpeg_decoder_ = std::make_shared<GstreamerJPEGDecoder>(
+      width_[COLOR], height_[COLOR], jpeg_decoder_, video_convert_, jpeg_parse_);
+#endif
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
@@ -46,6 +54,7 @@ OBCameraNode::~OBCameraNode() {
     tf_thread_->join();
   }
   stopStreams();
+  delete[] rgb_buffer_;
 }
 
 void OBCameraNode::getParameters() {
@@ -128,6 +137,9 @@ void OBCameraNode::getParameters() {
         nh_private_.param<std::string>(param_name, default_optical_frame_id);
     depth_aligned_frame_id_[stream_index] = stream_name_[COLOR] + "_optical_frame";
   }
+  jpeg_decoder_ = nh_private_.param<std::string>("jpeg_decoder", "avdec_mjpeg");
+  jpeg_parse_ = nh_private_.param<std::string>("jpeg_parse", "jpegparse");
+  video_convert_ = nh_private_.param<std::string>("video_convert", "videoconvert");
 }
 
 void OBCameraNode::startStreams() {
@@ -660,8 +672,8 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   bool hw_decode = false;
   auto frame_format = frame->format();
   if (frame->type() == OB_FRAME_COLOR && frame_format != OB_FORMAT_RGB888) {
-    if (frame_format == OB_FORMAT_MJPG || frame_format == OB_FORMAT_MJPEG) {
-#if (defined(USE_RK_HW_DECODER) || defined(USE_A311D_HW_DECODER) || defined(USE_NV_HW_DECODER))
+    if (frame_format == OB_FORMAT_MJPG && mjpeg_decoder_) {
+#if defined(USE_RK_HW_DECODER) || defined(USE_GST_HW_DECODER)
       CHECK_NOTNULL(mjpeg_decoder_.get());
       video_frame = frame->as<ob::ColorFrame>();
       const auto& color_frame = frame->as<ob::ColorFrame>();

@@ -5,11 +5,11 @@
 #include "libobsensor/ObSensor.hpp"
 
 namespace orbbec_camera {
-class MjpegDecoder {
+class JPEGDecoder {
  public:
-  MjpegDecoder(int width, int height);
+  JPEGDecoder(int width, int height);
 
-  virtual ~MjpegDecoder();
+  virtual ~JPEGDecoder();
 
   virtual bool decode(const std::shared_ptr<ob::ColorFrame> &frame, uint8_t *dest) = 0;
 

@@ -8,7 +8,9 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -fPIC -g3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -g3")
 set(CMAKE_BUILD_TYPE "Release")
-option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" ON)
+option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
+option(USE_GST_HW_DECODER "Use Gstreamer hardware decoder" ON)
+
 
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
@@ -49,7 +51,24 @@ if (USE_RK_HW_DECODER)
   if (NOT RK_MPP_FOUND)
     message(FATAL_ERROR "rockchip_mpp is not found")
   endif ()
+  pkg_search_module(RGA REQUIRED librga)
+  if (NOT RGA_FOUND)
+    message(FATAL_ERROR "librga is not found")
+  endif ()
 endif ()
+
+if (USE_GST_HW_DECODER)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(GST REQUIRED gstreamer-1.0)
+  if (NOT GST_FOUND)
+    message(FATAL_ERROR "gstreamer-1.0 is not found")
+  endif ()
+  pkg_search_module(GST_APP REQUIRED gstreamer-app-1.0)
+  if (NOT GST_APP_FOUND)
+    message(FATAL_ERROR "gstreamer-app-1.0 is not found")
+  endif ()
+endif ()
+
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
 execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
 message(STATUS "ORRBEC Machine : ${MACHINES}")
@@ -66,15 +85,6 @@ endif ()
 
 set(ORBBEC_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
 set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
-if (USE_RK_HW_DECODER)
-  set(RGA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/librga/include/)
-  set(RGA_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/librga/lib/${HOST_PLATFORM})
-else ()
-  set(RGA_INCLUDE_DIR "")
-  set(RGA_LIB_DIR "")
-endif ()
-
-message(STATUS "RGA Lib Dir : ${RGA_LIB_DIR}")
 
 add_message_files(
   FILES
@@ -140,6 +150,10 @@ if (USE_RK_HW_DECODER)
   list(APPEND SOURCE_FILES src/rk_mpp_decoder.cpp)
 endif ()
 
+if (USE_GST_HW_DECODER)
+  add_definitions(-DUSE_GST_HW_DECODER)
+  list(APPEND SOURCE_FILES src/gst_decoder.cpp)
+endif ()
 
 set(INCLUDE_DIRS
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -151,6 +165,7 @@ set(INCLUDE_DIRS
   ${ORBBEC_INCLUDE_DIR}
   ${RK_MPP_INCLUDE_DIRS}
   ${RGA_INCLUDE_DIR}
+  ${GST_INCLUDE_DIRS}
 )
 
 set(LINK_LIBRARIES
@@ -160,16 +175,46 @@ set(LINK_LIBRARIES
   ${GLOG_LIBRARIES}
   -lOrbbecSDK
   -L${ORBBEC_LIBS}
-  ${RK_MPP_LIBRARIES}
 )
 
 add_library(${PROJECT_NAME} ${SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})
 
+
 add_library(${PROJECT_NAME}_nodelet ${SOURCE_FILES} src/ros_nodelet.cpp)
 target_include_directories(${PROJECT_NAME}_nodelet PUBLIC ${INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_nodelet ${LINK_LIBRARIES})
+
+if (USE_RK_HW_DECODER)
+  target_link_libraries(${PROJECT_NAME}
+    ${RGA_LIBRARIES}
+    ${RK_MPP_LIBRARIES}
+  )
+  target_link_libraries(${PROJECT_NAME}_nodelet
+    ${RGA_LIBRARIES}
+    ${RK_MPP_LIBRARIES}
+  )
+elseif (USE_GST_HW_DECODER)
+  target_link_libraries(${PROJECT_NAME}
+    ${GST_LIBRARIES}
+    ${GST_APP_LIBRARIES}
+  )
+  target_link_libraries(${PROJECT_NAME}_nodelet
+    ${GST_LIBRARIES}
+    ${GST_APP_LIBRARIES}
+  )
+endif ()
+
+add_dependencies(${PROJECT_NAME}
+  ${PROJECT_NAME}_generate_messages_cpp)
+
+add_dependencies(${PROJECT_NAME}_nodelet
+  ${PROJECT_NAME}_generate_messages_cpp)
+
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_nodelet ${catkin_EXPORTED_TARGETS})
+
 
 set(EXECUTABLES
   ${PROJECT_NAME}_node
@@ -179,22 +224,33 @@ set(EXECUTABLES
   list_camera_profile_mode_node
 )
 
-foreach (EXEC ${EXECUTABLES})
-  add_executable(${EXEC} src/${EXEC}.cpp)
-  target_include_directories(${EXEC} PUBLIC ${INCLUDE_DIRS})
-  target_link_libraries(${EXEC} ${PROJECT_NAME} ${LINK_LIBRARIES})
+macro(add_orbbec_executable TARGET SOURCES)
+  add_executable(${TARGET} ${SOURCES})
+  target_include_directories(${TARGET} PUBLIC ${INCLUDE_DIRS})
+  target_link_libraries(${TARGET} ${LINK_LIBRARIES} ${PROJECT_NAME})
   if (USE_RK_HW_DECODER)
-    target_link_libraries(${EXEC}
-      -lrga
-      -L${RGA_LIB_DIR}
+    target_link_libraries(${TARGET}
+      ${RGA_LIBRARIES}
+      ${RK_MPP_LIBRARIES}
+    )
+  elseif (USE_GST_HW_DECODER)
+    target_link_libraries(${TARGET}
+      ${GST_LIBRARIES}
+      ${GST_APP_LIBRARIES}
     )
   endif ()
-endforeach ()
+endmacro()
 
-add_dependencies(${PROJECT_NAME}
-  ${PROJECT_NAME}_generate_messages_cpp)
+# Define library and nodes
 
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+
+# Add nodes using the macro
+add_orbbec_executable(list_devices_node src/list_devices_node.cpp)
+add_orbbec_executable(ob_cleanup_shm_node src/ob_cleanup_shm.cpp)
+add_orbbec_executable(list_depth_work_mode_node src/list_depth_work_mode.cpp)
+add_orbbec_executable(list_camera_profile_mode_node src/list_camera_profile_mode.cpp)
+add_orbbec_executable(orbbec_camera_node src/main.cpp)
+
 
 install(TARGETS ${PROJECT_NAME}
   ${PROJECT_NAME}_nodelet

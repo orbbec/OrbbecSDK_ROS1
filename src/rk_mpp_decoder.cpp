@@ -98,6 +98,8 @@ RKMjpegDecoder::~RKMjpegDecoder() {
 bool RKMjpegDecoder::mppFrame2RGB(const MppFrame frame, uint8_t *data) {
   rga_info_t src_info;
   rga_info_t dst_info;
+  memset(&src_info, 0, sizeof(rga_info_t));
+  memset(dst_info, 0, sizeof(dst_info));
   int width = mpp_frame_get_width(frame);
   int height = mpp_frame_get_height(frame);
   int format = mpp_frame_get_fmt(frame);
@@ -121,7 +123,7 @@ bool RKMjpegDecoder::mppFrame2RGB(const MppFrame frame, uint8_t *data) {
   rga_set_rect(&dst_info.rect, 0, 0, width, height, width, height, RK_FORMAT_RGB_888);
   int ret = c_RkRgaBlit(&src_info, &dst_info, nullptr);
   if (ret) {
-    ROS_ERROR_STREAM("c_RkRgaBlit error " << ret);
+    ROS_ERROR_STREAM("c_RkRgaBlit error " << ret << " " << strerror(errno));
     return false;
   }
   return true;
@@ -187,6 +189,7 @@ bool RKMjpegDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, uint8_
     }
     CHECK_NOTNULL(dest);
     memcpy(dest, rgb_buffer_, width_ * height_ * 3);
+    return true;
   }
   return false;
 }

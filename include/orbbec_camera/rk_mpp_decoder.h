@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mjpeg_decoder.h"
+#include "jpeg_decoder.h"
 #include <rga/RgaApi.h>
 #include <rockchip/mpp_buffer.h>
 #include <rockchip/mpp_err.h>
