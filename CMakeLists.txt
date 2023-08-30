@@ -1,21 +1,51 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(orbbec_camera)
 
+# Compiler settings
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -fPIC -g3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -g3")
 set(CMAKE_BUILD_TYPE "Release")
+
+# Options
 option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
 option(USE_GST_HW_DECODER "Use Gstreamer hardware decoder" OFF)
+option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" ON)
 
-
-if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra)
+# Detect machine type
+execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
+execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
+if ((${MACHINES} MATCHES "x86_64") AND (${MACHINES_BIT} MATCHES "64"))
+  set(HOST_PLATFORM "x64")
+elseif (${MACHINES} MATCHES "arm")
+  set(HOST_PLATFORM "arm32")
+elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "64"))
+  set(HOST_PLATFORM "arm64")
+elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "32"))
+  set(HOST_PLATFORM "arm32")
 endif ()
 
+# Paths
+set(ORBBEC_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
+set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
+set(JETSON_MULTI_MEDIA_API_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/jetson_multimedia_api)
+set(JETSON_MULTI_MEDIA_API_CLASS_DIR ${JETSON_MULTI_MEDIA_API_DIR}/samples/common/classes)
+set(JETSON_MULTI_MEDIA_API_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_DIR}/include/)
+set(LIBJPEG8B_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}/libjpeg-8b)
+set(CUDA_PATH /usr/local/cuda)
+set(TEGRA_ARMABI /usr/lib/aarch64-linux-gnu/)
+
+set(NV_LIBRARIES -lpthread -lv4l2 -lEGL -lGLESv2 -lX11
+  -lnvbuf_utils -lnvjpeg -lnvosd -ldrm
+  -lcuda -lcudart
+)
+list(APPEND NV_LIBRARIES -L${CUDA_PATH}/lib64
+  -L${TEGRA_ARMABI} -L${TEGRA_ARMABI}/tegra)
+
+set(CMAKE_BUILD_RPATH ${ORBBEC_LIBS} $${CUDA_PATH}/lib64 ${TEGRA_ARMABI} ${TEGRA_ARMABI}/tegra)
+# Dependencies
 find_package(catkin REQUIRED
   camera_info_manager
   cv_bridge
@@ -32,70 +62,7 @@ find_package(catkin REQUIRED
   pluginlib
   nodelet
 )
-
-find_package(OpenCV REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED)
-find_package(Boost REQUIRED)
-
-find_package(PkgConfig REQUIRED)
-
-pkg_search_module(GLOG REQUIRED libglog)
-
-if (NOT GLOG_FOUND)
-  message(FATAL_ERROR "glog is not found")
-endif ()
-
-if (USE_RK_HW_DECODER)
-  pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
-  if (NOT RK_MPP_FOUND)
-    message(FATAL_ERROR "rockchip_mpp is not found")
-  endif ()
-  pkg_search_module(RGA REQUIRED librga)
-  if (NOT RGA_FOUND)
-    message(FATAL_ERROR "librga is not found")
-  endif ()
-endif ()
-
-if (USE_GST_HW_DECODER)
-  find_package(PkgConfig REQUIRED)
-  pkg_search_module(GST REQUIRED gstreamer-1.0)
-  if (NOT GST_FOUND)
-    message(FATAL_ERROR "gstreamer-1.0 is not found")
-  endif ()
-  pkg_search_module(GST_APP REQUIRED gstreamer-app-1.0)
-  if (NOT GST_APP_FOUND)
-    message(FATAL_ERROR "gstreamer-app-1.0 is not found")
-  endif ()
-endif ()
-
-execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
-execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
-message(STATUS "ORRBEC Machine : ${MACHINES}")
-message(STATUS "ORRBEC Machine Bits : ${MACHINES_BIT}")
-if ((${MACHINES} MATCHES "x86_64") AND (${MACHINES_BIT} MATCHES "64"))
-  set(HOST_PLATFORM "x64")
-elseif (${MACHINES} MATCHES "arm")
-  set(HOST_PLATFORM "arm32")
-elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "64"))
-  set(HOST_PLATFORM "arm64")
-elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "32"))
-  set(HOST_PLATFORM "arm32")
-endif ()
-
-set(ORBBEC_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
-set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
-
-add_message_files(
-  FILES
-  DeviceInfo.msg
-  Extrinsics.msg
-  Metadata.msg
-)
-
-add_service_files(
-  FILES
-  GetBool.srv
+set(SERVICE_FILES
   SetBool.srv
   GetCameraInfo.srv
   GetCameraParams.srv
@@ -106,12 +73,29 @@ add_service_files(
   SetString.srv
 )
 
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  sensor_msgs
-)
+find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(Boost REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLOG REQUIRED libglog)
 
+# Additional dependencies based on options
+if (USE_RK_HW_DECODER)
+  pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
+  pkg_search_module(RGA REQUIRED librga)
+endif ()
+
+if (USE_GST_HW_DECODER)
+  pkg_search_module(GST REQUIRED gstreamer-1.0)
+  pkg_search_module(GST_APP REQUIRED gstreamer-app-1.0)
+endif ()
+
+# Message generation
+add_message_files(FILES DeviceInfo.msg Extrinsics.msg Metadata.msg)
+add_service_files(FILES ${SERVICE_FILES})
+generate_messages(DEPENDENCIES std_msgs sensor_msgs)
+
+# Catkin package
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
@@ -130,10 +114,28 @@ catkin_package(
   tf2_ros
 )
 
-link_directories(${ORBBEC_LIBS}
-  ${catkin_LINK_DIRS}
-  ${OpenCV_LIBS})
+# Include directories
+include_directories(
+  ${LIBJPEG8B_INCLUDE_DIR}
+  ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${OpenCV_INCLUDED_DIRS}
+  ${ORBBEC_INCLUDE_DIR}
+  ${RK_MPP_INCLUDE_DIRS}
+  ${RGA_INCLUDE_DIR}
+  ${GST_INCLUDE_DIRS}
+  ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
+link_directories(
+  ${ORBBEC_LIBS}
+  ${RK_MPP_LIBRARY_DIRS}
+  ${RGA_LIBRARY_DIRS}
+  ${GST_LIBRARY_DIRS}
+  ${JETSON_MULTI_MEDIA_API_LIB_DIR}
+)
+# Source files
 set(SOURCE_FILES
   src/d2c_viewer.cpp
   src/ob_camera_node.cpp
@@ -145,6 +147,7 @@ set(SOURCE_FILES
   src/mjpeg_decoder.cpp
 )
 
+# Additional source files based on options
 if (USE_RK_HW_DECODER)
   add_definitions(-DUSE_RK_HW_DECODER)
   list(APPEND SOURCE_FILES src/rk_mpp_decoder.cpp)
@@ -155,142 +158,88 @@ if (USE_GST_HW_DECODER)
   list(APPEND SOURCE_FILES src/gst_decoder.cpp)
 endif ()
 
-set(INCLUDE_DIRS
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  ${catkin_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${OpenCV_INCLUDED_DIRS}
-  ${ORBBEC_INCLUDE_DIR}
-  ${RK_MPP_INCLUDE_DIRS}
-  ${RGA_INCLUDE_DIR}
-  ${GST_INCLUDE_DIRS}
-)
+if (USE_NV_HW_DECODER)
+  add_definitions(-DUSE_NV_HW_DECODER)
+  list(APPEND SOURCE_FILES src/jetson_nv_decoder.cpp)
+  # append jetson_multimedia_api source files
+  list(APPEND SOURCE_FILES
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvBuffer.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvElement.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvElementProfiler.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvJpegDecoder.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvJpegEncoder.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvLogging.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvUtils.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvV4l2Element.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvV4l2ElementPlane.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvVideoDecoder.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvVideoEncoder.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvVideoConverter.cpp
+  )
+endif ()
 
+# Link libraries
 set(LINK_LIBRARIES
   ${catkin_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
   ${OpenCV_LIBS}
   ${GLOG_LIBRARIES}
   -lOrbbecSDK
   -L${ORBBEC_LIBS}
+  ${NV_LIBRARIES}
 )
 
+# Add libraries
 add_library(${PROJECT_NAME} ${SOURCE_FILES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})
 
-
 add_library(${PROJECT_NAME}_nodelet ${SOURCE_FILES} src/ros_nodelet.cpp)
-target_include_directories(${PROJECT_NAME}_nodelet PUBLIC ${INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_nodelet ${LINK_LIBRARIES})
 
+# Additional link libraries based on options
 if (USE_RK_HW_DECODER)
-  target_link_libraries(${PROJECT_NAME}
-    ${RGA_LIBRARIES}
-    ${RK_MPP_LIBRARIES}
-  )
-  target_link_libraries(${PROJECT_NAME}_nodelet
-    ${RGA_LIBRARIES}
-    ${RK_MPP_LIBRARIES}
-  )
+  target_link_libraries(${PROJECT_NAME} ${RGA_LIBRARIES} ${RK_MPP_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}_nodelet ${RGA_LIBRARIES} ${RK_MPP_LIBRARIES})
 elseif (USE_GST_HW_DECODER)
-  target_link_libraries(${PROJECT_NAME}
-    ${GST_LIBRARIES}
-    ${GST_APP_LIBRARIES}
-  )
-  target_link_libraries(${PROJECT_NAME}_nodelet
-    ${GST_LIBRARIES}
-    ${GST_APP_LIBRARIES}
-  )
+  target_link_libraries(${PROJECT_NAME} ${GST_LIBRARIES} ${GST_APP_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}_nodelet ${GST_LIBRARIES} ${GST_APP_LIBRARIES})
+elseif (USE_NV_HW_DECODER)
+  target_link_libraries(${PROJECT_NAME} ${NV_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}_nodelet ${NV_LIBRARIES})
 endif ()
 
-add_dependencies(${PROJECT_NAME}
-  ${PROJECT_NAME}_generate_messages_cpp)
+# Add dependencies
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_generate_messages_cpp)
 
-add_dependencies(${PROJECT_NAME}_nodelet
-  ${PROJECT_NAME}_generate_messages_cpp)
-
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_nodelet ${catkin_EXPORTED_TARGETS})
-
-
-set(EXECUTABLES
-  ${PROJECT_NAME}_node
-  list_devices_node
-  ob_cleanup_shm_node
-  list_depth_work_mode_node
-  list_camera_profile_mode_node
-)
-
+# Macro for adding executables
 macro(add_orbbec_executable TARGET SOURCES)
   add_executable(${TARGET} ${SOURCES})
-  target_include_directories(${TARGET} PUBLIC ${INCLUDE_DIRS})
   target_link_libraries(${TARGET} ${LINK_LIBRARIES} ${PROJECT_NAME})
-  if (USE_RK_HW_DECODER)
-    target_link_libraries(${TARGET}
-      ${RGA_LIBRARIES}
-      ${RK_MPP_LIBRARIES}
-    )
-  elseif (USE_GST_HW_DECODER)
-    target_link_libraries(${TARGET}
-      ${GST_LIBRARIES}
-      ${GST_APP_LIBRARIES}
-    )
-  endif ()
 endmacro()
 
-# Define library and nodes
-
-
-# Add nodes using the macro
+# Add nodes
 add_orbbec_executable(list_devices_node src/list_devices_node.cpp)
 add_orbbec_executable(ob_cleanup_shm_node src/ob_cleanup_shm.cpp)
 add_orbbec_executable(list_depth_work_mode_node src/list_depth_work_mode.cpp)
 add_orbbec_executable(list_camera_profile_mode_node src/list_camera_profile_mode.cpp)
 add_orbbec_executable(orbbec_camera_node src/main.cpp)
 
-
-install(TARGETS ${PROJECT_NAME}
-  ${PROJECT_NAME}_nodelet
-  ${EXECUTABLES}
+# Install
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${EXECUTABLES}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY include
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
-)
+install(DIRECTORY include DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/)
+install(DIRECTORY ${ORBBEC_INCLUDE_DIR} DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/)
+install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(FILES nodelet_plugins.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-install(DIRECTORY
-  ${ORBBEC_INCLUDE_DIR}
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/
-)
-
-install(DIRECTORY launch
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-install(DIRECTORY config
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-install(FILES nodelet_plugins.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-install(DIRECTORY
-  ${ORBBEC_LIBS}/
+install(DIRECTORY ${ORBBEC_LIBS}/
   DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/
-  FILES_MATCHING PATTERN "*.so"
-  PATTERN "*.so.*"
+  FILES_MATCHING PATTERN " *.so"
+  PATTERN "*.so.* "
 )
 
-install(DIRECTORY
-  ${RGA_LIB_DIR}/
-  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/
-  FILES_MATCHING PATTERN "*.so"
-  PATTERN "*.so.*"
-)

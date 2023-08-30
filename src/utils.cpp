@@ -417,4 +417,17 @@ std::string fullAccelScaleRangeToString(const OBAccelFullScaleRange &full_scale_
   }
 }
 
+bool isValidJPEG(const std::shared_ptr<ob::ColorFrame>& frame) {
+  if (frame->dataSize() < 2) {
+    return false;
+  }
+  // cast frame->data() to uint8_t
+  const auto* data = static_cast<const uint8_t*>(frame->data());
+
+  if (data[0] == 0xFF && data[1] == 0xD8) {
+    return true;
+  }
+  return false;
+}
+
 }  // namespace orbbec_camera

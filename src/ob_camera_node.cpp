@@ -3,6 +3,8 @@
 #include "orbbec_camera/rk_mpp_decoder.h"
 #elif defined(USE_GST_HW_DECODER)
 #include "orbbec_camera/gst_decoder.h"
+#elif defined(USE_NV_HW_DECODER)
+#include "orbbec_camera/jetson_nv_decoder.h"
 #endif
 
 namespace orbbec_camera {
@@ -42,6 +44,8 @@ void OBCameraNode::init() {
 #elif defined(USE_GST_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<GstreamerJPEGDecoder>(
       width_[COLOR], height_[COLOR], jpeg_decoder_, video_convert_, jpeg_parse_);
+#elif defined(USE_NV_HW_DECODER)
+  mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
 #endif
 }
 
@@ -673,7 +677,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   auto frame_format = frame->format();
   if (frame->type() == OB_FRAME_COLOR && frame_format != OB_FORMAT_RGB888) {
     if (frame_format == OB_FORMAT_MJPG && mjpeg_decoder_) {
-#if defined(USE_RK_HW_DECODER) || defined(USE_GST_HW_DECODER)
+#if defined(USE_RK_HW_DECODER) || defined(USE_GST_HW_DECODER) || defined(USE_NV_HW_DECODER)
       CHECK_NOTNULL(mjpeg_decoder_.get());
       video_frame = frame->as<ob::ColorFrame>();
       const auto& color_frame = frame->as<ob::ColorFrame>();

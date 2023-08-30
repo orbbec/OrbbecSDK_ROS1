@@ -56,4 +56,6 @@ OBAccelFullScaleRange fullAccelScaleRangeFromString(std::string &full_scale_rang
 
 std::string fullAccelScaleRangeToString(const OBAccelFullScaleRange &full_scale_range);
 
+bool isValidJPEG(const std::shared_ptr<ob::ColorFrame> &frame);
+
 }  // namespace orbbec_camera
