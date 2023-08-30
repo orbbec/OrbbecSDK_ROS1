@@ -24,6 +24,8 @@
 #include "orbbec_camera/GetCameraParams.h"
 #include <boost/optional.hpp>
 
+#include "jpeg_decoder.h"
+
 namespace orbbec_camera {
 class OBCameraNode {
  public:
@@ -65,6 +67,8 @@ class OBCameraNode {
 
   void readDefaultWhiteBalance();
 
+  std::shared_ptr<ob::Frame> softwareDecodeColorFrame(const std::shared_ptr<ob::Frame>& frame);
+
   void onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                           const stream_index_pair& stream_index);
 
@@ -99,7 +103,6 @@ class OBCameraNode {
   void startGyro();
 
   void startIMU(const stream_index_pair& stream_index);
-
 
   void startIMU();
 
@@ -359,6 +362,12 @@ class OBCameraNode {
   double angular_vel_cov_ = 0.0001;
   std::deque<IMUData> imu_history_;
   IMUData accel_data_{ACCEL, {0, 0, 0}, -1.0};
+  // mjpeg decoder
+  std::shared_ptr<JPEGDecoder> mjpeg_decoder_ = nullptr;
+  uint8_t* rgb_buffer_ = nullptr;
+  std::string jpeg_decoder_ = "avdec_mjpeg";  // avdec_mjpeg, mppjpegdec, nvjpegdec, jpegdec
+  std::string jpeg_parse_ = "jpegparse";
+  std::string video_convert_ = "videoconvert";  // videoconvert, nvvidconv
 };
 
 }  // namespace orbbec_camera

@@ -357,37 +357,34 @@ roslaunch orbbec_camera multi_camera.launch
 
 ## 启动文件
 
-| product serials     | launch file           |
-|---------------------|-----------------------|
-| astra+              | astra_adv.launch      |
-| astra               | astra.launch          |
-| astra2              | astra2.launch         |
-| astra mini          | astra_mini.launch     |
-| astra mini pro      | astra_mini_pro.launch |
-| astra pro           | astra_pro.launch      |
-| astra stereo s      | stereo_s_u3.launch    |
-| dabai               | dabai.launch          |
-| dabai d1            | dabai_d1.launch       |
-| dabai dcw           | dabai_dcw.launch      |
-| dabai dw            | dabai_dw.launch       |
-| dabai pro           | dabai_pro.launch      |
-| deeya               | deeya.launch          |
-| femto               | femto.launch          |
-| femto mega          | femto_mega.launch     |
-| femto w             | femto_w.launch        |
-| gemini              | gemini.launch         |
-| gemini              | gemini.launch         |
-| gemini2 / dabai DCL | gemini2.launch        |
-| gemini2L            | gemini2L.launch       |
-| gemini e            | gemini_e.launch       |
-| gemini e lite       | gemini_e_lite.launch  |
+| product serials                           | launch file          |
+| ----------------------------------------- | -------------------- |
+| astra+                                    | astra_adv.launch     |
+| astra/astra mini/astra mini pro/astra pro | astra.launch         |
+| astra2                                    | astra2.launch        |
+| astra stereo s                            | stereo_s_u3.launch   |
+| dabai                                     | dabai.launch         |
+| dabai d1                                  | dabai_d1.launch      |
+| dabai dcw                                 | dabai_dcw.launch     |
+| dabai dw                                  | dabai_dw.launch      |
+| dabai pro                                 | dabai_pro.launch     |
+| deeya                                     | deeya.launch         |
+| femto                                     | femto.launch         |
+| femto mega                                | femto_mega.launch    |
+| femto w                                   | femto_w.launch       |
+| gemini                                    | gemini.launch        |
+| gemini                                    | gemini.launch        |
+| gemini2 / dabai DCL                       | gemini2.launch       |
+| gemini2L                                  | gemini2L.launch      |
+| gemini e                                  | gemini_e.launch      |
+| gemini e lite                             | gemini_e_lite.launch |
 
 实际上所有启动文件几乎都是相同的，只是有的相机默认参数不同，请根据自己的相机选择对应的启动文件，并根据你的需要调整。
 
 ## 已经支持的硬件产品列表
 
 | **SDK version** | **products list** | **firmware version**        |
-|-----------------|-------------------|-----------------------------|
+| --------------- | ----------------- | --------------------------- |
 | v1.6.2          | Astra2            | 2.8.20                      |
 |                 | Gemini2 L         | 1.4.32                      |
 |                 | Gemini2           | 1.4.60                      |

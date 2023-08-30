@@ -1,4 +1,10 @@
 #include "orbbec_camera/ob_camera_node.h"
+#if defined(USE_RK_HW_DECODER)
+#include "orbbec_camera/rk_mpp_decoder.h"
+#elif defined(USE_GST_HW_DECODER)
+#include "orbbec_camera/gst_decoder.h"
+#endif
+
 namespace orbbec_camera {
 OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
                            std::shared_ptr<ob::Device> device)
@@ -31,6 +37,12 @@ void OBCameraNode::init() {
   readDefaultGain();
   readDefaultWhiteBalance();
   is_initialized_ = true;
+#if defined(USE_RK_HW_DECODER)
+  mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
+#elif defined(USE_GST_HW_DECODER)
+  mjpeg_decoder_ = std::make_shared<GstreamerJPEGDecoder>(
+      width_[COLOR], height_[COLOR], jpeg_decoder_, video_convert_, jpeg_parse_);
+#endif
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
@@ -42,6 +54,7 @@ OBCameraNode::~OBCameraNode() {
     tf_thread_->join();
   }
   stopStreams();
+  delete[] rgb_buffer_;
 }
 
 void OBCameraNode::getParameters() {
@@ -124,6 +137,9 @@ void OBCameraNode::getParameters() {
         nh_private_.param<std::string>(param_name, default_optical_frame_id);
     depth_aligned_frame_id_[stream_index] = stream_name_[COLOR] + "_optical_frame";
   }
+  jpeg_decoder_ = nh_private_.param<std::string>("jpeg_decoder", "avdec_mjpeg");
+  jpeg_parse_ = nh_private_.param<std::string>("jpeg_parse", "jpegparse");
+  video_convert_ = nh_private_.param<std::string>("video_convert", "videoconvert");
 }
 
 void OBCameraNode::startStreams() {
@@ -633,23 +649,51 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
   }
 }
 
+std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
+    const std::shared_ptr<ob::Frame>& frame) {
+  if (!setupFormatConvertType(frame->format())) {
+    ROS_ERROR_STREAM("Unsupported color format: " << frame->format());
+    return nullptr;
+  }
+  auto covert_frame = format_convert_filter_.process(frame);
+  if (covert_frame == nullptr) {
+    ROS_ERROR_STREAM("Format " << frame->format() << " convert to RGB888 failed");
+    return nullptr;
+  }
+  return covert_frame;
+}
+
 void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                                       const stream_index_pair& stream_index) {
   if (frame == nullptr) {
     return;
   }
   std::shared_ptr<ob::VideoFrame> video_frame;
-  if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_RGB888) {
-    if (!setupFormatConvertType(frame->format())) {
-      ROS_ERROR_STREAM("Unsupported color format: " << frame->format());
-      return;
+  bool hw_decode = false;
+  auto frame_format = frame->format();
+  if (frame->type() == OB_FRAME_COLOR && frame_format != OB_FORMAT_RGB888) {
+    if (frame_format == OB_FORMAT_MJPG && mjpeg_decoder_) {
+#if defined(USE_RK_HW_DECODER) || defined(USE_GST_HW_DECODER)
+      CHECK_NOTNULL(mjpeg_decoder_.get());
+      video_frame = frame->as<ob::ColorFrame>();
+      const auto& color_frame = frame->as<ob::ColorFrame>();
+      if (rgb_buffer_ == nullptr) {
+        rgb_buffer_ = new uint8_t[video_frame->width() * video_frame->height() * 3];
+      }
+      bool ret = mjpeg_decoder_->decode(color_frame, rgb_buffer_);
+      if (!ret) {
+        ROS_ERROR_STREAM("Decode frame failed");
+        return;
+      }
+      hw_decode = true;
+#else
+      auto covert_frame = softwareDecodeColorFrame(frame);
+      video_frame = covert_frame->as<ob::ColorFrame>();
+#endif
+    } else {
+      auto covert_frame = softwareDecodeColorFrame(frame);
+      video_frame = covert_frame->as<ob::ColorFrame>();
     }
-    auto covert_frame = format_convert_filter_.process(frame);
-    if (covert_frame == nullptr) {
-      ROS_ERROR_STREAM("Format " << frame->format() << " convert to RGB888 failed");
-      return;
-    }
-    video_frame = covert_frame->as<ob::ColorFrame>();
   } else if (frame->type() == OB_FRAME_COLOR) {
     video_frame = frame->as<ob::ColorFrame>();
   } else if (frame->type() == OB_FRAME_DEPTH) {
@@ -670,7 +714,12 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   if (image.empty() || image.cols != width || image.rows != height) {
     image.create(height, width, image_format_[stream_index]);
   }
-  image.data = (uchar*)video_frame->data();
+  if (hw_decode) {
+    memcpy(image.data, rgb_buffer_, width * height * 3);
+  } else {
+    memcpy(image.data, video_frame->data(), video_frame->dataSize());
+  }
+
   if (stream_index == DEPTH) {
     auto depth_scale = video_frame->as<ob::DepthFrame>()->getValueScale();
     image = image * depth_scale;
