@@ -23,6 +23,8 @@
 namespace orbbec_camera {
 OBFormat OBFormatFromString(const std::string &format);
 
+std::string OBFormatToString(const OBFormat &format);
+
 std::string ObDeviceTypeToString(const OBDeviceType &type);
 
 sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
@@ -57,5 +59,7 @@ OBAccelFullScaleRange fullAccelScaleRangeFromString(std::string &full_scale_rang
 std::string fullAccelScaleRangeToString(const OBAccelFullScaleRange &full_scale_range);
 
 bool isValidJPEG(const std::shared_ptr<ob::ColorFrame> &frame);
+
+std::string fourccToString(const uint32_t fourcc);
 
 }  // namespace orbbec_camera

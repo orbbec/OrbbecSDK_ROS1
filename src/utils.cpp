@@ -65,6 +65,61 @@ OBFormat OBFormatFromString(const std::string &format) {
   }
 }
 
+std::string OBFormatToString(const OBFormat &format) {
+  switch (format) {
+    case OB_FORMAT_MJPG:
+      return "MJPG";
+    case OB_FORMAT_YUYV:
+      return "YUYV";
+    case OB_FORMAT_YUY2:
+      return "YUYV2";
+    case OB_FORMAT_UYVY:
+      return "UYVY";
+    case OB_FORMAT_NV12:
+      return "NV12";
+    case OB_FORMAT_NV21:
+      return "NV21";
+    case OB_FORMAT_H264:
+      return "H264";
+    case OB_FORMAT_H265:
+      return "H265";
+    case OB_FORMAT_Y16:
+      return "Y16";
+    case OB_FORMAT_Y8:
+      return "Y8";
+    case OB_FORMAT_Y10:
+      return "Y10";
+    case OB_FORMAT_Y11:
+      return "Y11";
+    case OB_FORMAT_Y12:
+      return "Y12";
+    case OB_FORMAT_GRAY:
+      return "GRAY";
+    case OB_FORMAT_HEVC:
+      return "HEVC";
+    case OB_FORMAT_I420:
+      return "I420";
+    case OB_FORMAT_ACCEL:
+      return "ACCEL";
+    case OB_FORMAT_GYRO:
+      return "GYRO";
+    case OB_FORMAT_POINT:
+      return "POINT";
+    case OB_FORMAT_RGB_POINT:
+      return "RGB_POINT";
+    case OB_FORMAT_RLE:
+      return "REL";
+    case OB_FORMAT_RGB888:
+      return "RGB888";
+    case OB_FORMAT_BGR:
+      return "BGR";
+    case OB_FORMAT_Y14:
+      return "Y14";
+    default:
+      return "UNKNOWN";
+  }
+}
+
 std::string ObDeviceTypeToString(const OBDeviceType &type) {
   switch (type) {
     case OBDeviceType::OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA:
@@ -417,17 +472,28 @@ std::string fullAccelScaleRangeToString(const OBAccelFullScaleRange &full_scale_
   }
 }
 
-bool isValidJPEG(const std::shared_ptr<ob::ColorFrame>& frame) {
-  if (frame->dataSize() < 2) {
+bool isValidJPEG(const std::shared_ptr<ob::ColorFrame> &frame) {
+  if (frame->dataSize() < 2) {  // Checking both start and end markers, so minimal size is 4
     return false;
   }
-  // cast frame->data() to uint8_t
-  const auto* data = static_cast<const uint8_t*>(frame->data());
 
-  if (data[0] == 0xFF && data[1] == 0xD8) {
-    return true;
+  const auto *data = static_cast<const uint8_t *>(frame->data());
+
+  // Check for JPEG start marker
+  if (data[0] != 0xFF || data[1] != 0xD8) {
+    return false;
   }
-  return false;
+
+  return true;
+}
+
+std::string fourccToString(const uint32_t fourcc) {
+  std::string str;
+  str += (fourcc & 0xFF);
+  str += ((fourcc >> 8) & 0xFF);
+  str += ((fourcc >> 16) & 0xFF);
+  str += ((fourcc >> 24) & 0xFF);
+  return str;
 }
 
 }  // namespace orbbec_camera

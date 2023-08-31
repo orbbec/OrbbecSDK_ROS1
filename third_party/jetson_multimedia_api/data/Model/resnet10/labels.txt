@@ -1,5 +1,0 @@
-Car
-RoadSign
-TwoWheeler
-Person
-

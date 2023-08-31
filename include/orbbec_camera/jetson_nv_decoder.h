@@ -1,5 +1,7 @@
 #pragma once
 #include "utils.h"
+#include <opencv2/opencv.hpp>
+
 #include "jpeg_decoder.h"
 #include <NvJpegDecoder.h>
 #include <NvUtils.h>
@@ -18,12 +20,6 @@ class JetsonNvJPEGDecoder : public JPEGDecoder {
   bool decode(const std::shared_ptr<ob::ColorFrame>& frame, uint8_t* dest) override;
 
  private:
-  int width_;
-  int height_;
   NvJPEGDecoder* decoder_;
-  NvBuffer* converted_buffer_ = nullptr;
-  NvBuffer* output_buffer_ = nullptr;
-  NvVideoConverter* converter_ = nullptr;
-  int dmabuff_fd_ = -1;
 };
 }  // namespace orbbec_camera

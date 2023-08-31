@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(orbbec_camera)
+project(orbbec_camera CXX)
 
 # Compiler settings
 set(CMAKE_CXX_STANDARD 11)
@@ -13,7 +13,9 @@ set(CMAKE_BUILD_TYPE "Release")
 option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
 option(USE_GST_HW_DECODER "Use Gstreamer hardware decoder" OFF)
 option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" ON)
-
+if (USE_NV_HW_DECODER)
+  enable_language(CUDA)
+endif ()
 # Detect machine type
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
 execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
@@ -37,8 +39,8 @@ set(LIBJPEG8B_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}/libjpeg-8b)
 set(CUDA_PATH /usr/local/cuda)
 set(TEGRA_ARMABI /usr/lib/aarch64-linux-gnu/)
 
-set(NV_LIBRARIES -lpthread -lv4l2 -lEGL -lGLESv2 -lX11
-  -lnvbuf_utils -lnvjpeg -lnvosd -ldrm
+set(NV_LIBRARIES
+  -lnvbuf_utils -lnvjpeg -lv4l2
   -lcuda -lcudart
 )
 list(APPEND NV_LIBRARIES -L${CUDA_PATH}/lib64
@@ -63,6 +65,7 @@ find_package(catkin REQUIRED
   nodelet
 )
 set(SERVICE_FILES
+  GetBool.srv
   SetBool.srv
   GetCameraInfo.srv
   GetCameraParams.srv
@@ -161,6 +164,7 @@ endif ()
 if (USE_NV_HW_DECODER)
   add_definitions(-DUSE_NV_HW_DECODER)
   list(APPEND SOURCE_FILES src/jetson_nv_decoder.cpp)
+  list(APPEND SOURCE_FILES src/yuv2rgb.cu)
   # append jetson_multimedia_api source files
   list(APPEND SOURCE_FILES
     ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvBuffer.cpp
@@ -185,7 +189,6 @@ set(LINK_LIBRARIES
   ${GLOG_LIBRARIES}
   -lOrbbecSDK
   -L${ORBBEC_LIBS}
-  ${NV_LIBRARIES}
 )
 
 # Add libraries
