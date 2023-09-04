@@ -7,21 +7,8 @@
 
 namespace orbbec_camera {
 
-bool isValidJPEG(const std::shared_ptr<ob::ColorFrame>& frame) {
-  if (frame->dataSize() < 2) {
-    return false;
-  }
-  // cast frame->data() to uint8_t
-  const auto* data = static_cast<const uint8_t*>(frame->data());
-
-  if (data[0] == 0xFF && data[1] == 0xD8) {
-    return true;
-  }
-  return false;
-}
-
 GstreamerJPEGDecoder::GstreamerJPEGDecoder(int width, int height, std::string jpeg_decoder,
-                                             std::string video_convert, std::string jpeg_parse)
+                                           std::string video_convert, std::string jpeg_parse)
     : JPEGDecoder(width, height),
       jpeg_decoder_(std::move(jpeg_decoder)),
       video_convert_(std::move(video_convert)),

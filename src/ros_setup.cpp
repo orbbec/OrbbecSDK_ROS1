@@ -190,7 +190,7 @@ void OBCameraNode::setupProfiles() {
     ROS_INFO_STREAM(" stream " << stream_name_[stream_index] << " is enabled - width: "
                                << width_[stream_index] << ", height: " << height_[stream_index]
                                << ", fps: " << fps_[stream_index] << ", "
-                               << "Format: " << selected_profile->format());
+                               << "Format: " << OBFormatToString(format_[stream_index]));
   }
   if (!enable_pipeline_ && (depth_registration_ || enable_colored_point_cloud_)) {
     int index = getCameraParamIndex();
