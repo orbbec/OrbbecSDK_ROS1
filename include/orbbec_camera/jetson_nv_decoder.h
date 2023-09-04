@@ -7,9 +7,7 @@
 #include <NvUtils.h>
 #include <NvV4l2Element.h>
 #include <NvJpegDecoder.h>
-#include <nvbuf_utils.h>
 #include <NvV4l2Element.h>
-#include <NvVideoConverter.h>
 
 namespace orbbec_camera {
 class JetsonNvJPEGDecoder : public JPEGDecoder {
@@ -21,5 +19,6 @@ class JetsonNvJPEGDecoder : public JPEGDecoder {
 
  private:
   NvJPEGDecoder* decoder_;
+  int save_count_ = 0;
 };
 }  // namespace orbbec_camera

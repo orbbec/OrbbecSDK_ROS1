@@ -32,7 +32,7 @@ endif ()
 # Paths
 set(ORBBEC_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
 set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
-set(JETSON_MULTI_MEDIA_API_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/jetson_multimedia_api)
+set(JETSON_MULTI_MEDIA_API_DIR /usr/src/jetson_multimedia_api)
 set(JETSON_MULTI_MEDIA_API_CLASS_DIR ${JETSON_MULTI_MEDIA_API_DIR}/samples/common/classes)
 set(JETSON_MULTI_MEDIA_API_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_DIR}/include/)
 set(LIBJPEG8B_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}/libjpeg-8b)
@@ -40,7 +40,7 @@ set(CUDA_PATH /usr/local/cuda)
 set(TEGRA_ARMABI /usr/lib/aarch64-linux-gnu/)
 
 set(NV_LIBRARIES
-  -lnvbuf_utils -lnvjpeg -lv4l2
+   -lnvjpeg -lv4l2 -lnvbufsurface -lnvbufsurftransform
   -lcuda -lcudart
 )
 list(APPEND NV_LIBRARIES -L${CUDA_PATH}/lib64
@@ -178,7 +178,7 @@ if (USE_NV_HW_DECODER)
     ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvV4l2ElementPlane.cpp
     ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvVideoDecoder.cpp
     ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvVideoEncoder.cpp
-    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvVideoConverter.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvBufSurface.cpp
   )
 endif ()
 

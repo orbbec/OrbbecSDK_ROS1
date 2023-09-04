@@ -26,8 +26,8 @@ __global__ void yuv_to_rgb_kernel(uint8_t* y_plane, uint8_t* u_plane, uint8_t* v
 
   if (x < width && y < height) {
     float y_val = y_plane[y * width + x];
-    float u_val = u_plane[(y / 2) * (width / 2) + (x / 2)] - 128;
-    float v_val = v_plane[(y / 2) * (width / 2) + (x / 2)] - 128;
+    float v_val = u_plane[(y / 2) * (width / 2) + (x / 2)] - 128;
+    float u_val = v_plane[(y / 2) * (width / 2) + (x / 2)] - 128;
 
     float r = y_val + 1.402 * v_val;
     float g = y_val - 0.344 * u_val - 0.714 * v_val;
