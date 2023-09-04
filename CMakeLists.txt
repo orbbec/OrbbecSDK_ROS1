@@ -29,19 +29,19 @@ endif ()
 # Paths
 set(ORBBEC_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
 set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
-set(JETSON_MULTI_MEDIA_API_DIR /usr/src/jetson_multimedia_api)
-set(JETSON_MULTI_MEDIA_API_CLASS_DIR ${JETSON_MULTI_MEDIA_API_DIR}/samples/common/classes)
-set(JETSON_MULTI_MEDIA_API_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_DIR}/include/)
-set(LIBJPEG8B_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}/libjpeg-8b)
-set(TEGRA_ARMABI /usr/lib/aarch64-linux-gnu/)
-
-set(NV_LIBRARIES
-   -lnvjpeg  -lnvbufsurface -lnvbufsurftransform -lyuv -lv4l2
-)
-list(APPEND NV_LIBRARIES -L${CUDA_PATH}/lib64
-  -L${TEGRA_ARMABI} -L${TEGRA_ARMABI}/tegra)
-
-set(CMAKE_BUILD_RPATH ${ORBBEC_LIBS} $${CUDA_PATH}/lib64 ${TEGRA_ARMABI} ${TEGRA_ARMABI}/tegra)
+if (USE_NV_HW_DECODER)
+  set(JETSON_MULTI_MEDIA_API_DIR /usr/src/jetson_multimedia_api)
+  set(JETSON_MULTI_MEDIA_API_CLASS_DIR ${JETSON_MULTI_MEDIA_API_DIR}/samples/common/classes)
+  set(JETSON_MULTI_MEDIA_API_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_DIR}/include/)
+  set(LIBJPEG8B_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}/libjpeg-8b)
+  set(TEGRA_ARMABI /usr/lib/aarch64-linux-gnu/)
+  set(NV_LIBRARIES
+    -lnvjpeg -lnvbufsurface -lnvbufsurftransform -lyuv -lv4l2
+  )
+  list(APPEND NV_LIBRARIES -L${CUDA_PATH}/lib64
+    -L${TEGRA_ARMABI} -L${TEGRA_ARMABI}/tegra)
+  set(CMAKE_BUILD_RPATH ${ORBBEC_LIBS} $${CUDA_PATH}/lib64 ${TEGRA_ARMABI} ${TEGRA_ARMABI}/tegra)
+endif ()
 # Dependencies
 find_package(catkin REQUIRED
   camera_info_manager
