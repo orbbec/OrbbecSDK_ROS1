@@ -13,9 +13,6 @@ set(CMAKE_BUILD_TYPE "Release")
 option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
 option(USE_GST_HW_DECODER "Use Gstreamer hardware decoder" OFF)
 option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" OFF)
-if (USE_NV_HW_DECODER)
-  enable_language(CUDA)
-endif ()
 # Detect machine type
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
 execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
@@ -36,12 +33,10 @@ set(JETSON_MULTI_MEDIA_API_DIR /usr/src/jetson_multimedia_api)
 set(JETSON_MULTI_MEDIA_API_CLASS_DIR ${JETSON_MULTI_MEDIA_API_DIR}/samples/common/classes)
 set(JETSON_MULTI_MEDIA_API_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_DIR}/include/)
 set(LIBJPEG8B_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}/libjpeg-8b)
-set(CUDA_PATH /usr/local/cuda)
 set(TEGRA_ARMABI /usr/lib/aarch64-linux-gnu/)
 
 set(NV_LIBRARIES
-   -lnvjpeg -lv4l2 -lnvbufsurface -lnvbufsurftransform
-  -lcuda -lcudart
+   -lnvjpeg  -lnvbufsurface -lnvbufsurftransform -lyuv -lv4l2
 )
 list(APPEND NV_LIBRARIES -L${CUDA_PATH}/lib64
   -L${TEGRA_ARMABI} -L${TEGRA_ARMABI}/tegra)
@@ -80,6 +75,7 @@ find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
 pkg_search_module(GLOG REQUIRED libglog)
 
 # Additional dependencies based on options
@@ -137,6 +133,7 @@ link_directories(
   ${RGA_LIBRARY_DIRS}
   ${GST_LIBRARY_DIRS}
   ${JETSON_MULTI_MEDIA_API_LIB_DIR}
+  Threads::Threads
 )
 # Source files
 set(SOURCE_FILES
@@ -164,7 +161,6 @@ endif ()
 if (USE_NV_HW_DECODER)
   add_definitions(-DUSE_NV_HW_DECODER)
   list(APPEND SOURCE_FILES src/jetson_nv_decoder.cpp)
-  list(APPEND SOURCE_FILES src/yuv2rgb.cu)
   # append jetson_multimedia_api source files
   list(APPEND SOURCE_FILES
     ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvBuffer.cpp

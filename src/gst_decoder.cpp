@@ -4,6 +4,7 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 #include <glog/logging.h>
+#include <orbbec_camera/utils.h>
 
 namespace orbbec_camera {
 
