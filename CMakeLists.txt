@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(orbbec_camera CXX)
+project(orbbec_camera)
 
 # Compiler settings
 set(CMAKE_CXX_STANDARD 11)
@@ -12,7 +12,7 @@ set(CMAKE_BUILD_TYPE "Release")
 # Options
 option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
 option(USE_GST_HW_DECODER "Use Gstreamer hardware decoder" OFF)
-option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" ON)
+option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" OFF)
 if (USE_NV_HW_DECODER)
   enable_language(CUDA)
 endif ()
