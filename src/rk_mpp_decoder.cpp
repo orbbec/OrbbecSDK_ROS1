@@ -1,10 +1,16 @@
 #include "orbbec_camera/rk_mpp_decoder.h"
 #include <ros/ros.h>
 #include <glog/logging.h>
+#ifdef USE_LIBYUV
+#include <libyuv.h>
+#else
+#include <rga/RgaApi.h>
+#endif
 
 namespace orbbec_camera {
 
-RKMjpegDecoder::RKMjpegDecoder(int width, int height) : MjpegDecoder(width, height) {
+RKMjpegDecoder::RKMjpegDecoder(int width, int height) : JPEGDecoder(width, height) {
+  rgb_buffer_ = new uint8_t[width_ * height_ * 3];
   MPP_RET ret = mpp_create(&mpp_ctx_, &mpp_api_);
   if (ret != MPP_OK) {
     ROS_ERROR_STREAM("mpp_create failed, ret = " << ret);
@@ -93,15 +99,16 @@ RKMjpegDecoder::~RKMjpegDecoder() {
     mpp_destroy(mpp_ctx_);
     mpp_ctx_ = nullptr;
   }
+  if (rgb_buffer_) {
+    delete[] rgb_buffer_;
+    rgb_buffer_ = nullptr;
+  }
 }
 
 bool RKMjpegDecoder::mppFrame2RGB(const MppFrame frame, uint8_t *data) {
-  rga_info_t src_info;
-  rga_info_t dst_info;
-  memset(&src_info, 0, sizeof(rga_info_t));
-  memset(dst_info, 0, sizeof(dst_info));
-  int width = mpp_frame_get_width(frame);
   int height = mpp_frame_get_height(frame);
+  int width = mpp_frame_get_width(frame);
+
   int format = mpp_frame_get_fmt(frame);
   MppBuffer buffer = mpp_frame_get_buffer(frame);
   CHECK_EQ(width, width_);
@@ -111,6 +118,18 @@ bool RKMjpegDecoder::mppFrame2RGB(const MppFrame frame, uint8_t *data) {
   CHECK_EQ(height, height_);
   memset(data, 0, width * height * 3);
   auto buffer_ptr = mpp_buffer_get_ptr(buffer);
+#if defined(USE_LIBYUV)
+  // YUV420SP to RGB
+  libyuv::I420ToRGB24((const uint8_t *)buffer_ptr, width,
+                      (const uint8_t *)buffer_ptr + width * height, width / 2,
+                      (const uint8_t *)buffer_ptr + width * height * 5 / 4, width / 2, data,
+                      width * 3, width, height);
+#else
+  rga_info_t src_info;
+  rga_info_t dst_info;
+  memset(&src_info, 0, sizeof(rga_info_t));
+  memset(dst_info, 0, sizeof(dst_info));
+
   src_info.fd = -1;
   src_info.mmuFlag = 1;
   src_info.virAddr = buffer_ptr;
@@ -127,6 +146,7 @@ bool RKMjpegDecoder::mppFrame2RGB(const MppFrame frame, uint8_t *data) {
     return false;
   }
   return true;
+#endif
 }
 
 bool RKMjpegDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, uint8_t *dest) {

@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -g3")
 set(CMAKE_BUILD_TYPE "Release")
 
 # Options
-option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
+option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" ON)
 option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" OFF)
 # Detect machine type
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
@@ -83,7 +83,7 @@ if (USE_RK_HW_DECODER)
   if (NOT RK_MPP_FOUND)
     message(FATAL_ERROR "Rockchip MPP not found")
   endif ()
-  pkg_search_module(RGA REQUIRED librga)
+  pkg_search_module(RGA librga)
   if (NOT RGA_FOUND)
     message(STATUS "Rockchip RGA not found, use libyuv instead")
     add_definitions(-DUSE_LIBYUV)

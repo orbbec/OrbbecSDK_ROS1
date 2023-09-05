@@ -1,7 +1,6 @@
 #pragma once
 
 #include "jpeg_decoder.h"
-#include <rga/RgaApi.h>
 #include <rockchip/mpp_buffer.h>
 #include <rockchip/mpp_err.h>
 #include <rockchip/mpp_frame.h>
@@ -13,7 +12,8 @@
 #define MPP_ALIGN(x, a) (((x) + (a)-1) & ~((a)-1))
 
 namespace orbbec_camera {
-class RKMjpegDecoder : public MjpegDecoder {
+
+class RKMjpegDecoder : public JPEGDecoder {
  public:
   RKMjpegDecoder(int width, int height);
 
@@ -36,6 +36,7 @@ class RKMjpegDecoder : public MjpegDecoder {
   MppBufferGroup mpp_packet_group_ = nullptr;
   MppTask mpp_task_ = nullptr;
   uint32_t need_split_ = 0;
+  uint8_t *rgb_buffer_ = nullptr;
 };
 
 }  // namespace orbbec_camera
