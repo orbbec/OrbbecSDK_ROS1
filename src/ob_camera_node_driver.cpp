@@ -236,7 +236,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& dev
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
   if (!isOpenNIDevice(device_info_->pid())) {
-    ctx_->enableMultiDeviceSync(0);
+    ctx_->enableDeviceClockSync(0);
   }
   CHECK_NOTNULL(device_info_.get());
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
@@ -365,7 +365,7 @@ void OBCameraNodeDriver::deviceCountUpdate() {
 void OBCameraNodeDriver::syncTimeThread() {
   while (is_alive_ && ros::ok()) {
     if (device_connected_ && device_info_ && !isOpenNIDevice(device_info_->pid())) {
-      ctx_->enableMultiDeviceSync(0);
+      ctx_->enableDeviceClockSync(0);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
   }
