@@ -43,7 +43,7 @@ int ROSOBSensor::getExposure() {
       data = device_->getIntProperty(OB_PROP_IR_EXPOSURE_INT);
       break;
     default:
-      ROS_ERROR_STREAM(name_ << " does not support get exposure");
+      ROS_INFO_STREAM(name_ << " does not support get exposure");
       break;
   }
   return data;
@@ -61,7 +61,7 @@ void ROSOBSensor::setExposure(int data) {
       device_->setIntProperty(OB_PROP_IR_EXPOSURE_INT, data);
       break;
     default:
-      ROS_ERROR_STREAM(name_ << " does not support set exposure");
+      ROS_INFO_STREAM(name_ << " does not support set exposure");
       break;
   }
 }
@@ -79,7 +79,7 @@ int ROSOBSensor::getGain() {
       data = device_->getIntProperty(OB_PROP_COLOR_GAIN_INT);
       break;
     default:
-      ROS_ERROR_STREAM(name_ << " does not support get gain");
+      ROS_INFO_STREAM(name_ << " does not support get gain");
       break;
   }
   return data;
@@ -97,7 +97,7 @@ void ROSOBSensor::setGain(int data) {
       device_->setIntProperty(OB_PROP_COLOR_GAIN_INT, data);
       break;
     default:
-      ROS_ERROR_STREAM(name_ << " does not support set gain");
+      ROS_INFO_STREAM(name_ << " does not support set gain");
       break;
   }
 }

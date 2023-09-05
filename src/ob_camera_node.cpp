@@ -701,7 +701,8 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     video_frame = frame->as<ob::ColorFrame>();
   } else if (frame->type() == OB_FRAME_DEPTH) {
     video_frame = frame->as<ob::DepthFrame>();
-  } else if (frame->type() == OB_FRAME_IR) {
+  } else if (frame->type() == OB_FRAME_IR || frame->type() == OB_FRAME_IR_LEFT ||
+             frame->type() == OB_FRAME_IR_RIGHT) {
     video_frame = frame->as<ob::IRFrame>();
   } else {
     ROS_ERROR_STREAM("Unsupported frame type: " << frame->type());
@@ -735,6 +736,8 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   } else if (!camera_params_ && (stream_index == DEPTH || stream_index == INFRA0)) {
     camera_params_ = getCameraDepthParam();
   }
+  std::string frame_id =
+      depth_registration_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
   if (camera_params_) {
     auto& intrinsic =
         stream_index == COLOR ? camera_params_->rgbIntrinsic : camera_params_->depthIntrinsic;
@@ -746,6 +749,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     camera_info.width = width;
     camera_info.height = height;
     camera_info.header.stamp = timestamp;
+    camera_info.header.frame_id = frame_id;
     camera_info_publisher.publish(camera_info);
   }
   CHECK(image_publishers_.count(stream_index));
@@ -756,8 +760,8 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   image_msg->header.stamp = timestamp;
   image_msg->is_bigendian = false;
   image_msg->step = width * unit_step_size_[stream_index];
-  image_msg->header.frame_id =
-      depth_registration_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
+  image_msg->header.frame_id = frame_id;
+
   if (!flip_images_[stream_index]) {
     image_publisher.publish(image_msg);
   } else {
