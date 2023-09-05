@@ -10,12 +10,9 @@
 #include <libyuv.h>
 namespace orbbec_camera {
 
-JetsonNvJPEGDecoder::JetsonNvJPEGDecoder(int width, int height) : JPEGDecoder(width, height) {
-}
+JetsonNvJPEGDecoder::JetsonNvJPEGDecoder(int width, int height) : JPEGDecoder(width, height) {}
 
-JetsonNvJPEGDecoder::~JetsonNvJPEGDecoder() {
-  delete decoder_;
-}
+JetsonNvJPEGDecoder::~JetsonNvJPEGDecoder() { delete decoder_; }
 
 bool JetsonNvJPEGDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, uint8_t *dest) {
   if (!isValidJPEG(frame)) {
@@ -30,14 +27,15 @@ bool JetsonNvJPEGDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, u
   while (data[data_size - 1] == 0) {
     data_size--;
   }
-  auto null_file = freopen("/dev/null", "w", stderr);
-  (void)null_file;  // suppress warning (unused variable
-
   int fd = -1;
   decoder_ = NvJPEGDecoder::createJPEGDecoder("jpegdec");
+  std::shared_ptr<int> decoder_deleter(nullptr, [&](int *) { delete decoder_; });
   decoder_->decodeToFd(fd, data, data_size, pixfmt, width, height);
   if (pixfmt != V4L2_PIX_FMT_YUV422M) {
     ROS_ERROR_STREAM("Unexpected pixfmt: " << pixfmt);
+    if (fd != -1) {
+      close(fd);
+    }
     return false;
   }
   if (width != width_ || height != height_) {
@@ -51,8 +49,8 @@ bool JetsonNvJPEGDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, u
   nvbufParams.height = height;
   nvbufParams.layout = NVBUF_LAYOUT_PITCH;
   nvbufParams.colorFormat = NVBUF_COLOR_FORMAT_RGBA;
-  int dst_dma_fd = -1;
-  int ret = NvBufSurf::NvAllocate(&nvbufParams, 1, &dst_dma_fd);
+  int rgba_fd = -1;
+  int ret = NvBufSurf::NvAllocate(&nvbufParams, 1, &rgba_fd);
   if (ret != 0) {
     ROS_ERROR_STREAM("Failed to allocate buffer");
     return false;
@@ -69,13 +67,16 @@ bool JetsonNvJPEGDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, u
   transform_params.flag = NVBUFSURF_TRANSFORM_FILTER;
   transform_params.flip = NvBufSurfTransform_None;
   transform_params.filter = NvBufSurfTransformInter_Nearest;
-  ret = NvBufSurf::NvTransform(&transform_params, fd, dst_dma_fd);
+  ret = NvBufSurf::NvTransform(&transform_params, fd, rgba_fd);
   if (ret != 0) {
     ROS_ERROR_STREAM("Failed to transform buffer");
+    if (rgba_fd != -1) {
+      NvBufSurf::NvDestroy(rgba_fd);
+    }
     return false;
   }
   NvBufSurface *nvbuf_surf = 0;
-  NvBufSurfaceFromFd(dst_dma_fd, (void **)&nvbuf_surf);
+  NvBufSurfaceFromFd(rgba_fd, (void **)&nvbuf_surf);
   ret = NvBufSurfaceMap(nvbuf_surf, 0, 0, NVBUF_MAP_READ_WRITE);
   if (ret < 0) {
     printf("NvBufSurfaceMap failed\n");
@@ -88,12 +89,9 @@ bool JetsonNvJPEGDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, u
 
   libyuv::ARGBToRGB24(rgba, src_stride_argb, dest, dst_stride_rgb24, width, height);
   NvBufSurfaceUnMap(nvbuf_surf, 0, 0);
-  if (dst_dma_fd != -1) {
-    NvBufSurf::NvDestroy(dst_dma_fd);
+  if (rgba_fd != -1) {
+    NvBufSurf::NvDestroy(rgba_fd);
   }
-  delete decoder_;
-  null_file = freopen("/dev/tty", "w", stderr);
-  (void)null_file;  // suppress warning (unused variable
   return true;
 }
 }  // namespace orbbec_camera
