@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -g3")
 set(CMAKE_BUILD_TYPE "Release")
 
 # Options
-option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" ON)
+option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
 option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" OFF)
 # Detect machine type
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
