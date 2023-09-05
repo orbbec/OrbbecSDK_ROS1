@@ -25,14 +25,14 @@ void OBCameraNode::setupConfig() {
   encoding_[INFRA0] = sensor_msgs::image_encodings::MONO16;
   format_str_[INFRA0] = "Y16";
 
-  stream_name_[INFRA1] = "ir1";
+  stream_name_[INFRA1] = "left_ir";
   unit_step_size_[INFRA1] = sizeof(uint16_t);
   format_[INFRA1] = OB_FORMAT_Y16;
   image_format_[INFRA1] = CV_16UC1;
   encoding_[INFRA1] = sensor_msgs::image_encodings::MONO16;
   format_str_[INFRA1] = "Y16";
 
-  stream_name_[INFRA2] = "ir2";
+  stream_name_[INFRA2] = "right_ir";
   unit_step_size_[INFRA2] = sizeof(uint16_t);
   format_[INFRA2] = OB_FORMAT_Y16;
   image_format_[INFRA2] = CV_16UC1;
@@ -79,16 +79,17 @@ void OBCameraNode::setupDevices() {
     if (!depth_work_mode_.empty()) {
       device_->switchDepthWorkMode(depth_work_mode_.c_str());
     }
-    if (sync_mode_ != OB_SYNC_MODE_CLOSE) {
-      OBDeviceSyncConfig sync_config;
+    if (sync_mode_ != OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN) {
+      auto sync_config = device_->getMultiDeviceSyncConfig();
       sync_config.syncMode = sync_mode_;
-      sync_config.irTriggerSignalInDelay = ir_trigger_signal_in_delay_;
-      sync_config.rgbTriggerSignalInDelay = rgb_trigger_signal_in_delay_;
-      sync_config.deviceTriggerSignalOutDelay = device_trigger_signal_out_delay_;
-      device_->setSyncConfig(sync_config);
+      sync_config.depthDelayUs = depth_delay_us_;
+      sync_config.colorDelayUs = color_delay_us_;
+      sync_config.trigger2ImageDelayUs = trigger2image_delay_us_;
+      sync_config.triggerSignalOutputDelayUs = trigger_signal_output_delay_us_;
+      sync_config.triggerSignalOutputEnable = trigger_signal_output_enabled_;
+      device_->setMultiDeviceSyncConfig(sync_config);
       if (device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
                                        OB_PERMISSION_READ_WRITE)) {
-        device_->setBoolProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, sync_signal_trigger_out_);
       }
     }
     if (device_info_->pid() == GEMINI2_PID) {

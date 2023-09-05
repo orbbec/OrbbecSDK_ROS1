@@ -44,7 +44,7 @@ ros::Time frameTimeStampToROSTime(uint64_t ms);
 
 bool isOpenNIDevice(int pid);
 
-OBSyncMode OBSyncModeFromString(const std::string &mode);
+OBMultiDeviceSyncMode OBSyncModeFromString(const std::string &mode);
 
 OB_SAMPLE_RATE sampleRateFromString(std::string &sample_rate);
 

@@ -1,6 +1,7 @@
 <launch>
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
+    <arg name="output" default="screen"/>
     <!-- Hardware depth registration -->
     <arg name="depth_registration" default="false"/>
     <arg name="serial_number" default=""/>
@@ -31,7 +32,7 @@
     <arg name="enable_pipeline" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
     <group ns="$(arg camera_name)">
-        <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
+        <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="serial_number" type="string" value="$(arg serial_number)"/>

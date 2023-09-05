@@ -1,8 +1,6 @@
 #include "orbbec_camera/ob_camera_node.h"
 #if defined(USE_RK_HW_DECODER)
 #include "orbbec_camera/rk_mpp_decoder.h"
-#elif defined(USE_GST_HW_DECODER)
-#include "orbbec_camera/gst_decoder.h"
 #elif defined(USE_NV_HW_DECODER)
 #include "orbbec_camera/jetson_nv_decoder.h"
 #endif
@@ -41,9 +39,6 @@ void OBCameraNode::init() {
   is_initialized_ = true;
 #if defined(USE_RK_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
-#elif defined(USE_GST_HW_DECODER)
-  mjpeg_decoder_ = std::make_shared<GstreamerJPEGDecoder>(
-      width_[COLOR], height_[COLOR], jpeg_decoder_, video_convert_, jpeg_parse_);
 #elif defined(USE_NV_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
 #endif
@@ -109,13 +104,14 @@ void OBCameraNode::getParameters() {
   enable_soft_filter_ = nh_private_.param<bool>("enable_soft_filter", true);
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
-  sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "close");
+  sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "free_run");
   std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(), ::toupper);
   sync_mode_ = OBSyncModeFromString(sync_mode_str_);
-  ir_trigger_signal_in_delay_ = nh_private_.param<int>("ir_trigger_signal_in_delay", 0);
-  rgb_trigger_signal_in_delay_ = nh_private_.param<int>("rgb_trigger_signal_in_delay", 0);
-  device_trigger_signal_out_delay_ = nh_private_.param<int>("device_trigger_signal_out_delay", 0);
-  sync_signal_trigger_out_ = nh_private_.param<bool>("sync_signal_trigger_out", false);
+  depth_delay_us_ = nh_private_.param<int>("depth_delay_us", 0);
+  color_delay_us_ = nh_private_.param<int>("color_delay_us", 0);
+  trigger2image_delay_us_ = nh_private_.param<int>("trigger2image_delay_us", 0);
+  trigger_signal_output_delay_us_ = nh_private_.param<int>("trigger_signal_output_delay_us", 0);
+  trigger_signal_output_enabled_ = nh_private_.param<bool>("trigger_signal_output_enabled", false);
   depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "1mm");
   depth_precision_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
   if (enable_colored_point_cloud_) {
@@ -141,9 +137,6 @@ void OBCameraNode::getParameters() {
         nh_private_.param<std::string>(param_name, default_optical_frame_id);
     depth_aligned_frame_id_[stream_index] = stream_name_[COLOR] + "_optical_frame";
   }
-  jpeg_decoder_ = nh_private_.param<std::string>("jpeg_decoder", "avdec_mjpeg");
-  jpeg_parse_ = nh_private_.param<std::string>("jpeg_parse", "jpegparse");
-  video_convert_ = nh_private_.param<std::string>("video_convert", "videoconvert");
 }
 
 void OBCameraNode::startStreams() {
@@ -638,12 +631,18 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
   }
   try {
     publishPointCloud(frame_set);
-    auto color_frame = std::dynamic_pointer_cast<ob::Frame>(frame_set->colorFrame());
-    auto depth_frame = std::dynamic_pointer_cast<ob::Frame>(frame_set->depthFrame());
-    auto ir_frame = std::dynamic_pointer_cast<ob::Frame>(frame_set->irFrame());
-    onNewFrameCallback(color_frame, COLOR);
-    onNewFrameCallback(depth_frame, DEPTH);
-    onNewFrameCallback(ir_frame, INFRA0);
+    for (const auto& stream_index : IMAGE_STREAMS) {
+      if (enable_stream_[stream_index]) {
+        auto frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(stream_index.first);
+        auto frame = frame_set->getFrame(frame_type);
+        if (frame == nullptr) {
+          ROS_DEBUG_STREAM("frame type " << frame_type << " is null");
+          continue;
+        }
+        onNewFrameCallback(frame, stream_index);
+      }
+    }
+
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("onNewFrameSetCallback error: " << e.getMessage());
   } catch (const std::exception& e) {
@@ -677,7 +676,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   auto frame_format = frame->format();
   if (frame->type() == OB_FRAME_COLOR && frame_format != OB_FORMAT_RGB888) {
     if (frame_format == OB_FORMAT_MJPG && mjpeg_decoder_) {
-#if defined(USE_RK_HW_DECODER) || defined(USE_GST_HW_DECODER) || defined(USE_NV_HW_DECODER)
+#if defined(USE_RK_HW_DECODER) || defined(USE_NV_HW_DECODER)
       CHECK_NOTNULL(mjpeg_decoder_.get());
       video_frame = frame->as<ob::ColorFrame>();
       const auto& color_frame = frame->as<ob::ColorFrame>();

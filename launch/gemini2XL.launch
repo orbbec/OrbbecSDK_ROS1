@@ -3,35 +3,39 @@
     <arg name="camera_name" default="camera"/>
     <arg name="output" default="screen"/>
     <!-- Hardware depth registration -->
-    <arg name="depth_registration" default="true"/>
+    <arg name="depth_registration" default="false"/>
     <arg name="serial_number" default=""/>
-    <arg name="usb_port" default=""/>
     <arg name="device_num" default="1"/>
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default=""/>
     <arg name="enable_point_cloud" default="true"/>
-    <arg name="enable_colored_point_cloud" default="true"/>
+    <arg name="enable_colored_point_cloud" default="false"/>
     <arg name="connection_delay" default="100"/>
-    <arg name="color_width" default="640"/>
-    <arg name="color_height" default="480"/>
+    <arg name="color_width" default="1280"/>
+    <arg name="color_height" default="720"/>
     <arg name="color_fps" default="30"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
-    <arg name="depth_width" default="640"/>
-    <arg name="depth_height" default="400"/>
+    <arg name="depth_width" default="1280"/>
+    <arg name="depth_height" default="800"/>
     <arg name="depth_fps" default="30"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="Y14"/>
     <arg name="flip_depth" default="false"/>
     <arg name="depth_precision" default="0.8mm"/>
-    <arg name="ir_width" default="640"/>
-    <arg name="ir_height" default="400"/>
-    <arg name="ir_fps" default="30"/>
-    <arg name="enable_ir" default="true"/>
-    <arg name="ir_format" default="Y8"/>
-    <arg name="flip_ir" default="false"/>
+    <arg name="left_ir_width" default="1280"/>
+    <arg name="left_ir_height" default="800"/>
+    <arg name="left_ir_fps" default="30"/>
+    <arg name="enable_left_ir" default="true"/>
+    <arg name="left_ir_format" default="Y8"/>
+    <arg name="flip_left_ir" default="false"/>
+    <arg name="right_ir_width" default="1280"/>
+    <arg name="right_ir_height" default="800"/>
+    <arg name="right_ir_fps" default="30"/>
+    <arg name="enable_right_ir" default="true"/>
+    <arg name="right_ir_format" default="Y8"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
     <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="100hz"/>
@@ -52,17 +56,17 @@
     <arg name="enable_soft_filter" default="true"/>
     <arg name="soft_filter_max_diff" default="-1"/>
     <arg name="soft_filter_speckle_size" default="-1"/>
-    <arg name="sync_mode" default="close"/>
-    <arg name="ir_trigger_signal_in_delay" default="0"/>
-    <arg name="rgb_trigger_signal_in_delay" default="0"/>
-    <arg name="device_trigger_signal_out_delay" default="0"/>
-    <arg name="sync_signal_trigger_out" default="false"/>
+    <arg name="sync_mode" default="free_run"/>
+    <arg name="depth_delay_us" default="0"/>
+    <arg name="color_delay_us" default="0"/>
+    <arg name="trigger2image_delay_us" default="0"/>
+    <arg name="trigger_signal_output_delay_us" default="0"/>
+    <arg name="trigger_signal_output_enabled" default="false"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="serial_number" type="string" value="$(arg serial_number)"/>
-            <param name="usb_port" type="string" value="$(arg usb_port)"/>
             <param name="vendor_id" value="$(arg vendor_id)"/>
             <param name="product_id" value="$(arg product_id)"/>
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
@@ -82,12 +86,17 @@
             <param name="depth_format" value="$(arg depth_format)"/>
             <param name="flip_depth" value="$(arg flip_depth)"/>
             <param name="depth_precision" value="$(arg depth_precision)"/>
-            <param name="ir_width" value="$(arg ir_width)"/>
-            <param name="ir_height" value="$(arg ir_height)"/>
-            <param name="ir_fps" value="$(arg ir_fps)"/>
-            <param name="enable_ir" value="$(arg enable_ir)"/>
-            <param name="ir_format" value="$(arg ir_format)"/>
-            <param name="flip_ir" value="$(arg flip_ir)"/>
+            <param name="left_ir_width" value="$(arg left_ir_width)"/>
+            <param name="left_ir_height" value="$(arg left_ir_height)"/>
+            <param name="left_ir_fps" value="$(arg left_ir_fps)"/>
+            <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
+            <param name="left_ir_format" value="$(arg left_ir_format)"/>
+            <param name="flip_left_ir" value="$(arg flip_left_ir)"/>
+            <param name="right_ir_width" value="$(arg right_ir_width)"/>
+            <param name="right_ir_height" value="$(arg right_ir_height)"/>
+            <param name="right_ir_fps" value="$(arg right_ir_fps)"/>
+            <param name="enable_right_ir" value="$(arg enable_right_ir)"/>
+            <param name="right_ir_format" value="$(arg right_ir_format)"/>
             <param name="enable_ir_auto_exposure" value="$(arg enable_ir_auto_exposure)"/>
             <param name="enable_accel" value="$(arg enable_accel)"/>
             <param name="accel_rate" value="$(arg accel_rate)"/>
@@ -110,13 +119,12 @@
             <param name="soft_filter_max_diff" value="$(arg soft_filter_max_diff)"/>
             <param name="soft_filter_speckle_size" value="$(arg soft_filter_speckle_size)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
-            <param name="ir_trigger_signal_in_delay" value="$(arg ir_trigger_signal_in_delay)"/>
-            <param name="rgb_trigger_signal_in_delay" value="$(arg rgb_trigger_signal_in_delay)"/>
-            <param name="device_trigger_signal_out_delay"
-                   value="$(arg device_trigger_signal_out_delay)"/>
-            <param name="sync_signal_trigger_out" value="$(arg sync_signal_trigger_out)"/>
-            <remap from="/$(arg camera_name)/depth/color/points"
-                   to="/$(arg camera_name)/depth_registered/points"/>
+            <param name="depth_delay_us" value="$(arg depth_delay_us)"/>
+            <param name="color_delay_us" value="$(arg color_delay_us)"/>
+            <param name="trigger2image_delay_us" value="$(arg trigger2image_delay_us)"/>
+            <param name="trigger_signal_output_delay_us" value="$(arg trigger_signal_output_delay_us)"/>
+            <param name="trigger_signal_output_enabled" value="$(arg trigger_signal_output_enabled)"/>
+            <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>
 </launch>

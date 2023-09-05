@@ -342,14 +342,15 @@ class OBCameraNode {
   // Only for Gemini2 device
   bool enable_hardware_d2d_ = true;
   std::string depth_work_mode_;
-  OBSyncMode sync_mode_ = OBSyncMode::OB_SYNC_MODE_CLOSE;
+  OBMultiDeviceSyncMode sync_mode_ = OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN;
   std::string sync_mode_str_;
-  int ir_trigger_signal_in_delay_ = 0;
-  int rgb_trigger_signal_in_delay_ = 0;
-  int device_trigger_signal_out_delay_ = 0;
-  bool sync_signal_trigger_out_ = false;
+  int depth_delay_us_ = 0;
+  int color_delay_us_ = 0;
+  int trigger2image_delay_us_ = 0;
+  int trigger_signal_output_delay_us_ = 0;
+  bool trigger_signal_output_enabled_ = false;
   std::string depth_precision_str_;
-  OB_DEPTH_PRECISION_LEVEL depth_precision_ = OB_PRECISION_0MM8;
+  OB_DEPTH_PRECISION_LEVEL depth_precision_ = OB_PRECISION_1MM;
   // IMU
 
   std::map<stream_index_pair, ros::Publisher> imu_publishers_;
@@ -362,12 +363,14 @@ class OBCameraNode {
   double angular_vel_cov_ = 0.0001;
   std::deque<IMUData> imu_history_;
   IMUData accel_data_{ACCEL, {0, 0, 0}, -1.0};
+
   // mjpeg decoder
   std::shared_ptr<JPEGDecoder> mjpeg_decoder_ = nullptr;
   uint8_t* rgb_buffer_ = nullptr;
-  std::string jpeg_decoder_ = "avdec_mjpeg";  // avdec_mjpeg, mppjpegdec, nvjpegdec, jpegdec
-  std::string jpeg_parse_ = "jpegparse";
-  std::string video_convert_ = "videoconvert";  // videoconvert, nvvidconv
+
+  // double infrared
+  bool enable_left_ir_ = false;
+  bool enable_right_ir_ = false;
 };
 
 }  // namespace orbbec_camera

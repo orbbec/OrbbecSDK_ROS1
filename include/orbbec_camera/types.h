@@ -32,8 +32,8 @@ typedef std::pair<ob_stream_type, int> stream_index_pair;
 const stream_index_pair COLOR{OB_STREAM_COLOR, 0};
 const stream_index_pair DEPTH{OB_STREAM_DEPTH, 0};
 const stream_index_pair INFRA0{OB_STREAM_IR, 0};
-const stream_index_pair INFRA1{OB_STREAM_IR, 1};
-const stream_index_pair INFRA2{OB_STREAM_IR, 2};
+const stream_index_pair INFRA1{OB_STREAM_IR_LEFT, 0};
+const stream_index_pair INFRA2{OB_STREAM_IR_RIGHT, 0};
 
 const stream_index_pair GYRO{OB_STREAM_GYRO, 0};
 const stream_index_pair ACCEL{OB_STREAM_ACCEL, 0};
@@ -44,5 +44,15 @@ const std::vector<stream_index_pair> HID_STREAMS = {GYRO, ACCEL};
 const std::map<std::string, OBDepthPrecisionLevel> DEPTH_PRECISION_STR2ENUM = {
     {"1mm", OB_PRECISION_1MM},    {"0.8mm", OB_PRECISION_0MM8}, {"0.4mm", OB_PRECISION_0MM4},
     {"0.2mm", OB_PRECISION_0MM2}, {"0.1mm", OB_PRECISION_0MM1},
+};
+
+const std::map<OBStreamType, OBFrameType> STREAM_TYPE_TO_FRAME_TYPE = {
+    {OB_STREAM_COLOR, OB_FRAME_COLOR},
+    {OB_STREAM_DEPTH, OB_FRAME_DEPTH},
+    {OB_STREAM_IR, OB_FRAME_IR},
+    {OB_STREAM_IR_LEFT, OB_FRAME_IR_LEFT},
+    {OB_STREAM_IR_RIGHT, OB_FRAME_IR_RIGHT},
+    {OB_STREAM_GYRO, OB_FRAME_GYRO},
+    {OB_STREAM_ACCEL, OB_FRAME_ACCEL},
 };
 }  // namespace orbbec_camera

@@ -11,7 +11,6 @@ set(CMAKE_BUILD_TYPE "Release")
 
 # Options
 option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
-option(USE_GST_HW_DECODER "Use Gstreamer hardware decoder" OFF)
 option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" OFF)
 # Detect machine type
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
@@ -27,7 +26,7 @@ elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "32"))
 endif ()
 
 # Paths
-set(ORBBEC_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
+set(ORBBEC_LIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
 set(ORBBEC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/include/)
 if (USE_NV_HW_DECODER)
   set(JETSON_MULTI_MEDIA_API_DIR /usr/src/jetson_multimedia_api)
@@ -38,9 +37,8 @@ if (USE_NV_HW_DECODER)
   set(NV_LIBRARIES
     -lnvjpeg -lnvbufsurface -lnvbufsurftransform -lyuv -lv4l2
   )
-  list(APPEND NV_LIBRARIES -L${CUDA_PATH}/lib64
+  list(APPEND NV_LIBRARIES
     -L${TEGRA_ARMABI} -L${TEGRA_ARMABI}/tegra)
-  set(CMAKE_BUILD_RPATH ${ORBBEC_LIBS} $${CUDA_PATH}/lib64 ${TEGRA_ARMABI} ${TEGRA_ARMABI}/tegra)
 endif ()
 # Dependencies
 find_package(catkin REQUIRED
@@ -77,16 +75,18 @@ find_package(Boost REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 pkg_search_module(GLOG REQUIRED libglog)
-
 # Additional dependencies based on options
 if (USE_RK_HW_DECODER)
   pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
+  if (NOT RK_MPP_FOUND)
+    message(FATAL_ERROR "Rockchip MPP not found")
+  endif ()
   pkg_search_module(RGA REQUIRED librga)
-endif ()
-
-if (USE_GST_HW_DECODER)
-  pkg_search_module(GST REQUIRED gstreamer-1.0)
-  pkg_search_module(GST_APP REQUIRED gstreamer-app-1.0)
+  if (NOT RGA_FOUND)
+    message(STATUS "Rockchip RGA not found, use libyuv instead")
+    add_definitions(-DUSE_LIBYUV)
+    add_compile_options(-lyuv)
+  endif ()
 endif ()
 
 # Message generation
@@ -114,27 +114,28 @@ catkin_package(
 )
 
 # Include directories
-include_directories(
-  ${LIBJPEG8B_INCLUDE_DIR}
+set(COMMON_INCLUDE_DIRS
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${OpenCV_INCLUDED_DIRS}
   ${ORBBEC_INCLUDE_DIR}
-  ${RK_MPP_INCLUDE_DIRS}
-  ${RGA_INCLUDE_DIR}
-  ${GST_INCLUDE_DIRS}
-  ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+if (USE_NV_HW_DECODER)
+  list(APPEND COMMON_INCLUDE_DIRS
+    ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}
+    ${LIBJPEG8B_INCLUDE_DIR}
+  )
+endif ()
 
-link_directories(
-  ${ORBBEC_LIBS}
-  ${RK_MPP_LIBRARY_DIRS}
-  ${RGA_LIBRARY_DIRS}
-  ${GST_LIBRARY_DIRS}
-  ${JETSON_MULTI_MEDIA_API_LIB_DIR}
-  Threads::Threads
-)
+if (USE_RK_HW_DECODER)
+  list(APPEND COMMON_INCLUDE_DIRS
+    ${RK_MPP_INCLUDE_DIRS}
+    ${RGA_INCLUDE_DIR})
+endif ()
+
 # Source files
 set(SOURCE_FILES
   src/d2c_viewer.cpp
@@ -153,10 +154,6 @@ if (USE_RK_HW_DECODER)
   list(APPEND SOURCE_FILES src/rk_mpp_decoder.cpp)
 endif ()
 
-if (USE_GST_HW_DECODER)
-  add_definitions(-DUSE_GST_HW_DECODER)
-  list(APPEND SOURCE_FILES src/gst_decoder.cpp)
-endif ()
 
 if (USE_NV_HW_DECODER)
   add_definitions(-DUSE_NV_HW_DECODER)
@@ -179,32 +176,36 @@ if (USE_NV_HW_DECODER)
 endif ()
 
 # Link libraries
-set(LINK_LIBRARIES
+set(COMMON_LINK_LIBRARIES
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${GLOG_LIBRARIES}
   -lOrbbecSDK
-  -L${ORBBEC_LIBS}
+  -L${ORBBEC_LIBS_DIR}
+  Threads::Threads
 )
+
+if (USE_RK_HW_DECODER)
+  list(APPEND COMMON_LINK_LIBRARIES
+    ${RK_MPP_LIBRARIES}
+    ${RGA_LIBRARIES}
+  )
+elseif (USE_NV_HW_DECODER)
+  list(APPEND COMMON_LINK_LIBRARIES
+    ${NV_LIBRARIES}
+  )
+endif ()
+
 
 # Add libraries
 add_library(${PROJECT_NAME} ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${COMMON_LINK_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${COMMON_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}_nodelet ${SOURCE_FILES} src/ros_nodelet.cpp)
-target_link_libraries(${PROJECT_NAME}_nodelet ${LINK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_nodelet ${COMMON_LINK_LIBRARIES})
+target_include_directories(${PROJECT_NAME}_nodelet PUBLIC ${COMMON_INCLUDE_DIRS})
 
-# Additional link libraries based on options
-if (USE_RK_HW_DECODER)
-  target_link_libraries(${PROJECT_NAME} ${RGA_LIBRARIES} ${RK_MPP_LIBRARIES})
-  target_link_libraries(${PROJECT_NAME}_nodelet ${RGA_LIBRARIES} ${RK_MPP_LIBRARIES})
-elseif (USE_GST_HW_DECODER)
-  target_link_libraries(${PROJECT_NAME} ${GST_LIBRARIES} ${GST_APP_LIBRARIES})
-  target_link_libraries(${PROJECT_NAME}_nodelet ${GST_LIBRARIES} ${GST_APP_LIBRARIES})
-elseif (USE_NV_HW_DECODER)
-  target_link_libraries(${PROJECT_NAME} ${NV_LIBRARIES})
-  target_link_libraries(${PROJECT_NAME}_nodelet ${NV_LIBRARIES})
-endif ()
 
 # Add dependencies
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
@@ -213,7 +214,8 @@ add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_generate_messages_cpp)
 # Macro for adding executables
 macro(add_orbbec_executable TARGET SOURCES)
   add_executable(${TARGET} ${SOURCES})
-  target_link_libraries(${TARGET} ${LINK_LIBRARIES} ${PROJECT_NAME})
+  target_link_libraries(${TARGET} ${COMMON_LINK_LIBRARIES} ${PROJECT_NAME})
+  target_include_directories(${TARGET} PUBLIC ${COMMON_INCLUDE_DIRS})
 endmacro()
 
 # Add nodes
@@ -241,4 +243,3 @@ install(DIRECTORY ${ORBBEC_LIBS}/
   FILES_MATCHING PATTERN " *.so"
   PATTERN "*.so.* "
 )
-
