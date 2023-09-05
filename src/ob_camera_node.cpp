@@ -1017,16 +1017,17 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   transform = transform.inverse();
   Q = transform.getRotation();
   trans = transform.getOrigin();
-  publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[COLOR],
-                  optical_frame_id_[COLOR]);
-  publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[DEPTH],
-                  optical_frame_id_[DEPTH]);
-  publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[INFRA0],
-                  optical_frame_id_[INFRA0]);
-
-  publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_, frame_id_[DEPTH]);
+  publishStaticTF(tf_timestamp, trans, Q, frame_id_[DEPTH], frame_id_[COLOR]);
   publishStaticTF(tf_timestamp, trans, Q, camera_link_frame_id_, frame_id_[COLOR]);
-  publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_, frame_id_[INFRA0]);
+  for (const auto& stream_index : IMAGE_STREAMS) {
+    if (stream_index == COLOR || !enable_stream_[stream_index]) {
+      continue;
+    }
+    publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_,
+                    frame_id_[stream_index]);
+    publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[stream_index],
+                    optical_frame_id_[stream_index]);
+  }
 }
 
 void OBCameraNode::publishDynamicTransforms() {
