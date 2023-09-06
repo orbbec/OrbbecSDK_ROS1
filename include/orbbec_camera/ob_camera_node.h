@@ -311,6 +311,7 @@ class OBCameraNode {
   std::condition_variable tf_cv_;
   double tf_publish_rate_ = 10.0;
   bool depth_registration_ = false;
+  bool frame_sync_ = false;
   std::recursive_mutex device_lock_;
   std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_ = nullptr;
   std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_ = nullptr;
