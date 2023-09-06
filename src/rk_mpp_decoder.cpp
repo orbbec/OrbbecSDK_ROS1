@@ -131,7 +131,7 @@ bool RKMjpegDecoder::mppFrame2RGB(const MppFrame frame, uint8_t *data) {
   rga_info_t src_info;
   rga_info_t dst_info;
   memset(&src_info, 0, sizeof(rga_info_t));
-  memset(dst_info, 0, sizeof(dst_info));
+  memset(&dst_info, 0, sizeof(dst_info));
 
   src_info.fd = -1;
   src_info.mmuFlag = 1;
@@ -140,9 +140,9 @@ bool RKMjpegDecoder::mppFrame2RGB(const MppFrame frame, uint8_t *data) {
   dst_info.fd = -1;
   dst_info.mmuFlag = 1;
   dst_info.virAddr = data;
-  dst_info.format = RK_FORMAT_RGB_888;
+  dst_info.format = RK_FORMAT_BRG_888;
   rga_set_rect(&src_info.rect, 0, 0, width, height, width, height, RK_FORMAT_YCbCr_420_SP);
-  rga_set_rect(&dst_info.rect, 0, 0, width, height, width, height, RK_FORMAT_RGB_888);
+  rga_set_rect(&dst_info.rect, 0, 0, width, height, width, height, RK_FORMAT_BRG_888);
   int ret = c_RkRgaBlit(&src_info, &dst_info, nullptr);
   if (ret) {
     ROS_ERROR_STREAM("c_RkRgaBlit error " << ret << " " << strerror(errno));
