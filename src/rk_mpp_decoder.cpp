@@ -119,11 +119,14 @@ bool RKMjpegDecoder::mppFrame2RGB(const MppFrame frame, uint8_t *data) {
   memset(data, 0, width * height * 3);
   auto buffer_ptr = mpp_buffer_get_ptr(buffer);
 #if defined(USE_LIBYUV)
-  // YUV420SP to RGB
-  libyuv::I420ToRGB24((const uint8_t *)buffer_ptr, width,
-                      (const uint8_t *)buffer_ptr + width * height, width / 2,
-                      (const uint8_t *)buffer_ptr + width * height * 5 / 4, width / 2, data,
-                      width * 3, width, height);
+  auto *y = (const uint8_t *)buffer_ptr;
+  auto *uv = y + width * height;
+  int ret = libyuv::NV12ToRGB24(y, width, uv, width, data, width * 3, width, height);
+  if (ret) {
+    ROS_ERROR_STREAM("libyuv::NV12ToRGB24 error " << ret);
+    return false;
+  }
+  return true;
 #else
   rga_info_t src_info;
   rga_info_t dst_info;
