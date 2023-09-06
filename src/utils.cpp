@@ -205,6 +205,52 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fil
   fclose(fp);
 }
 
+void soavePointCloudMsgToPly(const sensor_msgs::PointCloud2 &msg, const std::string &fileName) {
+  FILE *fp = fopen(fileName.c_str(), "wb+");
+  CHECK_NOTNULL(fp);
+
+  sensor_msgs::PointCloud2ConstIterator<float> iter_x(msg, "x");
+  sensor_msgs::PointCloud2ConstIterator<float> iter_y(msg, "y");
+  sensor_msgs::PointCloud2ConstIterator<float> iter_z(msg, "z");
+
+  // First, count the actual number of valid points
+  size_t valid_points = 0;
+  for (; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z) {
+    if (!std::isnan(*iter_x) && !std::isnan(*iter_y) && !std::isnan(*iter_z)) {
+      ++valid_points;
+    }
+  }
+
+  // Reset the iterators
+  iter_x = sensor_msgs::PointCloud2ConstIterator<float>(msg, "x");
+  iter_y = sensor_msgs::PointCloud2ConstIterator<float>(msg, "y");
+  iter_z = sensor_msgs::PointCloud2ConstIterator<float>(msg, "z");
+  sensor_msgs::PointCloud2ConstIterator<uint8_t> iter_r(msg, "r");
+  sensor_msgs::PointCloud2ConstIterator<uint8_t> iter_g(msg, "g");
+  sensor_msgs::PointCloud2ConstIterator<uint8_t> iter_b(msg, "b");
+
+  fprintf(fp, "ply\n");
+  fprintf(fp, "format ascii 1.0\n");
+  fprintf(fp, "element vertex %zu\n", valid_points);
+  fprintf(fp, "property float x\n");
+  fprintf(fp, "property float y\n");
+  fprintf(fp, "property float z\n");
+  fprintf(fp, "property uchar red\n");
+  fprintf(fp, "property uchar green\n");
+  fprintf(fp, "property uchar blue\n");
+  fprintf(fp, "end_header\n");
+
+  for (; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z, ++iter_r, ++iter_g, ++iter_b) {
+    if (!std::isnan(*iter_x) && !std::isnan(*iter_y) && !std::isnan(*iter_z)) {
+      fprintf(fp, "%.3f %.3f %.3f %d %d %d\n", *iter_x, *iter_y, *iter_z, (int)*iter_r,
+              (int)*iter_g, (int)*iter_b);
+    }
+  }
+
+  fflush(fp);
+  fclose(fp);
+}
+
 void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fileName) {
   size_t point_size = frame->dataSize() / sizeof(OBPoint);
   FILE *fp = fopen(fileName.c_str(), "wb+");

@@ -42,6 +42,8 @@ void OBCameraNode::init() {
 #elif defined(USE_NV_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
 #endif
+  rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 3];
+  rgb_is_decoded_ = false;
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
@@ -479,28 +481,33 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   if (!depth_frame || !color_frame) {
     return;
   }
+  int depth_width = depth_frame->width();
+  int depth_height = depth_frame->height();
+  int color_width = color_frame->width();
+  int color_height = color_frame->height();
+  if (depth_width != color_width || depth_height != color_height) {
+    ROS_ERROR_STREAM("depth frame size is not equal to color frame size");
+    return;
+  }
   CHECK_NOTNULL(pipeline_.get());
   if (!camera_params_) {
     camera_params_ = pipeline_->getCameraParam();
   }
   CHECK(camera_params_);
-  cloud_filter_.setCameraParam(*camera_params_);
-  cloud_filter_.setCreatePointFormat(OB_FORMAT_RGB_POINT);
-  auto frame = cloud_filter_.process(frame_set);
-  if (!frame) {
-    ROS_ERROR_STREAM("cloud filter process failed");
-    return;
-  }
-  size_t point_size = frame->dataSize() / sizeof(OBColorPoint);
-  auto* points = (OBColorPoint*)frame->data();
-  if (!points) {
-    ROS_ERROR_STREAM("cloud point data is null");
-    return;
-  }
-  CHECK_NOTNULL(points);
+  float fdx =
+      camera_params_->rgbIntrinsic.fx * ((float)(color_width) / camera_params_->rgbIntrinsic.width);
+  float fdy = camera_params_->rgbIntrinsic.fy *
+              ((float)(color_height) / camera_params_->rgbIntrinsic.height);
+  fdx = 1 / fdx;
+  fdy = 1 / fdy;
+  float u0 =
+      camera_params_->rgbIntrinsic.cx * ((float)(color_width) / camera_params_->rgbIntrinsic.width);
+  float v0 = camera_params_->rgbIntrinsic.cy *
+             ((float)(color_height) / camera_params_->rgbIntrinsic.height);
+  const auto* depth_data = (uint16_t*)depth_frame->data();
+  const auto* color_data = (uint8_t*)(rgb_buffer_);
   sensor_msgs::PointCloud2Modifier modifier(cloud_msg_);
   modifier.setPointCloud2FieldsByString(1, "xyz");
-  modifier.resize(point_size);
   cloud_msg_.width = color_frame->width();
   cloud_msg_.height = color_frame->height();
   std::string format_str = "rgb";
@@ -515,20 +522,26 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   sensor_msgs::PointCloud2Iterator<uint8_t> iter_g(cloud_msg_, "g");
   sensor_msgs::PointCloud2Iterator<uint8_t> iter_b(cloud_msg_, "b");
   size_t valid_count = 0;
+  static const float MIN_DISTANCE = 20.0;
+  static const float MAX_DISTANCE = 10000.0;
   double depth_scale = depth_frame->getValueScale();
-  for (size_t point_idx = 0; point_idx < point_size; point_idx += 1) {
-    bool valid_pixel((points + point_idx)->z > 0);
-    if (valid_pixel) {
-      *iter_x = static_cast<float>(depth_scale * (points + point_idx)->x / 1000.0);
-      *iter_y = static_cast<float>(depth_scale * (points + point_idx)->y / 1000.0);
-      *iter_z = static_cast<float>(depth_scale * (points + point_idx)->z / 1000.0);
-      *iter_r = static_cast<uint8_t>((points + point_idx)->r);
-      *iter_g = static_cast<uint8_t>((points + point_idx)->g);
-      *iter_b = static_cast<uint8_t>((points + point_idx)->b);
-      if (std::isnan(*iter_x) || std::isnan(*iter_y) || std::isnan(*iter_z)) {
+  for (int y = 0; y < color_height; y++) {
+    for (int x = 0; x < color_width; x++) {
+      float min_depth = MIN_DISTANCE / depth_scale;
+      float max_depth = MAX_DISTANCE / depth_scale;
+      float depth = depth_data[y * depth_width + x];
+      if (depth < min_depth || depth > max_depth) {
         continue;
       }
-
+      float xf = (x - u0) * fdx;
+      float yf = (y - v0) * fdy;
+      float zf = depth * depth_scale;
+      *iter_x = zf * xf / 1000.0;
+      *iter_y = zf * yf / 1000.0;
+      *iter_z = zf / 1000.0;
+      *iter_r = color_data[(y * color_width + x) * 3];
+      *iter_g = color_data[(y * color_width + x) * 3 + 1];
+      *iter_b = color_data[(y * color_width + x) * 3 + 2];
       ++iter_x;
       ++iter_y;
       ++iter_z;
@@ -538,9 +551,8 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
       ++valid_count;
     }
   }
+
   if (valid_count == 0) {
-    ROS_WARN_STREAM(
-        "no valid point cloud data, Maybe depth resolution can not align to color resolution");
     return;
   }
   auto timestamp = frameTimeStampToROSTime(depth_frame->systemTimeStamp());
@@ -562,7 +574,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
       boost::filesystem::create_directory(current_path + "/point_cloud");
     }
     ROS_INFO_STREAM("Saving point cloud to " << filename);
-    saveRGBPointsToPly(frame, filename);
+    soavePointCloudMsgToPly(cloud_msg_, filename);
   }
 }
 
@@ -629,11 +641,54 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
   imu_publishers_[stream_index].publish(imu_msg);
 }
 
+bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& frame,
+                                            uint8_t* dest) {
+  bool has_subscriber = image_publishers_[COLOR].getNumSubscribers() > 0;
+  if (enable_colored_point_cloud_ && depth_registered_cloud_pub_.getNumSubscribers() > 0) {
+    has_subscriber = true;
+  }
+  if (!has_subscriber) {
+    return false;
+  }
+  bool is_decoded = false;
+  if (!frame) {
+    return false;
+  }
+#if defined(USE_RK_HW_DECODER) || defined(USE_NV_HW_DECODER)
+  if (frame && frame->format() != OB_FORMAT_RGB888) {
+    if (frame->format() == OB_FORMAT_MJPG && mjpeg_decoder_) {
+      CHECK_NOTNULL(mjpeg_decoder_.get());
+      CHECK_NOTNULL(rgb_buffer_);
+      auto video_frame = frame->as<ob::ColorFrame>();
+      bool ret = mjpeg_decoder_->decode(video_frame, rgb_buffer_);
+      if (!ret) {
+        ROS_ERROR_STREAM("Decode frame failed");
+        is_decoded = false;
+
+      } else {
+        is_decoded = true;
+      }
+    }
+  }
+#endif
+  if (!is_decoded) {
+    auto video_frame = softwareDecodeColorFrame(frame);
+    if (!video_frame) {
+      ROS_ERROR_STREAM("Decode frame failed");
+      return false;
+    }
+    CHECK_NOTNULL(rgb_buffer_);
+    memcpy(dest, video_frame->data(), video_frame->dataSize());
+    return true;
+  }
+  return true;
+}
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (frame_set == nullptr) {
     return;
   }
   try {
+    rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
     publishPointCloud(frame_set);
     for (const auto& stream_index : IMAGE_STREAMS) {
       if (enable_stream_[stream_index]) {
@@ -646,7 +701,6 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
         onNewFrameCallback(frame, stream_index);
       }
     }
-
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("onNewFrameSetCallback error: " << e.getMessage());
   } catch (const std::exception& e) {
@@ -673,6 +727,13 @@ std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
 void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                                       const stream_index_pair& stream_index) {
   if (frame == nullptr) {
+    return;
+  }
+  bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
+  if (camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
+    has_subscriber = true;
+  }
+  if (!has_subscriber) {
     return;
   }
   std::shared_ptr<ob::VideoFrame> video_frame;
@@ -722,20 +783,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   }
   int width = static_cast<int>(video_frame->width());
   int height = static_cast<int>(video_frame->height());
-  auto& image = images_[stream_index];
-  if (image.empty() || image.cols != width || image.rows != height) {
-    image.create(height, width, image_format_[stream_index]);
-  }
-  if (hw_decode) {
-    memcpy(image.data, rgb_buffer_, width * height * 3);
-  } else {
-    memcpy(image.data, video_frame->data(), video_frame->dataSize());
-  }
 
-  if (stream_index == DEPTH) {
-    auto depth_scale = video_frame->as<ob::DepthFrame>()->getValueScale();
-    image = image * depth_scale;
-  }
   auto timestamp = frameTimeStampToROSTime(video_frame->systemTimeStamp());
   if (!camera_params_ && depth_registration_) {
     camera_params_ = pipeline_->getCameraParam();
@@ -761,6 +809,27 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     camera_info_publisher.publish(camera_info);
   }
   CHECK(image_publishers_.count(stream_index));
+  if (image_publishers_[stream_index].getNumSubscribers() == 0) {
+    return;
+  }
+  auto& image = images_[stream_index];
+  if (image.empty() || image.cols != width || image.rows != height) {
+    image.create(height, width, image_format_[stream_index]);
+  }
+  if (frame->type() == OB_FRAME_COLOR && !rgb_is_decoded_) {
+    ROS_ERROR_STREAM("frame is not decoded");
+    return;
+  }
+  if (frame->type() == OB_FRAME_COLOR) {
+    memcpy(image.data, rgb_buffer_, width * height * 3);
+  } else {
+    memcpy(image.data, video_frame->data(), video_frame->dataSize());
+  }
+
+  if (stream_index == DEPTH) {
+    auto depth_scale = video_frame->as<ob::DepthFrame>()->getValueScale();
+    image = image * depth_scale;
+  }
   auto image_publisher = image_publishers_[stream_index];
   auto image_msg =
       cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], image).toImageMsg();
@@ -825,7 +894,7 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     if (pipeline_started_) {
-      ROS_WARN_STREAM("pipe line already started");
+      ROS_INFO_STREAM("pipe line already started");
       return;
     }
     try {
@@ -869,7 +938,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     if (!pipeline_started_) {
-      ROS_WARN_STREAM("pipe line not start");
+      ROS_INFO_STREAM("imageUnsubscribedCallback pipe line not start");
       return;
     }
     bool all_stream_no_subscriber = true;
@@ -877,6 +946,16 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       if (item.second.getNumSubscribers() > 0) {
         all_stream_no_subscriber = false;
         break;
+      }
+    }
+    if (enable_point_cloud_) {
+      if (depth_cloud_pub_.getNumSubscribers() > 0) {
+        all_stream_no_subscriber = false;
+      }
+    }
+    if (enable_colored_point_cloud_) {
+      if (depth_registered_cloud_pub_.getNumSubscribers() > 0) {
+        all_stream_no_subscriber = false;
       }
     }
     if (all_stream_no_subscriber) {

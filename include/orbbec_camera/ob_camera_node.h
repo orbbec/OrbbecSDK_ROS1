@@ -75,6 +75,8 @@ class OBCameraNode {
   void onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                              const stream_index_pair& stream_index);
 
+  bool decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& frame, uint8_t* dest);
+
   void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set);
 
   void publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
@@ -368,6 +370,7 @@ class OBCameraNode {
   // mjpeg decoder
   std::shared_ptr<JPEGDecoder> mjpeg_decoder_ = nullptr;
   uint8_t* rgb_buffer_ = nullptr;
+  bool rgb_is_decoded_ = false;
 
   // double infrared
   bool enable_left_ir_ = false;
