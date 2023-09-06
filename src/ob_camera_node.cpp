@@ -144,7 +144,7 @@ void OBCameraNode::startStreams() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
-    if(frame_sync_) {
+    if (frame_sync_) {
       pipeline_->enableFrameSync();
     }
     try {
@@ -701,7 +701,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
 #endif
     } else {
       auto covert_frame = softwareDecodeColorFrame(frame);
-      if(covert_frame) {
+      if (covert_frame) {
         video_frame = covert_frame->as<ob::ColorFrame>();
       }
     }
@@ -1025,8 +1025,11 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   transform = transform.inverse();
   Q = transform.getRotation();
   trans = transform.getOrigin();
-  publishStaticTF(tf_timestamp, trans, Q, frame_id_[DEPTH], frame_id_[COLOR]);
-  publishStaticTF(tf_timestamp, trans, Q, camera_link_frame_id_, frame_id_[COLOR]);
+  if (enable_stream_[COLOR]) {
+    publishStaticTF(tf_timestamp, trans, Q, camera_link_frame_id_, frame_id_[COLOR]);
+    publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[COLOR],
+                    optical_frame_id_[COLOR]);
+  }
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (stream_index == COLOR || !enable_stream_[stream_index]) {
       continue;
