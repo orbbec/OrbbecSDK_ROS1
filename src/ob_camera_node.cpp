@@ -748,36 +748,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     return;
   }
   std::shared_ptr<ob::VideoFrame> video_frame;
-  bool hw_decode = false;
-  auto frame_format = frame->format();
-  if (frame->type() == OB_FRAME_COLOR && frame_format != OB_FORMAT_RGB888) {
-    if (frame_format == OB_FORMAT_MJPG && mjpeg_decoder_) {
-#if defined(USE_RK_HW_DECODER) || defined(USE_NV_HW_DECODER)
-      CHECK_NOTNULL(mjpeg_decoder_.get());
-      video_frame = frame->as<ob::ColorFrame>();
-      const auto& color_frame = frame->as<ob::ColorFrame>();
-      if (rgb_buffer_ == nullptr) {
-        rgb_buffer_ = new uint8_t[video_frame->width() * video_frame->height() * 3];
-      }
-      bool ret = mjpeg_decoder_->decode(color_frame, rgb_buffer_);
-      if (!ret) {
-        ROS_ERROR_STREAM("Decode frame failed");
-        return;
-      }
-      hw_decode = true;
-#else
-      auto covert_frame = softwareDecodeColorFrame(frame);
-      if (covert_frame) {
-        video_frame = covert_frame->as<ob::ColorFrame>();
-      }
-#endif
-    } else {
-      auto covert_frame = softwareDecodeColorFrame(frame);
-      if (covert_frame) {
-        video_frame = covert_frame->as<ob::ColorFrame>();
-      }
-    }
-  } else if (frame->type() == OB_FRAME_COLOR) {
+  if (frame->type() == OB_FRAME_COLOR) {
     video_frame = frame->as<ob::ColorFrame>();
   } else if (frame->type() == OB_FRAME_DEPTH) {
     video_frame = frame->as<ob::DepthFrame>();
