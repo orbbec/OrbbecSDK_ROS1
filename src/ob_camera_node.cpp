@@ -723,6 +723,9 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
 
 std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
     const std::shared_ptr<ob::Frame>& frame) {
+  if (frame->format() == OB_FORMAT_RGB || frame->format() == OB_FORMAT_BGR) {
+    return frame;
+  }
   if (!setupFormatConvertType(frame->format())) {
     ROS_ERROR_STREAM("Unsupported color format: " << frame->format());
     return nullptr;
