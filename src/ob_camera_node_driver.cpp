@@ -275,7 +275,7 @@ void OBCameraNodeDriver::startDevice(const std::shared_ptr<ob::DeviceList>& list
 
 void OBCameraNodeDriver::checkConnectionTimer() {
   if (!device_connected_) {
-    ROS_INFO_STREAM("wait for device " << serial_number_ << " to be connected");
+    ROS_DEBUG_STREAM("wait for device " << serial_number_ << " to be connected");
   } else if (!ob_camera_node_) {
     device_connected_ = false;
   }
@@ -330,7 +330,7 @@ OBLogSeverity OBCameraNodeDriver::obLogSeverityFromString(const std::string& log
 void OBCameraNodeDriver::queryDevice() {
   while (is_alive_ && ros::ok()) {
     if (!device_connected_) {
-      ROS_INFO_STREAM_THROTTLE(1, "query device");
+      ROS_DEBUG_STREAM_THROTTLE(1, "query device");
       auto list = ctx_->queryDeviceList();
       CHECK_NOTNULL(list.get());
       if (list->deviceCount() == 0) {

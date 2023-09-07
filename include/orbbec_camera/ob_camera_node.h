@@ -327,7 +327,6 @@ class OBCameraNode {
   ros::Publisher depth_cloud_pub_;
   ros::Publisher depth_registered_cloud_pub_;
   sensor_msgs::PointCloud2 cloud_msg_;
-  ob::PointCloudFilter cloud_filter_;
   std::atomic_bool pipeline_started_{false};
   bool enable_point_cloud_ = false;
   bool enable_colored_point_cloud_ = false;

@@ -406,28 +406,32 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   } else if (!camera_params_) {
     camera_params_ = getCameraDepthParam();
   }
-  cloud_filter_.setCameraParam(*camera_params_);
-  cloud_filter_.setCreatePointFormat(OB_FORMAT_POINT);
+  if (!camera_params_) {
+    ROS_ERROR_STREAM("camera_params_ is null");
+    return;
+  }
   auto depth_frame = frame_set->depthFrame();
   if (!depth_frame) {
     ROS_ERROR_STREAM("depth frame is null");
     return;
   }
-  auto frame = cloud_filter_.process(frame_set);
-  if (!frame) {
-    ROS_ERROR_STREAM("cloud frame is null");
-    return;
-  }
-  size_t point_size = frame->dataSize() / sizeof(OBPoint);
-  auto* points = (OBPoint*)frame->data();
-  if (!points) {
-    ROS_ERROR_STREAM("cloud frame data is null");
-    return;
-  }
-  CHECK_NOTNULL(points);
+  auto width = depth_frame->width();
+  auto height = depth_frame->height();
+  float fdx =
+      camera_params_->depthIntrinsic.fx * ((float)(width) / camera_params_->depthIntrinsic.width);
+  float fdy =
+      camera_params_->depthIntrinsic.fy * ((float)(height) / camera_params_->depthIntrinsic.height);
+  fdx = 1 / fdx;
+  fdy = 1 / fdy;
+  float u0 =
+      camera_params_->depthIntrinsic.cx * ((float)(width) / camera_params_->depthIntrinsic.width);
+  float v0 =
+      camera_params_->depthIntrinsic.cy * ((float)(height) / camera_params_->depthIntrinsic.height);
+
+  const auto* depth_data = (uint16_t*)depth_frame->data();
   sensor_msgs::PointCloud2Modifier modifier(cloud_msg_);
   modifier.setPointCloud2FieldsByString(1, "xyz");
-  modifier.resize(point_size);
+  modifier.resize(width * height);
   cloud_msg_.width = depth_frame->width();
   cloud_msg_.height = depth_frame->height();
   cloud_msg_.row_step = cloud_msg_.width * cloud_msg_.point_step;
@@ -436,17 +440,24 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   sensor_msgs::PointCloud2Iterator<float> iter_y(cloud_msg_, "y");
   sensor_msgs::PointCloud2Iterator<float> iter_z(cloud_msg_, "z");
   size_t valid_count = 0;
+  const static float MIN_DISTANCE = 20.0;
+  const static float MAX_DISTANCE = 10000.0;
   double depth_scale = depth_frame->getValueScale();
-  for (size_t point_idx = 0; point_idx < point_size; point_idx++, points++) {
-    bool valid_pixel(points->z > 0);
-    if (valid_pixel) {
-      *iter_x = static_cast<float>((points->x * depth_scale) / 1000.0);
-      *iter_y = static_cast<float>((points->y * depth_scale) / 1000.0);
-      *iter_z = static_cast<float>((points->z * depth_scale) / 1000.0);
-      ++iter_x;
-      ++iter_y;
-      ++iter_z;
-      ++valid_count;
+  const static float min_depth = MIN_DISTANCE / depth_scale;
+  const static float max_depth = MAX_DISTANCE / depth_scale;
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      if (depth_data[y * width + x] < min_depth || depth_data[y * width + x] > max_depth) {
+        continue;
+      }
+      float xf = (x - u0) * fdx;
+      float yf = (y - v0) * fdy;
+      float zf = depth_data[y * width + x] * depth_scale;
+      *iter_x = zf * xf / 1000.0;
+      *iter_y = zf * yf / 1000.0;
+      *iter_z = zf / 1000.0;
+      ++iter_x, ++iter_y, ++iter_z;
+      valid_count++;
     }
   }
   auto timestamp = frameTimeStampToROSTime(depth_frame->systemTimeStamp());
@@ -468,7 +479,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
       boost::filesystem::create_directory(current_path + "/point_cloud");
     }
     ROS_INFO_STREAM("Saving point cloud to " << filename);
-    savePointsToPly(frame, filename);
+    soavePointCloudMsgToPly(cloud_msg_, filename);
   }
 }
 
@@ -481,10 +492,10 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   if (!depth_frame || !color_frame) {
     return;
   }
-  int depth_width = depth_frame->width();
-  int depth_height = depth_frame->height();
-  int color_width = color_frame->width();
-  int color_height = color_frame->height();
+  auto depth_width = depth_frame->width();
+  auto depth_height = depth_frame->height();
+  auto color_width = color_frame->width();
+  auto color_height = color_frame->height();
   if (depth_width != color_width || depth_height != color_height) {
     ROS_ERROR_STREAM("depth frame size is not equal to color frame size");
     return;
@@ -525,10 +536,10 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   static const float MIN_DISTANCE = 20.0;
   static const float MAX_DISTANCE = 10000.0;
   double depth_scale = depth_frame->getValueScale();
+  static float min_depth = MIN_DISTANCE / depth_scale;
+  static float max_depth = MAX_DISTANCE / depth_scale;
   for (int y = 0; y < color_height; y++) {
     for (int x = 0; x < color_width; x++) {
-      float min_depth = MIN_DISTANCE / depth_scale;
-      float max_depth = MAX_DISTANCE / depth_scale;
       float depth = depth_data[y * depth_width + x];
       if (depth < min_depth || depth > max_depth) {
         continue;
