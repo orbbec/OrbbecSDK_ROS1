@@ -254,6 +254,7 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/ir/image_raw`: The IR stream image
 
 ### Multiple cameras
+
 - First, you need to enumerate the `usb_port` of the cameras. Plug them in and run the following command in the
   terminal, please make sure no camera is open before running:
 
@@ -261,7 +262,8 @@ to `true` in the stream that corresponds to the argument of the launch file.
   rosrun orbbec_camera list_devices_node 
   ```
 
-or you can use the following script to get the serial number and usb port number, save the following script as `list_ob_devices.sh`, `chmod +x list_ob_devices.sh`, and then run `./list_ob_devices.sh`.
+or you can use the following script to get the serial number and usb port number, save the following script
+as `list_ob_devices.sh`, `chmod +x list_ob_devices.sh`, and then run `./list_ob_devices.sh`.
 
 ```bash
 VID="2bc5"
@@ -345,16 +347,21 @@ The following are the launch parameters available:
 - `log_level`: The log level for OrbbecSDK, with optional values of `none`, `info`, `debug`, `warn`, and `fatal`.
   The log file can be found in the ROS runtime directory, and the default location is `~/.ros/Log`.
 - `enable_accel` : Enables the accelerometer.
-- `accel_rate`: The frequency of the accelerometer, the optional values are `1.5625hz`,`3.125hz`,`6.25hz`,`12.5hz`,`25hz`,`50hz`,
-`100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`. The specific value depends on the current camera.
-- `accel_range` : The range of the accelerometer, the optional values are `2g`,`4g`,`8g`,`16g`. The specific value depends on the current camera.
+- `accel_rate`: The frequency of the accelerometer, the optional values
+  are `1.5625hz`,`3.125hz`,`6.25hz`,`12.5hz`,`25hz`,`50hz`,
+  `100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`. The specific value depends on the current camera.
+- `accel_range` : The range of the accelerometer, the optional values are `2g`,`4g`,`8g`,`16g`. The specific value
+  depends on the current camera.
 - `enable_gyro`: Whether to enable the gyroscope.
-- `gyro_rate` : The frequency of the gyroscope, the optional values are `1.5625hz`,`3.125hz`,`6.25hz`,`12.5hz`,`25hz`,`50hz`,
-`100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`. The specific value depends on the current camera.
-- `gyro_range` : The range of the gyroscope, the optional values are `16dps`,`31dps`,`62dps`,`125dps`,`250dps`,`500dps`,`1000dps`,`2000dps`. The specific value depends on the current camera.
+- `gyro_rate` : The frequency of the gyroscope, the optional values
+  are `1.5625hz`,`3.125hz`,`6.25hz`,`12.5hz`,`25hz`,`50hz`,
+  `100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`. The specific value depends on the current camera.
+- `gyro_range` : The range of the gyroscope, the optional values
+  are `16dps`,`31dps`,`62dps`,`125dps`,`250dps`,`500dps`,`1000dps`,`2000dps`. The specific value depends on the current
+  camera.
 
 ## Check which profiles the camera supports
-  
+
   ```bash
   rosrun orbbec_camera list_camera_profile_mode_node
   ```
@@ -362,7 +369,7 @@ The following are the launch parameters available:
 ## Launch files
 
 | product serials                           | launch file          |
-| ----------------------------------------- | -------------------- |
+|-------------------------------------------|----------------------|
 | astra+                                    | astra_adv.launch     |
 | astra/astra mini/astra mini pro/astra pro | astra.launch         |
 | astra2                                    | astra2.launch        |
@@ -373,9 +380,8 @@ The following are the launch parameters available:
 | dabai dw                                  | dabai_dw.launch      |
 | dabai pro                                 | dabai_pro.launch     |
 | deeya                                     | deeya.launch         |
-| femto                                     | femto.launch         |
+| femto / femto w                           | femto.launch         |
 | femto mega                                | femto_mega.launch    |
-| femto w                                   | femto_w.launch       |
 | gemini                                    | gemini.launch        |
 | gemini                                    | gemini.launch        |
 | gemini2 / dabai DCL                       | gemini2.launch       |
@@ -384,58 +390,31 @@ The following are the launch parameters available:
 | gemini e lite                             | gemini_e_lite.launch |
 
 Actually, All launch files all most the same, the only difference is the default value of the parameters.
+
 ## Use Nodelet
+
 For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
+
 ## Supported hardware products
 
-| **SDK version** | **products list** | **firmware version**        |
-| --------------- | ----------------- | --------------------------- |
-| v1.6.2          | Astra2            | 2.8.20                      |
-|                 | Gemini2 L         | 1.4.32                      |
-|                 | Gemini2           | 1.4.60                      |
-|                 | FemtoMega         | 1.1.7                       |
-|                 | Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19 |
-|                 | Femto             | 1.6.7                       |
-|                 | Femto W           | 1.1.8                       |
-|                 | Dabai             | 2436                        |
-|                 | Dabai DCW         | 2460                        |
-|                 | Dabai DW          | 2606                        |
-|                 | Astra Mini Pro    | 1007                        |
-|                 | Astra Pro Plus    | 2513                        |
-|                 | A1 Pro            | 3057                        |
-|                 | Gemini E          | 3460                        |
-|                 | Gemini E Lite     | 3606                        |
-|                 | Gemini            | 3.0.18                      |
-| v1.5.7          | Gemini2           | 1.4.60                      |
-|                 | FemtoMega         | 1.1.5                       |
-|                 | Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19 |
-|                 | Femto             | 1.6.7                       |
-|                 | Femto W           | 1.1.8                       |
-|                 | Dabai             | 2436                        |
-|                 | Dabai DCW         | 2460                        |
-|                 | Dabai DW          | 2606                        |
-|                 | Astra Mini Pro    | 1007                        |
-|                 | Astra Pro Plus    | 2513                        |
-|                 | A1 Pro            | 3057                        |
-|                 | Gemini E          | 3460                        |
-|                 | Gemini E Lite     | 3606                        |
-|                 | Gemini            | 3.0.18                      |
-| v1.4.3          | Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19 |
-|                 | Femto             | 1.6.7                       |
-|                 | *Femto W          | 1.1.3                       |
-|                 | Dabai             | 2436                        |
-|                 | Dabai DCW         | 2460                        |
-|                 | Dabai DW          | 2606                        |
-|                 | Astra Mini Pro    | 1007                        |
-|                 | Astra Pro Plus    | 2513                        |
-|                 | Gemini            | 3.0.18                      |
-| v1.3.1          | Astra+            | 1.0.21/1.0.20/1.0.19        |
-|                 | Femto             | 1.6.7                       |
-| v1.2.8          | Astra+            | 1.0.20                      |
-|                 | Femto             | 1.6.7                       |
-| v1.1.6          | Astra+            | 1.0.20/1.0.19               |
-|                 | *Femto            | 1.5.1                       |
-| v1.0.2          | Astra+            | 1.0.19                      |
+| **SDK version** | **products list** | **firmware version**                      |
+|-----------------|-------------------|-------------------------------------------|
+| v1.7.2          | Gemini 2 XL       | Obox: V1.2.5  VL:1.4.54                   |
+|                 | Astra 2           | 2.8.20                                    |
+|                 | Gemini 2 L        | 1.4.32                                    |
+|                 | Gemini 2          | 1.4.60 /1.4.76                            |
+|                 | Femto Mega        | 1.1.7  (window10、ubuntu20.04、ubuntu22.04) |
+|                 | Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19               |
+|                 | Femto             | 1.6.7                                     |
+|                 | Femto W           | 1.1.8                                     |
+|                 | DaBai             | 2436                                      |
+|                 | DaBai DCW         | 2460                                      |
+|                 | DaBai DW          | 2606                                      |
+|                 | Astra Mini Pro    | 1007                                      |
+|                 | Gemini E          | 3460                                      |
+|                 | Gemini E Lite     | 3606                                      |
+|                 | Gemini            | 3.0.18                                    |
+|                 | Astra Mini S Pro  | 1.0.05                                    |
 
 ## Frequently Asked Questions
 
