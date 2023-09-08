@@ -147,7 +147,7 @@ set(SOURCE_FILES
   src/ros_service.cpp
   src/utils.cpp
   src/ros_setup.cpp
-  src/mjpeg_decoder.cpp
+  src/jpeg_decoder.cpp
 )
 
 # Additional source files based on options
