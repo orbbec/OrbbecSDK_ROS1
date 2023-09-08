@@ -62,6 +62,7 @@
     <arg name="trigger2image_delay_us" default="0"/>
     <arg name="trigger_signal_output_delay_us" default="0"/>
     <arg name="trigger_signal_output_enabled" default="false"/>
+    <arg name="depth_work_mode" default=""/>
     <group ns="$(arg camera_name)">
         <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
               output="$(arg output)" required="$(arg required)" respawn="$(arg respawn)"/>
@@ -125,6 +126,7 @@
             <param name="trigger2image_delay_us" value="$(arg trigger2image_delay_us)"/>
             <param name="trigger_signal_output_delay_us" value="$(arg trigger_signal_output_delay_us)"/>
             <param name="trigger_signal_output_enabled" value="$(arg trigger_signal_output_enabled)"/>
+            <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
             <remap from="/$(arg camera_name)/depth/color/points"
                    to="/$(arg camera_name)/depth_registered/points"/>
         </node>
