@@ -19,6 +19,14 @@
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
+    <arg name="enable_accel" default="false"/>
+    <arg name="accel_rate" default="100hz"/>
+    <arg name="accel_range" default="4g"/>
+    <arg name="enable_gyro" default="false"/>
+    <arg name="gyro_rate" default="100hz"/>
+    <arg name="gyro_range" default="1000dps"/>
+    <arg name="liner_accel_cov" default="0.01"/>
+    <arg name="angular_vel_cov" default="0.01"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="576"/>
     <arg name="depth_fps" default="30"/>
@@ -58,6 +66,14 @@
             <param name="color_format" value="$(arg color_format)"/>
             <param name="flip_color" value="$(arg flip_color)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="enable_accel" value="$(arg enable_accel)"/>
+            <param name="accel_rate" value="$(arg accel_rate)"/>
+            <param name="accel_range" value="$(arg accel_range)"/>
+            <param name="enable_gyro" value="$(arg enable_gyro)"/>
+            <param name="gyro_rate" value="$(arg gyro_rate)"/>
+            <param name="gyro_range" value="$(arg gyro_range)"/>
+            <param name="liner_accel_cov" value="$(arg liner_accel_cov)"/>
+            <param name="angular_vel_cov" value="$(arg angular_vel_cov)"/>
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
             <param name="depth_fps" value="$(arg depth_fps)"/>
