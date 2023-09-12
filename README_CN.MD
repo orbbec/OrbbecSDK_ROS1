@@ -320,13 +320,16 @@ done
 ``` bash
 roslaunch orbbec_camera multi_camera.launch
 ```
+
 ## 调用硬件解码JPEG
 
 ### rockchip 和 Amlogic
+
 依赖  `rockchip-mpp-dev` 和 `rockchip-rga-dev`, 不是所有的系统都有这两个包， 名字可能不一样， 请自行搜索。
 打开 `CMakeLists.txt` 把 `USE_RK_HW_DECODER` 设置为 `ON`。
 
 ### Nvidia Jetson
+
 依赖 : `jetson_multimedia_api`, `libyuv`。
 打开 `CMakeLists.txt` 把 `USE_NV_HW_DECODER` 设置为 `ON`。
 
@@ -372,6 +375,7 @@ roslaunch orbbec_camera multi_camera.launch
 |-------------------------------------------|----------------------|
 | astra+                                    | astra_adv.launch     |
 | astra/astra mini/astra mini pro/astra pro | astra.launch         |
+| astra mini s pro                          | astra.launch         |
 | astra2                                    | astra2.launch        |
 | astra stereo s                            | stereo_s_u3.launch   |
 | dabai                                     | dabai.launch         |
