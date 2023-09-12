@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+
 #include "orbbec_camera/ob_camera_node.h"
 #if defined(USE_RK_HW_DECODER)
 #include "orbbec_camera/rk_mpp_decoder.h"

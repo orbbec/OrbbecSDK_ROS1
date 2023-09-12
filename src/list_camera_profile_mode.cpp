@@ -1,18 +1,18 @@
 /*******************************************************************************
-* Copyright (c) 2023 Orbbec 3D Technology, Inc
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+ * Copyright (c) 2023 Orbbec 3D Technology, Inc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 
 #include <ros/ros.h>
 #include <memory>
@@ -32,18 +32,15 @@ int main() {
       if (sensor->type() == OB_SENSOR_COLOR) {
         auto profile = origin_profile->as<ob::VideoStreamProfile>();
         ROS_INFO_STREAM("color profile: " << profile->width() << "x" << profile->height() << " "
-                                          << profile->fps() << "fps "
-                                          << profile->format());
+                                          << profile->fps() << "fps " << profile->format());
       } else if (sensor->type() == OB_SENSOR_DEPTH) {
         auto profile = origin_profile->as<ob::VideoStreamProfile>();
         ROS_INFO_STREAM("depth profile: " << profile->width() << "x" << profile->height() << " "
-                                          << profile->fps() << "fps "
-                                          << profile->format());
+                                          << profile->fps() << "fps " << profile->format());
       } else if (sensor->type() == OB_SENSOR_IR) {
         auto profile = origin_profile->as<ob::VideoStreamProfile>();
         ROS_INFO_STREAM("ir profile: " << profile->width() << "x" << profile->height() << " "
-                                       << profile->fps() << "fps "
-                                       << profile->format());
+                                       << profile->fps() << "fps " << profile->format());
       } else if (sensor->type() == OB_SENSOR_ACCEL) {
         auto profile = origin_profile->as<ob::AccelStreamProfile>();
         ROS_INFO_STREAM("accel profile: sampleRate "

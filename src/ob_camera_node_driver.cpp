@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+
 #include "orbbec_camera/ob_camera_node_driver.h"
 #include <fcntl.h>
 #include <unistd.h>
