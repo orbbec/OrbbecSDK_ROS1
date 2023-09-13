@@ -210,8 +210,10 @@ void ROSOBSensor::setMirror(bool data) {
     case OB_SENSOR_DEPTH:
       device_->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, data);
       break;
-    case OB_SENSOR_IR_LEFT:
     case OB_SENSOR_IR_RIGHT:
+      device_->setBoolProperty(OB_PROP_IR_RIGHT_MIRROR_BOOL, data);
+      break;
+    case OB_SENSOR_IR_LEFT:
     case OB_SENSOR_IR:
       device_->setBoolProperty(OB_PROP_IR_MIRROR_BOOL, data);
       break;
