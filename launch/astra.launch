@@ -14,20 +14,20 @@
     <arg name="connection_delay" default="100"/>
     <arg name="color_width" default="640"/>
     <arg name="color_height" default="480"/>
-    <arg name="color_fps" default="30"/>
+    <arg name="color_fps" default="10"/>
     <arg name="enable_color" default="true"/>
     <arg name="flip_color" default="false"/>
     <arg name="color_format" default="RGB"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="480"/>
-    <arg name="depth_fps" default="30"/>
+    <arg name="depth_fps" default="10"/>
     <arg name="enable_depth" default="true"/>
     <arg name="flip_depth" default="false"/>
     <arg name="depth_format" default="Y11"/>
     <arg name="ir_width" default="640"/>
     <arg name="ir_height" default="480"/>
-    <arg name="ir_fps" default="30"/>
+    <arg name="ir_fps" default="10"/>
     <arg name="enable_ir" default="true"/>
     <arg name="ir_format" default="Y10"/>
     <arg name="flip_ir" default="false"/>

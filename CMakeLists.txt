@@ -222,7 +222,6 @@ endmacro()
 
 # Add nodes
 add_orbbec_executable(list_devices_node src/list_devices_node.cpp)
-add_orbbec_executable(ob_cleanup_shm_node src/ob_cleanup_shm.cpp)
 add_orbbec_executable(list_depth_work_mode_node src/list_depth_work_mode.cpp)
 add_orbbec_executable(list_camera_profile_mode_node src/list_camera_profile_mode.cpp)
 add_orbbec_executable(orbbec_camera_node src/main.cpp)

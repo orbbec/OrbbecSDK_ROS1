@@ -19,15 +19,9 @@
 #include <thread>
 #include <mutex>
 #include <semaphore.h>
+#include <pthread.h>
 
 namespace orbbec_camera {
-enum DeviceConnectionEvent {
-  kDeviceConnected = 0,
-  kDeviceDisconnected,
-  kOtherDeviceConnected,
-  kOtherDeviceDisconnected,
-  kDeviceCountUpdate,
-};
 
 class OBCameraNodeDriver {
  public:
@@ -37,11 +31,6 @@ class OBCameraNodeDriver {
 
  private:
   void init();
-
-  void releaseDeviceSemaphore(sem_t* device_sem, int& num_devices_connected) const;
-
-  static void updateConnectedDeviceCount(int& num_devices_connected,
-                                         DeviceConnectionEvent connection_event);
 
   std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
 
@@ -61,8 +50,6 @@ class OBCameraNodeDriver {
   static OBLogSeverity obLogSeverityFromString(const std::string& log_level);
 
   void queryDevice();
-
-  void deviceCountUpdate();
 
   void syncTimeThread();
 
@@ -87,7 +74,6 @@ class OBCameraNodeDriver {
   std::string usb_port_;
   int connection_delay_ = 1.0;
   std::shared_ptr<std::thread> query_thread_ = nullptr;
-  std::shared_ptr<std::thread> device_count_update_thread_ = nullptr;
   std::recursive_mutex device_lock_;
   int device_num_ = 1;
   int num_devices_connected_ = 0;
@@ -96,5 +82,9 @@ class OBCameraNodeDriver {
   std::condition_variable reset_device_cv_;
   std::atomic_bool reset_device_{false};
   std::mutex reset_device_lock_;
+  pthread_mutex_t* orb_device_lock_ = nullptr;
+  pthread_mutexattr_t orb_device_lock_attr_;
+  uint8_t* orb_device_lock_shm_addr_ = nullptr;
+  int orb_device_lock_shm_fd_ = -1;
 };
 }  // namespace orbbec_camera
