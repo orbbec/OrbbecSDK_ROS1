@@ -178,6 +178,11 @@ rosservice call  /camera/toggle_depth "{data: true}"
 ```bash
 rosservice call /camera/save_images "{}"
 ```
+- 保存点云。
+
+```bash
+rosservice call /camera/save_point_cloud "{}"
+```
 
 注意：图像保存在 `~/.ros/image` 下，仅在传感器打开时才可用
 

@@ -182,6 +182,12 @@ rosservice call  /camera/toggle_depth "{data: true}"
 rosservice call /camera/save_images "{}"
 ```
 
+- save point cloud
+
+```bash
+rosservice call /camera/save_point_cloud "{}"
+```
+
 NOTE: The images are saved under ~/.ros/image and are only available when the sensor is on.
 
 ### All available service for camera control
