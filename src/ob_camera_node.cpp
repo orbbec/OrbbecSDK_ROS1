@@ -495,7 +495,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
       boost::filesystem::create_directory(current_path + "/point_cloud");
     }
     ROS_INFO_STREAM("Saving point cloud to " << filename);
-    soavePointCloudMsgToPly(cloud_msg_, filename);
+    saveDepthPointCloudMsgToPly(cloud_msg_, filename);
   }
 }
 
@@ -601,7 +601,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
       boost::filesystem::create_directory(current_path + "/point_cloud");
     }
     ROS_INFO_STREAM("Saving point cloud to " << filename);
-    soavePointCloudMsgToPly(cloud_msg_, filename);
+    saveRGBPointCloudMsgToPly(cloud_msg_, filename);
   }
 }
 

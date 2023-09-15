@@ -38,7 +38,10 @@ void savePointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fileNa
 
 void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, const std::string &fileName);
 
-void soavePointCloudMsgToPly(const sensor_msgs::PointCloud2 &msg, const std::string &fileName);
+void saveRGBPointCloudMsgToPly(const sensor_msgs::PointCloud2 &msg, const std::string &fileName);
+
+void saveDepthPointCloudMsgToPly(const sensor_msgs::PointCloud2 &msg, const std::string &fileName);
+
 
 tf2::Quaternion rotationMatrixToQuaternion(const float rotation[9]);
 
