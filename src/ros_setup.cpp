@@ -240,8 +240,8 @@ void OBCameraNode::setupPublishers() {
     image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
-    camera_info_publishers_[stream_index] =
-        nh_.advertise<sensor_msgs::CameraInfo>(topic_name, 1, true);
+    camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
+        topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
   }
   if (enable_point_cloud_) {
     ros::SubscriberStatusCallback depth_cloud_subscribed_cb =
@@ -277,14 +277,12 @@ void OBCameraNode::setupPublishers() {
 void OBCameraNode::setupCameraInfo() {
   auto param = getCameraParam();
   if (param) {
-    int base_depth_width = param->depthIntrinsic.width == 0 ? 640 : param->depthIntrinsic.width;
-    int base_rgb_width = param->rgbIntrinsic.width == 0 ? 640 : param->rgbIntrinsic.width;
-    camera_infos_[DEPTH] =
-        convertToCameraInfo(param->depthIntrinsic, param->depthDistortion, base_depth_width);
-    camera_infos_[INFRA0] =
-        convertToCameraInfo(param->depthIntrinsic, param->depthDistortion, base_depth_width);
+    camera_infos_[DEPTH] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
+                                               param->depthIntrinsic.width);
+    camera_infos_[INFRA0] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
+                                                param->depthIntrinsic.width);
     camera_infos_[COLOR] =
-        convertToCameraInfo(param->rgbIntrinsic, param->rgbDistortion, base_rgb_width);
+        convertToCameraInfo(param->rgbIntrinsic, param->rgbDistortion, param->rgbIntrinsic.width);
   } else {
     ROS_WARN_STREAM("Failed to get camera parameters");
   }

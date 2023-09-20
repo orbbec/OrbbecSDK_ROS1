@@ -150,6 +150,7 @@ std::string ObDeviceTypeToString(const OBDeviceType &type) {
 
 sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
                                             OBCameraDistortion distortion, int width) {
+  (void)width;
   sensor_msgs::CameraInfo info;
   info.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
   info.width = intrinsic.width;
@@ -179,17 +180,6 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
   info.P[5] = info.K[4];
   info.P[6] = info.K[5];
   info.P[10] = 1.0;
-
-  double scaling = static_cast<double>(width) / 640;
-  info.K[0] *= scaling;  // fx
-  info.K[2] *= scaling;  // cx
-  info.K[4] *= scaling;  // fy
-  info.K[5] *= scaling;  // cy
-  info.P[0] *= scaling;  // fx
-  info.P[2] *= scaling;  // cx
-  info.P[5] *= scaling;  // fy
-  info.P[6] *= scaling;  // cy
-
   return info;
 }
 
