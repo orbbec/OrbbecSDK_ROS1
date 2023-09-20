@@ -30,7 +30,7 @@ Get Source code
 
 ```bash
 cd ~/ros_ws/src/
-git clone https://github.com/OrbbecDeveloper/OrbbecSDK_ROS1.git
+git clone https://github.com/orbbec/OrbbecSDK_ROS1.git
 ```
 
 Or you can download from [Orbbec developer community](https://developer.orbbec.com.cn/download.html)

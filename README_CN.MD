@@ -28,7 +28,7 @@ mkdir -p ~/ros_ws/src
 
 ```bash
 cd ~/ros_ws/src/
-git clone https://github.com/OrbbecDeveloper/OrbbecSDK_ROS1.git
+git clone https://github.com/orbbec/OrbbecSDK_ROS1.git
 ```
 
 或者您可以从[Orbbec 开发者社区](https://developer.orbbec.com.cn/download.html)下载
