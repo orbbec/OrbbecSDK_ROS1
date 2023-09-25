@@ -181,6 +181,9 @@ void OBCameraNode::startStreams() {
         this->onNewFrameSetCallback(frame_set);
       });
     }
+    if (pipeline_ && (enable_colored_point_cloud_ || depth_registration_)) {
+      pipeline_->enableFrameSync();
+    }
     pipeline_started_ = true;
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
