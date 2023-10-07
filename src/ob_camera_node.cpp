@@ -111,7 +111,7 @@ void OBCameraNode::getParameters() {
   }
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
-  frame_sync_ = nh_private_.param<bool>("frame_sync", false);
+  enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", false);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");
   enable_d2c_viewer_ = nh_private_.param<bool>("enable_d2c_viewer", false);
@@ -162,7 +162,7 @@ void OBCameraNode::startStreams() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
-    if (frame_sync_) {
+    if (enable_frame_sync_) {
       pipeline_->enableFrameSync();
     }
     try {
@@ -180,9 +180,6 @@ void OBCameraNode::startStreams() {
         CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
       });
-    }
-    if (pipeline_ && (enable_colored_point_cloud_ || depth_registration_)) {
-      pipeline_->enableFrameSync();
     }
     pipeline_started_ = true;
   } else {
