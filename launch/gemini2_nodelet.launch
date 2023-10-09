@@ -60,8 +60,8 @@
     <arg name="depth_delay_us" default="0"/>
     <arg name="color_delay_us" default="0"/>
     <arg name="trigger2image_delay_us" default="0"/>
-    <arg name="trigger_signal_output_delay_us" default="0"/>
-    <arg name="trigger_signal_output_enabled" default="false"/>
+    <arg name="trigger_output_delay_us" default="0"/>
+    <arg name="trigger_output_enabled" default="false"/>
     <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="false"/>
     <group ns="$(arg camera_name)">
@@ -125,8 +125,8 @@
             <param name="depth_delay_us" value="$(arg depth_delay_us)"/>
             <param name="color_delay_us" value="$(arg color_delay_us)"/>
             <param name="trigger2image_delay_us" value="$(arg trigger2image_delay_us)"/>
-            <param name="trigger_signal_output_delay_us" value="$(arg trigger_signal_output_delay_us)"/>
-            <param name="trigger_signal_output_enabled" value="$(arg trigger_signal_output_enabled)"/>
+            <param name="trigger_output_delay_us" value="$(arg trigger_output_delay_us)"/>
+            <param name="trigger_output_enabled" value="$(arg trigger_output_enabled)"/>
             <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <remap from="/$(arg camera_name)/depth/color/points"

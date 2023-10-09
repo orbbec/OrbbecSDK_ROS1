@@ -101,8 +101,8 @@ void OBCameraNode::setupDevices() {
       sync_config.depthDelayUs = depth_delay_us_;
       sync_config.colorDelayUs = color_delay_us_;
       sync_config.trigger2ImageDelayUs = trigger2image_delay_us_;
-      sync_config.triggerSignalOutputDelayUs = trigger_signal_output_delay_us_;
-      sync_config.triggerSignalOutputEnable = trigger_signal_output_enabled_;
+      sync_config.triggerOutDelayUs = trigger_output_delay_us_;
+      sync_config.triggerOutEnable = trigger_output_enabled_;
       device_->setMultiDeviceSyncConfig(sync_config);
       if (device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
                                        OB_PERMISSION_READ_WRITE)) {
