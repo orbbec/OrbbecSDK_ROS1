@@ -129,8 +129,8 @@ void OBCameraNode::getParameters() {
   depth_delay_us_ = nh_private_.param<int>("depth_delay_us", 0);
   color_delay_us_ = nh_private_.param<int>("color_delay_us", 0);
   trigger2image_delay_us_ = nh_private_.param<int>("trigger2image_delay_us", 0);
-  trigger_output_delay_us_ = nh_private_.param<int>("trigger_output_delay_us", 0);
-  trigger_output_enabled_ = nh_private_.param<bool>("trigger_output_enabled", false);
+  trigger_out_delay_us_ = nh_private_.param<int>("trigger_out_delay_us", 0);
+  trigger_out_enabled_ = nh_private_.param<bool>("trigger_out_enabled", false);
   depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "1mm");
   depth_precision_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
   if (enable_colored_point_cloud_) {
