@@ -427,6 +427,7 @@ For Femto Mega and Femto Bolt devices, the depth NFOV and WFOV modes are achieve
 | deeya                                     | deeya.launch         |
 | femto / femto w                           | femto.launch         |
 | femto mega                                | femto_mega.launch    |
+| femto bolt                                | femto_bolt.launch    |
 | gemini                                    | gemini.launch        |
 | gemini                                    | gemini.launch        |
 | gemini2 / dabai DCL                       | gemini2.launch       |

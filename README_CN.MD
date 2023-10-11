@@ -417,6 +417,7 @@ rosrun orbbec_camera list_depth_work_mode_node
 | deeya                                     | deeya.launch         |
 | femto / femto w                           | femto.launch         |
 | femto mega                                | femto_mega.launch    |
+| femto bolt                                | femto_bolt.launch    |
 | gemini                                    | gemini.launch        |
 | gemini                                    | gemini.launch        |
 | gemini2 / dabai DCL                       | gemini2.launch       |
