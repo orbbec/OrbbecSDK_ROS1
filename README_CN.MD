@@ -186,6 +186,26 @@ rosservice call /camera/save_point_cloud "{}"
 
 注意：图像保存在 `~/.ros/image` 下，仅在传感器打开时才可用
 
+- 深度模式切换：
+- 启动相机前,可通过配置对应相继的xxx.launch的深度模式(depth_work_mode)支持。
+- 深度模式切换支持的相机:gemini,gemini2L,gemini2VL,gemini2XL。
+- xxx.launch默认深度模式配置为相机默认配置,如果需要修改可根据需要切换相应深度模式。
+- 具体相机深度模式支持类型可查看深度模式的注释。
+
+```XML
+  <!-- Depth work mode support is as follows： -->
+  <!-- Unbinned Dense Default -->
+  <!-- Unbinned Sparse Default -->
+  <!-- Binned Sparse Default -->
+  <arg name="depth_work_mode" default=""/>
+```
+
+- 深度工作模式查看:
+
+```bash
+rosrun orbbec_camera list_depth_work_mode_node
+```
+
 ### 相机控制的所有可用service
 
 以下服务的名称已经表达了它们的功能。

@@ -189,6 +189,27 @@ rosservice call /camera/save_point_cloud "{}"
 
 NOTE: The images are saved under ~/.ros/image and are only available when the sensor is on.
 
+
+- Depth work mode switch:
+- Before starting the camera, depth work mode (depth_work_mode) can be configured for the corresponding xxx.launch file's support.
+- The depth work mode switch is supported by gemini, gemini2l, gemini2VL, and gemini2XL cameras.
+- The default depth work mode configuration of xxx.launch is the camera's default configuration. If you need to modify it, you can switch to the corresponding mode as needed.
+- The specific camera depth work mode support types can be found in the comments of the depth mode.
+
+```XML
+  <!-- Depth work mode support is as follows： -->
+  <!-- Unbinned Dense Default -->
+  <!-- Unbinned Sparse Default -->
+  <!-- Binned Sparse Default -->
+  <arg name="depth_work_mode" default=""/>
+```
+
+- View depth work modes:
+
+```bash
+rosrun orbbec_camera list_depth_work_mode_node
+```
+
 ### All available service for camera control
 
 The name of the following service already expresses its function.
