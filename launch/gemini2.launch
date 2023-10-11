@@ -14,21 +14,21 @@
     <arg name="connection_delay" default="100"/>
     <arg name="color_width" default="640"/>
     <arg name="color_height" default="480"/>
-    <arg name="color_fps" default="30"/>
+    <arg name="color_fps" default="15"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="400"/>
-    <arg name="depth_fps" default="30"/>
+    <arg name="depth_fps" default="15"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="Y14"/>
     <arg name="flip_depth" default="false"/>
     <arg name="depth_precision" default="1mm"/>
     <arg name="ir_width" default="640"/>
     <arg name="ir_height" default="400"/>
-    <arg name="ir_fps" default="30"/>
+    <arg name="ir_fps" default="15"/>
     <arg name="enable_ir" default="true"/>
     <arg name="ir_format" default="Y8"/>
     <arg name="flip_ir" default="false"/>
@@ -58,6 +58,10 @@
     <arg name="trigger2image_delay_us" default="0"/>
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="false"/>
+    <!-- Depth work mode support is as follows： -->
+    <!-- Unbinned Dense Default -->
+    <!-- Unbinned Sparse Default -->
+    <!-- Binned Sparse Default -->
     <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="false"/>
     <group ns="$(arg camera_name)">
