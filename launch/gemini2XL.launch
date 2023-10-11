@@ -51,6 +51,7 @@
     <arg name="ir_info_uri" default=""/>
     <arg name="color_info_uri" default=""/>
     <arg name="log_level" default="none"/>
+    <arg name="enumerate_net_device" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_pipeline" default="true"/>
     <arg name="enable_ldp" default="true"/>
@@ -120,6 +121,7 @@
             <param name="ir_info_uri" value="$(arg ir_info_uri)"/>
             <param name="color_info_uri" value="$(arg color_info_uri)"/>
             <param name="log_level" value="$(arg log_level)"/>
+            <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
             <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>

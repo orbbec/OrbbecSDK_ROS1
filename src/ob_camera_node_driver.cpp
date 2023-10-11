@@ -76,6 +76,8 @@ void OBCameraNodeDriver::init() {
   usb_port_ = nh_private_.param<std::string>("usb_port", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 100);
   device_num_ = static_cast<int>(nh_private_.param<int>("device_num", 1));
+  auto enumerate_net_device_ = static_cast<int>(nh_private_.param<bool>("enumerate_net_device", false));
+  ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
   check_connection_timer_ = nh_.createWallTimer(
       ros::WallDuration(1.0), [this](const ros::WallTimerEvent&) { this->checkConnectionTimer(); });
   ctx_->setDeviceChangedCallback([this](const std::shared_ptr<ob::DeviceList>& removed_list,
