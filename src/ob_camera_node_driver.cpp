@@ -76,7 +76,8 @@ void OBCameraNodeDriver::init() {
   usb_port_ = nh_private_.param<std::string>("usb_port", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 100);
   device_num_ = static_cast<int>(nh_private_.param<int>("device_num", 1));
-  auto enumerate_net_device_ = static_cast<int>(nh_private_.param<bool>("enumerate_net_device", false));
+  auto enumerate_net_device_ =
+      static_cast<int>(nh_private_.param<bool>("enumerate_net_device", false));
   ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
   check_connection_timer_ = nh_.createWallTimer(
       ros::WallDuration(1.0), [this](const ros::WallTimerEvent&) { this->checkConnectionTimer(); });
@@ -235,7 +236,6 @@ void OBCameraNodeDriver::deviceDisconnectCallback(
   if (device_info_ != nullptr) {
     ROS_INFO_STREAM("current node serial " << device_info_->serialNumber());
   }
-  bool current_device_disconnected = false;
   for (size_t i = 0; i < device_list->deviceCount(); i++) {
     std::string device_uid = device_list->uid(i);
     ROS_INFO_STREAM("Device with uid " << device_uid << " disconnected");
@@ -244,7 +244,7 @@ void OBCameraNodeDriver::deviceDisconnectCallback(
       std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
       reset_device_ = true;
       reset_device_cv_.notify_all();
-      current_device_disconnected = true;
+      ROS_INFO_STREAM(device_uid << " reset device notification sent");
       break;
     }
   }
@@ -277,14 +277,25 @@ void OBCameraNodeDriver::queryDevice() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         continue;
       }
+      bool failed_to_start_device = false;
       try {
         startDevice(list);
       } catch (const ob::Error& e) {
+        failed_to_start_device = true;
         ROS_WARN_STREAM("Failed to start device: " << e.getMessage());
       } catch (const std::exception& e) {
+        failed_to_start_device = true;
         ROS_WARN_STREAM("Failed to start device: " << e.what());
       } catch (...) {
+        failed_to_start_device = true;
         ROS_WARN_STREAM("Failed to start device");
+      }
+      if (failed_to_start_device) {
+        device_.reset();
+        device_info_.reset();
+        device_connected_ = false;
+        device_uid_.clear();
+        ob_camera_node_.reset();
       }
 
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -310,6 +321,7 @@ void OBCameraNodeDriver::resetDeviceThread() {
     if (!is_alive_) {
       break;
     }
+    ROS_INFO_STREAM("resetDeviceThread: device is disconnected, reset device");
     ob_camera_node_.reset();
     device_.reset();
     device_info_.reset();

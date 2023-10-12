@@ -180,6 +180,9 @@ void OBCameraNode::startStreams() {
         CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
       });
+    } catch (...) {
+      ROS_ERROR_STREAM("failed to start pipeline");
+      throw;
     }
     pipeline_started_ = true;
   } else {
