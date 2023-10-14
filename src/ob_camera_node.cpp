@@ -268,7 +268,7 @@ void OBCameraNode::startIMU(const stream_index_pair& stream_index) {
 }
 void OBCameraNode::startIMU() {
   for (const auto& stream_index : HID_STREAMS) {
-    if (enable_stream_[stream_index]) {
+    if (enable_stream_[stream_index] && !imu_started_[stream_index]) {
       CHECK(sensors_.count(stream_index));
       CHECK(imu_sensor_.count(stream_index));
       auto profile_list = sensors_[stream_index]->getStreamProfileList();
@@ -673,6 +673,9 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
 
 bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& frame,
                                             uint8_t* dest) {
+  if (!rgb_buffer_) {
+    return false;
+  }
   bool has_subscriber = image_publishers_[COLOR].getNumSubscribers() > 0;
   if (enable_colored_point_cloud_ && depth_registered_cloud_pub_.getNumSubscribers() > 0) {
     has_subscriber = true;
@@ -714,6 +717,10 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
   return true;
 }
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
+  if (!is_running_) {
+    // is_running_ is false means the node is shutting down
+    return;
+  }
   if (frame_set == nullptr) {
     return;
   }
