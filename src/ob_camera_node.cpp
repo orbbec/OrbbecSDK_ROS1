@@ -65,13 +65,18 @@ void OBCameraNode::init() {
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
 
 OBCameraNode::~OBCameraNode() {
+  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() start");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   is_running_ = false;
+  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() stop tf thread");
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
   }
+  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() stop stream");
   stopStreams();
+  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() delete rgb_buffer");
   delete[] rgb_buffer_;
+  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() end");
 }
 
 void OBCameraNode::getParameters() {

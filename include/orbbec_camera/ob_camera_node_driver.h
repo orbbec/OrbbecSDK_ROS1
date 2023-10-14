@@ -34,14 +34,14 @@ class OBCameraNodeDriver {
 
   std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
 
-  static std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
+  std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
       const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number);
-  static std::shared_ptr<ob::Device> selectDeviceByUSBPort(
-      const std::shared_ptr<ob::DeviceList>& list, const std::string& usb_port);
+  std::shared_ptr<ob::Device> selectDeviceByUSBPort(const std::shared_ptr<ob::DeviceList>& list,
+                                                    const std::string& usb_port);
 
   void initializeDevice(const std::shared_ptr<ob::Device>& device);
 
-  void startDevice(const std::shared_ptr<ob::DeviceList>& list);
+  void deviceConnectCallback(const std::shared_ptr<ob::DeviceList>& list);
 
   void checkConnectionTimer();
 
@@ -50,8 +50,6 @@ class OBCameraNodeDriver {
   static OBLogSeverity obLogSeverityFromString(const std::string& log_level);
 
   void queryDevice();
-
-  void syncTimeThread();
 
   void resetDeviceThread();
 
@@ -76,8 +74,6 @@ class OBCameraNodeDriver {
   std::shared_ptr<std::thread> query_thread_ = nullptr;
   std::recursive_mutex device_lock_;
   int device_num_ = 1;
-  int num_devices_connected_ = 0;
-  std::shared_ptr<std::thread> sync_time_thread_ = nullptr;
   std::shared_ptr<std::thread> reset_device_thread_ = nullptr;
   std::condition_variable reset_device_cv_;
   std::atomic_bool reset_device_{false};
