@@ -801,13 +801,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   int height = static_cast<int>(video_frame->height());
 
   auto timestamp = frameTimeStampToROSTime(video_frame->systemTimeStamp());
-  if (!camera_params_ && depth_registration_) {
-    camera_params_ = pipeline_->getCameraParam();
-  } else if (!camera_params_ && stream_index == COLOR) {
-    camera_params_ = getCameraColorParam();
-  } else if (!camera_params_ && (stream_index == DEPTH || stream_index == INFRA0)) {
-    camera_params_ = getCameraDepthParam();
-  }
+  camera_params_ = pipeline_->getCameraParam();
   std::string frame_id =
       depth_registration_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
   if (camera_params_) {
@@ -815,6 +809,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
         stream_index == COLOR ? camera_params_->rgbIntrinsic : camera_params_->depthIntrinsic;
     auto& distortion =
         stream_index == COLOR ? camera_params_->rgbDistortion : camera_params_->depthDistortion;
+
     auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
     CHECK(camera_info_publishers_.count(stream_index) > 0);
     auto camera_info_publisher = camera_info_publishers_[stream_index];
