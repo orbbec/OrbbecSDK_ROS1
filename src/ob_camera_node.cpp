@@ -785,8 +785,6 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
         } else {
           onNewFrameCallback(frame, stream_index);
         }
-
-        //onNewFrameCallback(frame, stream_index);
       }
     }
   } catch (const ob::Error& e) {
@@ -847,7 +845,13 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   int height = static_cast<int>(video_frame->height());
 
   auto timestamp = frameTimeStampToROSTime(video_frame->systemTimeStamp());
-  camera_params_ = pipeline_->getCameraParam();
+  if (!camera_params_ && depth_registration_) {
+    camera_params_ = pipeline_->getCameraParam();
+  } else if (!camera_params_ && stream_index == COLOR) {
+    camera_params_ = getCameraColorParam();
+  } else if (!camera_params_ && (stream_index == DEPTH || stream_index == INFRA0)) {
+    camera_params_ = getCameraDepthParam();
+  }
   std::string frame_id =
       depth_registration_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
   if (camera_params_) {
@@ -1087,7 +1091,18 @@ boost::optional<OBCameraParam> OBCameraNode::getCameraDepthParam() {
     auto param = camera_params->getCameraParam(i);
     int depth_w = param.depthIntrinsic.width;
     int depth_h = param.depthIntrinsic.height;
+    if (depth_w == width_[DEPTH] && depth_h == height_[DEPTH]) {
+      ROS_INFO_STREAM("getCameraDepthParam w=" << depth_w << ", h=" << depth_h);
+      return param;
+    }
+  }
+
+  for (size_t i = 0; i < camera_params->count(); i++) {
+    auto param = camera_params->getCameraParam(i);
+    int depth_w = param.depthIntrinsic.width;
+    int depth_h = param.depthIntrinsic.height;
     if (depth_w * height_[DEPTH] == depth_h * width_[DEPTH]) {
+      ROS_INFO_STREAM("getCameraDepthParam w=" << depth_w << ", h=" << depth_h);
       return param;
     }
   }
@@ -1100,7 +1115,18 @@ boost::optional<OBCameraParam> OBCameraNode::getCameraColorParam() {
     auto param = camera_params->getCameraParam(i);
     int color_w = param.rgbIntrinsic.width;
     int color_h = param.rgbIntrinsic.height;
+    if (color_w == width_[COLOR] && color_h == height_[COLOR]) {
+      ROS_INFO_STREAM("getCameraColorParam w=" << color_w << ", h=" << color_h);
+      return param;
+    }
+  }
+
+  for (size_t i = 0; i < camera_params->count(); i++) {
+    auto param = camera_params->getCameraParam(i);
+    int color_w = param.rgbIntrinsic.width;
+    int color_h = param.rgbIntrinsic.height;
     if (color_w * height_[COLOR] == color_h * width_[COLOR]) {
+      ROS_INFO_STREAM("getCameraColorParam w=" << color_w << ", h=" << color_h);
       return param;
     }
   }
