@@ -110,6 +110,14 @@ void OBCameraNode::getParameters() {
                                     : sensor_msgs::image_encodings::MONO8;
       unit_step_size_[stream_index] = sizeof(uint8_t);
     }
+    if (format_[stream_index] == OB_FORMAT_MJPG) {
+      if (stream_index.first == OB_STREAM_IR || stream_index.first == OB_STREAM_IR_LEFT ||
+          stream_index.first == OB_STREAM_IR_RIGHT) {
+        image_format_[stream_index] = CV_8UC1;
+        encoding_[stream_index] = sensor_msgs::image_encodings::MONO8;
+        unit_step_size_[stream_index] = sizeof(uint8_t);
+      }
+    }
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     depth_aligned_frame_id_[stream_index] = optical_frame_id_[COLOR];
@@ -721,6 +729,36 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
   }
   return true;
 }
+
+std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(const std::shared_ptr<ob::Frame> &frame) {
+  if (frame->format() == OB_FORMAT_MJPEG &&
+      (frame->type() == OB_FRAME_IR || frame->type() == OB_FRAME_IR_LEFT ||
+       frame->type() == OB_FRAME_IR_RIGHT)) {
+    auto video_frame = frame->as<ob::IRFrame>();
+
+    cv::Mat mjpgMat(1, video_frame->dataSize(), CV_8UC1, video_frame->data());
+    cv::Mat irRawMat = cv::imdecode(mjpgMat, cv::IMREAD_GRAYSCALE);
+
+    std::shared_ptr<ob::Frame> irFrame = ob::FrameHelper::createFrame(
+        video_frame->type(), video_frame->format(), video_frame->width(), video_frame->height(), 0);
+
+    uint32_t buffer_size = irRawMat.rows * irRawMat.cols * irRawMat.channels();
+
+    if(buffer_size > irFrame->dataSize()) {
+      ROS_ERROR_STREAM("Insufficient buffer size allocation,failed to decode ir mjpg frame!");
+      return nullptr;
+    }
+
+    memcpy(irFrame->data(), irRawMat.data, buffer_size);
+    ob::FrameHelper::setFrameDeviceTimestamp(irFrame, video_frame->timeStamp());
+    ob::FrameHelper::setFrameDeviceTimestampUs(irFrame, video_frame->timeStampUs());
+    ob::FrameHelper::setFrameSystemTimestamp(irFrame, video_frame->systemTimeStamp());
+    return irFrame;
+  }
+
+  return nullptr;
+}
+
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (!is_running_) {
     // is_running_ is false means the node is shutting down
@@ -740,7 +778,15 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
           ROS_DEBUG_STREAM("frame type " << frame_type << " is null");
           continue;
         }
-        onNewFrameCallback(frame, stream_index);
+
+        std::shared_ptr<ob::Frame> irFrame = decodeIRMJPGFrame(frame);
+        if(irFrame) {
+          onNewFrameCallback(irFrame, stream_index);
+        } else {
+          onNewFrameCallback(frame, stream_index);
+        }
+
+        //onNewFrameCallback(frame, stream_index);
       }
     }
   } catch (const ob::Error& e) {

@@ -93,6 +93,8 @@ class OBCameraNode {
 
   bool decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& frame, uint8_t* dest);
 
+  std::shared_ptr<ob::Frame> decodeIRMJPGFrame(const std::shared_ptr<ob::Frame> &frame);
+
   void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set);
 
   void publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
