@@ -116,6 +116,9 @@ void OBCameraNode::setupDevices() {
     }
 
     device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+    if (device_->isPropertySupported(OB_PROP_SDK_DEPTH_RECTIFY_MGC_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_SDK_DEPTH_RECTIFY_MGC_FILTER_BOOL, enable_mgc_filter_);
+    }
     device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     device_->setBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
