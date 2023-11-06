@@ -97,7 +97,9 @@ class OBCameraNode {
 
   void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set);
 
-  void publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
+  void onNewColorFrameCallback();
+
+  void publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set, bool isColorPointCloud);
 
   void publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
 
@@ -391,6 +393,12 @@ class OBCameraNode {
   // double infrared
   bool enable_left_ir_ = false;
   bool enable_right_ir_ = false;
+
+  //For color
+  std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
+  std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
+  std::mutex colorFrameMtx_;
+  std::condition_variable colorFrameCV_;
 };
 
 }  // namespace orbbec_camera

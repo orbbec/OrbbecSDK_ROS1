@@ -72,6 +72,12 @@ OBCameraNode::~OBCameraNode() {
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
   }
+
+  if (colorFrameThread_ && colorFrameThread_->joinable()) {
+    colorFrameCV_.notify_all();
+    colorFrameThread_->join();
+  }
+
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() stop stream");
   stopStreams();
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() delete rgb_buffer");
@@ -196,6 +202,11 @@ void OBCameraNode::startStreams() {
     } catch (...) {
       ROS_ERROR_STREAM("failed to start pipeline");
       throw;
+    }
+
+    if (!colorFrameThread_ && enable_stream_[COLOR]) {
+      ROS_INFO_STREAM("Create color frame read thread.");
+      colorFrameThread_ = std::make_shared<std::thread>([this]() { onNewColorFrameCallback(); });
     }
     pipeline_started_ = true;
   } else {
@@ -388,6 +399,11 @@ void OBCameraNode::startStream(const stream_index_pair& stream_index) {
   try {
     sensors_[stream_index]->startStream(profile, callback);
     stream_started_[stream_index] = true;
+
+    if (!colorFrameThread_ && stream_index == COLOR) {
+      ROS_INFO_STREAM("Create color frame read thread.");
+      colorFrameThread_ = std::make_shared<std::thread>([this]() { onNewColorFrameCallback(); });
+    }
     ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " started.");
   } catch (...) {
     ROS_ERROR_STREAM("Failed to start stream " << stream_name_[stream_index] << ".");
@@ -410,15 +426,20 @@ void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
   ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " stopped.");
 }
 
-void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
+void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set, bool isColorPointCloud) {
   try {
-    if (depth_registration_ || enable_colored_point_cloud_) {
-      if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
-        publishColoredPointCloud(frame_set);
+    if (isColorPointCloud) {
+      if (depth_registration_ || enable_colored_point_cloud_) {
+        if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
+          publishColoredPointCloud(frame_set);
+        }
       }
     }
-    if (frame_set->depthFrame() != nullptr) {
-      publishDepthPointCloud(frame_set);
+
+    if (!isColorPointCloud) {
+      if (frame_set->depthFrame() != nullptr) {
+        publishDepthPointCloud(frame_set);
+      }
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM(e.getMessage());
@@ -768,8 +789,15 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     return;
   }
   try {
-    rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
-    publishPointCloud(frame_set);
+    //rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
+    std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
+    if (enable_stream_[COLOR] && colorFrame){
+      std::lock_guard<std::mutex> colorLock(colorFrameMtx_);
+      colorFrameQueue_.push(frame_set);
+      colorFrameCV_.notify_all();
+    }
+
+    publishPointCloud(frame_set, false);
     for (const auto& stream_index : IMAGE_STREAMS) {
       if (enable_stream_[stream_index]) {
         auto frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(stream_index.first);
@@ -794,6 +822,28 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
   } catch (...) {
     ROS_ERROR_STREAM("onNewFrameSetCallback error: unknown error");
   }
+}
+
+void OBCameraNode::onNewColorFrameCallback() {
+  while (enable_stream_[COLOR] && ros::ok() && is_running_.load()) {
+    std::unique_lock<std::mutex> lock(colorFrameMtx_);
+    colorFrameCV_.wait(lock,
+                       [this]() { return !colorFrameQueue_.empty() || !(is_running_.load()); });
+
+    if (!ros::ok() || !is_running_.load()) {
+      break;
+    }
+
+    std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
+    rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
+    publishPointCloud(frameSet, true);
+    if (rgb_is_decoded_) {
+      onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(2));
+    }
+    colorFrameQueue_.pop();
+  }
+
+  ROS_INFO_STREAM("Color frame thread exit!");
 }
 
 std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
