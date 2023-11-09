@@ -256,6 +256,8 @@ class OBCameraNode {
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
+  ros::NodeHandle nh_rgb_;
+  ros::NodeHandle nh_ir_;
   std::shared_ptr<ob::Device> device_ = nullptr;
   std::shared_ptr<ob::DeviceInfo> device_info_ = nullptr;
   std::atomic_bool is_running_{false};
