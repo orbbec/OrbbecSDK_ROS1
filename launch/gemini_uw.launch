@@ -2,7 +2,7 @@
   <!-- unique camera name-->
   <arg name="camera_name" default="camera" />
   <!-- Hardware depth registration -->
-  <arg name="depth_registration" default="true" />
+  <arg name="depth_registration" default="false" />
   <arg name="serial_number" default="" />
   <arg name="usb_port" default="" />
   <arg name="device_num" default="1" />
