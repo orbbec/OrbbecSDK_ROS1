@@ -230,13 +230,13 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     initializeDevice(device);
   } catch (ob::Error& e) {
     start_device_failed = true;
-    ROS_ERROR_STREAM("Failed to initialize 1 device " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to initialize device " << e.getMessage());
   } catch (std::exception& e) {
     start_device_failed = true;
-    ROS_ERROR_STREAM("Failed to initialize 2 device " << e.what());
+    ROS_ERROR_STREAM("Failed to initialize device " << e.what());
   } catch (...) {
     start_device_failed = true;
-    ROS_ERROR_STREAM("Failed to initialize 3 device");
+    ROS_ERROR_STREAM("Failed to initialize device");
   }
   if (start_device_failed) {
     std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
