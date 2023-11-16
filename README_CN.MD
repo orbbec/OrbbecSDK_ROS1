@@ -452,6 +452,8 @@ IR的分辨率和帧率必须和深度保持一致。不同模式和分辨率对
 |                 | Gemini E Lite     | 3606                                      |
 |                 | Gemini            | 3.0.18                                    |
 |                 | Astra Mini S Pro  | 1.0.05                                    |
+|                 | DaBai Max Pro     | 1.0.06                                    |
+|                 | Gemini UW         | 1.0.060                                   |
 
 ## 使用Nodelet
 
