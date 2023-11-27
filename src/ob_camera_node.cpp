@@ -27,6 +27,7 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
     : nh_(nh),
       nh_private_(nh_private),
       device_(std::move(device)),
+      image_transport_(nh),
       device_info_(device_->getDeviceInfo()) {
   stream_name_[COLOR] = "color";
   stream_name_[DEPTH] = "depth";

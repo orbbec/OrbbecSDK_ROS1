@@ -233,15 +233,20 @@ void OBCameraNode::setupPublishers() {
     }
     std::string name = stream_name_[stream_index];
     std::string topic_name = "/" + camera_name_ + "/" + name + "/image_raw";
-    ros::SubscriberStatusCallback image_subscribed_cb =
+    image_transport::SubscriberStatusCallback image_subscribed_cb =
         boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
-    ros::SubscriberStatusCallback image_unsubscribed_cb =
+    image_transport::SubscriberStatusCallback image_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
-    image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
+    image_publishers_[stream_index] = image_transport_.advertise(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
+    ros::SubscriberStatusCallback camera_info_subscribed_cb =
+        boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
+    ros::SubscriberStatusCallback camera_info_unsubscribed_cb =
+        boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
+
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
-        topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
+        topic_name, 1, camera_info_subscribed_cb, camera_info_unsubscribed_cb);
   }
   if (enable_point_cloud_) {
     ros::SubscriberStatusCallback depth_cloud_subscribed_cb =

@@ -21,6 +21,7 @@
 #include "ros/ros.h"
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/distortion_models.h>
@@ -256,6 +257,7 @@ class OBCameraNode {
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
+  image_transport::ImageTransport image_transport_;
   std::shared_ptr<ob::Device> device_ = nullptr;
   std::shared_ptr<ob::DeviceInfo> device_info_ = nullptr;
   std::atomic_bool is_running_{false};
@@ -273,7 +275,7 @@ class OBCameraNode {
   std::map<stream_index_pair, std::shared_ptr<ob::StreamProfileList>> supported_profiles_;
   std::map<stream_index_pair, std::string> stream_name_;
   std::map<stream_index_pair, std::atomic_bool> save_images_;
-  std::map<stream_index_pair, ros::Publisher> image_publishers_;
+  std::map<stream_index_pair, image_transport::Publisher> image_publishers_;
   std::map<stream_index_pair, ros::Publisher> camera_info_publishers_;
   std::map<stream_index_pair, ob::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
