@@ -68,7 +68,7 @@ OBFormat OBFormatFromString(const std::string &format) {
     return OB_FORMAT_POINT;
   } else if (fixed_format == "RGB_POINT") {
     return OB_FORMAT_RGB_POINT;
-  } else if (fixed_format == "REL") {
+  } else if (fixed_format == "RLE") {
     return OB_FORMAT_RLE;
   } else if (fixed_format == "RGB888" || fixed_format == "RGB") {
     return OB_FORMAT_RGB888;
@@ -124,7 +124,7 @@ std::string OBFormatToString(const OBFormat &format) {
     case OB_FORMAT_RGB_POINT:
       return "RGB_POINT";
     case OB_FORMAT_RLE:
-      return "REL";
+      return "RLE";
     case OB_FORMAT_RGB888:
       return "RGB888";
     case OB_FORMAT_BGR:
