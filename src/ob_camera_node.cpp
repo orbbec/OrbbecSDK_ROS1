@@ -456,8 +456,10 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
     return;
   }
 
-  if(!camera_params_) {
+  if (!camera_params_ && depth_registration_) {
     camera_params_ = pipeline_->getCameraParam();
+  } else if (!camera_params_) {
+    camera_params_ = getCameraDepthParam();
   }
 
   if (!camera_params_) {
@@ -900,8 +902,12 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   int height = static_cast<int>(video_frame->height());
 
   auto timestamp = frameTimeStampToROSTime(video_frame->systemTimeStamp());
-  if (!camera_params_) {
+  if (!camera_params_ && depth_registration_) {
     camera_params_ = pipeline_->getCameraParam();
+  } else if (!camera_params_ && stream_index == COLOR) {
+    camera_params_ = getCameraColorParam();
+  } else if (!camera_params_ && (stream_index == DEPTH || stream_index == INFRA0)) {
+    camera_params_ = getCameraDepthParam();
   }
 
   std::string frame_id =
