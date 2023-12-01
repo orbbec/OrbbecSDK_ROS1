@@ -287,7 +287,7 @@ void OBCameraNode::setupCameraInfo() {
     camera_infos_[COLOR] =
         convertToCameraInfo(param->rgbIntrinsic, param->rgbDistortion, param->rgbIntrinsic.width);
   } else {
-    ROS_WARN_STREAM("Failed to get camera parameters");
+    //ROS_WARN_STREAM("Failed to get camera parameters");
   }
 }
 
