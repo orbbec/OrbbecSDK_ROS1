@@ -419,7 +419,7 @@ The frame fps and resolution of IR must be consistent with the depth. The corres
 | product serials                           | launch file          |
 |-------------------------------------------|----------------------|
 | astra+                                    | astra_adv.launch     |
-| astra/astra mini/astra mini pro/astra pro | astra.launch         |
+| astra mini/astra mini pro/astra pro       | astra.launch         |
 | astra mini s pro                          | astra.launch         |
 | astra2                                    | astra2.launch        |
 | astra stereo s                            | stereo_s_u3.launch   |

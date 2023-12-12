@@ -409,7 +409,7 @@ IR的分辨率和帧率必须和深度保持一致。不同模式和分辨率对
 | product serials                           | launch file          |
 |-------------------------------------------|----------------------|
 | astra+                                    | astra_adv.launch     |
-| astra/astra mini/astra mini pro/astra pro | astra.launch         |
+| astra mini/astra mini pro/astra pro       | astra.launch         |
 | astra mini s pro                          | astra.launch         |
 | astra2                                    | astra2.launch        |
 | astra stereo s                            | stereo_s_u3.launch   |
