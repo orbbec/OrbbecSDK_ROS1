@@ -1229,6 +1229,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   auto ex = camera_param.transform;
   Q = rotationMatrixToQuaternion(ex.rot);
   Q = quaternion_optical * Q * quaternion_optical.inverse();
+  Q = Q.inverse();
   for (int i = 0; i < 3; i++) {
     trans[i] = ex.trans[i];
   }
