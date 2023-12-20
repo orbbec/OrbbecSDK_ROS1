@@ -83,9 +83,9 @@ void OBCameraNode::getParameters() {
   camera_name_ = nh_private_.param<std::string>("camera_name", "camera");
   camera_link_frame_id_ = "depthcam_" + camera_name_ + "_link";
   for (const auto& stream_index : IMAGE_STREAMS) {
-    frame_id_[stream_index] = camera_name_ + "_" + stream_name_[stream_index] + "_frame";
+    frame_id_[stream_index] = "depthcam_" + camera_name_ + "_" + stream_name_[stream_index] + "_frame";
     optical_frame_id_[stream_index] =
-        camera_name_ + "_" + stream_name_[stream_index] + "_optical_frame";
+        "depthcam_" + camera_name_ + "_" + stream_name_[stream_index] + "_optical_frame";
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     std::string param_name = stream_name_[stream_index] + "_width";
