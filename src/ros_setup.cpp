@@ -88,6 +88,11 @@ void OBCameraNode::setupDevices() {
   if (enable_pipeline_) {
     pipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
+  if (enable_sync_output_accel_gyro_)
+  {
+    imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
+  }
+  
   try {
     if (enable_hardware_d2d_ && device_info_->pid() == GEMINI2_PID) {
       device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
@@ -115,18 +120,42 @@ void OBCameraNode::setupDevices() {
       }
     }
 
-    device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
-    device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
-    device_->setBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
+    if (!depth_filter_config_.empty() && enable_depth_filter_) {
+      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
+      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
+    }
+
+    if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+    }
+
+    if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
+      device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
+    }
+
+    if (device_->isPropertySupported(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
+      device_->setBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
+    }
+
+    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
+      auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
+      if (soft_filter_max_diff_ != -1 && default_soft_filter_max_diff != soft_filter_max_diff_) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
+      }
+    }
+
+    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
+      auto default_soft_filter_speckle_size =
+          device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+      if (soft_filter_speckle_size_ != -1 &&
+          default_soft_filter_speckle_size != soft_filter_speckle_size_) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
+      }
+    }
+
     auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
     if (soft_filter_max_diff_ != -1 && default_soft_filter_max_diff != soft_filter_max_diff_) {
       device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
-    }
-    auto default_soft_filter_speckle_size =
-        device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-    if (soft_filter_speckle_size_ != -1 &&
-        default_soft_filter_speckle_size != soft_filter_speckle_size_) {
-      device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
@@ -260,17 +289,27 @@ void OBCameraNode::setupPublishers() {
         "depth_registered/points", 1, depth_registered_cloud_subscribed_cb,
         depth_registered_cloud_unsubscribed_cb);
   }
-  for (const auto& stream_index : HID_STREAMS) {
-    if (!enable_stream_[stream_index]) {
-      continue;
-    }
-    std::string topic_name = stream_name_[stream_index] + "/sample";
+
+  if (enable_sync_output_accel_gyro_) {
+    std::string topic_name = stream_name_[GYRO] + "_" + stream_name_[ACCEL] + "/sample";
     ros::SubscriberStatusCallback imu_subscribed_cb =
-        boost::bind(&OBCameraNode::imuSubscribedCallback, this, stream_index);
-    ros::SubscriberStatusCallback imu_unsubscribed_cb =
-        boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, stream_index);
-    imu_publishers_[stream_index] =
-        nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+          boost::bind(&OBCameraNode::imuSubscribedCallback, this, GYRO);
+      ros::SubscriberStatusCallback imu_unsubscribed_cb =
+          boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, GYRO);
+    imu_gyro_accel_publisher_ = nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+  } else {
+    for (const auto& stream_index : HID_STREAMS) {
+      if (!enable_stream_[stream_index]) {
+        continue;
+      }
+      std::string topic_name = stream_name_[stream_index] + "/sample";
+      ros::SubscriberStatusCallback imu_subscribed_cb =
+          boost::bind(&OBCameraNode::imuSubscribedCallback, this, stream_index);
+      ros::SubscriberStatusCallback imu_unsubscribed_cb =
+          boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, stream_index);
+      imu_publishers_[stream_index] =
+          nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+    }
   }
 }
 

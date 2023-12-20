@@ -88,6 +88,9 @@ class OBCameraNode {
   void onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                           const stream_index_pair& stream_index);
 
+  void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame>& aframe,
+                             const std::shared_ptr<ob::Frame>& gframe);
+
   void onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                              const stream_index_pair& stream_index);
 
@@ -119,6 +122,8 @@ class OBCameraNode {
                        const std::string& from, const std::string& to);
 
   void startStreams();
+
+  void startIMUSyncStream();
 
   void startAccel();
 
@@ -359,6 +364,8 @@ class OBCameraNode {
   bool enable_ldp_ = true;
   int soft_filter_max_diff_ = -1;
   int soft_filter_speckle_size_ = -1;
+  std::string depth_filter_config_;
+  bool enable_depth_filter_ = false;
 
   // Only for Gemini2 device
   bool enable_hardware_d2d_ = true;
@@ -373,7 +380,6 @@ class OBCameraNode {
   std::string depth_precision_str_;
   OB_DEPTH_PRECISION_LEVEL depth_precision_ = OB_PRECISION_1MM;
   // IMU
-
   std::map<stream_index_pair, ros::Publisher> imu_publishers_;
   std::map<stream_index_pair, std::string> imu_rate_;
   std::map<stream_index_pair, std::string> imu_range_;
@@ -384,6 +390,11 @@ class OBCameraNode {
   double angular_vel_cov_ = 0.0001;
   std::deque<IMUData> imu_history_;
   IMUData accel_data_{ACCEL, {0, 0, 0}, -1.0};
+
+  bool enable_sync_output_accel_gyro_ = false;
+  std::shared_ptr<ob::Pipeline> imuPipeline_ = nullptr;
+  ros::Publisher imu_gyro_accel_publisher_;
+  bool imu_sync_output_start_ = false;
 
   // mjpeg decoder
   std::shared_ptr<JPEGDecoder> mjpeg_decoder_ = nullptr;

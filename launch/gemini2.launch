@@ -33,6 +33,7 @@
     <arg name="ir_format" default="Y8"/>
     <arg name="flip_ir" default="false"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
+    <arg name="enable_sync_output_accel_gyro" default="true"/>   
     <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="100hz"/>
     <arg name="accel_range" default="4g"/>
@@ -49,6 +50,8 @@
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_pipeline" default="true"/>
     <arg name="enable_ldp" default="true"/>
+    <!-- Configure the path for depth filter file, for example: /config/depthfilter/Openni_device.json -->
+    <arg name="depth_filter_config" default="" />
     <arg name="enable_soft_filter" default="true"/>
     <arg name="soft_filter_max_diff" default="-1"/>
     <arg name="soft_filter_speckle_size" default="-1"/>
@@ -96,6 +99,7 @@
             <param name="ir_format" value="$(arg ir_format)"/>
             <param name="flip_ir" value="$(arg flip_ir)"/>
             <param name="enable_ir_auto_exposure" value="$(arg enable_ir_auto_exposure)"/>
+            <param name="enable_sync_output_accel_gyro" value="$(arg enable_sync_output_accel_gyro)"/>
             <param name="enable_accel" value="$(arg enable_accel)"/>
             <param name="accel_rate" value="$(arg accel_rate)"/>
             <param name="accel_range" value="$(arg accel_range)"/>
@@ -113,6 +117,7 @@
             <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="device_num" value="$(arg device_num)"/>
+            <param name="depth_filter_config" value="$(arg depth_filter_config)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
             <param name="soft_filter_max_diff" value="$(arg soft_filter_max_diff)"/>
             <param name="soft_filter_speckle_size" value="$(arg soft_filter_speckle_size)"/>
