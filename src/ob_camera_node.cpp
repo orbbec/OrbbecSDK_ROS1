@@ -1235,6 +1235,7 @@ void OBCameraNode::publishStaticTransforms() {
   static_tf_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>();
   dynamic_tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>();
   calcAndPublishStaticTransform();
+  tf_publish_rate_ = 0.0;
   if (tf_publish_rate_ > 0) {
     tf_thread_ = std::make_shared<std::thread>([this]() { publishDynamicTransforms(); });
   } else {
