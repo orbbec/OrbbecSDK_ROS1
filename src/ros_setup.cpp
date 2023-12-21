@@ -314,6 +314,10 @@ void OBCameraNode::setupPublishers() {
 }
 
 void OBCameraNode::setupCameraInfo() {
+  color_camera_info_ = std::make_shared<camera_info_manager::CameraInfoManager>(
+      nh_rgb_, camera_name_ + "_" + stream_name_[COLOR], color_info_uri_);
+  ir_camera_info_ = std::make_shared<camera_info_manager::CameraInfoManager>(
+      nh_ir_, camera_name_ + "_" + stream_name_[INFRA0], ir_info_uri_);
   auto param = getCameraParam();
   if (param) {
     camera_infos_[DEPTH] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
