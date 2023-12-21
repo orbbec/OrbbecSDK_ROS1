@@ -1007,16 +1007,16 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
 
   std::string frame_id =
       depth_registration_ ? depth_aligned_frame_id_[stream_index] : optical_frame_id_[stream_index];
-  if (color_camera_info_->isCalibrated() && stream_index == COLOR) {
+  if (color_camera_info_manager_ && color_camera_info_manager_->isCalibrated() && stream_index == COLOR) {
     auto camera_info_publisher = camera_info_publishers_[stream_index];
-    auto camera_info = color_camera_info_->getCameraInfo();
+    auto camera_info = color_camera_info_manager_->getCameraInfo();
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
     camera_info_publisher.publish(camera_info);
-  } else if (ir_camera_info_->isCalibrated() &&
+  } else if (ir_camera_info_manager_ && ir_camera_info_manager_->isCalibrated() &&
              (stream_index == INFRA0 || stream_index == DEPTH)) {
     auto camera_info_publisher = camera_info_publishers_[stream_index];
-    auto camera_info = ir_camera_info_->getCameraInfo();
+    auto camera_info = ir_camera_info_manager_->getCameraInfo();
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
     camera_info_publisher.publish(camera_info);

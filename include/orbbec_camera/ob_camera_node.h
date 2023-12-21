@@ -341,8 +341,8 @@ class OBCameraNode {
   bool depth_registration_ = false;
   bool enable_frame_sync_ = false;
   std::recursive_mutex device_lock_;
-  std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_ = nullptr;
-  std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_ = nullptr;
+  std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_manager_ = nullptr;
+  std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_manager_ = nullptr;
   std::string ir_info_uri_;
   std::string color_info_uri_;
   bool enable_d2c_viewer_ = false;
