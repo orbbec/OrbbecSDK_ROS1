@@ -497,20 +497,16 @@ void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
   ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " stopped.");
 }
 
-void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set, bool isColorPointCloud) {
+void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
   try {
-    if (isColorPointCloud) {
-      if (depth_registration_ || enable_colored_point_cloud_) {
-        if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
-          publishColoredPointCloud(frame_set);
-        }
+    if (depth_registration_ || enable_colored_point_cloud_) {
+      if (frame_set->depthFrame() != nullptr && frame_set->colorFrame() != nullptr) {
+        publishColoredPointCloud(frame_set);
       }
     }
 
-    if (!isColorPointCloud) {
-      if (frame_set->depthFrame() != nullptr) {
-        publishDepthPointCloud(frame_set);
-      }
+    if (frame_set->depthFrame() != nullptr) {
+      publishDepthPointCloud(frame_set);
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM(e.getMessage());
@@ -900,8 +896,10 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
       colorFrameQueue_.push(frame_set);
       colorFrameCV_.notify_all();
     }
+    else {
+      publishPointCloud(frame_set);
+    }
 
-    publishPointCloud(frame_set, false);
     for (const auto& stream_index : IMAGE_STREAMS) {
       if (enable_stream_[stream_index]) {
         auto frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(stream_index.first);
@@ -944,7 +942,7 @@ void OBCameraNode::onNewColorFrameCallback() {
 
     std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
-    publishPointCloud(frameSet, true);
+    publishPointCloud(frameSet);
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(2));
     colorFrameQueue_.pop();
   }
