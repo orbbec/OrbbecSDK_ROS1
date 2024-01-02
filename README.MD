@@ -444,6 +444,13 @@ The frame fps and resolution of IR must be consistent with the depth. The corres
 | gemini2L                                  | gemini2L.launch      |
 | gemini e                                  | gemini_e.launch      |
 | gemini e lite                             | gemini_e_lite.launch |
+| dabai max                                 | dabai_max.launch     |
+| dabai max pro                             | dabai_max_pro.launch |
+| gemini uw                                 | gemini_uw.launch     |
+| dabai dcw2                                | dabai_dcw2.launch    |
+| dabai dw2                                 | dabai_dw2.launch     |
+| gemini ew                                 | gemini_ew.launch     |
+| gemini ew lite                            | gemini_ew_lite.launch|
 
 Actually, All launch files all most the same, the only difference is the default value of the parameters.
 

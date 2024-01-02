@@ -434,6 +434,13 @@ IR的分辨率和帧率必须和深度保持一致。不同模式和分辨率对
 | gemini2L                                  | gemini2L.launch      |
 | gemini e                                  | gemini_e.launch      |
 | gemini e lite                             | gemini_e_lite.launch |
+| dabai max                                 | dabai_max.launch     |
+| dabai max pro                             | dabai_max_pro.launch |
+| gemini uw                                 | gemini_uw.launch     |
+| dabai dcw2                                | dabai_dcw2.launch    |
+| dabai dw2                                 | dabai_dw2.launch     |
+| gemini ew                                 | gemini_ew.launch     |
+| gemini ew lite                            | gemini_ew_lite.launch|
 
 实际上所有启动文件几乎都是相同的，只是有的相机默认参数不同，请根据自己的相机选择对应的启动文件，并根据你的需要调整。
 
