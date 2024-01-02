@@ -252,6 +252,9 @@ rosservice call /camera/save_point_cloud "{}"
 - `/camera/depth_registered/points`: 彩色点云话题，仅当 `enable_colored_point_cloud` 为 `true` 时才可用。
 - `/camera/ir/camera_info`:  红外相机信息（CameraInfo）话题。
 - `/camera/ir/image_raw`: 红外数据流图像话题。
+- `/camera/accel/sample`: 加速度数据流，`enable_sync_output_accel_gyro`配置关闭，`enable_accel`配置打开
+- `/camera/gyro/sample`: 陀螺仪数据流，enable_sync_output_accel_gyro`配置关闭，`enable_gyro`配置打开
+- `camera/gyro_accel/sample`: 加速度和陀螺仪同步数据流，通过`enable_sync_output_accel_gyro`配置打开
 
 ### 多相机
 
@@ -369,6 +372,7 @@ roslaunch orbbec_camera multi_camera.launch
   。具体的值取决于当前的相机型号。
 - `enumerate_net_device` : 是否开启枚举网络设备的功能，true为开启，false为关闭，仅Femto mega和Gemini 2 XL设备支持。
   当通过网络方式访问以上设备时，需提前配置好设备的IP地址，使能开关需要配置成true。
+- `depth_filter_config` : 配置深度滤波配置文件加载路径，默认深度滤波配置文件在/config/depthfilter目录下,仅gemini2支持。
 
 ## 深度模式切换：
 - 启动相机前,可通过配置对应相继的xxx.launch的深度模式(depth_work_mode)支持。
@@ -381,6 +385,7 @@ roslaunch orbbec_camera multi_camera.launch
   <!-- Unbinned Dense Default -->
   <!-- Unbinned Sparse Default -->
   <!-- Binned Sparse Default -->
+  <!-- Obstacle Avoidance -->
   <arg name="depth_work_mode" default=""/>
 ```
 
@@ -409,10 +414,11 @@ IR的分辨率和帧率必须和深度保持一致。不同模式和分辨率对
 | product serials                           | launch file          |
 |-------------------------------------------|----------------------|
 | astra+                                    | astra_adv.launch     |
-| astra/astra mini/astra mini pro/astra pro | astra.launch         |
+| astra mini/astra mini pro/astra pro       | astra.launch         |
 | astra mini s pro                          | astra.launch         |
 | astra2                                    | astra2.launch        |
 | astra stereo s                            | stereo_s_u3.launch   |
+| astra pro2                                | astra_pro2.launch    |
 | dabai                                     | dabai.launch         |
 | dabai d1                                  | dabai_d1.launch      |
 | dabai dcw                                 | dabai_dcw.launch     |
@@ -433,25 +439,25 @@ IR的分辨率和帧率必须和深度保持一致。不同模式和分辨率对
 
 ## 已经支持的硬件产品列表
 
-| **SDK version** | **products list** | **firmware version**                      |
-|-----------------|-------------------|-------------------------------------------|
-| v1.8.1          | Gemini 2 XL       | Obox: V1.2.5  VL:1.4.54                   |
-|                 | Astra 2           | 2.8.20                                    |
-|                 | Gemini 2 L        | 1.4.32                                    |
-|                 | Gemini 2          | 1.4.60 /1.4.76                            |
-|                 | Femto Mega        | 1.1.7  (window10、ubuntu20.04、ubuntu22.04) |
-|                 | Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19               |
-|                 | Femto             | 1.6.7                                     |
-|                 | Femto W           | 1.1.8                                     |
-|                 | Femto Bolt        | 1.0.6 (unsupported ARNM32)                |
-|                 | DaBai             | 2436                                      |
-|                 | DaBai DCW         | 2460                                      |
-|                 | DaBai DW          | 2606                                      |
-|                 | Astra Mini Pro    | 1007                                      |
-|                 | Gemini E          | 3460                                      |
-|                 | Gemini E Lite     | 3606                                      |
-|                 | Gemini            | 3.0.18                                    |
-|                 | Astra Mini S Pro  | 1.0.05                                    |
+| **products list** | **firmware version**                      |
+|-------------------|-------------------------------------------|
+| Gemini 2 XL       | Obox: V1.2.5  VL:1.4.54                   |
+| Astra 2           | 2.8.20                                    |
+| Gemini 2 L        | 1.4.32                                    |
+| Gemini 2          | 1.4.60 /1.4.76                            |
+| Femto Mega        | 1.1.7  (window10、ubuntu20.04、ubuntu22.04) |
+| Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19               |
+| Femto             | 1.6.7                                     |
+| Femto W           | 1.1.8                                     |
+| Femto Bolt        | 1.0.6 (unsupported ARNM32)                |
+| DaBai             | 2436                                      |
+| DaBai DCW         | 2460                                      |
+| DaBai DW          | 2606                                      |
+| Astra Mini Pro    | 1007                                      |
+| Gemini E          | 3460                                      |
+| Gemini E Lite     | 3606                                      |
+| Gemini            | 3.0.18                                    |
+| Astra Mini S Pro  | 1.0.05                                    |
 
 ## 使用Nodelet
 

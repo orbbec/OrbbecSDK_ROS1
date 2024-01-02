@@ -152,15 +152,18 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
                                             OBCameraDistortion distortion, int width) {
   (void)width;
   sensor_msgs::CameraInfo info;
-  info.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+  info.distortion_model = sensor_msgs::distortion_models::RATIONAL_POLYNOMIAL;
   info.width = intrinsic.width;
   info.height = intrinsic.height;
-  info.D.resize(5, 0.0);
+  info.D.resize(8, 0.0);
   info.D[0] = distortion.k1;
   info.D[1] = distortion.k2;
   info.D[2] = distortion.p1;
   info.D[3] = distortion.p2;
   info.D[4] = distortion.k3;
+  info.D[5] = distortion.k4;
+  info.D[6] = distortion.k5;
+  info.D[7] = distortion.k6;
 
   info.K.fill(0.0);
   info.K[0] = intrinsic.fx;
