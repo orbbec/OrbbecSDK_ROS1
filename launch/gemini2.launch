@@ -62,6 +62,7 @@
     <!-- Unbinned Dense Default -->
     <!-- Unbinned Sparse Default -->
     <!-- Binned Sparse Default -->
+    <!-- Obstacle Avoidance -->
     <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="false"/>
     <group ns="$(arg camera_name)">

@@ -395,6 +395,7 @@ The following are the launch parameters available:
   <!-- Unbinned Dense Default -->
   <!-- Unbinned Sparse Default -->
   <!-- Binned Sparse Default -->
+  <!-- Obstacle Avoidance -->
   <arg name="depth_work_mode" default=""/>
 ```
 
@@ -427,6 +428,7 @@ The frame fps and resolution of IR must be consistent with the depth. The corres
 | astra mini s pro                          | astra.launch         |
 | astra2                                    | astra2.launch        |
 | astra stereo s                            | stereo_s_u3.launch   |
+| astra pro2                                | astra_pro2.launch    |
 | dabai                                     | dabai.launch         |
 | dabai d1                                  | dabai_d1.launch      |
 | dabai dcw                                 | dabai_dcw.launch     |
