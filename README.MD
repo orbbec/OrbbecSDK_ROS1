@@ -472,6 +472,8 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 | Gemini E Lite     | 3606                                      |
 | Gemini            | 3.0.18                                    |
 | Astra Mini S Pro  | 1.0.05                                    |
+| DaBai Max Pro     | 1.0.06                                    |
+| Gemini UW         | 1.0.060                                   |
 
 ## Frequently Asked Questions
 
