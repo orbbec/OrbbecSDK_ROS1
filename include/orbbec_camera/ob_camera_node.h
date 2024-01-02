@@ -88,6 +88,9 @@ class OBCameraNode {
   void onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                           const stream_index_pair& stream_index);
 
+  void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame>& aframe,
+                             const std::shared_ptr<ob::Frame>& gframe);
+
   void onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                              const stream_index_pair& stream_index);
 
@@ -99,7 +102,7 @@ class OBCameraNode {
 
   void onNewColorFrameCallback();
 
-  void publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set, bool isColorPointCloud);
+  void publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
 
   void publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set);
 
@@ -119,6 +122,8 @@ class OBCameraNode {
                        const std::string& from, const std::string& to);
 
   void startStreams();
+
+  void startIMUSyncStream();
 
   void startAccel();
 
@@ -258,6 +263,8 @@ class OBCameraNode {
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
+  ros::NodeHandle nh_rgb_;
+  ros::NodeHandle nh_ir_;
   std::shared_ptr<ob::Device> device_ = nullptr;
   std::shared_ptr<ob::DeviceInfo> device_info_ = nullptr;
   std::atomic_bool is_running_{false};
@@ -334,8 +341,8 @@ class OBCameraNode {
   bool depth_registration_ = false;
   bool enable_frame_sync_ = false;
   std::recursive_mutex device_lock_;
-  std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_ = nullptr;
-  std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_ = nullptr;
+  std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_manager_ = nullptr;
+  std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_manager_ = nullptr;
   std::string ir_info_uri_;
   std::string color_info_uri_;
   bool enable_d2c_viewer_ = false;
@@ -354,11 +361,14 @@ class OBCameraNode {
   boost::optional<OBCameraParam> camera_params_;
   bool is_initialized_ = false;
   bool enable_soft_filter_ = true;
+  bool enable_mgc_filter_ = false;
   bool enable_color_auto_exposure_ = true;
   bool enable_ir_auto_exposure_ = true;
   bool enable_ldp_ = true;
   int soft_filter_max_diff_ = -1;
   int soft_filter_speckle_size_ = -1;
+  std::string depth_filter_config_;
+  bool enable_depth_filter_ = false;
 
   // Only for Gemini2 device
   bool enable_hardware_d2d_ = true;
@@ -373,7 +383,6 @@ class OBCameraNode {
   std::string depth_precision_str_;
   OB_DEPTH_PRECISION_LEVEL depth_precision_ = OB_PRECISION_1MM;
   // IMU
-
   std::map<stream_index_pair, ros::Publisher> imu_publishers_;
   std::map<stream_index_pair, std::string> imu_rate_;
   std::map<stream_index_pair, std::string> imu_range_;
@@ -384,6 +393,11 @@ class OBCameraNode {
   double angular_vel_cov_ = 0.0001;
   std::deque<IMUData> imu_history_;
   IMUData accel_data_{ACCEL, {0, 0, 0}, -1.0};
+
+  bool enable_sync_output_accel_gyro_ = false;
+  std::shared_ptr<ob::Pipeline> imuPipeline_ = nullptr;
+  ros::Publisher imu_gyro_accel_publisher_;
+  bool imu_sync_output_start_ = false;
 
   // mjpeg decoder
   std::shared_ptr<JPEGDecoder> mjpeg_decoder_ = nullptr;

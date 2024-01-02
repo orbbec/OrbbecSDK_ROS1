@@ -21,6 +21,7 @@
 
 #include "orbbec_camera/d2c_viewer.h"
 
+/**Only for test*/
 namespace orbbec_camera {
 D2CViewer::D2CViewer(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
     : nh_(nh), nh_private_(nh_private) {
