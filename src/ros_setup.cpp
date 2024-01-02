@@ -123,10 +123,10 @@ void OBCameraNode::setupDevices() {
     if (!depth_filter_config_.empty() && enable_depth_filter_) {
       ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
       device_->loadDepthFilterConfig(depth_filter_config_.c_str());
-    }
-
-    if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
-      device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+    } else {
+      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+      }
     }
 
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {

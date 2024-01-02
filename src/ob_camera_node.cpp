@@ -162,7 +162,6 @@ void OBCameraNode::getParameters() {
   soft_filter_speckle_size_ = nh_private_.param<int>("soft_filter_speckle_size", -1);
   depth_filter_config_ = nh_private_.param<std::string>("depth_filter_config", "");
   if (!depth_filter_config_.empty()) {
-    enable_soft_filter_ = false;
     enable_depth_filter_ = true;
   }
 
