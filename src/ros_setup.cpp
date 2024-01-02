@@ -152,11 +152,6 @@ void OBCameraNode::setupDevices() {
         device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
       }
     }
-
-    auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-    if (soft_filter_max_diff_ != -1 && default_soft_filter_max_diff != soft_filter_max_diff_) {
-      device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
-    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
   } catch (const std::exception& e) {
