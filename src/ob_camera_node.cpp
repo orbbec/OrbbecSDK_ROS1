@@ -195,6 +195,9 @@ void OBCameraNode::startStreams() {
     if (enable_frame_sync_) {
       pipeline_->enableFrameSync();
     }
+    else {
+      pipeline_->disableFrameSync();
+    }
     try {
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
