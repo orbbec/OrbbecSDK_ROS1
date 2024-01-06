@@ -65,7 +65,7 @@
     <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="false"/>
     <group ns="$(arg camera_name)">
-        <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
+        <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)" respawn="true">
             <param name="camera_name" value="$(arg camera_name)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="serial_number" type="string" value="$(arg serial_number)"/>
