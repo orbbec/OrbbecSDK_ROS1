@@ -123,10 +123,10 @@ void OBCameraNode::setupDevices() {
     if (!depth_filter_config_.empty() && enable_depth_filter_) {
       ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
       device_->loadDepthFilterConfig(depth_filter_config_.c_str());
-    }
-
-    if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
-      device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+    } else {
+      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+      }
     }
 
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
@@ -151,11 +151,6 @@ void OBCameraNode::setupDevices() {
           default_soft_filter_speckle_size != soft_filter_speckle_size_) {
         device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
       }
-    }
-
-    auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-    if (soft_filter_max_diff_ != -1 && default_soft_filter_max_diff != soft_filter_max_diff_) {
-      device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
