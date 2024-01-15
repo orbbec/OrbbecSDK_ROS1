@@ -272,7 +272,7 @@ void OBCameraNode::startIMUSyncStream() {
     ROS_ERROR_STREAM(
         "Failed to start IMU stream, please check the imu_rate and imu_range parameters.");
   } else {
-    ROS_ERROR_STREAM(
+    ROS_INFO_STREAM(
         "start accel stream with range: "
         << fullAccelScaleRangeToString(accel_range) << ",rate:" << sampleRateToString(accel_rate)
         << ", and start gyro stream with range:" << fullGyroScaleRangeToString(gyro_range)
