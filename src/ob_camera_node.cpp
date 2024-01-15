@@ -145,6 +145,7 @@ void OBCameraNode::getParameters() {
   enable_mgc_filter_ = nh_private_.param<bool>("enable_mgc_filter", false);
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
+  enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);
   sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "free_run");
   std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(), ::toupper);
   sync_mode_ = OBSyncModeFromString(sync_mode_str_);

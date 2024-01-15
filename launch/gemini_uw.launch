@@ -18,6 +18,7 @@
   <arg name="color_format" default="MJPG" />
   <arg name="flip_color" default="false" />
   <arg name="enable_color_auto_exposure" default="true" />
+  <arg name="enable_ir_long_exposure" default="false" />
   <arg name="depth_width" default="640" />
   <arg name="depth_height" default="400" />
   <arg name="depth_fps" default="10" />
@@ -70,6 +71,7 @@
       <param name="ir_format" value="$(arg ir_format)" />
       <param name="flip_ir" value="$(arg flip_ir)" />
       <param name="enable_ir_auto_exposure" value="$(arg enable_ir_auto_exposure)" />
+      <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)" />
       <param name="publish_tf" value="$(arg publish_tf)" />
       <param name="tf_publish_rate" value="$(arg tf_publish_rate)" />
       <param name="ir_info_uri" value="$(arg ir_info_uri)" />
