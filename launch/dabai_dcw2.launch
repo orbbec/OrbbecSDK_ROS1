@@ -38,7 +38,8 @@
   <arg name="log_level" default="none" />
   <arg name="enable_pipeline" default="true" />
   <arg name="enable_soft_filter" default="true" />
-  <arg name="enable_mgc_filter" default="true"/>
+  <!-- Configure the path for depth filter file, for example: /config/depthfilter/Openni_device.json -->
+  <arg name="depth_filter_config" default="" />
   <group ns="$(arg camera_name)">
     <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
       <param name="camera_name" value="$(arg camera_name)" />
@@ -78,7 +79,7 @@
       <param name="enable_pipeline" value="$(arg enable_pipeline)" />
       <param name="device_num" value="$(arg device_num)" />
       <param name="enable_soft_filter" value="$(arg enable_soft_filter)" />
-      <param name="enable_mgc_filter" value="$(arg enable_mgc_filter)"/>
+      <param name="depth_filter_config" value="$(arg depth_filter_config)"/>
       <remap from="/$(arg camera_name)/depth/color/points"
         to="/$(arg camera_name)/depth_registered/points" />
     </node>

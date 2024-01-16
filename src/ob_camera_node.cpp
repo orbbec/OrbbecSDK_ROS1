@@ -142,7 +142,6 @@ void OBCameraNode::getParameters() {
   enable_hardware_d2d_ = nh_private_.param<bool>("enable_hardware_d2d", true);
   depth_work_mode_ = nh_private_.param<std::string>("depth_work_mode", "");
   enable_soft_filter_ = nh_private_.param<bool>("enable_soft_filter", true);
-  enable_mgc_filter_ = nh_private_.param<bool>("enable_mgc_filter", false);
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
   enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);
