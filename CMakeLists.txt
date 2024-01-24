@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(orbbec_camera)
 
 # Compiler settings
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
@@ -218,6 +218,7 @@ macro(add_orbbec_executable TARGET SOURCES)
   add_executable(${TARGET} ${SOURCES})
   target_link_libraries(${TARGET} ${COMMON_LINK_LIBRARIES} ${PROJECT_NAME})
   target_include_directories(${TARGET} PUBLIC ${COMMON_INCLUDE_DIRS})
+  install(TARGETS ${TARGET} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 endmacro()
 
 # Add nodes

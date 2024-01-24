@@ -90,6 +90,12 @@ OBCameraNode::~OBCameraNode() {
 void OBCameraNode::getParameters() {
   camera_name_ = nh_private_.param<std::string>("camera_name", "camera");
   camera_link_frame_id_ = camera_name_ + "_link";
+  if(camera_link_frame_id_ == "ob_camera_01_link"){
+    camera_link_frame_id_ = "/r2_19132/right_depth_camera_link";
+  }
+  if(camera_link_frame_id_ == "ob_camera_02_link"){
+    camera_link_frame_id_ = "/r2_19132/left_depth_camera_link";
+  }
   for (const auto& stream_index : IMAGE_STREAMS) {
     frame_id_[stream_index] = camera_name_ + "_" + stream_name_[stream_index] + "_frame";
     optical_frame_id_[stream_index] =
