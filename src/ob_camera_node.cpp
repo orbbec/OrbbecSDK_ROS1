@@ -130,6 +130,7 @@ void OBCameraNode::getParameters() {
   for (const auto& stream_index : IMAGE_STREAMS) {
     depth_aligned_frame_id_[stream_index] = optical_frame_id_[COLOR];
   }
+  use_hardware_time_ = nh_private_.param<bool>("use_hardware_time", false);
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
   enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", false);
@@ -586,7 +587,8 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
       valid_count++;
     }
   }
-  auto timestamp = frameTimeStampToROSTime(depth_frame->systemTimeStamp());
+  auto frame_time_stamp = use_hardware_time_ ? depth_frame->depth_frame->timeStamp():depth_frame->systemTimeStamp();
+  auto timestamp = frameTimeStampToROSTime(frame_time_stamp);
   std::string frame_id =
       depth_registration_ ? depth_aligned_frame_id_[COLOR] : optical_frame_id_[DEPTH];
   cloud_msg_.header.stamp = timestamp;
@@ -694,7 +696,8 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   if (valid_count == 0) {
     return;
   }
-  auto timestamp = frameTimeStampToROSTime(depth_frame->systemTimeStamp());
+  auto frame_time_stamp = use_hardware_time_ ? depth_frame->timeStamp() : depth_frame->systemTimeStamp();
+  auto timestamp = frameTimeStampToROSTime(frame_time_stamp);
   cloud_msg_.header.stamp = timestamp;
   cloud_msg_.header.frame_id = optical_frame_id_[COLOR];
   cloud_msg_.is_dense = true;
@@ -1001,8 +1004,8 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   }
   int width = static_cast<int>(video_frame->width());
   int height = static_cast<int>(video_frame->height());
-
-  auto timestamp = frameTimeStampToROSTime(video_frame->systemTimeStamp());
+  auto frame_time_stamp = use_hardware_time_? video_frame->timeStamp() : video_frame->systemTimeStamp();
+  auto timestamp = frameTimeStampToROSTime(frame_time_stamp);
   if (!camera_params_) {
     camera_params_ = pipeline_->getCameraParam();
   }
