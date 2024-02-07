@@ -3,8 +3,8 @@
         <arg name="3d_sensor" default="gemini2"/>
         <arg name="camera1_prefix" default="01"/>
         <arg name="camera2_prefix" default="02"/>
-        <arg name="camera1_usb_port" default="2-1"/>
-        <arg name="camera2_usb_port" default="2-2"/>
+        <arg name="camera1_usb_port" default="2-3"/>
+        <arg name="camera2_usb_port" default="2-5"/>
 
         <arg name="device_num" default="2"/>
         <node name="camera" pkg="orbbec_camera" type="ob_cleanup_shm_node" respawn="true" output="screen"/>
