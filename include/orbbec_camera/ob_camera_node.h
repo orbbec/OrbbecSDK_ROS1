@@ -299,6 +299,7 @@ class OBCameraNode {
   std::map<stream_index_pair, int> default_exposure_;
   int default_white_balance_ = 0;
   std::string camera_link_frame_id_ = "camera_link";
+  std::string robot_name_ = "robot";
   std::string camera_name_ = "camera";
   const std::string imu_optical_frame_id_ = "camera_gyro_accel_optical_frame";
   const std::string imu_frame_id_ = "camera_gyro_accel_frame";

@@ -1,0 +1,12 @@
+<launch>
+    <arg name="camera_name" default="$(arg camera_name)"/>
+    <arg name="robot_name" default="$(arg robot_name)"/>                
+    <arg name="usb_port" default="$(arg usb_port)"/>
+
+    <include file="$(find orbbec_camera)/launch/gemini2.launch">
+            <arg name="camera_name" value="$(arg camera_name)"/>
+            <arg name="robot_name" value="$(arg robot_name)"/>
+            <arg name="usb_port" value="$(arg usb_port)"/>
+            <arg name="device_num" value="2"/>
+    </include>
+</launch>
