@@ -164,6 +164,7 @@ void OBCameraNode::getParameters() {
   soft_filter_speckle_size_ = nh_private_.param<int>("soft_filter_speckle_size", -1);
   depth_filter_config_ = nh_private_.param<std::string>("depth_filter_config", "");
   ordered_pc_ = nh_private_.param<bool>("ordered_pc", false);
+  max_save_images_count_ = nh_private_.param<int>("max_save_images_count", 10);
   if (!depth_filter_config_.empty()) {
     enable_depth_filter_ = true;
   }
@@ -1107,28 +1108,43 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
     ss << std::put_time(localtime(&now), "%Y%m%d_%H%M%S");
     auto current_path = boost::filesystem::current_path().string();
     auto fps = fps_[stream_index];
+    int index = save_images_count_[stream_index];
+    std::string file_suffix = stream_index == COLOR ? ".png" : ".raw";
     std::string filename = current_path + "/image/" + stream_name_[stream_index] + "_" +
                            std::to_string(image_msg->width) + "x" +
                            std::to_string(image_msg->height) + "_" + std::to_string(fps) + "hz_" +
-                           ss.str() + ".png";
+                           ss.str() + "_" + std::to_string(index) + file_suffix;
     if (!boost::filesystem::exists(current_path + "/image")) {
       boost::filesystem::create_directory(current_path + "/image");
     }
     ROS_INFO_STREAM("Saving image to " << filename);
-    if (stream_index.first == OB_STREAM_DEPTH) {
-      auto image_to_save = cv_bridge::toCvCopy(image_msg, encoding_[stream_index])->image;
-      cv::imwrite(filename, image_to_save);
-    } else if (stream_index.first == OB_STREAM_COLOR) {
+    if (stream_index.first == OB_STREAM_COLOR) {
       auto image_to_save =
           cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8)->image;
       cv::imwrite(filename, image_to_save);
     } else if (stream_index.first == OB_STREAM_IR || stream_index.first == OB_STREAM_IR_LEFT ||
-               stream_index.first == OB_STREAM_IR_RIGHT) {
-      cv::imwrite(filename, image);
+               stream_index.first == OB_STREAM_IR_RIGHT || stream_index.first == OB_STREAM_DEPTH) {
+      std::ofstream ofs(filename, std::ios::out | std::ios::binary);
+      if (!ofs.is_open()) {
+        ROS_ERROR_STREAM("Failed to open file: " << filename);
+        return;
+      }
+      if (image.isContinuous()) {
+        ofs.write(reinterpret_cast<const char*>(image.data), image.total() * image.elemSize());
+      } else {
+        int rows = image.rows;
+        int cols = image.cols * image.channels();
+        for (int r = 0; r < rows; ++r) {
+          ofs.write(reinterpret_cast<const char*>(image.ptr<uchar>(r)), cols);
+        }
+      }
+      ofs.close();
     } else {
       ROS_ERROR_STREAM("Unsupported stream type: " << stream_index.first);
     }
-    save_images_[stream_index] = false;
+    if (++save_images_count_[stream_index] >= max_save_images_count_) {
+      save_images_[stream_index] = false;
+    }
   }
 }
 

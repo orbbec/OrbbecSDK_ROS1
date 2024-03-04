@@ -89,14 +89,14 @@ class OBCameraNode {
                           const stream_index_pair& stream_index);
 
   void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame>& aframe,
-                             const std::shared_ptr<ob::Frame>& gframe);
+                                       const std::shared_ptr<ob::Frame>& gframe);
 
   void onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                              const stream_index_pair& stream_index);
 
   bool decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& frame, uint8_t* dest);
 
-  std::shared_ptr<ob::Frame> decodeIRMJPGFrame(const std::shared_ptr<ob::Frame> &frame);
+  std::shared_ptr<ob::Frame> decodeIRMJPGFrame(const std::shared_ptr<ob::Frame>& frame);
 
   void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set);
 
@@ -282,6 +282,8 @@ class OBCameraNode {
   std::map<stream_index_pair, std::shared_ptr<ob::StreamProfileList>> supported_profiles_;
   std::map<stream_index_pair, std::string> stream_name_;
   std::map<stream_index_pair, std::atomic_bool> save_images_;
+  std::map<stream_index_pair, int> save_images_count_;
+  int max_save_images_count_ = 10;
   std::map<stream_index_pair, ros::Publisher> image_publishers_;
   std::map<stream_index_pair, ros::Publisher> camera_info_publishers_;
   std::map<stream_index_pair, ob::FrameCallback> frame_callback_;
@@ -410,7 +412,7 @@ class OBCameraNode {
   bool enable_left_ir_ = false;
   bool enable_right_ir_ = false;
 
-  //For color
+  // For color
   std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
   std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
   std::mutex colorFrameMtx_;
