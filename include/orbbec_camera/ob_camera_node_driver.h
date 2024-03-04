@@ -43,6 +43,8 @@ class OBCameraNodeDriver {
 
   void deviceConnectCallback(const std::shared_ptr<ob::DeviceList>& list);
 
+  void connectNetDevice(const std::string& ip_address, int port);
+
   void checkConnectionTimer();
 
   void deviceDisconnectCallback(const std::shared_ptr<ob::DeviceList>& device_list);
@@ -82,5 +84,8 @@ class OBCameraNodeDriver {
   pthread_mutexattr_t orb_device_lock_attr_;
   uint8_t* orb_device_lock_shm_addr_ = nullptr;
   int orb_device_lock_shm_fd_ = -1;
+  // net work config
+  std::string ip_address_;
+  int port_ = 0;
 };
 }  // namespace orbbec_camera
