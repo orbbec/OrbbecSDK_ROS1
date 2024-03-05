@@ -39,6 +39,7 @@
 #include "orbbec_camera/d2c_viewer.h"
 #include "orbbec_camera/GetCameraParams.h"
 #include <boost/optional.hpp>
+#include <image_transport/image_transport.h>
 
 #include "jpeg_decoder.h"
 
@@ -284,7 +285,8 @@ class OBCameraNode {
   std::map<stream_index_pair, std::atomic_bool> save_images_;
   std::map<stream_index_pair, int> save_images_count_;
   int max_save_images_count_ = 10;
-  std::map<stream_index_pair, ros::Publisher> image_publishers_;
+  std::map<stream_index_pair, image_transport::Publisher> image_publishers_;
+  std::map<stream_index_pair, uint32_t> image_seq_;
   std::map<stream_index_pair, ros::Publisher> camera_info_publishers_;
   std::map<stream_index_pair, ob::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
@@ -420,6 +422,7 @@ class OBCameraNode {
   bool use_hardware_time_ = false;
   // ordered point cloud
   bool ordered_pc_ = false;
+  bool enable_compressed_color_ = false;
 };
 
 }  // namespace orbbec_camera

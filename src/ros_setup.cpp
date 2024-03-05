@@ -88,11 +88,10 @@ void OBCameraNode::setupDevices() {
   if (enable_pipeline_) {
     pipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
-  if (enable_sync_output_accel_gyro_)
-  {
+  if (enable_sync_output_accel_gyro_) {
     imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
-  
+
   try {
     if (enable_hardware_d2d_ && device_info_->pid() == GEMINI2_PID) {
       device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
@@ -255,19 +254,24 @@ void OBCameraNode::setupTopics() {
 }
 
 void OBCameraNode::setupPublishers() {
+  image_transport::ImageTransport image_transport(nh_);
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (!enable_stream_[stream_index]) {
       continue;
     }
     std::string name = stream_name_[stream_index];
     std::string topic_name = "/" + camera_name_ + "/" + name + "/image_raw";
+    image_transport::SubscriberStatusCallback it_subscribed_cb =
+        boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
+    image_transport::SubscriberStatusCallback it_unsubscribed_cb =
+        boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
+    image_publishers_[stream_index] =
+        image_transport.advertise(topic_name, 1, it_subscribed_cb, it_unsubscribed_cb);
+    topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     ros::SubscriberStatusCallback image_subscribed_cb =
         boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
     ros::SubscriberStatusCallback image_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
-    image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
-        topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
-    topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
   }
@@ -292,10 +296,11 @@ void OBCameraNode::setupPublishers() {
   if (enable_sync_output_accel_gyro_) {
     std::string topic_name = stream_name_[GYRO] + "_" + stream_name_[ACCEL] + "/sample";
     ros::SubscriberStatusCallback imu_subscribed_cb =
-          boost::bind(&OBCameraNode::imuSubscribedCallback, this, GYRO);
-      ros::SubscriberStatusCallback imu_unsubscribed_cb =
-          boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, GYRO);
-    imu_gyro_accel_publisher_ = nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+        boost::bind(&OBCameraNode::imuSubscribedCallback, this, GYRO);
+    ros::SubscriberStatusCallback imu_unsubscribed_cb =
+        boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, GYRO);
+    imu_gyro_accel_publisher_ =
+        nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
   } else {
     for (const auto& stream_index : HID_STREAMS) {
       if (!enable_stream_[stream_index]) {
@@ -326,7 +331,7 @@ void OBCameraNode::setupCameraInfo() {
     camera_infos_[COLOR] =
         convertToCameraInfo(param->rgbIntrinsic, param->rgbDistortion, param->rgbIntrinsic.width);
   } else {
-    //ROS_WARN_STREAM("Failed to get camera parameters");
+    // ROS_WARN_STREAM("Failed to get camera parameters");
   }
 }
 
@@ -339,7 +344,7 @@ void OBCameraNode::setupPipelineConfig() {
     if (device_info_->pid() == FEMTO_BOLT_PID) {
       ROS_INFO_STREAM("set align mode:  ALIGN_D2C_SW_MODE");
       pipeline_config_->setAlignMode(ALIGN_D2C_SW_MODE);
-    }else {
+    } else {
       ROS_INFO_STREAM("set align mode:  ALIGN_D2C_HW_MODE");
       pipeline_config_->setAlignMode(ALIGN_D2C_HW_MODE);
     }

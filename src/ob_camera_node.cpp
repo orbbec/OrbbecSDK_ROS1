@@ -1077,10 +1077,12 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   auto image_msg =
       cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], image).toImageMsg();
   CHECK_NOTNULL(image_msg.get());
+  auto& seq = image_seq_[stream_index];
   image_msg->header.stamp = timestamp;
   image_msg->is_bigendian = false;
   image_msg->step = width * unit_step_size_[stream_index];
   image_msg->header.frame_id = frame_id;
+  image_msg->header.seq = seq++;
 
   if (!flip_images_[stream_index]) {
     image_publisher.publish(image_msg);
