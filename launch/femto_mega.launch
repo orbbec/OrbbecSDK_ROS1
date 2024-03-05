@@ -47,7 +47,7 @@
     <arg name="color_info_uri" default=""/>
     <arg name="log_level" default="none"/>
     <!--Network device settings: default ip_address is 192.168.1.10 and port is 8090
-    <If you don't want to use ip addr and port, set enumerate_net_device to true
+    If you don't want to use ip addr and port, set enumerate_net_device to true
     and  leave ip_address blank , it can enumerate automate -->
     <arg name="enumerate_net_device" default="false"/>
     <arg name="ip_address" default=""/>
