@@ -204,36 +204,42 @@ void OBCameraNode::setupProfiles() {
     if (!enable_stream_[stream_index]) {
       continue;
     }
-    auto profile_list = sensors_[stream_index]->getStreamProfileList();
-    supported_profiles_[stream_index] = profile_list;
-    auto selected_profile = profile_list->getVideoStreamProfile(
-        width_[stream_index], height_[stream_index], format_[stream_index], fps_[stream_index]);
-    auto default_profile = profile_list->getVideoStreamProfile(
-        width_[stream_index], height_[stream_index], format_[stream_index]);
-    if (!selected_profile) {
-      ROS_WARN_STREAM("Given stream configuration is not supported by the device! "
-                      << " Stream: " << stream_name_[stream_index] << ", Width: "
-                      << width_[stream_index] << ", Height: " << height_[stream_index]
-                      << ", FPS: " << fps_[stream_index] << ", Format: " << format_[stream_index]);
-      if (default_profile) {
-        ROS_WARN_STREAM("Using default profile instead.");
-        ROS_WARN_STREAM("default FPS " << default_profile->fps());
-        selected_profile = default_profile;
-      } else {
-        ROS_WARN_STREAM(" NO default_profile found , Stream: " << stream_index.first
-                                                               << " will be disable");
-        enable_stream_[stream_index] = false;
-        continue;
+    try {
+      auto profile_list = sensors_[stream_index]->getStreamProfileList();
+      supported_profiles_[stream_index] = profile_list;
+      auto selected_profile = profile_list->getVideoStreamProfile(
+          width_[stream_index], height_[stream_index], format_[stream_index], fps_[stream_index]);
+      auto default_profile = profile_list->getVideoStreamProfile(
+          width_[stream_index], height_[stream_index], format_[stream_index]);
+      if (!selected_profile) {
+        ROS_WARN_STREAM("Given stream configuration is not supported by the device! "
+                        << " Stream: " << stream_name_[stream_index]
+                        << ", Width: " << width_[stream_index]
+                        << ", Height: " << height_[stream_index] << ", FPS: " << fps_[stream_index]
+                        << ", Format: " << format_[stream_index]);
+        if (default_profile) {
+          ROS_WARN_STREAM("Using default profile instead.");
+          ROS_WARN_STREAM("default FPS " << default_profile->fps());
+          selected_profile = default_profile;
+        } else {
+          ROS_WARN_STREAM(" NO default_profile found , Stream: " << stream_index.first
+                                                                 << " will be disable");
+          enable_stream_[stream_index] = false;
+          continue;
+        }
       }
+      CHECK_NOTNULL(selected_profile.get());
+      stream_profile_[stream_index] = selected_profile;
+      images_[stream_index] = cv::Mat(height_[stream_index], width_[stream_index],
+                                      image_format_[stream_index], cv::Scalar(0, 0, 0));
+      ROS_INFO_STREAM(" stream " << stream_name_[stream_index] << " is enabled - width: "
+                                 << width_[stream_index] << ", height: " << height_[stream_index]
+                                 << ", fps: " << fps_[stream_index] << ", "
+                                 << "Format: " << OBFormatToString(format_[stream_index]));
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to setup << " << stream_name_[stream_index]
+                                             << " profile: " << e.getMessage());
     }
-    CHECK_NOTNULL(selected_profile.get());
-    stream_profile_[stream_index] = selected_profile;
-    images_[stream_index] = cv::Mat(height_[stream_index], width_[stream_index],
-                                    image_format_[stream_index], cv::Scalar(0, 0, 0));
-    ROS_INFO_STREAM(" stream " << stream_name_[stream_index] << " is enabled - width: "
-                               << width_[stream_index] << ", height: " << height_[stream_index]
-                               << ", fps: " << fps_[stream_index] << ", "
-                               << "Format: " << OBFormatToString(format_[stream_index]));
   }
   if (!enable_pipeline_ && (depth_registration_ || enable_colored_point_cloud_)) {
     int index = getCameraParamIndex();
@@ -391,7 +397,7 @@ void OBCameraNode::readDefaultExposure() {
       default_exposure_[stream_index] = exposure;
     } catch (ob::Error& e) {
       default_exposure_[stream_index] = 0;
-      ROS_ERROR_STREAM("get exposure error " << e.getMessage());
+      ROS_WARN_STREAM("get " << stream_name_[stream_index] << " exposure error " << e.getMessage());
     }
   }
 }
