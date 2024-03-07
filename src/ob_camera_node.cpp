@@ -1102,6 +1102,33 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   saveImageToFile(stream_index, image, image_msg);
 }
 
+void OBCameraNode::publishMetadata(const std::shared_ptr<ob::Frame>& frame,
+                                   const stream_index_pair& stream_index,
+                                   const std_msgs::Header& header) {
+  if (metadata_publishers_.count(stream_index) == 0) {
+    return;
+  }
+  auto metadata_publisher = metadata_publishers_[stream_index];
+  if (metadata_publisher.getNumSubscribers() == 0) {
+    return;
+  }
+  orbbec_camera::Metadata metadata_msg;
+  metadata_msg.header = header;
+  nlohmann::json json_data;
+
+  for (int i = 0; i < OB_FRAME_METADATA_TYPE_COUNT; i++) {
+    auto meta_data_type = static_cast<OBFrameMetadataType>(i);
+    std::string field_name = metaDataTypeToString(meta_data_type);
+    if (!frame->hasMetadata(meta_data_type)) {
+      continue;
+    }
+    int64_t value = frame->getMetadataValue(meta_data_type);
+    json_data[field_name] = value;
+  }
+  metadata_msg.json_data = json_data.dump(2);
+  metadata_publisher.publish(metadata_msg);
+}
+
 void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const cv::Mat& image,
                                    const sensor_msgs::ImagePtr& image_msg) {
   if (save_images_[stream_index]) {

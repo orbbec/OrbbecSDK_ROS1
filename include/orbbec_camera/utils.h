@@ -42,7 +42,6 @@ void saveRGBPointCloudMsgToPly(const sensor_msgs::PointCloud2 &msg, const std::s
 
 void saveDepthPointCloudMsgToPly(const sensor_msgs::PointCloud2 &msg, const std::string &fileName);
 
-
 tf2::Quaternion rotationMatrixToQuaternion(const float rotation[9]);
 
 std::ostream &operator<<(std::ostream &os, const OBCameraParam &rhs);
@@ -69,6 +68,8 @@ std::string fullAccelScaleRangeToString(const OBAccelFullScaleRange &full_scale_
 
 bool isValidJPEG(const std::shared_ptr<ob::ColorFrame> &frame);
 
-std::string fourccToString(const uint32_t fourcc);
+std::string fourccToString(uint32_t fourcc);
+
+std::string metaDataTypeToString(const OBFrameMetadataType &meta_data_type);
 
 }  // namespace orbbec_camera

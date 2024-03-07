@@ -40,6 +40,7 @@
 #include "orbbec_camera/GetCameraParams.h"
 #include <boost/optional.hpp>
 #include <image_transport/image_transport.h>
+#include <orbbec_camera/Metadata.h>
 
 #include "jpeg_decoder.h"
 
@@ -88,6 +89,9 @@ class OBCameraNode {
 
   void onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                           const stream_index_pair& stream_index);
+
+  void publishMetadata(const std::shared_ptr<ob::Frame>& frame,
+                       const stream_index_pair& stream_index, const std_msgs::Header& header);
 
   void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame>& aframe,
                                        const std::shared_ptr<ob::Frame>& gframe);
@@ -290,6 +294,7 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::Publisher> camera_info_publishers_;
   std::map<stream_index_pair, ob::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
+  std::map<stream_index_pair, ros::Publisher> metadata_publishers_;
   std::map<stream_index_pair, bool> flip_images_;
   std::map<stream_index_pair, bool> stream_started_;
   std::vector<int> compression_params_;
