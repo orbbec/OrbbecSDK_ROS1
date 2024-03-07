@@ -261,6 +261,9 @@ class OBCameraNode {
 
   bool switchIRDataSourceChannelCallback(SetStringRequest& request, SetStringResponse& response);
 
+  bool setIRLongExposureCallback(std_srvs::SetBoolRequest& request,
+                                 std_srvs::SetBoolResponse& response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -336,6 +339,7 @@ class OBCameraNode {
   ros::ServiceServer save_images_srv_;
   ros::ServiceServer switch_ir_mode_srv_;
   ros::ServiceServer switch_ir_data_source_channel_srv_;
+  ros::ServiceServer set_ir_long_exposure_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
