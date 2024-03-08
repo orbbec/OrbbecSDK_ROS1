@@ -330,6 +330,17 @@ typedef struct {
 } OBFloatPropertyRange, ob_float_property_range;
 
 /**
+ * @brief Structure for float range
+ */
+typedef struct {
+    uint16_t cur;   ///< Current value
+    uint16_t max;   ///< Maximum value
+    uint16_t min;   ///< Minimum value
+    uint16_t step;  ///< Step value
+    uint16_t def;   ///< Default value
+} OBUint16PropertyRange, ob_uint16_property_range;
+
+/**
  * @brief Structure for boolean range
  */
 typedef struct {
@@ -391,12 +402,32 @@ typedef struct {
     float p2;  ///< Tangential distortion factor 2
 } OBCameraDistortion, ob_camera_distortion;
 
+/** \brief Distortion model: defines how pixel coordinates should be mapped to sensor coordinates. */
+typedef enum {
+    OB_DISTORTION_NONE,                  /**< Rectilinear images. No distortion compensation required. */
+    OB_DISTORTION_INVERSE_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it */
+    OB_DISTORTION_BROWN_CONRADY,         /**< Unmodified Brown-Conrady distortion model */
+} OBCameraDistortionModel, ob_camera_distortion_model;
+
+/** \brief Video stream intrinsics. */
+typedef struct {
+    int                 width;  /**< Width of the image in pixels */
+    int                 height; /**< Height of the image in pixels */
+    float               ppx;    /**< Horizontal coordinate of the principal point of the image, as a pixel offset from the left edge */
+    float               ppy;    /**< Vertical coordinate of the principal point of the image, as a pixel offset from the top edge */
+    float               fx;     /**< Focal length of the image plane, as a multiple of pixel width */
+    float               fy;     /**< Focal length of the image plane, as a multiple of pixel height */
+    OBCameraDistortionModel model;  /**< Distortion model of the image */
+    float coeffs[5]; /**< Distortion coefficients. Order for Brown-Conrady: [k1, k2, p1, p2, k3]. Order for F-Theta Fish-eye: [k1, k2, k3, k4, 0]. Other models
+                        are subject to their own interpretations */
+} OBCameraAlignIntrinsic, ob_camera_align_intrinsic;
+
 /**
  * @brief Structure for rotation/transformation
  */
 typedef struct {
     float rot[9];    ///< Rotation matrix
-    float trans[3];  ///< Transformation matrix
+    float trans[3];  ///< Transformation matrix in millimeters
 } OBD2CTransform, ob_d2c_transform, OBTransform, ob_transform, OBExtrinsic, ob_extrinsic;
 
 /**
@@ -429,7 +460,7 @@ typedef struct {
 typedef struct {
     OBCameraIntrinsic  intrinsics[OB_SENSOR_COUNT];            ///< Sensor internal parameters
     OBCameraDistortion distortion[OB_SENSOR_COUNT];            ///< Sensor distortion
-    OBTransform extrinsics[OB_SENSOR_COUNT][OB_SENSOR_COUNT];  ///< The extrinsic parameters allow 3D coordinate conversions between sensor.To transform from a
+    OBExtrinsic extrinsics[OB_SENSOR_COUNT][OB_SENSOR_COUNT];  ///< The extrinsic parameters allow 3D coordinate conversions between sensor.To transform from a
                                                                ///< source to a target 3D coordinate system,under extrinsics[source][target].
 } OBCalibrationParam, ob_calibration_param;
 
@@ -889,6 +920,37 @@ typedef struct {
      */
     char name[32];
 } OBDepthWorkMode, ob_depth_work_mode;
+
+/**
+ * @brief Hole fillig mode
+ */
+typedef enum {
+    OB_HOLE_FILL_TOP     = 0,
+    OB_HOLE_FILL_NEAREST = 1,  // "max" means farest for depth, and nearest for disparity; FILL_NEAREST
+    OB_HOLE_FILL_FAREST  = 2,  // FILL_FAREST
+} OBHoleFillingMode, ob_hole_filling_mode;
+
+typedef struct {
+    uint8_t               magnitude;  // magnitude
+    float                 alpha;      // smooth_alpha
+    uint16_t              disp_diff;  // smooth_delta
+    uint16_t              radius;     // hole_fill
+} OBSpatialAdvancedFilterParams, ob_spatial_advanced_filter_params;
+
+/**
+ * @brief 去噪方式
+ */
+typedef enum OB_DDO_NOISE_REMOVAL_TYPE {
+    OB_NR_LUT     = 0,  // SPLIT
+    OB_NR_OVERALL = 1,  // NON_SPLIT
+} OBDDONoiseRemovalType, ob_ddo_noise_removal_type;
+
+typedef struct {
+    uint16_t            size;
+    uint16_t            disp_diff;
+    OBDDONoiseRemovalType type;
+} OBNoiseRemovalFilterParams, ob_noise_removal_filter_params;
+;
 
 /**
  * @brief Control command protocol version number

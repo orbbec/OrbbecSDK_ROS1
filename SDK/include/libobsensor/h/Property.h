@@ -637,6 +637,11 @@ typedef enum {
     OB_PROP_SKIP_FRAME_BOOL = 2036,
 
     /**
+     * @brief Depth HDR merge, true: on, false: off.
+     */
+    OB_PROP_HDR_MERGE_BOOL = 2037,
+
+    /**
      * @brief Software disparity to depth
      */
     OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL = 3004,
