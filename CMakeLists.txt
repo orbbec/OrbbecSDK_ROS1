@@ -92,7 +92,7 @@ if (USE_RK_HW_DECODER)
 endif ()
 
 # Message generation
-add_message_files(FILES DeviceInfo.msg Extrinsics.msg Metadata.msg)
+add_message_files(FILES DeviceInfo.msg Extrinsics.msg Metadata.msg IMUInfo.msg)
 add_service_files(FILES ${SERVICE_FILES})
 generate_messages(DEPENDENCIES std_msgs sensor_msgs)
 

@@ -688,6 +688,53 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   }
 }
 
+IMUInfo OBCameraNode::createIMUInfo(const stream_index_pair& stream_index) {
+  IMUInfo imu_info;
+  imu_info.header.frame_id = optical_frame_id_[stream_index];
+  imu_info.header.stamp = ros::Time::now();
+  auto imu_profile = stream_profile_[stream_index];
+  if (stream_index == GYRO) {
+    auto gyro_profile = stream_profile_[stream_index]->as<ob::GyroStreamProfile>();
+    auto gyro_intrinsics = gyro_profile->getIntrinsic();
+    imu_info.noise_density = gyro_intrinsics.noiseDensity;
+    imu_info.random_walk = gyro_intrinsics.randomWalk;
+    imu_info.reference_temperature = gyro_intrinsics.referenceTemp;
+    imu_info.bias = {gyro_intrinsics.bias[0], gyro_intrinsics.bias[1], gyro_intrinsics.bias[2]};
+    imu_info.scale_misalignment = {
+        gyro_intrinsics.scaleMisalignment[0], gyro_intrinsics.scaleMisalignment[1],
+        gyro_intrinsics.scaleMisalignment[2], gyro_intrinsics.scaleMisalignment[3],
+        gyro_intrinsics.scaleMisalignment[4], gyro_intrinsics.scaleMisalignment[5],
+        gyro_intrinsics.scaleMisalignment[6], gyro_intrinsics.scaleMisalignment[7],
+        gyro_intrinsics.scaleMisalignment[8]};
+    imu_info.temperature_slope = {
+        gyro_intrinsics.tempSlope[0], gyro_intrinsics.tempSlope[1], gyro_intrinsics.tempSlope[2],
+        gyro_intrinsics.tempSlope[3], gyro_intrinsics.tempSlope[4], gyro_intrinsics.tempSlope[5],
+        gyro_intrinsics.tempSlope[6], gyro_intrinsics.tempSlope[7], gyro_intrinsics.tempSlope[8]};
+  } else if (stream_index == ACCEL) {
+    auto accel_profile = stream_profile_[stream_index]->as<ob::AccelStreamProfile>();
+    auto accel_intrinsics = accel_profile->getIntrinsic();
+    imu_info.noise_density = accel_intrinsics.noiseDensity;
+    imu_info.random_walk = accel_intrinsics.randomWalk;
+    imu_info.reference_temperature = accel_intrinsics.referenceTemp;
+    imu_info.bias = {accel_intrinsics.bias[0], accel_intrinsics.bias[1], accel_intrinsics.bias[2]};
+    imu_info.gravity = {accel_intrinsics.gravity[0], accel_intrinsics.gravity[1],
+                        accel_intrinsics.gravity[2]};
+    imu_info.scale_misalignment = {
+        accel_intrinsics.scaleMisalignment[0], accel_intrinsics.scaleMisalignment[1],
+        accel_intrinsics.scaleMisalignment[2], accel_intrinsics.scaleMisalignment[3],
+        accel_intrinsics.scaleMisalignment[4], accel_intrinsics.scaleMisalignment[5],
+        accel_intrinsics.scaleMisalignment[6], accel_intrinsics.scaleMisalignment[7],
+        accel_intrinsics.scaleMisalignment[8]};
+    imu_info.temperature_slope = {accel_intrinsics.tempSlope[0], accel_intrinsics.tempSlope[1],
+                                  accel_intrinsics.tempSlope[2], accel_intrinsics.tempSlope[3],
+                                  accel_intrinsics.tempSlope[4], accel_intrinsics.tempSlope[5],
+                                  accel_intrinsics.tempSlope[6], accel_intrinsics.tempSlope[7],
+                                  accel_intrinsics.tempSlope[8]};
+  }
+
+  return imu_info;
+}
+
 void OBCameraNode::setDefaultIMUMessage(sensor_msgs::Imu& imu_msg) {
   imu_msg.header.frame_id = "imu_link";
   imu_msg.orientation.x = 0.0;
@@ -723,8 +770,10 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
     ROS_ERROR_STREAM("stream Accel Gryo publisher not initialized");
     return;
   }
-  auto subscriber_count = imu_gyro_accel_publisher_.getNumSubscribers();
-  if (subscriber_count == 0) {
+  auto has_subscriber = imu_gyro_accel_publisher_.getNumSubscribers() > 0;
+  has_subscriber |= imu_info_publishers_[ACCEL].getNumSubscribers() > 0;
+  has_subscriber |= imu_info_publishers_[GYRO].getNumSubscribers() > 0;
+  if (!has_subscriber) {
     return;
   }
 
@@ -752,8 +801,9 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
     ROS_ERROR_STREAM("stream " << stream_name_[stream_index] << " publisher not initialized");
     return;
   }
-  auto subscriber_count = imu_publishers_[stream_index].getNumSubscribers();
-  if (subscriber_count == 0) {
+  auto has_subscriber = imu_publishers_[stream_index].getNumSubscribers() > 0;
+  has_subscriber |= imu_info_publishers_[stream_index].getNumSubscribers() > 0;
+  if (!has_subscriber) {
     return;
   }
   auto imu_msg = sensor_msgs::Imu();
@@ -778,6 +828,8 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
     return;
   }
   imu_publishers_[stream_index].publish(imu_msg);
+  auto imu_info = createIMUInfo(stream_index);
+  imu_info_publishers_[stream_index].publish(imu_info);
 }
 
 bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& frame,

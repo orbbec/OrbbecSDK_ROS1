@@ -340,6 +340,12 @@ void OBCameraNode::setupPublishers() {
         boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, GYRO);
     imu_gyro_accel_publisher_ =
         nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+    topic_name = stream_name_[GYRO] + "/imu_info";
+    imu_info_publishers_[GYRO] = nh_.advertise<orbbec_camera::IMUInfo>(
+        topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+    topic_name = stream_name_[ACCEL] + "/imu_info";
+    imu_info_publishers_[ACCEL] = nh_.advertise<orbbec_camera::IMUInfo>(
+        topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
   } else {
     for (const auto& stream_index : HID_STREAMS) {
       if (!enable_stream_[stream_index]) {
@@ -352,6 +358,8 @@ void OBCameraNode::setupPublishers() {
           boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, stream_index);
       imu_publishers_[stream_index] =
           nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+      topic_name = stream_name_[stream_index] + "/imu_info";
+      imu_info_publishers_[stream_index] = nh_.advertise<orbbec_camera::IMUInfo>(topic_name, 1);
     }
   }
 }

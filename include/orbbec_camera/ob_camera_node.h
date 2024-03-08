@@ -41,6 +41,7 @@
 #include <boost/optional.hpp>
 #include <image_transport/image_transport.h>
 #include <orbbec_camera/Metadata.h>
+#include <orbbec_camera/IMUInfo.h>
 
 #include "jpeg_decoder.h"
 
@@ -143,6 +144,8 @@ class OBCameraNode {
   void stopIMU();
 
   void setDefaultIMUMessage(sensor_msgs::Imu& imu_msg);
+
+  IMUInfo createIMUInfo(const stream_index_pair& stream_index);
 
   sensor_msgs::Imu createUnitIMUMessage(const IMUData& accel_data, const IMUData& gyro_data);
 
@@ -293,6 +296,7 @@ class OBCameraNode {
   std::map<stream_index_pair, ob::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
   std::map<stream_index_pair, ros::Publisher> metadata_publishers_;
+  std::map<stream_index_pair, ros::Publisher> imu_info_publishers_;
   std::map<stream_index_pair, bool> flip_images_;
   std::map<stream_index_pair, bool> stream_started_;
   std::vector<int> compression_params_;
