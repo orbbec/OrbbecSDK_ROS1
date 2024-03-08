@@ -1036,12 +1036,13 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
     camera_info_publisher.publish(camera_info);
-  } else if (camera_params_) {
-    auto& intrinsic =
-        stream_index == COLOR ? camera_params_->rgbIntrinsic : camera_params_->depthIntrinsic;
-    auto& distortion =
-        stream_index == COLOR ? camera_params_->rgbDistortion : camera_params_->depthDistortion;
-
+  } else {
+    auto stream_profile = frame->getStreamProfile();
+    CHECK_NOTNULL(stream_profile);
+    auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
+    CHECK_NOTNULL(video_stream_profile);
+    const auto& intrinsic = video_stream_profile->getIntrinsic();
+    const auto& distortion = video_stream_profile->getDistortion();
     auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
     CHECK(camera_info_publishers_.count(stream_index) > 0);
     auto camera_info_publisher = camera_info_publishers_[stream_index];
