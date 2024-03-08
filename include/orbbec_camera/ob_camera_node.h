@@ -136,8 +136,6 @@ class OBCameraNode {
 
   void startIMU(const stream_index_pair& stream_index);
 
-  void startIMU();
-
   void stopStreams();
 
   void stopIMU(const stream_index_pair& stream_index);

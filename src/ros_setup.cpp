@@ -241,6 +241,35 @@ void OBCameraNode::setupProfiles() {
                                              << " profile: " << e.getMessage());
     }
   }
+  // IMU
+  for (const auto& stream_index : HID_STREAMS) {
+    if (!enable_stream_[stream_index]) {
+      continue;
+    }
+    try {
+      auto profile_list = sensors_[stream_index]->getStreamProfileList();
+      supported_profiles_[stream_index] = profile_list;
+      if (stream_index == ACCEL) {
+        auto full_scale_range = fullAccelScaleRangeFromString(imu_range_[stream_index]);
+        auto sample_rate = sampleRateFromString(imu_rate_[stream_index]);
+        auto profile = profile_list->getAccelStreamProfile(full_scale_range, sample_rate);
+        stream_profile_[stream_index] = profile;
+      } else if (stream_index == GYRO) {
+        auto full_scale_range = fullGyroScaleRangeFromString(imu_range_[stream_index]);
+        auto sample_rate = sampleRateFromString(imu_rate_[stream_index]);
+        auto profile = profile_list->getGyroStreamProfile(full_scale_range, sample_rate);
+        stream_profile_[stream_index] = profile;
+      }
+      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " full scale range "
+                                << imu_range_[stream_index] << " sample rate "
+                                << imu_rate_[stream_index]);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to setup << " << stream_name_[stream_index]
+                                             << " profile: " << e.getMessage());
+      enable_stream_[stream_index] = false;
+      stream_profile_[stream_index] = nullptr;
+    }
+  }
   if (!enable_pipeline_ && (depth_registration_ || enable_colored_point_cloud_)) {
     int index = getCameraParamIndex();
     try {

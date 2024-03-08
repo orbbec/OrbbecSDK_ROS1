@@ -351,59 +351,18 @@ void OBCameraNode::startIMU(const stream_index_pair& stream_index) {
   if (enable_sync_output_accel_gyro_) {
     startIMUSyncStream();
   } else {
-    if (stream_index == ACCEL) {
-      startAccel();
-    } else if (stream_index == GYRO) {
-      startGyro();
+    if (!stream_profile_[stream_index]) {
+      ROS_ERROR_STREAM("stream " << stream_name_[stream_index] << " profile is null!");
+      return;
     }
-  }
-}
-void OBCameraNode::startIMU() {
-  for (const auto& stream_index : HID_STREAMS) {
-    if (enable_stream_[stream_index] && !imu_started_[stream_index]) {
-      CHECK(sensors_.count(stream_index));
-      CHECK(imu_sensor_.count(stream_index));
-      auto profile_list = sensors_[stream_index]->getStreamProfileList();
-      for (size_t i = 0; i < profile_list->count(); i++) {
-        auto item = profile_list->getProfile(i);
-        if (stream_index == ACCEL) {
-          auto profile = item->as<ob::AccelStreamProfile>();
-          auto accel_rate = sampleRateFromString(imu_rate_[stream_index]);
-          auto accel_range = fullAccelScaleRangeFromString(imu_range_[stream_index]);
-          if (profile->fullScaleRange() == accel_range && profile->sampleRate() == accel_rate) {
-            imu_sensor_[stream_index]->start(
-                profile, [this, stream_index](const std::shared_ptr<ob::Frame>& frame) {
-                  onNewIMUFrameCallback(frame, stream_index);
-                });
-            imu_started_[stream_index] = true;
-            ROS_INFO_STREAM("start accel stream with "
-                            << fullAccelScaleRangeToString(accel_range) << " range and "
-                            << sampleRateToString(accel_rate) << " rate");
-          }
-        } else if (stream_index == GYRO) {
-          auto profile = item->as<ob::GyroStreamProfile>();
-          auto gyro_rate = sampleRateFromString(imu_rate_[stream_index]);
-          auto gyro_range = fullGyroScaleRangeFromString(imu_range_[stream_index]);
-          if (profile->fullScaleRange() == gyro_range && profile->sampleRate() == gyro_rate) {
-            imu_sensor_[stream_index]->start(
-                profile, [this, stream_index](const std::shared_ptr<ob::Frame>& frame) {
-                  onNewIMUFrameCallback(frame, stream_index);
-                });
-            ROS_INFO_STREAM("start gyro stream with " << fullGyroScaleRangeToString(gyro_range)
-                                                      << " range and "
-                                                      << sampleRateToString(gyro_rate) << " rate");
-            imu_started_[stream_index] = true;
-          }
-        }
-      }
-    }
-  }
-  for (const auto& stream_index : HID_STREAMS) {
-    if (enable_stream_[stream_index] && !imu_started_[stream_index]) {
-      ROS_INFO_STREAM("Failed to start IMU stream: "
-                      << stream_name_[stream_index]
-                      << ", please check the imu_rate and imu_range parameters");
-    }
+    auto profile = stream_profile_[stream_index];
+    imu_sensor_[stream_index]->start(profile,
+                                     [this, stream_index](const std::shared_ptr<ob::Frame>& frame) {
+                                       onNewIMUFrameCallback(frame, stream_index);
+                                     });
+    imu_started_[stream_index] = true;
+    ROS_INFO_STREAM("start IMU stream with " << imu_range_[stream_index] << " range and "
+                                             << imu_rate_[stream_index] << " rate");
   }
 }
 
