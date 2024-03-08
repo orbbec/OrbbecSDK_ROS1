@@ -789,6 +789,9 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
   if (enable_colored_point_cloud_ && depth_registered_cloud_pub_.getNumSubscribers() > 0) {
     has_subscriber = true;
   }
+  if (metadata_publishers_[COLOR].getNumSubscribers() > 0) {
+    has_subscriber = true;
+  }
   if (!has_subscriber) {
     return false;
   }
@@ -951,6 +954,9 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   if (camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
+  if (metadata_publishers_[stream_index].getNumSubscribers() > 0) {
+    has_subscriber = true;
+  }
   if (!has_subscriber) {
     return;
   }
@@ -1012,9 +1018,6 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     camera_info_publisher.publish(camera_info);
   }
   CHECK(image_publishers_.count(stream_index));
-  if (image_publishers_[stream_index].getNumSubscribers() == 0) {
-    return;
-  }
   auto& image = images_[stream_index];
   if (image.empty() || image.cols != width || image.rows != height) {
     image.create(height, width, image_format_[stream_index]);
@@ -1043,6 +1046,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   image_msg->step = width * unit_step_size_[stream_index];
   image_msg->header.frame_id = frame_id;
   image_msg->header.seq = seq++;
+  publishMetadata(frame, stream_index, image_msg->header);
 
   if (!flip_images_[stream_index]) {
     image_publisher.publish(image_msg);
