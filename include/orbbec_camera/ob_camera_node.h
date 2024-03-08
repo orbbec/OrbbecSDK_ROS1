@@ -304,6 +304,7 @@ class OBCameraNode {
   std::map<stream_index_pair, std::string> depth_aligned_frame_id_;
   std::map<stream_index_pair, int> default_gain_;
   std::map<stream_index_pair, int> default_exposure_;
+  const stream_index_pair base_stream_ = DEPTH;
   int default_white_balance_ = 0;
   std::string camera_link_frame_id_ = "camera_link";
   std::string camera_name_ = "camera";

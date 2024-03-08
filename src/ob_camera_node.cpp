@@ -1365,56 +1365,47 @@ void OBCameraNode::publishStaticTF(const ros::Time& t, const tf2::Vector3& trans
 }
 
 void OBCameraNode::calcAndPublishStaticTransform() {
-  tf2::Quaternion quaternion_optical, zero_rot, Q;
+  tf2::Quaternion quaternion_optical, zero_rot;
   zero_rot.setRPY(0.0, 0.0, 0.0);
   quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
   tf2::Vector3 zero_trans(0, 0, 0);
-  tf2::Vector3 trans(0, 0, 0);
-  startStreams();
-  CHECK_NOTNULL(pipeline_.get());
-  auto camera_param = pipeline_->getCameraParam();
-  auto ex = camera_param.transform;
-  Q = rotationMatrixToQuaternion(ex.rot);
-  Q = quaternion_optical * Q * quaternion_optical.inverse();
-  auto device_info = device_->getDeviceInfo();
-  auto device_pid = device_info->pid();
-  for (int i = 0; i < 3; i++) {
-    trans[i] = ex.trans[i];
-  }
-  stopStreams();
-
-  auto tf_timestamp = ros::Time::now();
-  tf2::Transform transform(Q, trans);
-  transform = transform.inverse();
-  Q = transform.getRotation();
-  trans = transform.getOrigin();
-  if (enable_stream_[COLOR]) {
-    if (device_pid != FEMTO_BOLT_PID) {
-      publishStaticTF(tf_timestamp, trans, Q, camera_link_frame_id_, frame_id_[COLOR]);
-    } else {
-      publishStaticTF(tf_timestamp, trans, zero_rot, camera_link_frame_id_, frame_id_[COLOR]);
-    }
-    publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[COLOR],
-                    optical_frame_id_[COLOR]);
-  }
-  for (const auto& stream_index : IMAGE_STREAMS) {
-    if (stream_index == COLOR || !enable_stream_[stream_index]) {
+  auto base_stream_profile = stream_profile_[base_stream_];
+  CHECK_NOTNULL(base_stream_profile.get());
+  for (const auto& item : stream_profile_) {
+    auto stream_index = item.first;
+    auto stream_profile = item.second;
+    if (!stream_profile) {
       continue;
     }
-    if (device_pid != FEMTO_BOLT_PID) {
-      publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_,
-                      frame_id_[stream_index]);
-    } else {
-      publishStaticTF(tf_timestamp, zero_trans, Q, camera_link_frame_id_, frame_id_[stream_index]);
+    OBExtrinsic ex;
+    try {
+      ex = stream_profile->getExtrinsicTo(base_stream_profile);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get " << stream_name_[stream_index]
+                                        << " extrinsic: " << e.getMessage());
+      ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
-    publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[stream_index],
-                    optical_frame_id_[stream_index]);
-  }
-  publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_, imu_frame_id_);
-  publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, imu_frame_id_,
-                  imu_optical_frame_id_);
-}
 
+    auto Q = rotationMatrixToQuaternion(ex.rot);
+    Q = quaternion_optical * Q * quaternion_optical.inverse();
+    tf2::Vector3 trans(ex.trans[0], ex.trans[1], ex.trans[2]);
+    ROS_INFO_STREAM("Publishing static transform from " << camera_link_frame_id_ << " to "
+                                                        << stream_name_[stream_index]);
+    ROS_INFO_STREAM("Translation " << trans[0] << ", " << trans[1] << ", " << trans[2]);
+    ROS_INFO_STREAM("Rotation " << Q.getX() << ", " << Q.getY() << ", " << Q.getZ() << ", "
+                                << Q.getW());
+    auto timestamp = ros::Time::now();
+    publishStaticTF(timestamp, trans, Q, camera_link_frame_id_, frame_id_[stream_index]);
+    publishStaticTF(timestamp, zero_trans, quaternion_optical, frame_id_[stream_index],
+                    optical_frame_id_[stream_index]);
+    if (depth_registration_ && depth_aligned_frame_id_.count(stream_index) > 0) {
+      publishStaticTF(timestamp, trans, Q, camera_link_frame_id_,
+                      depth_aligned_frame_id_[stream_index]);
+      publishStaticTF(timestamp, zero_trans, quaternion_optical,
+                      depth_aligned_frame_id_[stream_index], optical_frame_id_[stream_index]);
+    }
+  }
+}
 void OBCameraNode::publishDynamicTransforms() {
   ROS_WARN("Publishing dynamic camera transforms (/tf) at %g Hz", tf_publish_rate_);
   static std::mutex mu;

@@ -201,7 +201,7 @@ bool OBCameraNode::setupFormatConvertType(OBFormat type) {
 
 void OBCameraNode::setupProfiles() {
   for (const auto& stream_index : IMAGE_STREAMS) {
-    if (!enable_stream_[stream_index]) {
+    if (!enable_stream_[stream_index] && stream_index != base_stream_) {
       continue;
     }
     try {
