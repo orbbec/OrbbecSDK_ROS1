@@ -359,9 +359,25 @@ void OBCameraNode::setupPublishers() {
       imu_publishers_[stream_index] =
           nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
       topic_name = stream_name_[stream_index] + "/imu_info";
-      imu_info_publishers_[stream_index] = nh_.advertise<orbbec_camera::IMUInfo>(topic_name, 1,
-                                                                                 imu_subscribed_cb, imu_unsubscribed_cb);
+      imu_info_publishers_[stream_index] = nh_.advertise<orbbec_camera::IMUInfo>(
+          topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
     }
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[INFRA0]) {
+    depth_to_other_extrinsics_publishers_[INFRA0] =
+        nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_ir", 1, true);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[COLOR]) {
+    depth_to_other_extrinsics_publishers_[COLOR] =
+        nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_color", 1, true);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[INFRA1]) {
+    depth_to_other_extrinsics_publishers_[INFRA1] =
+        nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_left_ir", 1, true);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[INFRA2]) {
+    depth_to_other_extrinsics_publishers_[INFRA2] =
+        nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_right_ir", 1, true);
   }
 }
 
@@ -417,7 +433,7 @@ void OBCameraNode::readDefaultGain() {
       default_gain_[stream_index] = gain;
     } catch (ob::Error& e) {
       default_gain_[stream_index] = 0;
-      ROS_ERROR_STREAM("get gain error " << e.getMessage());
+      ROS_DEBUG_STREAM("get gain error " << e.getMessage());
     }
   }
 }
@@ -435,7 +451,7 @@ void OBCameraNode::readDefaultExposure() {
       default_exposure_[stream_index] = exposure;
     } catch (ob::Error& e) {
       default_exposure_[stream_index] = 0;
-      ROS_WARN_STREAM("get " << stream_name_[stream_index] << " exposure error " << e.getMessage());
+      ROS_DEBUG_STREAM("get " << stream_name_[stream_index] << " exposure error " << e.getMessage());
     }
   }
 }
@@ -453,7 +469,7 @@ void OBCameraNode::readDefaultWhiteBalance() {
     default_white_balance_ = wb;
   } catch (ob::Error& e) {
     default_white_balance_ = 0;
-    ROS_WARN_STREAM("get white balance error " << e.getMessage());
+    ROS_DEBUG_STREAM("get white balance error " << e.getMessage());
   }
 }
 }  // namespace orbbec_camera

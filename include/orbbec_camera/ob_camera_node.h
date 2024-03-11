@@ -297,6 +297,8 @@ class OBCameraNode {
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
   std::map<stream_index_pair, ros::Publisher> metadata_publishers_;
   std::map<stream_index_pair, ros::Publisher> imu_info_publishers_;
+  std::map<stream_index_pair, ros::Publisher> depth_to_other_extrinsics_publishers_;
+  std::map<stream_index_pair, OBExtrinsic> depth_to_other_extrinsics_;
   std::map<stream_index_pair, bool> flip_images_;
   std::map<stream_index_pair, bool> stream_started_;
   std::vector<int> compression_params_;

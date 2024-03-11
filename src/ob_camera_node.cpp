@@ -1483,6 +1483,59 @@ void OBCameraNode::publishDynamicTransforms() {
 void OBCameraNode::publishStaticTransforms() {
   static_tf_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>();
   dynamic_tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>();
+  auto base_stream_profile = stream_profile_[base_stream_];
+  if (enable_stream_[DEPTH] && enable_stream_[COLOR]) {
+    static const char* frame_id = "depth_to_color_extrinsics";
+    OBExtrinsic ex;
+    try {
+      ex = base_stream_profile->getExtrinsicTo(stream_profile_[COLOR]);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << e.getMessage());
+      ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
+    }
+    depth_to_other_extrinsics_[COLOR] = ex;
+    auto ex_msg = obExtrinsicsToMsg(ex, frame_id);
+    depth_to_other_extrinsics_publishers_[COLOR].publish(ex_msg);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[INFRA0]) {
+    static const char* frame_id = "depth_to_ir_extrinsics";
+    OBExtrinsic ex;
+    try {
+      ex = base_stream_profile->getExtrinsicTo(stream_profile_[INFRA0]);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << e.getMessage());
+      ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
+    }
+    depth_to_other_extrinsics_[INFRA0] = ex;
+    auto ex_msg = obExtrinsicsToMsg(ex, frame_id);
+    depth_to_other_extrinsics_publishers_[INFRA0].publish(ex_msg);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[INFRA1]) {
+    static const char* frame_id = "depth_to_left_ir_extrinsics";
+    OBExtrinsic ex;
+    try {
+      ex = base_stream_profile->getExtrinsicTo(stream_profile_[INFRA1]);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << e.getMessage());
+      ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
+    }
+    depth_to_other_extrinsics_[INFRA1] = ex;
+    auto ex_msg = obExtrinsicsToMsg(ex, frame_id);
+    depth_to_other_extrinsics_publishers_[INFRA1].publish(ex_msg);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[INFRA2]) {
+    static const char* frame_id = "depth_to_right_ir_extrinsics";
+    OBExtrinsic ex;
+    try {
+      ex = base_stream_profile->getExtrinsicTo(stream_profile_[INFRA2]);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << e.getMessage());
+      ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
+    }
+    depth_to_other_extrinsics_[INFRA2] = ex;
+    auto ex_msg = obExtrinsicsToMsg(ex, frame_id);
+    depth_to_other_extrinsics_publishers_[INFRA2].publish(ex_msg);
+  }
   calcAndPublishStaticTransform();
   if (tf_publish_rate_ > 0) {
     tf_thread_ = std::make_shared<std::thread>([this]() { publishDynamicTransforms(); });
