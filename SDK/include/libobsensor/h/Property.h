@@ -487,6 +487,11 @@ typedef enum {
     OB_STRUCT_DEPTH_AE_ROI = 1061,
 
     /**
+     * @brief ASIC serial number
+     */
+    OB_STRUCT_ASIC_SERIAL_NUMBER = 1063,
+
+    /**
      * @brief Color camera auto exposure
      */
     OB_PROP_COLOR_AUTO_EXPOSURE_BOOL = 2000,

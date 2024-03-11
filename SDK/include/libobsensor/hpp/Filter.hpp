@@ -303,4 +303,20 @@ public:
     OBUint16PropertyRange getSizeRange();
 };
 
+/**
+ * @brief
+ */
+class OB_EXTENSION_API DecimationFilter : public Filter {
+public:
+    DecimationFilter();
+
+    void enable(bool enable);
+
+    bool isEnabled();
+
+    void setScaleValue(uint8_t value);
+
+    OBUint8PropertyRange getScaleRange();
+};
+
 }  // namespace ob

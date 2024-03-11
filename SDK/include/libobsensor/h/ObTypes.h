@@ -341,6 +341,17 @@ typedef struct {
 } OBUint16PropertyRange, ob_uint16_property_range;
 
 /**
+ * @brief Structure for float range
+ */
+typedef struct {
+    uint8_t cur;   ///< Current value
+    uint8_t  max;   ///< Maximum value
+    uint8_t  min;   ///< Minimum value
+    uint8_t  step;  ///< Step value
+    uint8_t  def;   ///< Default value
+} OBUint8PropertyRange, ob_uint8_property_range;
+
+/**
  * @brief Structure for boolean range
  */
 typedef struct {
