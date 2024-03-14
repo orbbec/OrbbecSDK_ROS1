@@ -75,6 +75,8 @@ void OBCameraNodeDriver::init() {
   device_num_ = static_cast<int>(nh_private_.param<int>("device_num", 1));
   auto enumerate_net_device_ =
       static_cast<int>(nh_private_.param<bool>("enumerate_net_device", false));
+  ip_address_ = nh_private_.param<std::string>("ip_address", "");
+  port_ = nh_private_.param<int>("port", 0);
   ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
   check_connection_timer_ = nh_.createWallTimer(
       ros::WallDuration(1.0), [this](const ros::WallTimerEvent&) { this->checkConnectionTimer(); });
@@ -246,6 +248,20 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
   ROS_INFO_STREAM("deviceConnectCallback : deviceConnectCallback end");
 }
 
+void OBCameraNodeDriver::connectNetDevice(const std::string& ip_address, int port) {
+  if (ip_address.empty() || port == 0) {
+    ROS_ERROR_STREAM("Invalid ip address or port");
+    return;
+  }
+  ROS_INFO_STREAM("Connecting to net device " << ip_address << ":" << port);
+  auto device = ctx_->createNetDevice(ip_address.c_str(), port);
+  if (device == nullptr) {
+    ROS_ERROR_STREAM("Failed to create net device");
+    return;
+  }
+  initializeDevice(device);
+}
+
 void OBCameraNodeDriver::checkConnectionTimer() {
   if (!device_connected_) {
     ROS_DEBUG_STREAM("wait for device " << serial_number_ << " to be connected");
@@ -299,13 +315,18 @@ OBLogSeverity OBCameraNodeDriver::obLogSeverityFromString(const std::string& log
 void OBCameraNodeDriver::queryDevice() {
   if (!device_connected_) {
     ROS_INFO_STREAM("queryDevice: first query device");
-    auto list = ctx_->queryDeviceList();
-    CHECK_NOTNULL(list.get());
-    if (list->deviceCount() == 0) {
-      ROS_WARN_STREAM("No device found");
-      return;
+    if (!ip_address_.empty() && port_ != 0) {
+      ROS_INFO_STREAM("queryDevice: connect to net device " << ip_address_ << ":" << port_);
+      connectNetDevice(ip_address_, port_);
+    } else {
+      auto list = ctx_->queryDeviceList();
+      CHECK_NOTNULL(list.get());
+      if (list->deviceCount() == 0) {
+        ROS_WARN_STREAM("No device found");
+        return;
+      }
+      deviceConnectCallback(list);
     }
-    deviceConnectCallback(list);
   }
 }
 

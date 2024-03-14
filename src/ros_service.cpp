@@ -215,6 +215,13 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->switchIRDataSourceChannelCallback(request, response);
         return response.success;
       });
+  set_ir_long_exposure_srv_ =
+      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+          "/" + camera_name_ + "/" + "set_ir_long_exposure",
+          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+            response.success = this->setIRLongExposureCallback(request, response);
+            return response.success;
+          });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -562,6 +569,7 @@ bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
       save_images_[stream_index] = true;
+      save_images_count_[stream_index] = 0;
     } else {
       ROS_WARN_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     }
@@ -750,6 +758,26 @@ bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
     response.message = ss.str();
     return false;
   }
-  return false;
+}
+
+bool OBCameraNode::setIRLongExposureCallback(std_srvs::SetBoolRequest& request,
+                                             std_srvs::SetBoolResponse& response) {
+  try {
+    device_->setBoolProperty(OB_PROP_IR_LONG_EXPOSURE_BOOL, request.data);
+    return true;
+  } catch (const ob::Error& e) {
+    std::stringstream ss;
+    ss << "Failed to set IR long exposure: " << e.getMessage();
+    ROS_ERROR_STREAM(ss.str());
+    response.message = ss.str();
+    return false;
+
+  } catch (...) {
+    std::stringstream ss;
+    ss << "Failed to set IR long exposure: unknown error";
+    ROS_ERROR_STREAM(ss.str());
+    response.message = ss.str();
+    return false;
+  }
 }
 }  // namespace orbbec_camera

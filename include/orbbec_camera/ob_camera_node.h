@@ -39,6 +39,7 @@
 #include "orbbec_camera/d2c_viewer.h"
 #include "orbbec_camera/GetCameraParams.h"
 #include <boost/optional.hpp>
+#include <image_transport/image_transport.h>
 
 #include "jpeg_decoder.h"
 
@@ -89,14 +90,14 @@ class OBCameraNode {
                           const stream_index_pair& stream_index);
 
   void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame>& aframe,
-                             const std::shared_ptr<ob::Frame>& gframe);
+                                       const std::shared_ptr<ob::Frame>& gframe);
 
   void onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                              const stream_index_pair& stream_index);
 
   bool decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& frame, uint8_t* dest);
 
-  std::shared_ptr<ob::Frame> decodeIRMJPGFrame(const std::shared_ptr<ob::Frame> &frame);
+  std::shared_ptr<ob::Frame> decodeIRMJPGFrame(const std::shared_ptr<ob::Frame>& frame);
 
   void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set);
 
@@ -260,6 +261,9 @@ class OBCameraNode {
 
   bool switchIRDataSourceChannelCallback(SetStringRequest& request, SetStringResponse& response);
 
+  bool setIRLongExposureCallback(std_srvs::SetBoolRequest& request,
+                                 std_srvs::SetBoolResponse& response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -282,7 +286,10 @@ class OBCameraNode {
   std::map<stream_index_pair, std::shared_ptr<ob::StreamProfileList>> supported_profiles_;
   std::map<stream_index_pair, std::string> stream_name_;
   std::map<stream_index_pair, std::atomic_bool> save_images_;
-  std::map<stream_index_pair, ros::Publisher> image_publishers_;
+  std::map<stream_index_pair, int> save_images_count_;
+  int max_save_images_count_ = 10;
+  std::map<stream_index_pair, image_transport::Publisher> image_publishers_;
+  std::map<stream_index_pair, uint32_t> image_seq_;
   std::map<stream_index_pair, ros::Publisher> camera_info_publishers_;
   std::map<stream_index_pair, ob::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
@@ -332,6 +339,7 @@ class OBCameraNode {
   ros::ServiceServer save_images_srv_;
   ros::ServiceServer switch_ir_mode_srv_;
   ros::ServiceServer switch_ir_data_source_channel_srv_;
+  ros::ServiceServer set_ir_long_exposure_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
@@ -410,7 +418,7 @@ class OBCameraNode {
   bool enable_left_ir_ = false;
   bool enable_right_ir_ = false;
 
-  //For color
+  // For color
   std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
   std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
   std::mutex colorFrameMtx_;
@@ -418,6 +426,7 @@ class OBCameraNode {
   bool use_hardware_time_ = false;
   // ordered point cloud
   bool ordered_pc_ = false;
+  bool enable_compressed_color_ = false;
 };
 
 }  // namespace orbbec_camera
