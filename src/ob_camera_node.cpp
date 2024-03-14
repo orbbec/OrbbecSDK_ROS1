@@ -15,6 +15,8 @@
  *******************************************************************************/
 
 #include "orbbec_camera/ob_camera_node.h"
+#include <sys/stat.h>
+#include <sys/types.h>
 #if defined(USE_RK_HW_DECODER)
 #include "orbbec_camera/rk_mpp_decoder.h"
 #elif defined(USE_NV_HW_DECODER)
@@ -613,7 +615,15 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
     auto current_path = boost::filesystem::current_path().string();
     std::string filename = current_path + "/point_cloud/points_" + ss.str() + ".ply";
     if (!boost::filesystem::exists(current_path + "/point_cloud")) {
-      boost::filesystem::create_directory(current_path + "/point_cloud");
+      std::string directory = current_path + "/point_cloud";
+      int result = mkdir(directory.c_str(), 0777);
+      if (result == 0) {
+        ROS_INFO_STREAM("Create directory success: " << directory);
+      } else {
+        ROS_ERROR_STREAM("Failed to create directory: " << directory);
+        std::exit(EXIT_FAILURE); // Stop compilation with error status
+      }
+      //boost::filesystem::create_directory(current_path + "/point_cloud");
     }
     ROS_INFO_STREAM("Saving point cloud to " << filename);
     saveDepthPointCloudMsgToPly(cloud_msg_, filename);
@@ -722,7 +732,15 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
     auto current_path = boost::filesystem::current_path().string();
     std::string filename = current_path + "/point_cloud/colored_points_" + ss.str() + ".ply";
     if (!boost::filesystem::exists(current_path + "/point_cloud")) {
-      boost::filesystem::create_directory(current_path + "/point_cloud");
+      std::string directory = current_path + "/point_cloud";
+      int result = mkdir(directory.c_str(), 0777);
+      if (result == 0) {
+        ROS_INFO_STREAM("Create directory success: " << directory);
+      } else {
+        ROS_ERROR_STREAM("Failed to create directory: " << directory);
+        std::exit(EXIT_FAILURE); // Stop compilation with error status
+      }
+      //boost::filesystem::create_directory(current_path + "/point_cloud");
     }
     ROS_INFO_STREAM("Saving point cloud to " << filename);
     saveRGBPointCloudMsgToPly(cloud_msg_, filename);
@@ -1117,7 +1135,15 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
                            std::to_string(image_msg->height) + "_" + std::to_string(fps) + "hz_" +
                            ss.str() + "_" + std::to_string(index) + file_suffix;
     if (!boost::filesystem::exists(current_path + "/image")) {
-      boost::filesystem::create_directory(current_path + "/image");
+      std::string directory = current_path + "/image";
+      int result = mkdir(directory.c_str(), 0777);
+      if (result == 0) {
+        ROS_INFO_STREAM("Create directory success: " << directory);
+      } else {
+        ROS_ERROR_STREAM("Failed to create directory: " << directory);
+        std::exit(EXIT_FAILURE); // Stop compilation with error status
+      }
+      //boost::filesystem::create_directory(current_path + "/image");
     }
     ROS_INFO_STREAM("Saving image to " << filename);
     if (stream_index.first == OB_STREAM_COLOR) {
