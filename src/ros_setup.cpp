@@ -376,8 +376,8 @@ void OBCameraNode::setupPublishers() {
         nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_left_ir", 1, true);
   }
   if (enable_stream_[DEPTH] && enable_stream_[INFRA2]) {
-    depth_to_other_extrinsics_publishers_[INFRA2] =
-        nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_right_ir", 1, true);
+    depth_to_other_extrinsics_publishers_[INFRA2] = nh_.advertise<orbbec_camera::Extrinsics>(
+        "/" + camera_name_ + "/depth_to_right_ir", 1, true);
   }
 }
 
@@ -404,8 +404,9 @@ void OBCameraNode::setupPipelineConfig() {
     pipeline_config_.reset();
   }
   pipeline_config_ = std::make_shared<ob::Config>();
+  auto pid = device_info_->pid();
   if (depth_registration_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
-    if (device_info_->pid() == FEMTO_BOLT_PID) {
+    if (pid == FEMTO_BOLT_PID || pid == GEMINI2R_PID) {
       ROS_INFO_STREAM("set align mode:  ALIGN_D2C_SW_MODE");
       pipeline_config_->setAlignMode(ALIGN_D2C_SW_MODE);
     } else {
@@ -451,7 +452,8 @@ void OBCameraNode::readDefaultExposure() {
       default_exposure_[stream_index] = exposure;
     } catch (ob::Error& e) {
       default_exposure_[stream_index] = 0;
-      ROS_DEBUG_STREAM("get " << stream_name_[stream_index] << " exposure error " << e.getMessage());
+      ROS_DEBUG_STREAM("get " << stream_name_[stream_index] << " exposure error "
+                              << e.getMessage());
     }
   }
 }
