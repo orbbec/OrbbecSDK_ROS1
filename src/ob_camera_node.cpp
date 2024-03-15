@@ -771,8 +771,8 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
     return;
   }
   auto has_subscriber = imu_gyro_accel_publisher_.getNumSubscribers() > 0;
-  has_subscriber |= imu_info_publishers_[ACCEL].getNumSubscribers() > 0;
-  has_subscriber |= imu_info_publishers_[GYRO].getNumSubscribers() > 0;
+  has_subscriber = has_subscriber || imu_info_publishers_[ACCEL].getNumSubscribers() > 0;
+  has_subscriber = has_subscriber || imu_info_publishers_[GYRO].getNumSubscribers() > 0;
   if (!has_subscriber) {
     return;
   }
@@ -802,7 +802,7 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
     return;
   }
   auto has_subscriber = imu_publishers_[stream_index].getNumSubscribers() > 0;
-  has_subscriber |= imu_info_publishers_[stream_index].getNumSubscribers() > 0;
+  has_subscriber = has_subscriber || imu_info_publishers_[stream_index].getNumSubscribers() > 0;
   if (!has_subscriber) {
     return;
   }
