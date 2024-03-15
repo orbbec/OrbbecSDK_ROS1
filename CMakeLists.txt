@@ -228,6 +228,10 @@ add_orbbec_executable(orbbec_camera_node src/main.cpp)
 
 # Install
 install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${EXECUTABLES}
+  list_devices_node
+  list_depth_work_mode_node
+  list_camera_profile_mode_node
+  orbbec_camera_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
