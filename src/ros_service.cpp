@@ -284,7 +284,6 @@ bool OBCameraNode::getGainCallback(GetInt32Request& request, GetInt32Response& r
   auto sensor = sensors_[stream_index];
   try {
     response.data = sensor->getGain();
-    ROS_INFO_STREAM("Current gain: " << response.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to get gain: " << e.getMessage());
     response.success = false;

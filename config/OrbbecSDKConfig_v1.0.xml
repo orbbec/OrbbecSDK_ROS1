@@ -76,7 +76,7 @@
         <EnumerateNetDevice>false</EnumerateNetDevice>
 
         <!--UVC Backend select on Linux; optional values: Auto, V4L2, LibUVC; Auto is the default value-->
-        <LinuxUVCBackend>LibUVC</LinuxUVCBackend>
+        <LinuxUVCBackend>V4L2</LinuxUVCBackend>
 
         <FemtoMega>
             <Depth>

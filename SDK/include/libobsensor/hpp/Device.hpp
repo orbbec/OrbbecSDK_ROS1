@@ -7,7 +7,7 @@
 #include "Types.hpp"
 
 #include "libobsensor/h/Property.h"
-
+#include "libobsensor/hpp/Filter.hpp"
 #include <memory>
 #include <string>
 #include <vector>
