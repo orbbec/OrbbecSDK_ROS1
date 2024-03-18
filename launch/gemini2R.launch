@@ -3,14 +3,14 @@
     <arg name="camera_name" default="camera"/>
     <arg name="output" default="screen"/>
     <!-- Hardware depth registration -->
-    <arg name="depth_registration" default="false"/>
+    <arg name="depth_registration" default="true"/>
     <arg name="serial_number" default=""/>
     <arg name="usb_port" default=""/>
     <arg name="device_num" default="1"/>
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default=""/>
     <arg name="enable_point_cloud" default="true"/>
-    <arg name="enable_colored_point_cloud" default="false"/>
+    <arg name="enable_colored_point_cloud" default="true"/>
     <arg name="connection_delay" default="100"/>
     <arg name="color_width" default="1280"/>
     <arg name="color_height" default="720"/>

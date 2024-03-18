@@ -23,6 +23,7 @@
 #include "types.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "orbbec_camera/Extrinsics.h"
+#include <opencv2/opencv.hpp>
 
 namespace orbbec_camera {
 OBFormat OBFormatFromString(const std::string &format);

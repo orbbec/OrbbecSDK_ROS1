@@ -284,6 +284,7 @@ bool OBCameraNode::getGainCallback(GetInt32Request& request, GetInt32Response& r
   auto sensor = sensors_[stream_index];
   try {
     response.data = sensor->getGain();
+    ROS_INFO_STREAM("Current gain: " << response.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to get gain: " << e.getMessage());
     response.success = false;
@@ -301,7 +302,13 @@ bool OBCameraNode::setGainCallback(SetInt32Request& request, SetInt32Response& r
   }
   auto sensor = sensors_[stream_index];
   try {
+    auto gain = sensor->getGain();
+    ROS_INFO_STREAM("Current gain: " << gain);
+    ROS_INFO_STREAM("Setting gain to: " << request.data);
     sensor->setGain(request.data);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    gain = sensor->getGain();
+    ROS_INFO_STREAM("After set gain: " << gain);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set gain: " << e.getMessage());
     response.success = false;
@@ -430,7 +437,8 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
   (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
-    device_->setBoolProperty(OB_PROP_LASER_BOOL, request.data);
+    int data = request.data ? 1 : 0;
+    device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set laser: " << e.getMessage());
     response.message = e.getMessage();
