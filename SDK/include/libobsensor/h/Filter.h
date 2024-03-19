@@ -278,7 +278,7 @@ ob_int_property_range ob_noise_removal_filter_get_max_size_range(ob_filter *filt
  * @param[in] params ob_noise_removal_filter_params.
  * @param[out] error Log error messages.
  */
-void ob_noise_removal_filter_set_filter_params(ob_filter *filter, ob_noise_removal_filter_params* params, ob_error **error);
+void ob_noise_removal_filter_set_filter_params(ob_filter *filter, ob_noise_removal_filter_params params, ob_error **error);
 
 /**
  * @brief Get the noise removal filter params.

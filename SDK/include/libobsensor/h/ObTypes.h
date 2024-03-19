@@ -51,24 +51,25 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct ContextImpl               ob_context;
-typedef struct DeviceImpl                ob_device;
-typedef struct DeviceInfoImpl            ob_device_info;
-typedef struct DeviceListImpl            ob_device_list;
-typedef struct CameraParamListImpl       ob_camera_param_list;
-typedef struct SensorImpl                ob_sensor;
-typedef struct SensorListImpl            ob_sensor_list;
-typedef struct StreamProfileImpl         ob_stream_profile;
-typedef struct StreamProfileListImpl     ob_stream_profile_list;
-typedef struct CFrameImpl                ob_frame;
-typedef struct FilterImpl                ob_filter;
-typedef struct PipelineImpl              ob_pipeline;
-typedef struct ConfigImpl                ob_config;
-typedef struct RecorderImpl              ob_recorder;
-typedef struct PlaybackImpl              ob_playback;
-typedef struct OBDepthWorkModeListImpl   ob_depth_work_mode_list;
-typedef struct FilterListImpl            ob_filter_list;
-typedef struct OBFilterListImpl          ob_filters;
+typedef struct ContextImpl             ob_context;
+typedef struct DeviceImpl              ob_device;
+typedef struct DeviceInfoImpl          ob_device_info;
+typedef struct DeviceListImpl          ob_device_list;
+typedef struct CameraParamListImpl     ob_camera_param_list;
+typedef struct SensorImpl              ob_sensor;
+typedef struct SensorListImpl          ob_sensor_list;
+typedef struct StreamProfileImpl       ob_stream_profile;
+typedef struct StreamProfileListImpl   ob_stream_profile_list;
+typedef struct CFrameImpl              ob_frame;
+typedef struct FilterImpl              ob_filter;
+typedef struct PipelineImpl            ob_pipeline;
+typedef struct ConfigImpl              ob_config;
+typedef struct RecorderImpl            ob_recorder;
+typedef struct PlaybackImpl            ob_playback;
+typedef struct OBDepthWorkModeListImpl ob_depth_work_mode_list;
+typedef struct FilterListImpl          ob_filter_list;
+typedef struct OBFilterListImpl        ob_filters;
+typedef struct DevicePresetListImpl    ob_device_preset_list;
 
 #define OB_WIDTH_ANY 0
 #define OB_HEIGHT_ANY 0

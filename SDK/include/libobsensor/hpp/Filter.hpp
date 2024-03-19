@@ -310,7 +310,7 @@ class OB_EXTENSION_API NoiseRemovalFilter : public Filter {
 public:
     NoiseRemovalFilter();
 
-    void setFilterParams(OBNoiseRemovalFilterParams *filterParams);
+    void setFilterParams(OBNoiseRemovalFilterParams filterParams);
 
     OBNoiseRemovalFilterParams getFilterParams();
 
@@ -360,7 +360,24 @@ template <typename T> bool Filter::is() {
     if(name == "HoleFillingFilter") {
         return typeid(T) == typeid(HoleFillingFilter);
     }
-
+    if(name == "DecimationFilter") {
+        return typeid(T) == typeid(DecimationFilter);
+    }
+    if(name == "PointCloudFilter") {
+        return typeid(T) == typeid(PointCloudFilter);
+    }
+    if(name == "CompressionFilter") {
+        return typeid(T) == typeid(CompressionFilter);
+    }
+    if(name == "DecompressionFilter") {
+        return typeid(T) == typeid(DecompressionFilter);
+    }
+    if(name == "FormatConverter") {
+        return typeid(T) == typeid(FormatConvertFilter);
+    }
+    if(name == "Align") {
+        return typeid(T) == typeid(Align);
+    }
     return false;
 }
 
