@@ -60,7 +60,7 @@ Start the camera
 
 ```bash
 source ./devel/setup.bash 
-roslaunch orbbec_camera astra.launch
+roslaunch orbbec_camera gemini2L.launch
 ```
 
 - In terminal 2
@@ -190,19 +190,6 @@ rosservice call /camera/save_point_cloud "{}"
 
 NOTE: The images are saved under ~/.ros/image and are only available when the sensor is on.
 
-### Network device enumeration
-
-Currently, the network device enumeration function is supported only by the Femto Mega device. When accessing this
-device over the network, if `enumerate_net_device` is set to `true`, the device will be automatically enumerated,
-eliminating the need to configure the IP address in advance or set the enable switch to true. The specific configuration
-methods are as follows:
-
-- `enumerate_net_device`: enumeration network device automatically, only supported by Femto Mega.
-  if `enumerate_net_device` set to `true`, the device will be enumerated automatically,No need to set the `ip_address`
-  and `port` parameters.
-- `ip_address`: The IP address of the device.
-- `port`: The port number of the device.
-
 ### All available service for camera control
 
 The name of the following service already expresses its function.
@@ -313,7 +300,7 @@ done
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
     <!-- Hardware depth registration -->
-    <arg name="3d_sensor" default="astra"/>
+    <arg name="3d_sensor" default="gemini2L"/>
     <!-- stereo_s_u3, astrapro, astra -->
     <arg name="camera1_prefix" default="01"/>
     <arg name="camera2_prefix" default="02"/>
@@ -323,14 +310,14 @@ done
     <arg name="camera2_usb_port" default="1-4.2.2"/>
     -->Change serial number here -->
     <arg name="device_num" default="2"/>
-    <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
+    <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
         <arg name="device_num" default="$(arg device_num)"/>
 
     </include>
 
-    <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
+    <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
         <arg name="usb_port" value="$(arg camera2_usb_port)"/>
         <arg name="device_num" default="$(arg device_num)"/>
@@ -395,119 +382,10 @@ The following are the launch parameters available:
 - `gyro_range` : The range of the gyroscope, the optional values
   are `16dps`,`31dps`,`62dps`,`125dps`,`250dps`,`500dps`,`1000dps`,`2000dps`. The specific value depends on the current
   camera.
-- `enumerate_net_device` : Whether to enable the function of enumerating network devices. True means enabled, false
-  means disabled.
   This feature is only supported by Femto Mega and Gemini 2 XL devices. When accessing these devices through the
   network, the IP address of the device needs to be configured in advance. The enable switch needs to be set to true.
 - `depth_filter_config` : Configure the loading path for the depth filtering configuration file. By default, the depth
   filtering configuration file is located in the /config/depthfilter directory，Supported only on Gemini2.
-
-## Depth work mode switch:
-
-- Before starting the camera, depth work mode (depth_work_mode) can be configured for the corresponding xxx.launch
-  file's support.
-- The depth work mode switch is supported by Gemini 2, Gemini 2 L, and Gemini 2 XL cameras.
-- The default depth work mode configuration of xxx.launch is the camera's default configuration. If you need to modify
-  it, you can switch to the corresponding mode as needed.
-- The specific camera depth work mode support types can be found in the comments of the depth mode.
-
-```XML
-  <!-- Depth work mode support is as follows： -->
-<!-- Unbinned Dense Default -->
-<!-- Unbinned Sparse Default -->
-<!-- Binned Sparse Default -->
-<!-- Obstacle Avoidance -->
-<arg name="depth_work_mode" default=""/>
-```
-
-- View depth work modes:
-
-```bash
-rosrun orbbec_camera list_depth_work_mode_node
-```
-
-## Configuration of depth NFOV and WFOV modes
-
-For the Femto Mega and Femto Bolt devices, the NFOV and WFOV modes are implemented by configuring the resolution of
-Depth and IR in the launch file.
-In launch file, depth_width、depth_height、ir_width、ir_height represents the resolution of the depth and the resolution of
-the IR.
-The frame fps and resolution of IR must be consistent with the depth. The correspondence between different modes and
-resolutions is as follows:
-
-- NFOV unbinned: 640 x 576.
-- NFOV binned: 320 x 288.
-- WFOV unbinned: 1024 x 1024.
-- WFOV binned: 512 x 512.
-
-## Check which profiles the camera supports
-
-  ```bash
-  rosrun orbbec_camera list_camera_profile_mode_node
-  ```
-
-## Launch files
-
-| product serials                     | launch file           |
-|-------------------------------------|-----------------------|
-| astra+                              | astra_adv.launch      |
-| astra mini/astra mini pro/astra pro | astra.launch          |
-| astra mini s pro                    | astra.launch          |
-| astra2                              | astra2.launch         |
-| astra stereo s                      | stereo_s_u3.launch    |
-| astra pro2                          | astra_pro2.launch     |
-| dabai                               | dabai.launch          |
-| dabai d1                            | dabai_d1.launch       |
-| dabai dcw                           | dabai_dcw.launch      |
-| dabai dw                            | dabai_dw.launch       |
-| dabai pro                           | dabai_pro.launch      |
-| deeya                               | deeya.launch          |
-| femto / femto w                     | femto.launch          |
-| femto mega                          | femto_mega.launch     |
-| femto bolt                          | femto_bolt.launch     |
-| gemini                              | gemini.launch         |
-| gemini                              | gemini.launch         |
-| gemini2 / dabai DCL                 | gemini2.launch        |
-| gemini2L                            | gemini2L.launch       |
-| gemini e                            | gemini_e.launch       |
-| gemini e lite                       | gemini_e_lite.launch  |
-| dabai max                           | dabai_max.launch      |
-| dabai max pro                       | dabai_max_pro.launch  |
-| gemini uw                           | gemini_uw.launch      |
-| dabai dcw2                          | dabai_dcw2.launch     |
-| dabai dw2                           | dabai_dw2.launch      |
-| gemini ew                           | gemini_ew.launch      |
-| gemini ew lite                      | gemini_ew_lite.launch |
-
-Actually, All launch files all most the same, the only difference is the default value of the parameters.
-
-## Use Nodelet
-
-For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
-
-## Supported hardware products
-
-| **products list** | **firmware version**                      |
-|-------------------|-------------------------------------------|
-| Gemini 2 XL       | Obox: V1.2.5  VL:1.4.54                   |
-| Astra 2           | 2.8.20                                    |
-| Gemini 2 L        | 1.4.32                                    |
-| Gemini 2          | 1.4.60 /1.4.76                            |
-| Femto Mega        | 1.1.7  (window10、ubuntu20.04、ubuntu22.04) |
-| Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19               |
-| Femto             | 1.6.7                                     |
-| Femto W           | 1.1.8                                     |
-| Femto Bolt        | 1.0.6 (unsupported ARNM32)                |
-| DaBai             | 2436                                      |
-| DaBai DCW         | 2460                                      |
-| DaBai DW          | 2606                                      |
-| Astra Mini Pro    | 1007                                      |
-| Gemini E          | 3460                                      |
-| Gemini E Lite     | 3606                                      |
-| Gemini            | 3.0.18                                    |
-| Astra Mini S Pro  | 1.0.05                                    |
-| DaBai Max Pro     | 1.0.06                                    |
-| Gemini UW         | 1.0.060                                   |
 
 ## Frequently Asked Questions
 
@@ -524,11 +402,6 @@ Why are there so many launch files here
 - The reason for the presence of multiple launch
   files is due to the fact that the default resolutions and image formats of different cameras vary.
   To make it easier to use, the launch files have been separated for each camera.
-
-Why IR stream No data output
-
-- If you are using Astra/Astra mini / astra mini S camera, you cannot turn on IR and RGB at the same time, please
-  change `enable_color` to false in the corresponding launch file to turn off color camera.
 
 Why do I get the following error when running the launch file
 
@@ -554,7 +427,7 @@ Edit`/etc/udev/rules.d/99-obsensor-libusb.rules`，add the following line
 SUBSYSTEM=="usb", ATTR{idProduct}=="your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root"  GROUP:="video", SYMLINK+="you_device_name_here"
 ```
 
-`you_device_name_here` is the name of the device you want to create, for example `Astra`.
+`you_device_name_here` is the name of the device you want to create, for example `gemini2L`.
 
 Then restart the udev service
 
@@ -564,7 +437,7 @@ sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm
 
 ## License
 
-Copyright 2023 Orbbec Ltd.
+Copyright 2024 Orbbec Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with
 the License. You may obtain a copy of the License at

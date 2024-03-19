@@ -57,7 +57,7 @@ sudo udevadm control --reload && sudo  udevadm trigger
 
 ```bash
 source ./devel/setup.bash 
-roslaunch orbbec_camera astra.launch
+roslaunch orbbec_camera gemini2L.launch
 ```
 
 - 在终端 2
@@ -178,6 +178,7 @@ rosservice call  /camera/toggle_depth "{data: true}"
 ```bash
 rosservice call /camera/save_images "{}"
 ```
+
 - 保存点云。
 
 ```bash
@@ -295,7 +296,7 @@ done
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
     <!-- Hardware depth registration -->
-    <arg name="3d_sensor" default="astra"/>
+    <arg name="3d_sensor" default="gemini2R"/>
     <!-- stereo_s_u3, astrapro, astra -->
     <arg name="camera1_prefix" default="01"/>
     <arg name="camera2_prefix" default="02"/>
@@ -305,14 +306,14 @@ done
     <arg name="camera2_usb_port" default="1-4.2.2"/>
     -->Change serial number here -->
     <arg name="device_num" default="2"/>
-    <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
+    <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
         <arg name="device_num" default="$(arg device_num)"/>
 
     </include>
 
-    <include file="$(find astra_camera)/launch/$(arg 3d_sensor).launch">
+    <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
         <arg name="usb_port" value="$(arg camera2_usb_port)"/>
         <arg name="device_num" default="$(arg device_num)"/>
@@ -370,107 +371,13 @@ roslaunch orbbec_camera multi_camera.launch
   `100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`。具体的值取决于当前的相机型号。
 - `gyro_range` : 陀螺仪的量程, 可选值为`16dps`,`31dps`,`62dps`,`125dps`,`250dps`,`500dps`,`1000dps`,`2000dps`
   。具体的值取决于当前的相机型号。
-- `enumerate_net_device` : 是否开启枚举网络设备的功能，true为开启，false为关闭，仅Femto mega和Gemini 2 XL设备支持。
-  当通过网络方式访问以上设备时，需提前配置好设备的IP地址，使能开关需要配置成true。
 - `depth_filter_config` : 配置深度滤波配置文件加载路径，默认深度滤波配置文件在/config/depthfilter目录下,仅gemini2支持。
-
-## 深度模式切换：
-- 启动相机前,可通过配置对应相继的xxx.launch的深度模式(depth_work_mode)支持。
-- 深度模式切换支持的相机:Gemini 2,Gemini 2 L,Gemini 2 XL。
-- xxx.launch默认深度模式配置为相机默认配置,如果需要修改可根据需要切换相应深度模式。
-- 具体相机深度模式支持类型可查看深度模式的注释。
-
-```XML
-  <!-- Depth work mode support is as follows： -->
-  <!-- Unbinned Dense Default -->
-  <!-- Unbinned Sparse Default -->
-  <!-- Binned Sparse Default -->
-  <!-- Obstacle Avoidance -->
-  <arg name="depth_work_mode" default=""/>
-```
-
-- 深度工作模式查看:
-
-```bash
-rosrun orbbec_camera list_depth_work_mode_node
-```
-## 深度NFOV和WFOV模式配置
-对于Femto Mega和Femto Bolt设备，深度NFOV和WFOV模式通过在launch文件中配置Depth和IR的分辨率实现。
-在launch文件中，`depth_width`, `depth_height`、'ir_width'、‘ir_height’为深度流的分辨率和IR流的分辨率。
-IR的分辨率和帧率必须和深度保持一致。不同模式和分辨率对应关系如下:
-- NFoV unbinned：640 x 576。
-- NFoV binned：320 x 288。
-- WFoV unbinned：1024 x1024。
-- WFoV binned：512 x 512。
 
 ## 查看相机支持那些Profile
 
   ```bash
   rosrun orbbec_camera list_camera_profile_mode_node
   ```
-
-## 启动文件
-
-| product serials                           | launch file          |
-|-------------------------------------------|----------------------|
-| astra+                                    | astra_adv.launch     |
-| astra mini/astra mini pro/astra pro       | astra.launch         |
-| astra mini s pro                          | astra.launch         |
-| astra2                                    | astra2.launch        |
-| astra stereo s                            | stereo_s_u3.launch   |
-| astra pro2                                | astra_pro2.launch    |
-| dabai                                     | dabai.launch         |
-| dabai d1                                  | dabai_d1.launch      |
-| dabai dcw                                 | dabai_dcw.launch     |
-| dabai dw                                  | dabai_dw.launch      |
-| dabai pro                                 | dabai_pro.launch     |
-| deeya                                     | deeya.launch         |
-| femto / femto w                           | femto.launch         |
-| femto mega                                | femto_mega.launch    |
-| femto bolt                                | femto_bolt.launch    |
-| gemini                                    | gemini.launch        |
-| gemini                                    | gemini.launch        |
-| gemini2 / dabai DCL                       | gemini2.launch       |
-| gemini2L                                  | gemini2L.launch      |
-| gemini e                                  | gemini_e.launch      |
-| gemini e lite                             | gemini_e_lite.launch |
-| dabai max                                 | dabai_max.launch     |
-| dabai max pro                             | dabai_max_pro.launch |
-| gemini uw                                 | gemini_uw.launch     |
-| dabai dcw2                                | dabai_dcw2.launch    |
-| dabai dw2                                 | dabai_dw2.launch     |
-| gemini ew                                 | gemini_ew.launch     |
-| gemini ew lite                            | gemini_ew_lite.launch|
-
-实际上所有启动文件几乎都是相同的，只是有的相机默认参数不同，请根据自己的相机选择对应的启动文件，并根据你的需要调整。
-
-## 已经支持的硬件产品列表
-
-| **products list** | **firmware version**                      |
-|-------------------|-------------------------------------------|
-| Gemini 2 XL       | Obox: V1.2.5  VL:1.4.54                   |
-| Astra 2           | 2.8.20                                    |
-| Gemini 2 L        | 1.4.32                                    |
-| Gemini 2          | 1.4.60 /1.4.76                            |
-| Femto Mega        | 1.1.7  (window10、ubuntu20.04、ubuntu22.04) |
-| Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19               |
-| Femto             | 1.6.7                                     |
-| Femto W           | 1.1.8                                     |
-| Femto Bolt        | 1.0.6 (unsupported ARNM32)                |
-| DaBai             | 2436                                      |
-| DaBai DCW         | 2460                                      |
-| DaBai DW          | 2606                                      |
-| Astra Mini Pro    | 1007                                      |
-| Gemini E          | 3460                                      |
-| Gemini E Lite     | 3606                                      |
-| Gemini            | 3.0.18                                    |
-| Astra Mini S Pro  | 1.0.05                                    |
-| DaBai Max Pro     | 1.0.06                                    |
-| Gemini UW         | 1.0.060                                   |
-
-## 使用Nodelet
-
-对于需要使用Nodelet的用户，请参考`gemini2_nodelet.launch`
 
 ## 常见问题
 
@@ -484,10 +391,6 @@ IR的分辨率和帧率必须和深度保持一致。不同模式和分辨率对
 
 - 存在多个启动文件的原因是因为不同相机的默认分辨率和图像格式不同。
   为了方便使用，启动文件已针对每个相机进行了分离
-
-为什么IR数据没有输出
-
-- 如果你用的是Astra/Astra mini相机，是不能同时打开IR和RGB的， 请在对应的launch文件把`enable_color`改成false关闭彩色相机
 
 运行时报错
 
@@ -523,7 +426,7 @@ sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm
 
 ## License
 
-Copyright 2023 Orbbec Ltd.
+Copyright 2024 Orbbec Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with
 the License. You may obtain a copy of the License at
