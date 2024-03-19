@@ -109,13 +109,13 @@ rosservice call /camera/get_sdk_version "{}"
 
 ```bash
 rosservice call /camera/set_color_auto_exposure '{data: false}' 
-rosservice call /camera/set_ir_auto_exposure  "{data: false}"
+rosservice call /camera/set_left_ir_auto_exposure  "{data: false}"
     
 # Setting exposure values (Be careful with the data range, the following example may not be correct.)
-rosservice call /camera/set_ir_exposure  "{data: 2000}"
+rosservice call /camera/set_left_ir_exposure  "{data: 2000}"
 roservice call /camera/set_color_exposure  "{data: 2000}"
  # Get exposure
- rosservice call /camera/get_ir_exposure  "{}"
+ rosservice call /camera/get_left_ir_exposure  "{}"
  rosservice call /camera/get_color_exposure "{}"
 ```
 
@@ -124,10 +124,10 @@ roservice call /camera/set_color_exposure  "{data: 2000}"
 ```bash
 # Get Gain
 rosservice call /camera/get_color_gain '{}'
-rosservice call /camera/get_ir_gain '{}' 
+rosservice call /camera/get_left_ir_gain '{}' 
 # Setting the gain (Be careful with the data range, the following example may not be correct.)
 rosservice call /camera/set_color_gain  "{data: 200}"
-rosservice call /camera/set_ir_gain "{data: 200}"
+rosservice call /camera/set_left_ir_gain "{data: 200}"
 ```
 
 - Set/get mirror
@@ -135,7 +135,7 @@ rosservice call /camera/set_ir_gain "{data: 200}"
 ```bash
 rosservice call /camera/set_color_mirror  "{data: true}"
 rosservice call /camera/set_depth_mirror  "{data: true}"
-rosservice call /camera/set_ir_mirror  "{data: true}"
+rosservice call /camera/set_left_ir_mirror  "{data: true}"
 ```
 
 - Set/get (auto) white balance
@@ -208,10 +208,10 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/get_depth_gain`
 - `/camera/get_device_info`
 - `/camera/get_device_type`
-- `/camera/get_ir_auto_exposure`
-- `/camera/get_ir_camera_info`
-- `/camera/get_ir_exposure`
-- `/camera/get_ir_gain`
+- `/camera/get_left_ir_auto_exposure`
+- `/camera/get_left_ir_camera_info`
+- `/camera/get_left_ir_exposure`
+- `/camera/get_left_ir_gain`
 - `/camera/get_serial`
 - `/camera/get_sdk_version`
 - `/camera/get_white_balance`
@@ -219,8 +219,8 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/reset_color_gain`
 - `/camera/reset_depth_exposure`
 - `/camera/reset_depth_gain`
-- `/camera/reset_ir_exposure`
-- `/camera/reset_ir_gain`
+- `/camera/reset_left_ir_exposure`
+- `/camera/reset_left_ir_gain`
 - `/camera/reset_white_balance`
 - `/camera/save_images`
 - `/camera/save_point_cloud`
@@ -235,10 +235,10 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/set_depth_mirror`
 - `/camera/set_fan_work_mode`
 - `/camera/set_floor`
-- `/camera/set_ir_auto_exposure`
-- `/camera/set_ir_exposure`
-- `/camera/set_ir_gain`
-- `/camera/set_ir_mirror`
+- `/camera/set_left_ir_auto_exposure`
+- `/camera/set_left_ir_exposure`
+- `/camera/set_left_ir_gain`
+- `/camera/set_left_ir_mirror`
 - `/camera/set_laser`
 - `/camera/set_ldp`
 - `/camera/set_white_balance`
@@ -255,8 +255,10 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/depth/points` : The point cloud, only available when  `enable_point_cloud` is `true`.
 - `/camera/depth_registered/points`: The colored point cloud, only available when  `enable_colored_point_cloud`
   is `true`.
-- `/camera/ir/camera_info`:  The IR camera info.
-- `/camera/ir/image_raw`: The IR stream image
+- `/camera/left_ir/camera_info`:  The left IR camera info.
+- `/camera/left_ir/image_raw`: The left IR stream image
+- `/camera/right_ir/camera_info`:  The left IR camera info.
+- `/camera/right_ir/image_raw`: The left IR stream image
 - `/camera/accel/sample`: Acceleration data stream `enable_sync_output_accel_gyro`turned off，`enable_accel`turned on
 - `/camera/gyro/sample`: Gyroscope data stream，enable_sync_output_accel_gyro`turned off，`enable_gyro`turned on
 - `camera/gyro_accel/sample`: Synchronized data stream of acceleration and gyroscope，`enable_sync_output_accel_gyro`
@@ -358,14 +360,15 @@ The following are the launch parameters available:
 - `enable_d2c_viewer`: Publishes the D2C overlay image (for testing only).
 - `device_num`: The number of devices. This must be filled in if multiple cameras are required.
 - `color_width`, `color_height`, `color_fps`: The resolution and frame rate of the color stream.
-- `ir_width`, `ir_height`, `ir_fps`: The resolution and frame rate of the IR stream.
+- `left_ir_width`, `left_ir_height`, `left_ir_fps`: The resolution and frame rate of the left IR stream.
+- `right_ir_width`, `right_ir_height`, `right_ir_fps`: The resolution and frame rate of the right IR stream.
 - `depth_width`, `depth_height`, `depth_fps`: The resolution and frame rate of the depth stream.
 - `enable_color`: Enables the RGB camera.
 - `enable_depth`: Enables the depth camera.
-- `enable_ir`: Enables the IR camera.
+- `enable_ir`: Enables the left IR camera.
+- `enable_right_ir`: Enables the right IR camera.
 - `depth_registration`: Enables hardware alignment the depth frame to color frame. This field is required when
   the `enable_colored_point_cloud` is set to `true`.
-- `enable_publish_extrinsic`: Enables the publishing of camera extrinsic information.
 - `log_level`: The log level for OrbbecSDK, with optional values of `none`, `info`, `debug`, `warn`, and `fatal`.
   The log file can be found in the ROS runtime directory, and the default location is `~/.ros/Log`.
 - `enable_accel` : Enables the accelerometer.
@@ -391,12 +394,6 @@ No Picture from Multiple Cameras
 
 - It's also possible that the resolution is too high.
   To resolve this, try lowering the resolution.
-
-Why are there so many launch files here
-
-- The reason for the presence of multiple launch
-  files is due to the fact that the default resolutions and image formats of different cameras vary.
-  To make it easier to use, the launch files have been separated for each camera.
 
 Why do I get the following error when running the launch file
 

@@ -105,13 +105,13 @@ rosservice call /camera/get_sdk_version "{}"
 
 ```bash
 rosservice call /camera/set_color_auto_exposure '{data: false}' 
-rosservice call /camera/set_ir_auto_exposure  "{data: false}"
+rosservice call /camera/set_left_ir_auto_exposure  "{data: false}"
     
 # 设置曝光值（注意数据范围，以下示例可能不正确）
-rosservice call /camera/set_ir_exposure  "{data: 2000}"
+rosservice call /camera/set_left_ir_exposure  "{data: 2000}"
 roservice call /camera/set_color_exposure  "{data: 2000}"
  # 获取曝光值。
- rosservice call /camera/get_ir_exposure  "{}"
+ rosservice call /camera/get_left_ir_exposure  "{}"
  rosservice call /camera/get_color_exposure "{}"
 ```
 
@@ -120,10 +120,10 @@ roservice call /camera/set_color_exposure  "{data: 2000}"
 ```bash
 # 获取增益。
 rosservice call /camera/get_color_gain '{}'
-rosservice call /camera/get_ir_gain '{}' 
+rosservice call /camera/get_left_ir_gain '{}' 
 # 设置增益（注意数据范围，以下示例可能不正确）。
 rosservice call /camera/set_color_gain  "{data: 200}"
-rosservice call /camera/set_ir_gain "{data: 200}"
+rosservice call /camera/set_left_ir_gain "{data: 200}"
 ```
 
 - 设置/获取镜像。
@@ -131,7 +131,7 @@ rosservice call /camera/set_ir_gain "{data: 200}"
 ```bash
 rosservice call /camera/set_color_mirror  "{data: true}"
 rosservice call /camera/set_depth_mirror  "{data: true}"
-rosservice call /camera/set_ir_mirror  "{data: true}"
+rosservice call /camera/set_left_ir_mirror  "{data: true}"
 ```
 
 - 设置/获取（自动）白平衡。
@@ -203,10 +203,10 @@ rosservice call /camera/save_point_cloud "{}"
 - `/camera/get_depth_gain`
 - `/camera/get_device_info`
 - `/camera/get_device_type`
-- `/camera/get_ir_auto_exposure`
-- `/camera/get_ir_camera_info`
-- `/camera/get_ir_exposure`
-- `/camera/get_ir_gain`
+- `/camera/get_left_ir_auto_exposure`
+- `/camera/get_left_ir_camera_info`
+- `/camera/get_left_ir_exposure`
+- `/camera/get_left_ir_gain`
 - `/camera/get_serial`
 - `/camera/get_sdk_version`
 - `/camera/get_white_balance`
@@ -214,8 +214,8 @@ rosservice call /camera/save_point_cloud "{}"
 - `/camera/reset_color_gain`
 - `/camera/reset_depth_exposure`
 - `/camera/reset_depth_gain`
-- `/camera/reset_ir_exposure`
-- `/camera/reset_ir_gain`
+- `/camera/reset_left_ir_exposure`
+- `/camera/reset_left_ir_gain`
 - `/camera/reset_white_balance`
 - `/camera/save_images`
 - `/camera/save_point_cloud`
@@ -230,10 +230,10 @@ rosservice call /camera/save_point_cloud "{}"
 - `/camera/set_depth_mirror`
 - `/camera/set_fan_work_mode`
 - `/camera/set_floor`
-- `/camera/set_ir_auto_exposure`
-- `/camera/set_ir_exposure`
-- `/camera/set_ir_gain`
-- `/camera/set_ir_mirror`
+- `/camera/set_left_ir_auto_exposure`
+- `/camera/set_left_ir_exposure`
+- `/camera/set_left_ir_gain`
+- `/camera/set_left_ir_mirror`
 - `/camera/set_laser`
 - `/camera/set_ldp`
 - `/camera/set_white_balance`
@@ -249,8 +249,8 @@ rosservice call /camera/save_point_cloud "{}"
 - `/camera/depth/image_raw`: 红外数据流图像话题。
 - `/camera/depth/points` : 点云话题，仅当 `enable_point_cloud` 为 `true` 时才可用`.
 - `/camera/depth_registered/points`: 彩色点云话题，仅当 `enable_colored_point_cloud` 为 `true` 时才可用。
-- `/camera/ir/camera_info`:  红外相机信息（CameraInfo）话题。
-- `/camera/ir/image_raw`: 红外数据流图像话题。
+- `/camera/left_ir/camera_info`:  红外相机信息（CameraInfo）话题。
+- `/camera/left_ir/image_raw`: 红外数据流图像话题。
 - `/camera/accel/sample`: 加速度数据流，`enable_sync_output_accel_gyro`配置关闭，`enable_accel`配置打开
 - `/camera/gyro/sample`: 陀螺仪数据流，enable_sync_output_accel_gyro`配置关闭，`enable_gyro`配置打开
 - `camera/gyro_accel/sample`: 加速度和陀螺仪同步数据流，通过`enable_sync_output_accel_gyro`配置打开
@@ -349,13 +349,14 @@ roslaunch orbbec_camera multi_camera.launch
 - `enable_colored_point_cloud`: 启用彩色点云。
 - `device_num`: 设备数量。如果需要多个相机，则必须填写此项。
 - `color_width`, `color_height`, `color_fps`: 彩色数据流的分辨率和帧率。
-- `ir_width`, `ir_height`, `ir_fps`: 红外数据流的分辨率和帧率。
+- `left_ir_width`, `left_ir_height`, `left_ir_fps`: 红外数据流的分辨率和帧率。
+- `right_ir_width`, `right_ir_height`, `right_ir_fps`: 红外数据流的分辨率和帧率。
 - `depth_width`, `depth_height`, `depth_fps`: 深度数据流的分辨率和帧率。
 - `enable_color`: 启用彩色相机。
 - `enable_depth`: 启用深度相机。
-- `enable_ir`: 启用红外相机。
+- `enable_left_ir`: 启用红外相机。
+- `enable_right_ir`: 启用红外相机。
 - `depth_registration`: 启用硬件对准将深度帧对准到彩色帧。当 `enable_colored_point_cloud` 设置为 `true` 时需要此字段。
-- `enable_publish_extrinsic`: 启用相机外参信息的publisher。
 - `log_level`: `OrbbecSDK` 的日志级别，可选值为 `none`、`info`、`debug`、`warn` 和 `fatal`。日志文件可以在 ROS
   运行时目录中找到，其默认位置为`~/.ros/Log`。
 - `usb_port` : USB端口号，当使用多个相机时，这是必需的。
@@ -382,11 +383,6 @@ roslaunch orbbec_camera multi_camera.launch
 - 可能是USB供电不足导致的。为避免此问题，请不要将所有相机连接到同一个HUB上，还要使用供电的HUB。
 
 - 也有可能是分辨率太高导致的。要解决此问题，请尝试降低分辨率。
-
-为什么这里有这么多启动文件？
-
-- 存在多个启动文件的原因是因为不同相机的默认分辨率和图像格式不同。
-  为了方便使用，启动文件已针对每个相机进行了分离
 
 运行时报错
 
