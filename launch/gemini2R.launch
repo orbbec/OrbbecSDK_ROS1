@@ -12,8 +12,8 @@
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="true"/>
     <arg name="connection_delay" default="100"/>
-    <arg name="color_width" default="1280"/>
-    <arg name="color_height" default="720"/>
+    <arg name="color_width" default="640"/>
+    <arg name="color_height" default="480"/>
     <arg name="color_fps" default="30"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="YUYV"/>
@@ -28,14 +28,14 @@
     <arg name="depth_precision" default="1mm"/>
     <arg name="left_ir_width" default="640"/>
     <arg name="left_ir_height" default="480"/>
-    <arg name="left_ir_fps" default="30"/>
-    <arg name="enable_left_ir" default="true"/>
+    <arg name="left_ir_fps" default="10"/>
+    <arg name="enable_left_ir" default="false"/>
     <arg name="left_ir_format" default="Y8"/>
     <arg name="flip_left_ir" default="false"/>
     <arg name="right_ir_width" default="640"/>
     <arg name="right_ir_height" default="480"/>
-    <arg name="right_ir_fps" default="30"/>
-    <arg name="enable_right_ir" default="true"/>
+    <arg name="right_ir_fps" default="10"/>
+    <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="Y8"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
     <arg name="enable_sync_output_accel_gyro" default="false"/>
