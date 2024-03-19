@@ -30,11 +30,10 @@ mkdir -p ~/ros_ws/src
 Get Source code
 
 ```bash
-cd ~/ros_ws/src/
-git clone https://github.com/orbbec/OrbbecSDK_ROS1.git
-```
+# go to where you ORBBEC_SDK_ROS_SDK.tar.gz is located, xxx is the version, may be different
+tar -xvf OrbbecSDK_ROS_g2r_xxx.tar.gz -C ~/ros_ws/src/
 
-Or you can download from [Orbbec developer community](https://developer.orbbec.com.cn/download.html)
+```
 
 Build
 

@@ -25,13 +25,11 @@ mkdir -p ~/ros_ws/src
 ```
 
 把代码放到 ROS 工作空间
-
 ```bash
-cd ~/ros_ws/src/
-git clone https://github.com/orbbec/OrbbecSDK_ROS1.git
-```
+# go to where you ORBBEC_SDK_ROS_SDK.tar.gz is located, xxx is the version, may be different
+tar -xvf OrbbecSDK_ROS_g2r_xxx.tar.gz -C ~/ros_ws/src/
 
-或者您可以从[Orbbec 开发者社区](https://developer.orbbec.com.cn/download.html)下载
+```
 
 构建
 
