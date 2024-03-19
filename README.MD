@@ -31,7 +31,7 @@ Get Source code
 
 ```bash
 # go to where you ORBBEC_SDK_ROS_SDK.tar.gz is located, xxx is the version, may be different
-tar -xvf OrbbecSDK_ROS_g2r_xxx.tar.gz -C ~/ros_ws/src/
+tar -xvf OrbbecSDK_ROS_xxx.tar.gz -C ~/ros_ws/src/
 
 ```
 
@@ -170,7 +170,7 @@ rosservice  call /camera/set_ldp '{data: false}' # Turn off
 - Turn on/off sensors
 
 ```bash
-rosservice call  /camera/toggle_ir "{data: true}"
+rosservice call  /camera/toggle_left_ir "{data: true}"
 rosservice call  /camera/toggle_color "{data: true}"
 rosservice call  /camera/toggle_depth "{data: true}"
 ```
@@ -244,7 +244,7 @@ to `true` in the stream that corresponds to the argument of the launch file.
 - `/camera/set_white_balance`
 - `/camera/toggle_color`
 - `/camera/toggle_depth`
-- `/camera/toggle_ir`
+- `/camera/toggle_left_ir`
 
 ### All available topics
 
@@ -357,7 +357,6 @@ The following are the launch parameters available:
   reopening the device immediately can cause firmware crashes when hot plugging.
 - `enable_point_cloud`: Enables the point cloud.
 - `enable_colored_point_cloud`: Enables the RGB point cloud.
-- `enable_d2c_viewer`: Publishes the D2C overlay image (for testing only).
 - `device_num`: The number of devices. This must be filled in if multiple cameras are required.
 - `color_width`, `color_height`, `color_fps`: The resolution and frame rate of the color stream.
 - `left_ir_width`, `left_ir_height`, `left_ir_fps`: The resolution and frame rate of the left IR stream.
@@ -365,7 +364,7 @@ The following are the launch parameters available:
 - `depth_width`, `depth_height`, `depth_fps`: The resolution and frame rate of the depth stream.
 - `enable_color`: Enables the RGB camera.
 - `enable_depth`: Enables the depth camera.
-- `enable_ir`: Enables the left IR camera.
+- `enable_left_ir`: Enables the left IR camera.
 - `enable_right_ir`: Enables the right IR camera.
 - `depth_registration`: Enables hardware alignment the depth frame to color frame. This field is required when
   the `enable_colored_point_cloud` is set to `true`.
