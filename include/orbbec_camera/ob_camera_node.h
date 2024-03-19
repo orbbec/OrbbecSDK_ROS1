@@ -88,8 +88,7 @@ class OBCameraNode {
 
   std::shared_ptr<ob::Frame> softwareDecodeColorFrame(const std::shared_ptr<ob::Frame>& frame);
 
-  void onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
-                          const stream_index_pair& stream_index);
+  void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair& stream_index);
 
   void publishMetadata(const std::shared_ptr<ob::Frame>& frame,
                        const stream_index_pair& stream_index, const std_msgs::Header& header);
@@ -105,6 +104,8 @@ class OBCameraNode {
   std::shared_ptr<ob::Frame> decodeIRMJPGFrame(const std::shared_ptr<ob::Frame>& frame);
 
   void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set);
+
+  std::shared_ptr<ob::Frame> processDepthFrameFilter(std::shared_ptr<ob::Frame>& frame);
 
   void onNewColorFrameCallback();
 
@@ -433,6 +434,7 @@ class OBCameraNode {
   // ordered point cloud
   bool ordered_pc_ = false;
   bool enable_compressed_color_ = false;
+  std::shared_ptr<ob::Frame> depth_frame_ = nullptr;
 };
 
 }  // namespace orbbec_camera

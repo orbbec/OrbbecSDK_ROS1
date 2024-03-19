@@ -474,7 +474,7 @@ void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_
       }
     }
 
-    if (frame_set->depthFrame() != nullptr) {
+    if (depth_frame_) {
       publishDepthPointCloud(frame_set);
     }
   } catch (const ob::Error& e) {
@@ -572,7 +572,11 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   if (depth_registered_cloud_pub_.getNumSubscribers() == 0 || !enable_colored_point_cloud_) {
     return;
   }
-  auto depth_frame = frame_set->depthFrame();
+  if (!depth_frame_) {
+    return;
+  }
+  CHECK_NOTNULL(depth_frame_.get());
+  auto depth_frame = depth_frame_->as<ob::DepthFrame>();
   auto color_frame = frame_set->colorFrame();
   if (!depth_frame || !color_frame) {
     return;
@@ -582,7 +586,8 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   auto color_width = color_frame->width();
   auto color_height = color_frame->height();
   if (depth_width != color_width || depth_height != color_height) {
-    ROS_ERROR_STREAM("depth frame size is not equal to color frame size");
+    ROS_ERROR("Depth (%d x %d) and color (%d x %d) frame size mismatch", depth_width, depth_height,
+              color_width, color_height);
     return;
   }
   auto color_profile = stream_profile_[COLOR]->as<ob::VideoStreamProfile>();
@@ -892,6 +897,28 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(
   return nullptr;
 }
 
+std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
+    std::shared_ptr<ob::Frame>& frame) {
+  if (frame == nullptr || frame->type() != OB_FRAME_DEPTH) {
+    return nullptr;
+  }
+  auto sensor = device_->getSensor(OB_SENSOR_DEPTH);
+  CHECK_NOTNULL(sensor.get());
+  auto filter_list = sensor->getRecommendedFilters();
+  for (size_t i = 0; i < filter_list->count(); i++) {
+    auto filter = filter_list->getFilter(i);
+    CHECK_NOTNULL(filter.get());
+    if (filter->isEnabled()) {
+      frame = filter->process(frame);
+      if (frame == nullptr) {
+        ROS_ERROR_STREAM("Depth filter process failed");
+        break;
+      }
+    }
+  }
+  return frame;
+}
+
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (!is_running_) {
     // is_running_ is false means the node is shutting down
@@ -903,6 +930,8 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
   try {
     // rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
     std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
+    depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
+    depth_frame_ = processDepthFrameFilter(depth_frame_);
     if (enable_stream_[COLOR] && colorFrame) {
       std::lock_guard<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
@@ -922,6 +951,9 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
         if (frame == nullptr) {
           ROS_DEBUG_STREAM("frame type " << frame_type << " is null");
           continue;
+        }
+        if (frame_type == OB_FRAME_DEPTH) {
+          frame = depth_frame_;
         }
 
         std::shared_ptr<ob::Frame> irFrame = decodeIRMJPGFrame(frame);
@@ -981,7 +1013,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
   return covert_frame;
 }
 
-void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
+void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
                                       const stream_index_pair& stream_index) {
   if (frame == nullptr) {
     return;
