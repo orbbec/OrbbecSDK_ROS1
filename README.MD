@@ -59,7 +59,7 @@ Start the camera
 
 ```bash
 source ./devel/setup.bash 
-roslaunch orbbec_camera gemini2L.launch
+roslaunch orbbec_camera gemini2R.launch
 ```
 
 - In terminal 2
@@ -291,7 +291,7 @@ done
 ```
 
 - Set the `device_num` parameter to the number of cameras you have.
-- Go to the `orbbec-ros-sdk/launch/multi_xxx.launch` file and modify the `usb_port`.
+- Go to the `orbbec-ros-sdk/launch/multi_camera.launch` file and modify the `usb_port`.
 
 ```XML
 
@@ -299,7 +299,7 @@ done
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
     <!-- Hardware depth registration -->
-    <arg name="3d_sensor" default="gemini2L"/>
+    <arg name="3d_sensor" default="gemini2R"/>
     <!-- stereo_s_u3, astrapro, astra -->
     <arg name="camera1_prefix" default="01"/>
     <arg name="camera2_prefix" default="02"/>
@@ -381,10 +381,6 @@ The following are the launch parameters available:
 - `gyro_range` : The range of the gyroscope, the optional values
   are `16dps`,`31dps`,`62dps`,`125dps`,`250dps`,`500dps`,`1000dps`,`2000dps`. The specific value depends on the current
   camera.
-  This feature is only supported by Femto Mega and Gemini 2 XL devices. When accessing these devices through the
-  network, the IP address of the device needs to be configured in advance. The enable switch needs to be set to true.
-- `depth_filter_config` : Configure the loading path for the depth filtering configuration file. By default, the depth
-  filtering configuration file is located in the /config/depthfilter directory，Supported only on Gemini2.
 
 ## Frequently Asked Questions
 
@@ -426,7 +422,7 @@ Edit`/etc/udev/rules.d/99-obsensor-libusb.rules`，add the following line
 SUBSYSTEM=="usb", ATTR{idProduct}=="your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root"  GROUP:="video", SYMLINK+="you_device_name_here"
 ```
 
-`you_device_name_here` is the name of the device you want to create, for example `gemini2L`.
+`you_device_name_here` is the name of the device you want to create, for example `gemini2R`.
 
 Then restart the udev service
 

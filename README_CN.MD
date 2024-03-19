@@ -55,7 +55,7 @@ sudo udevadm control --reload && sudo  udevadm trigger
 
 ```bash
 source ./devel/setup.bash 
-roslaunch orbbec_camera gemini2L.launch
+roslaunch orbbec_camera gemini2R.launch
 ```
 
 - 在终端 2
