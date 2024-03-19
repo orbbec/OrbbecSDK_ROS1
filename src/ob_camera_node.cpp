@@ -548,7 +548,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
     cloud_msg_.height = 1;
     modifier.resize(valid_count);
   }
-  auto timestamp = frameTimeStampToROSTime(depth_frame->timeStamp() );
+  auto timestamp = frameTimeStampToROSTime(depth_frame->timeStamp());
   std::string frame_id = depth_registration_ ? optical_frame_id_[COLOR] : optical_frame_id_[DEPTH];
   cloud_msg_.header.stamp = timestamp;
   cloud_msg_.header.frame_id = frame_id;
@@ -1240,6 +1240,12 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
         break;
       }
     }
+    for (auto& item : camera_info_publishers_) {
+      if (item.second.getNumSubscribers() > 0) {
+        all_stream_no_subscriber = false;
+        break;
+      }
+    }
     if (enable_point_cloud_) {
       if (depth_cloud_pub_.getNumSubscribers() > 0) {
         all_stream_no_subscriber = false;
@@ -1272,6 +1278,21 @@ void OBCameraNode::imuUnsubscribedCallback(const stream_index_pair& stream_index
     ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " unsubscribed");
   }
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  if (imu_publishers_.count(stream_index) > 0) {
+    auto subscriber_count = imu_publishers_[stream_index].getNumSubscribers();
+    if (subscriber_count > 0) {
+      return;
+    }
+  }
+  if (imu_gyro_accel_publisher_.getNumSubscribers() > 0) {
+    return;
+  }
+  if (imu_info_publishers_.count(stream_index) > 0) {
+    auto subscriber_count = imu_info_publishers_[stream_index].getNumSubscribers();
+    if (subscriber_count > 0) {
+      return;
+    }
+  }
   stopIMU(stream_index);
 }
 

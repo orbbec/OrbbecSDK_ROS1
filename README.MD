@@ -102,7 +102,7 @@ rosservice call /camera/get_device_info "{}"
 - Get the SDK version (Include firmware and Orbbec SDK version )
 
 ```bash
-rosservice call /camera/get_version "{}"
+rosservice call /camera/get_sdk_version "{}"
 ```
 
 - Set/get (auto) exposure

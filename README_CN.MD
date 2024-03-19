@@ -98,7 +98,7 @@ rosservice call /camera/get_device_info "{}"
 - 获取SDK版本（包括固件和Orbbec SDK版本）
 
 ```bash
-rosservice call /camera/get_version "{}"
+rosservice call /camera/get_sdk_version "{}"
 ```
 
 - 设置/获取（自动）曝光
