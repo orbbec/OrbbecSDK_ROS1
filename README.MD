@@ -155,8 +155,8 @@ rosservice call /camera/set_laser '{data: false}' # Turn off
 - Turn on/off fans
 
 ```bash
- rosservice call /camera/set_fan  '{data: true}' # Turn on
- rosservice call /camera/set_fan  '{data: false}' # Turn off
+ rosservice call /camera/set_fan_work_mode  '{data: true}' # Turn on
+ rosservice call /camera/set_fan_work_mode  '{data: false}' # Turn off
 ```
 
 - Turn on/off LDP
