@@ -548,9 +548,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
     cloud_msg_.height = 1;
     modifier.resize(valid_count);
   }
-  auto frame_time_stamp =
-      use_hardware_time_ ? depth_frame->timeStamp() : depth_frame->systemTimeStamp();
-  auto timestamp = frameTimeStampToROSTime(frame_time_stamp);
+  auto timestamp = frameTimeStampToROSTime(depth_frame->timeStamp() );
   std::string frame_id = depth_registration_ ? optical_frame_id_[COLOR] : optical_frame_id_[DEPTH];
   cloud_msg_.header.stamp = timestamp;
   cloud_msg_.header.frame_id = frame_id;
@@ -652,9 +650,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
     cloud_msg_.height = 1;
     modifier.resize(valid_count);
   }
-  auto frame_time_stamp =
-      use_hardware_time_ ? depth_frame->timeStamp() : depth_frame->systemTimeStamp();
-  auto timestamp = frameTimeStampToROSTime(frame_time_stamp);
+  auto timestamp = frameTimeStampToROSTime(depth_frame->timeStamp());
   cloud_msg_.header.stamp = timestamp;
   cloud_msg_.header.frame_id = optical_frame_id_[COLOR];
   depth_registered_cloud_pub_.publish(cloud_msg_);
@@ -765,7 +761,7 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
   auto imu_msg = sensor_msgs::Imu();
   setDefaultIMUMessage(imu_msg);
   imu_msg.header.frame_id = imu_optical_frame_id_;
-  auto timestamp = frameTimeStampToROSTime(accelframe->systemTimeStamp());
+  auto timestamp = frameTimeStampToROSTime(accelframe->timeStamp());
   imu_msg.header.stamp = timestamp;
   auto gyro_frame = gryoframe->as<ob::GyroFrame>();
   auto gyroData = gyro_frame->value();
@@ -794,7 +790,7 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
   auto imu_msg = sensor_msgs::Imu();
   setDefaultIMUMessage(imu_msg);
   imu_msg.header.frame_id = optical_frame_id_[stream_index];
-  auto timestamp = frameTimeStampToROSTime(frame->systemTimeStamp());
+  auto timestamp = frameTimeStampToROSTime(frame->timeStamp());
   imu_msg.header.stamp = timestamp;
   if (frame->type() == OB_FRAME_GYRO) {
     auto gyro_frame = frame->as<ob::GyroFrame>();
@@ -1018,9 +1014,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   }
   int width = static_cast<int>(video_frame->width());
   int height = static_cast<int>(video_frame->height());
-  auto frame_time_stamp =
-      use_hardware_time_ ? video_frame->timeStamp() : video_frame->systemTimeStamp();
-  auto timestamp = frameTimeStampToROSTime(frame_time_stamp);
+  auto timestamp = frameTimeStampToROSTime(video_frame->timeStamp());
   std::string frame_id = (depth_registration_ && stream_index == DEPTH)
                              ? depth_aligned_frame_id_[stream_index]
                              : optical_frame_id_[stream_index];
