@@ -320,7 +320,7 @@ done
           args="0 0 0 0 0 0 camera01_link camera02_link"/>
 </launch>
 
- ```
+```
 
 - 启动
 
@@ -347,7 +347,6 @@ roslaunch orbbec_camera multi_camera.launch
 - `connection_delay`: 重新打开设备的延迟时间，单位为毫秒。某些设备，例如 Astra mini，需要更长的时间来初始化，立即重新打开设备可能会在热插拔时导致固件崩溃。
 - `enable_point_cloud`: 启用点云。
 - `enable_colored_point_cloud`: 启用彩色点云。
-- `enable_d2c_viewer`: 发布 D2C 叠加图像（仅用于测试）。
 - `device_num`: 设备数量。如果需要多个相机，则必须填写此项。
 - `color_width`, `color_height`, `color_fps`: 彩色数据流的分辨率和帧率。
 - `ir_width`, `ir_height`, `ir_fps`: 红外数据流的分辨率和帧率。
@@ -369,7 +368,6 @@ roslaunch orbbec_camera multi_camera.launch
   `100hz`,`200hz`,`500hz`,`1khz`,`2khz`,`4khz`,`8khz`,`16khz`,`32khz`。具体的值取决于当前的相机型号。
 - `gyro_range` : 陀螺仪的量程, 可选值为`16dps`,`31dps`,`62dps`,`125dps`,`250dps`,`500dps`,`1000dps`,`2000dps`
   。具体的值取决于当前的相机型号。
-- `depth_filter_config` : 配置深度滤波配置文件加载路径，默认深度滤波配置文件在/config/depthfilter目录下,仅gemini2支持。
 
 ## 查看相机支持那些Profile
 
@@ -414,7 +412,7 @@ Bus 002 Device 007: ID 2bc5:your_pid_here
 SUBSYSTEM=="usb", ATTR{idProduct}=="your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root"  GROUP:="video", SYMLINK+="you_device_name_here"
 ```
 
-`you_device_name_here`是你的设备名称，比如`Astra`,`dabai`等。
+`you_device_name_here`是你的设备名称。
 
 重启udev服务
 
