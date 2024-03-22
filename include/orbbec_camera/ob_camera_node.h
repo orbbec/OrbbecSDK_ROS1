@@ -381,7 +381,6 @@ class OBCameraNode {
   bool enable_color_auto_exposure_ = true;
   bool enable_ir_auto_exposure_ = true;
   bool enable_ir_long_exposure_ = false;
-  bool enable_ldp_ = true;
   int soft_filter_max_diff_ = -1;
   int soft_filter_speckle_size_ = -1;
   std::string depth_filter_config_;
@@ -397,8 +396,8 @@ class OBCameraNode {
   int trigger2image_delay_us_ = 0;
   int trigger_out_delay_us_ = 0;
   bool trigger_out_enabled_ = false;
-  std::string depth_precision_str_;
-  OB_DEPTH_PRECISION_LEVEL depth_precision_ = OB_PRECISION_1MM;
+  std::string depth_unit_str_;
+  OB_DEPTH_PRECISION_LEVEL depth_unit_ = OB_PRECISION_1MM;
   // IMU
   std::map<stream_index_pair, ros::Publisher> imu_publishers_;
   std::map<stream_index_pair, std::string> imu_rate_;
@@ -419,11 +418,7 @@ class OBCameraNode {
   // mjpeg decoder
   std::shared_ptr<JPEGDecoder> mjpeg_decoder_ = nullptr;
   uint8_t* rgb_buffer_ = nullptr;
-  bool rgb_is_decoded_ = false;
-
-  // double infrared
-  bool enable_left_ir_ = false;
-  bool enable_right_ir_ = false;
+  std::atomic_bool rgb_is_decoded_{false};
 
   // For color
   std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
@@ -433,7 +428,6 @@ class OBCameraNode {
   bool use_hardware_time_ = false;
   // ordered point cloud
   bool ordered_pc_ = false;
-  bool enable_compressed_color_ = false;
   std::shared_ptr<ob::Frame> depth_frame_ = nullptr;
   std::string device_preset_ = "Default";
 };

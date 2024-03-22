@@ -140,7 +140,7 @@ void OBCameraNode::getParameters() {
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");
   enable_d2c_viewer_ = nh_private_.param<bool>("enable_d2c_viewer", false);
-  enable_pipeline_ = nh_private_.param<bool>("enable_pipeline", false);
+  enable_pipeline_ = nh_private_.param<bool>("enable_pipeline", true);
   enable_point_cloud_ = nh_private_.param<bool>("enable_point_cloud", true);
   enable_colored_point_cloud_ = nh_private_.param<bool>("enable_colored_point_cloud", false);
   enable_hardware_d2d_ = nh_private_.param<bool>("enable_hardware_d2d", true);
@@ -157,12 +157,11 @@ void OBCameraNode::getParameters() {
   trigger2image_delay_us_ = nh_private_.param<int>("trigger2image_delay_us", 0);
   trigger_out_delay_us_ = nh_private_.param<int>("trigger_out_delay_us", 0);
   trigger_out_enabled_ = nh_private_.param<bool>("trigger_out_enabled", false);
-  depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "1mm");
-  depth_precision_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
+  depth_unit_str_ = nh_private_.param<std::string>("depth_unit", "1mm");
+  depth_unit_ = DEPTH_PRECISION_STR2ENUM.at(depth_unit_str_);
   if (enable_colored_point_cloud_) {
     depth_registration_ = true;
   }
-  enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
   soft_filter_max_diff_ = nh_private_.param<int>("soft_filter_max_diff", -1);
   soft_filter_speckle_size_ = nh_private_.param<int>("soft_filter_speckle_size", -1);
   depth_filter_config_ = nh_private_.param<std::string>("depth_filter_config", "");
@@ -934,7 +933,7 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
     depth_frame_ = processDepthFrameFilter(depth_frame_);
     if (enable_stream_[COLOR] && colorFrame) {
-      std::lock_guard<std::mutex> colorLock(colorFrameMtx_);
+      std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
       colorFrameCV_.notify_all();
     } else {
@@ -983,12 +982,14 @@ void OBCameraNode::onNewColorFrameCallback() {
     if (!ros::ok() || !is_running_.load()) {
       break;
     }
-
+    if (colorFrameQueue_.empty()) {
+      continue;
+    }
     std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
+    colorFrameQueue_.pop();
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
     publishPointCloud(frameSet);
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(2));
-    colorFrameQueue_.pop();
   }
 
   ROS_INFO_STREAM("Color frame thread exit!");

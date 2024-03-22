@@ -1,6 +1,6 @@
 # Orbbec ROS SDK
 
-[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.4.7-green)
+[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.4.8-green)
 
 Orbbec ROS SDK is a wrapper for OrbbecSDK that supports ROS Kinetic, Melodic, and Noetic distributions.
 It enables smooth integration of Orbbec 3D cameras into ROS projects.
@@ -15,10 +15,6 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
 - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
     - [Available Services for Camera Control](#available-services-for-camera-control)
     - [Available Topics](#available-topics)
-- [Multiple Cameras](#multiple-cameras)
-- [Using Hardware Decoders](#using-hardware-decoders)
-    - [Rockchip and Amlogic](#rockchip-and-amlogic)
-    - [Nvidia Jetson](#nvidia-jetson)
 - [Launch Parameters](#launch-parameters)
 - [Frequently Asked Questions](#frequently-asked-questions)
 - [License](#license)
@@ -151,14 +147,6 @@ rosservice call /camera/set_color_gain "{data: 200}"
 rosservice call /camera/set_left_ir_gain "{data: 200}"
 ```
 
-Set/get mirror:
-
-```bash
-rosservice call /camera/set_color_mirror "{data: true}"
-rosservice call /camera/set_depth_mirror "{data: true}"
-rosservice call /camera/set_left_ir_mirror "{data: true}"
-```
-
 Set/get (auto) white balance:
 
 ```bash
@@ -171,28 +159,6 @@ Turn on/off laser:
 ```bash
 rosservice call /camera/set_laser '{data: true}' # Turn on
 rosservice call /camera/set_laser '{data: false}' # Turn off
-```
-
-Turn on/off fans:
-
-```bash
-rosservice call /camera/set_fan_work_mode '{data: true}' # Turn on
-rosservice call /camera/set_fan_work_mode '{data: false}' # Turn off
-```
-
-Turn on/off LDP:
-
-```bash
-rosservice call /camera/set_ldp '{data: true}' # Turn on
-rosservice call /camera/set_ldp '{data: false}' # Turn off
-```
-
-Turn on/off sensors:
-
-```bash
-rosservice call /camera/toggle_left_ir "{data: true}"
-rosservice call /camera/toggle_color "{data: true}"
-rosservice call /camera/toggle_depth "{data: true}"
 ```
 
 Save images:
@@ -248,23 +214,15 @@ to `true` in the corresponding stream argument of the launch file.
 - `/camera/set_color_auto_exposure`
 - `/camera/set_color_exposure`
 - `/camera/set_color_gain`
-- `/camera/set_color_mirror`
 - `/camera/set_depth_auto_exposure`
 - `/camera/set_depth_exposure`
 - `/camera/set_depth_gain`
-- `/camera/set_depth_mirror`
-- `/camera/set_fan_work_mode`
 - `/camera/set_floor`
 - `/camera/set_left_ir_auto_exposure`
 - `/camera/set_left_ir_exposure`
 - `/camera/set_left_ir_gain`
-- `/camera/set_left_ir_mirror`
 - `/camera/set_laser`
-- `/camera/set_ldp`
 - `/camera/set_white_balance`
-- `/camera/toggle_color`
-- `/camera/toggle_depth`
-- `/camera/toggle_left_ir`
 
 ### Available Topics
 
@@ -279,92 +237,6 @@ to `true` in the corresponding stream argument of the launch file.
 - `/camera/left_ir/image_raw`: The left IR stream image.
 - `/camera/right_ir/camera_info`: The right IR camera info.
 - `/camera/right_ir/image_raw`: The right IR stream image.
-- `/camera/accel/sample`: Acceleration data stream when `enable_sync_output_accel_gyro` is turned off and `enable_accel`
-  is turned on.
-- `/camera/gyro/sample`: Gyroscope data stream when `enable_sync_output_accel_gyro` is turned off and `enable_gyro` is
-  turned on.
-- `camera/gyro_accel/sample`: Synchronized data stream of acceleration and gyroscope
-  when `enable_sync_output_accel_gyro` is turned on.
-
-## Multiple Cameras
-
-First, you need to enumerate the `usb_port` of the cameras. Plug them in and run the following command in the terminal,
-making sure no camera is open before running:
-
-```bash
-rosrun orbbec_camera list_devices_node 
-```
-
-Alternatively, you can use the following script to get the serial number and USB port number. Save the script
-as `list_ob_devices.sh`, run `chmod +x list_ob_devices.sh`, and then execute `./list_ob_devices.sh`.
-
-```bash
-VID="2bc5"
-
-for dev in /sys/bus/usb/devices/*; do
-  if [ -e "$dev/idVendor" ]; then
-    vid=$(cat "$dev/idVendor")
-    if [ "$vid" == "${VID}" ]; then
-      port=$(basename $dev)
-      product=$(cat "$dev/product" 2>/dev/null) # product name
-      serial=$(cat "$dev/serial" 2>/dev/null) # serial number
-      echo "Found Orbbec device $product, usb port $port, serial number $serial"
-    fi
-  fi
-done
-```
-
-Set the `device_num` parameter to the number of cameras you have.
-Go to the `orbbec-ros-sdk/launch/multi_camera.launch` file and modify the `usb_port`.
-
-```xml
-
-<launch>
-    <!-- unique camera name-->
-    <arg name="camera_name" default="camera"/>
-    <!-- Hardware depth registration -->
-    <arg name="3d_sensor" default="gemini2R"/>
-    <arg name="camera1_prefix" default="01"/>
-    <arg name="camera2_prefix" default="02"/>
-    <!-- TODO: change to your usb port -->
-    <arg name="camera1_usb_port" default="1-4.2.1"/>
-    <arg name="camera2_usb_port" default="1-4.2.2"/>
-    <!-- Change serial number here -->
-    <arg name="device_num" default="2"/>
-    <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
-        <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
-        <arg name="usb_port" value="$(arg camera1_usb_port)"/>
-        <arg name="device_num" default="$(arg device_num)"/>
-    </include>
-
-    <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
-        <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
-        <arg name="usb_port" value="$(arg camera2_usb_port)"/>
-        <arg name="device_num" default="$(arg device_num)"/>
-    </include>
-    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf"
-          args="0 0 0 0 0 0 camera01_link camera02_link"/>
-</launch>
-```
-
-Launch the multi-camera setup:
-
-```bash
-roslaunch orbbec_camera multi_camera.launch
-```
-
-## Using Hardware Decoders
-
-### Rockchip and Amlogic
-
-Depends on `rockchip-mpp-dev` and `rockchip-rga-dev`. Not all systems have these two packages, and the names may be
-different, so please search for them yourself.
-Open `CMakeLists.txt` and set `USE_RK_HW_DECODER` to `ON`.
-
-### Nvidia Jetson
-
-Depends on `jetson_multimedia_api` and `libyuv`.
-Open `CMakeLists.txt` and set `USE_NV_HW_DECODER` to `ON`.
 
 ## Launch Parameters
 
@@ -374,7 +246,6 @@ The following launch parameters are available:
   a longer time to initialize, and reopening the device immediately can cause firmware crashes when hot-plugging.
 - `enable_point_cloud`: Enables the point cloud.
 - `enable_colored_point_cloud`: Enables the RGB point cloud.
-- `device_num`: The number of devices. This must be specified if multiple cameras are required.
 - `color_width`, `color_height`, `color_fps`: The resolution and frame rate of the color stream.
 - `left_ir_width`, `left_ir_height`, `left_ir_fps`: The resolution and frame rate of the left IR stream.
 - `right_ir_width`, `right_ir_height`, `right_ir_fps`: The resolution and frame rate of the right IR stream.
@@ -387,19 +258,9 @@ The following launch parameters are available:
   when `enable_colored_point_cloud` is set to `true`.
 - `log_level`: The log level for OrbbecSDK, with optional values of `none`, `info`, `debug`, `warn`, and `fatal`. The
   log file can be found in the ROS runtime directory, and the default location is `~/.ros/Log`.
-- `enable_accel`: Enables the accelerometer.
-- `accel_rate`: The frequency of the accelerometer. Optional values
-  are `1.5625hz`, `3.125hz`, `6.25hz`, `12.5hz`, `25hz`, `50hz`, `100hz`, `200hz`, `500hz`, `1khz`, `2khz`, `4khz`, `
-  8khz`, `16khz`, `32khz`. The specific value depends on the current camera.
-- `accel_range`: The range of the accelerometer. Optional values are `2g`, `4g`, `8g`, `16g`. The specific value depends
-  on the current camera.
-- `enable_gyro`: Enables the gyroscope.
-- `gyro_rate`: The frequency of the gyroscope. Optional values
-  are `1.5625hz`, `3.125hz`, `6.25hz`, `12.5hz`, `25hz`, `50hz`, `100hz`, `200hz`, `500hz`, `1khz`, `2khz`, `4khz`, `8khz`, `16khz`, `32khz`.
-  The specific value depends on the current camera.
-- `gyro_range`: The range of the gyroscope. Optional values
-  are `16dps`, `31dps`, `62dps`, `125dps`, `250dps`, `500dps`, `1000dps`, `2000dps`. The specific value depends on the
-  current camera.
+- `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
+  points (`false`).
+- `device_preset`: The device preset,`Custom`,`Default`,`Hand`, `High Density`, `High Accuracy`,`Medium Density`.
 
 ## Frequently Asked Questions
 

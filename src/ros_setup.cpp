@@ -94,41 +94,6 @@ void OBCameraNode::setupDevices() {
 
   try {
     device_->loadPreset(device_preset_.c_str());
-    if (enable_hardware_d2d_ && device_info_->pid() == GEMINI2_PID) {
-      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
-    }
-    if (!depth_work_mode_.empty()) {
-      device_->switchDepthWorkMode(depth_work_mode_.c_str());
-    }
-    if (sync_mode_ != OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN) {
-      auto sync_config = device_->getMultiDeviceSyncConfig();
-      sync_config.syncMode = sync_mode_;
-      sync_config.depthDelayUs = depth_delay_us_;
-      sync_config.colorDelayUs = color_delay_us_;
-      sync_config.trigger2ImageDelayUs = trigger2image_delay_us_;
-      sync_config.triggerOutDelayUs = trigger_out_delay_us_;
-      sync_config.triggerOutEnable = trigger_out_enabled_;
-      device_->setMultiDeviceSyncConfig(sync_config);
-      if (device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
-                                       OB_PERMISSION_READ_WRITE)) {
-      }
-    }
-    if (device_info_->pid() == GEMINI2_PID) {
-      auto default_precision_level = device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT);
-      if (default_precision_level != depth_precision_) {
-        device_->setIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT, depth_precision_);
-      }
-    }
-
-    if (!depth_filter_config_.empty() && enable_depth_filter_) {
-      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
-      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
-    } else {
-      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
-        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
-      }
-    }
-
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     }
@@ -141,21 +106,6 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_IR_LONG_EXPOSURE_BOOL, enable_ir_long_exposure_);
     }
 
-    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
-      auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-      if (soft_filter_max_diff_ != -1 && default_soft_filter_max_diff != soft_filter_max_diff_) {
-        device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
-      }
-    }
-
-    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
-      auto default_soft_filter_speckle_size =
-          device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-      if (soft_filter_speckle_size_ != -1 &&
-          default_soft_filter_speckle_size != soft_filter_speckle_size_) {
-        device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
-      }
-    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
   } catch (const std::exception& e) {
