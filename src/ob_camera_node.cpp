@@ -191,6 +191,7 @@ void OBCameraNode::getParameters() {
     param_name = stream_name_[stream_index] + "_optical_frame_id";
     optical_frame_id_[stream_index] =
         nh_private_.param<std::string>(param_name, default_optical_frame_id);
+    device_preset_ = nh_private_.param<std::string>("device_preset", "Default");
   }
 }
 

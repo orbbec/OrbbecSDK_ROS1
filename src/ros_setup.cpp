@@ -93,6 +93,7 @@ void OBCameraNode::setupDevices() {
   }
 
   try {
+    device_->loadPreset(device_preset_.c_str());
     if (enable_hardware_d2d_ && device_info_->pid() == GEMINI2_PID) {
       device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
     }

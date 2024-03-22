@@ -435,6 +435,7 @@ class OBCameraNode {
   bool ordered_pc_ = false;
   bool enable_compressed_color_ = false;
   std::shared_ptr<ob::Frame> depth_frame_ = nullptr;
+  std::string device_preset_ = "Default";
 };
 
 }  // namespace orbbec_camera
