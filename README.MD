@@ -8,21 +8,21 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
 ## Table of Contents
 
 - [Orbbec ROS SDK](#orbbec-ros-sdk)
-  - [Table of Contents](#table-of-contents)
-  - [Install Dependencies](#install-dependencies)
-    - [ROS](#ros)
-    - [Other Dependencies](#other-dependencies)
-  - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-  - [Start the Camera](#start-the-camera)
-  - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-    - [Available Services for Camera Control](#available-services-for-camera-control)
-    - [Available Topics](#available-topics)
-  - [Launch Parameters](#launch-parameters)
-  - [Frequently Asked Questions](#frequently-asked-questions)
-    - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-    - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
-  - [License](#license)
-  - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
+    - [Table of Contents](#table-of-contents)
+    - [Install Dependencies](#install-dependencies)
+        - [ROS](#ros)
+        - [Other Dependencies](#other-dependencies)
+    - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+    - [Start the Camera](#start-the-camera)
+    - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+        - [Available Services for Camera Control](#available-services-for-camera-control)
+        - [Available Topics](#available-topics)
+    - [Launch Parameters](#launch-parameters)
+    - [Frequently Asked Questions](#frequently-asked-questions)
+        - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
+        - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+    - [License](#license)
+    - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
 
 ## Install Dependencies
 
@@ -181,11 +181,11 @@ rosservice call /camera/save_point_cloud "{}"
 NOTE: The images are saved under `~/.ros/image` and are only available when the sensor is on.
 
 ### Available Services for Camera Control
-
-The name of the following services already expresses their function.
-However, it should be noted that the corresponding `set_[ir|depth|color]*`
-and `get[ir|depth|color]*` **services are only available if you set** `enable[ir|depth|color]`
-to `true` in the corresponding stream argument of the launch file.
+The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or getting parameters—denoted as
+`set_*` and `get_*`—become available only when the respective `enable_*` parameters are activated. For instance, enabling features such as left infrared (IR) 
+with `enable_left_ir`, right IR with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer to [Launch Parameters](#Launch-Parameters))
+is a prerequisite for their corresponding services to be operational. This configuration ensures that services are accessible only when their specific stream is enabled in the 
+launch file's stream argument.
 
 - `/camera/get_auto_white_balance`
 - `/camera/get_camera_params`
