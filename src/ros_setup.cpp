@@ -105,7 +105,7 @@ void OBCameraNode::setupDevices() {
           {"SequencedFilter", enable_sequenced_filter_},
           {"ThresholdFilter", enable_threshold_filter_},
           {"NoiseRemovalFilter", enable_noise_removal_filter_},
-          {"SpatialAdvancedFilter", enable_spatial_advanced_filter_},
+          {"SpatialFilter", enable_spatial_filter_},
           {"TemporalFilter", enable_temporal_filter_},
           {"HoleFillingFilter", enable_hole_filling_filter_},
 

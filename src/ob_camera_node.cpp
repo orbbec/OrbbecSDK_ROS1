@@ -196,9 +196,9 @@ void OBCameraNode::getParameters() {
     enable_hdr_merge_ = nh_private_.param<bool>("enable_hdr_merge", false);
     enable_sequenced_filter_ = nh_private_.param<bool>("enable_sequenced_filter", false);
     enable_threshold_filter_ = nh_private_.param<bool>("enable_threshold_filter", false);
-    enable_noise_removal_filter_ = nh_private_.param<bool>("enable_noise_removal_filter", false);
-    enable_spatial_advanced_filter_ =
-        nh_private_.param<bool>("enable_spatial_advanced_filter", false);
+    enable_noise_removal_filter_ = nh_private_.param<bool>("enable_noise_removal_filter", true);
+    enable_spatial_filter_ =
+        nh_private_.param<bool>("enable_spatial_filter", true);
     enable_temporal_filter_ = nh_private_.param<bool>("enable_temporal_filter", false);
     enable_hole_filling_filter_ = nh_private_.param<bool>("enable_hole_filling_filter", false);
   }

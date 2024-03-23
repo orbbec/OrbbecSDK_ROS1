@@ -56,7 +56,7 @@
     <arg name="enable_sequenced_filter" default="false"/>
     <arg name="enable_threshold_filter" default="false"/>
     <arg name="enable_noise_removal_filter" default="true"/>
-    <arg name="enable_spatial_advanced_filter" default="true"/>
+    <arg name="enable_spatial_filter" default="true"/>
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_hole_filling_filter" default="false"/>
 
@@ -109,7 +109,7 @@
             <param name="enable_sequenced_filter" value="$(arg enable_sequenced_filter)"/>
             <param name="enable_threshold_filter" value="$(arg enable_threshold_filter)"/>
             <param name="enable_noise_removal_filter" value="$(arg enable_noise_removal_filter)"/>
-            <param name="enable_spatial_advanced_filter" value="$(arg enable_spatial_advanced_filter)"/>
+            <param name="enable_spatial_filter" value="$(arg enable_spatial_filter)"/>
             <param name="enable_temporal_filter" value="$(arg enable_temporal_filter)"/>
             <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
 
