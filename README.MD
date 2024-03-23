@@ -261,7 +261,14 @@ The following launch parameters are available:
 - `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
 - `device_preset`: The device preset,`Custom`,`Default`,`Hand`, `High Density`, `High Accuracy`,`Medium Density`.
-
+- `enable_decimation_filter`: Toggles the decimation filter to reduce data density.
+- `enable_hdr_merge`: Enables the HDR merge filter to combine multiple exposures for a greater dynamic range.
+- `enable_sequenced_filter`: Enables a filter to discard frames with specific HDR Sequence IDs that are not required for further processing.
+- `enable_threshold_filter`: Applies a threshold filter to limit depth data within a certain range.
+- `enable_noise_removal_filter`: Engages a filter to remove noise from the data streams.
+- `enable_spatial_advanced_filter`: Utilizes an advanced spatial filter to enhance data quality by analyzing spatial relationships.
+- `enable_temporal_filter`: Turns on a temporal filter to improve data stability over time.
+- `enable_hole_filling_filter`: Activates a hole filling filter to fill gaps in the data.
 ## Frequently Asked Questions
 
 ### No Picture from Multiple Cameras

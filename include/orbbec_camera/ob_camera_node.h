@@ -430,6 +430,15 @@ class OBCameraNode {
   bool ordered_pc_ = false;
   std::shared_ptr<ob::Frame> depth_frame_ = nullptr;
   std::string device_preset_ = "Default";
+  // filter switch
+  bool enable_decimation_filter_ = false;
+  bool enable_hdr_merge_ = false;
+  bool enable_sequenced_filter_ = false;
+  bool enable_threshold_filter_ = false;
+  bool enable_noise_removal_filter_ = false;
+  bool enable_spatial_advanced_filter_ = false;
+  bool enable_temporal_filter_ = false;
+  bool enable_hole_filling_filter_ = false;
 };
 
 }  // namespace orbbec_camera

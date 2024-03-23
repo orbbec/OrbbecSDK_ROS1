@@ -4,10 +4,10 @@
     <arg name="camera_name" default="camera"/>
     <!-- open device delay time 100m-->
     <arg name="connection_delay" default="100"/>
-    <arg name="log_level" default="none"/>
+    <arg name="log_level" default="debug"/>
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>
-    <arg name="enable_frame_sync" default="false"/>
+    <arg name="enable_frame_sync" default="true"/>
     <arg name="use_hardware_time" default="true"/>
     <!-- Custom,Default,Hand, High Density, High Accuracy,Medium Density.-->
     <arg name="device_preset" default="Default"/>
@@ -49,6 +49,16 @@
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="true"/>
     <arg name="ordered_pc" default="false"/>
+
+    <!-- filter switch -->
+    <arg name="enable_decimation_filter" default="false"/>
+    <arg name="enable_hdr_merge" default="false"/>
+    <arg name="enable_sequenced_filter" default="false"/>
+    <arg name="enable_threshold_filter" default="false"/>
+    <arg name="enable_noise_removal_filter" default="true"/>
+    <arg name="enable_spatial_advanced_filter" default="true"/>
+    <arg name="enable_temporal_filter" default="false"/>
+    <arg name="enable_hole_filling_filter" default="false"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
@@ -93,6 +103,15 @@
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
             <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
             <param name="ordered_pc" value="$(arg ordered_pc)"/>
+
+            <param name="enable_decimation_filter" value="$(arg enable_decimation_filter)"/>
+            <param name="enable_hdr_merge" value="$(arg enable_hdr_merge)"/>
+            <param name="enable_sequenced_filter" value="$(arg enable_sequenced_filter)"/>
+            <param name="enable_threshold_filter" value="$(arg enable_threshold_filter)"/>
+            <param name="enable_noise_removal_filter" value="$(arg enable_noise_removal_filter)"/>
+            <param name="enable_spatial_advanced_filter" value="$(arg enable_spatial_advanced_filter)"/>
+            <param name="enable_temporal_filter" value="$(arg enable_temporal_filter)"/>
+            <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
 
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>

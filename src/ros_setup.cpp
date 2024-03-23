@@ -94,6 +94,27 @@ void OBCameraNode::setupDevices() {
 
   try {
     device_->loadPreset(device_preset_.c_str());
+    auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
+    // set depth sensor to filter
+    auto filter_list = depth_sensor->getRecommendedFilters();
+    for (size_t i = 0; i < filter_list->count(); i++) {
+      auto filter = filter_list->getFilter(i);
+      std::map<std::string, bool> filter_params = {
+          {"DecimationFilter", enable_decimation_filter_},
+          {"HdrMerge", enable_hdr_merge_},
+          {"SequencedFilter", enable_sequenced_filter_},
+          {"ThresholdFilter", enable_threshold_filter_},
+          {"NoiseRemovalFilter", enable_noise_removal_filter_},
+          {"SpatialAdvancedFilter", enable_spatial_advanced_filter_},
+          {"TemporalFilter", enable_temporal_filter_},
+          {"HoleFillingFilter", enable_hole_filling_filter_},
+
+      };
+      std::string filter_name = filter->type();
+      if (filter_params.find(filter_name) != filter_params.end()) {
+        filter->enable(filter_params[filter_name]);
+      }
+    }
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     }
