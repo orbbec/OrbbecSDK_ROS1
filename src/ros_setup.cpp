@@ -105,13 +105,16 @@ void OBCameraNode::setupDevices() {
           {"SequencedFilter", enable_sequenced_filter_},
           {"ThresholdFilter", enable_threshold_filter_},
           {"NoiseRemovalFilter", enable_noise_removal_filter_},
-          {"SpatialFilter", enable_spatial_filter_},
+          {"SpatialAdvancedFilter", enable_spatial_filter_},
           {"TemporalFilter", enable_temporal_filter_},
           {"HoleFillingFilter", enable_hole_filling_filter_},
 
       };
       std::string filter_name = filter->type();
+      ROS_INFO_STREAM("Setting " << filter_name << "......");
       if (filter_params.find(filter_name) != filter_params.end()) {
+        std::string value = filter_params[filter_name]? "true" : "false";
+        ROS_INFO_STREAM("set " << filter_name << " to " << value);
         filter->enable(filter_params[filter_name]);
       }
     }
