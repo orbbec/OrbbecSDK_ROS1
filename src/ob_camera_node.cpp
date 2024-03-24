@@ -1474,6 +1474,10 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   CHECK_NOTNULL(base_stream_profile.get());
   for (const auto& item : stream_profile_) {
     auto stream_index = item.first;
+    if (stream_index == ACCEL || stream_index == GYRO) {
+      // FIXME: remove it when accel and gyro work.
+      continue;
+    }
     auto stream_profile = item.second;
     if (!stream_profile) {
       continue;
