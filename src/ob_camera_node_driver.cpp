@@ -274,7 +274,7 @@ void OBCameraNodeDriver::deviceDisconnectCallback(
     const std::shared_ptr<ob::DeviceList>& device_list) {
   CHECK_NOTNULL(device_list.get());
   if (device_list->deviceCount() == 0) {
-    ROS_WARN_STREAM("device list is empty");
+    ROS_DEBUG_STREAM("device list is empty");
     return;
   }
   ROS_INFO("Device disconnected");
