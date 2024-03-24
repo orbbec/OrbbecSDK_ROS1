@@ -265,7 +265,7 @@ The following launch parameters are available:
   log file can be found in the ROS runtime directory, and the default location is `~/.ros/Log`.
 - `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
-- `device_preset`: The device preset,`Custom`,`Default`,`Hand`, `High Density`, `High Accuracy`,`Medium Density`.
+- `device_preset`: The device preset,`Default`, `High Accuracy`.
 - `enable_decimation_filter`: Toggles the decimation filter to reduce data density.
 - `enable_hdr_merge`: Enables the HDR merge filter to combine multiple exposures for a greater dynamic range.
 - `enable_sequenced_filter`: Enables a filter to discard frames with specific HDR Sequence IDs that are not required for
