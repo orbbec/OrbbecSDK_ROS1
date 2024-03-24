@@ -8,21 +8,21 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
 ## Table of Contents
 
 - [Orbbec ROS SDK](#orbbec-ros-sdk)
-  - [Table of Contents](#table-of-contents)
-  - [Install Dependencies](#install-dependencies)
-    - [ROS](#ros)
-    - [Other Dependencies](#other-dependencies)
-  - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-  - [Start the Camera](#start-the-camera)
-  - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-    - [Available Services for Camera Control](#available-services-for-camera-control)
-    - [Available Topics](#available-topics)
-  - [Launch Parameters](#launch-parameters)
-  - [Frequently Asked Questions](#frequently-asked-questions)
-    - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-    - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
-  - [License](#license)
-  - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
+    - [Table of Contents](#table-of-contents)
+    - [Install Dependencies](#install-dependencies)
+        - [ROS](#ros)
+        - [Other Dependencies](#other-dependencies)
+    - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+    - [Start the Camera](#start-the-camera)
+    - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+        - [Available Services for Camera Control](#available-services-for-camera-control)
+        - [Available Topics](#available-topics)
+    - [Launch Parameters](#launch-parameters)
+    - [Frequently Asked Questions](#frequently-asked-questions)
+        - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
+        - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+    - [License](#license)
+    - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
 
 ## Install Dependencies
 
@@ -261,8 +261,8 @@ The following launch parameters are available:
 - `enable_right_ir`: Enables the right IR camera.
 - `depth_registration`: Enables hardware alignment of the depth frame to the color frame. This field is required
   when `enable_colored_point_cloud` is set to `true`.
-- `log_level` for OrbbecSDK controls console log verbosity, with levels `none`, `info`, `debug`, `warn`, `fatal`. Logs save in `~/.ros/Log`.
-For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
+- `log_level` for OrbbecSDK controls console log verbosity, with levels `none`, `info`, `debug`, `warn`, `fatal`. Logs
+  save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
 - `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
 - `device_preset`: The device preset options are `Default` or `High Accuracy`.

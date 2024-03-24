@@ -840,6 +840,9 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
   if (metadata_publishers_[COLOR].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
+  if(camera_info_publishers_[COLOR].getNumSubscribers() > 0) {
+    has_subscriber = true;
+  }
   if (!has_subscriber) {
     return false;
   }
