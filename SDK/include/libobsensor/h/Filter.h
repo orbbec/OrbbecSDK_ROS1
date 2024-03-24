@@ -145,6 +145,7 @@ void ob_holefilling_filter_set_mode(ob_filter *filter, ob_hole_filling_mode mode
  *
  * @param[in] filter A holefilling_filter object.
  * @param[out] error Log error messages.
+ * @return ob_hole_filling_mode
  */
 ob_hole_filling_mode ob_holefilling_filter_get_mode(ob_filter *filter, ob_error **error);
 
@@ -162,11 +163,12 @@ ob_filter *ob_create_temporal_filter(ob_error **error);
  *
  * @param[in] filter A temporal_filter object.
  * @param[out] error Log error messages.
+ * @return ob_float_property_range the value of property range.
  */
 ob_float_property_range ob_temporal_filter_get_diffscale_range(ob_filter *filter, ob_error **error);
 
 /**
- * @brief Set the TemporalFilter diffscale range.
+ * @brief Set the TemporalFilter diffscale value.
  *
  * @param[in] filter A temporal_filter object.
  * @param[in] value diffscale value.
@@ -203,6 +205,7 @@ ob_filter *ob_create_spatial_advanced_filter(ob_error **error);
  *
  * @param[in] filter A spatial advanced filter object.
  * @param[out] error Log error messages.
+ * @return ob_float_property_range the alpha value of property range.
  */
 ob_float_property_range ob_spatial_advanced_filter_get_alpha_range(ob_filter *filter, ob_error **error);
 
@@ -211,6 +214,7 @@ ob_float_property_range ob_spatial_advanced_filter_get_alpha_range(ob_filter *fi
  *
  * @param[in] filter A spatial advanced filter object.
  * @param[out] error Log error messages.
+ * @return ob_uint16_property_range the dispdiff value of property range.
  */
 ob_uint16_property_range ob_spatial_advanced_filter_get_disp_diff_range(ob_filter *filter, ob_error **error);
 
@@ -219,6 +223,7 @@ ob_uint16_property_range ob_spatial_advanced_filter_get_disp_diff_range(ob_filte
  *
  * @param[in] filter A spatial advanced filter object.
  * @param[out] error Log error messages.
+ * @return ob_uint16_property_range the radius value of property range.
  */
 ob_uint16_property_range ob_spatial_advanced_filter_get_radius_range(ob_filter *filter, ob_error **error);
 
@@ -227,6 +232,7 @@ ob_uint16_property_range ob_spatial_advanced_filter_get_radius_range(ob_filter *
  *
  * @param[in] filter A spatial advanced filter object.
  * @param[out] error Log error messages.
+ * @return ob_int_property_range the magnitude value of property range.
  */
 ob_int_property_range ob_spatial_advanced_filter_get_magnitude_range(ob_filter *filter, ob_error **error);
 
@@ -260,6 +266,7 @@ ob_filter *ob_create_noise_removal_filter(ob_error **error);
  *
  * @param[in] filter A noise removal filter object.
  * @param[out] error Log error messages.
+ * @return ob_uint16_property_range the disp_diff value of property range.
  */
 ob_uint16_property_range ob_noise_removal_filter_get_disp_diff_range(ob_filter *filter, ob_error **error);
 
@@ -268,6 +275,7 @@ ob_uint16_property_range ob_noise_removal_filter_get_disp_diff_range(ob_filter *
  *
  * @param[in] filter noise removal filter object.
  * @param[out] error Log error messages.
+ * @return ob_int_property_range the _max_size value of property range.
  */
 ob_int_property_range ob_noise_removal_filter_get_max_size_range(ob_filter *filter, ob_error **error);
 
@@ -285,7 +293,7 @@ void ob_noise_removal_filter_set_filter_params(ob_filter *filter, ob_noise_remov
  *
  * @param[in] filter noise removal filter object.
  * @param[out] error Log error messages.
- *  @return ob_noise_removal_filter_params.
+ * @return ob_noise_removal_filter_params.
  */
 ob_noise_removal_filter_params ob_noise_removal_filter_get_filter_params(ob_filter *filter, ob_error **error);
 
@@ -366,7 +374,7 @@ ob_filter *ob_create_sequenceId_filter(ob_error **error);
  * @brief Set the sequence id filter select sequence id.
  *
  * @param[in] filter A sequence id object.
- * @param[in] sequence_id threshold filter sequence id.
+ * @param[in] sequence_id sequence id to pass the filter.
  * @param[out] error Log error messages.
  */
 void ob_sequence_id_filter_select_sequence_id(ob_filter *filter, int sequence_id, ob_error **error);
@@ -376,6 +384,7 @@ void ob_sequence_id_filter_select_sequence_id(ob_filter *filter, int sequence_id
  *
  * @param[in] filter A sequence id object.
  * @param[out] error Log error messages.
+ * @return sequence id to pass the filter.
  */
 int ob_sequence_id_filter_get_sequence_id(ob_filter *filter, ob_error **error);
 
