@@ -47,7 +47,7 @@ void OBCameraNodeDriver::init() {
   is_alive_ = true;
   auto log_level = nh_private_.param<std::string>("log_level", "info");
   auto ob_log_level = obLogSeverityFromString(log_level);
-  ctx_->setLoggerSeverity(ob_log_level);
+  ctx_->setLoggerToConsole(ob_log_level);
   orb_device_lock_shm_fd_ = shm_open(ORB_DEFAULT_LOCK_NAME.c_str(), O_CREAT | O_RDWR, 0666);
   if (orb_device_lock_shm_fd_ < 0) {
     ROS_ERROR_STREAM("Failed to open shared memory " << ORB_DEFAULT_LOCK_NAME);

@@ -261,8 +261,8 @@ The following launch parameters are available:
 - `enable_right_ir`: Enables the right IR camera.
 - `depth_registration`: Enables hardware alignment of the depth frame to the color frame. This field is required
   when `enable_colored_point_cloud` is set to `true`.
-- `log_level`: The log level for OrbbecSDK, with optional values of `none`, `info`, `debug`, `warn`, and `fatal`. The
-  log file can be found in the ROS runtime directory, and the default location is `~/.ros/Log`.
+- `log_level` for OrbbecSDK controls console log verbosity, with levels `none`, `info`, `debug`, `warn`, `fatal`. Logs save in `~/.ros/Log`.
+For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
 - `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
 - `device_preset`: The device preset,`Default`, `High Accuracy`.
