@@ -188,7 +188,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& dev
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
   if (!isOpenNIDevice(device_info_->pid())) {
-    ctx_->enableDeviceClockSync(5000);
+    ctx_->enableDeviceClockSync(1800000);
   }
   CHECK_NOTNULL(device_info_.get());
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
