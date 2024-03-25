@@ -8,21 +8,21 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
 ## Table of Contents
 
 - [Orbbec ROS SDK](#orbbec-ros-sdk)
-    - [Table of Contents](#table-of-contents)
-    - [Install Dependencies](#install-dependencies)
-        - [ROS](#ros)
-        - [Other Dependencies](#other-dependencies)
-    - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-    - [Start the Camera](#start-the-camera)
-    - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-        - [Available Services for Camera Control](#available-services-for-camera-control)
-        - [Available Topics](#available-topics)
-    - [Launch Parameters](#launch-parameters)
-    - [Frequently Asked Questions](#frequently-asked-questions)
-        - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-        - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
-    - [License](#license)
-    - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
+  - [Table of Contents](#table-of-contents)
+  - [Install Dependencies](#install-dependencies)
+    - [ROS](#ros)
+    - [Other Dependencies](#other-dependencies)
+  - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+  - [Start the Camera](#start-the-camera)
+  - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+    - [Available Services for Camera Control](#available-services-for-camera-control)
+    - [Available Topics](#available-topics)
+  - [Launch Parameters](#launch-parameters)
+  - [Frequently Asked Questions](#frequently-asked-questions)
+    - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
+    - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+  - [License](#license)
+  - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
 
 ## Install Dependencies
 
@@ -181,10 +181,7 @@ rosservice call /camera/save_point_cloud "{}"
 NOTE: The images are saved under `~/.ros/image` and are only available when the sensor is on.
 
 ### Available Services for Camera Control
-The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or getting parameters—denoted as
-`set_*` and `get_*`—become available only when the respective `enable_*` parameters are activated. For instance, enabling features such as left infrared (IR) 
-with `enable_left_ir`, right IR with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer to [Launch Parameters](#Launch-Parameters))
-is a prerequisite for their corresponding services to be operational. This configuration ensures that services are accessible only when their specific stream is enabled in the 
+The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or getting parameters—denoted as `set_*` and `get_*`—become available only when the respective `enable_*` parameters are activated. For instance, enabling features such as left infrared (IR)  with `enable_left_ir`, right IR with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer to [Launch Parameters](#Launch-Parameters)) is a prerequisite for their corresponding services to be operational. This configuration ensures that services are accessible only when their specific stream is enabled in the 
 launch file's stream argument.
 
 - `/camera/get_auto_white_balance`
@@ -236,8 +233,7 @@ launch file's stream argument.
 - `/camera/depth/camera_info`: The depth camera info.
 - `/camera/depth/image_raw`: The depth stream image.
 - `/camera/depth/points`: The point cloud, only available when `enable_point_cloud` is `true`.
-- `/camera/depth_registered/points`: The colored point cloud, only available when `enable_colored_point_cloud`
-  is `true`.
+- `/camera/depth_registered/points`: The colored point cloud, only available when `enable_colored_point_cloud` is `true`.
 - `/camera/left_ir/camera_info`: The left IR camera info.
 - `/camera/left_ir/image_raw`: The left IR stream image.
 - `/camera/right_ir/camera_info`: The right IR camera info.
@@ -263,18 +259,16 @@ The following launch parameters are available:
   when `enable_colored_point_cloud` is set to `true`.
 - `log_level` for OrbbecSDK controls console log verbosity, with levels `none`, `info`, `debug`, `warn`, `fatal`. Logs
   save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
-- `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
-  points (`false`).
+- `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of points (`false`).
 - `device_preset`: The device preset options are `Default` or `High Accuracy`.
-- `enable_decimation_filter`: Toggles the decimation filter to reduce data density.
-- `enable_hdr_merge`: Enables the HDR merge filter to combine multiple exposures for a greater dynamic range.
-- `enable_sequenced_filter`: Enables a filter to discard frames with specific HDR Sequence IDs that are not required for
-  further processing.
-- `enable_threshold_filter`: Applies a threshold filter to limit depth data within a certain range.
-- `enable_noise_removal_filter`: Engages a filter to remove noise from the data streams.
-- `enable_spatial_filter`: Utilizes a spatial filter to enhance data quality by analyzing spatial relationships.
-- `enable_temporal_filter`: Turns on a temporal filter to improve data stability over time.
-- `enable_hole_filling_filter`: Activates a hole filling filter to fill gaps in the data.
+- `enable_decimation_filter`: This filter effectively reduces the depth scene complexity. The filter runs on kernel sizes [2x2] to [8x8] pixels. The image size is scaled down proportionally in both dimensions to preserve the aspect ratio.
+- `enable_hdr_merge`: This filter is used jointly with depth HDR function. By merging consecutive depth images of alternating exposure values, we can over come challenges in acquiring depth values for under-illuminated and over-illuminated objects simultaneously.
+- `enable_sequenceID_filter`: This filter is used jointly with depth HDR function and outputs only the sequence with specified sequence ID.
+- `enable_threshold_filter`: This filter preserves depth values of interest and omits depth values out of scope.
+- `enable_noise_removal_filter`: This filter removes speckle noise in clusters and gives rise to a less-filled depth map.
+- `enable_spatial_filter`: This filter performs multiple iterations of processing as specified by the magnitude parameter, to enhance the smoothness of depth data. It is also capable of filling small holes in depth maps.
+- `enable_temporal_filter`:This filter is designed to enhance the persistence of depth data by manipulating per-pixel values based on previous frames. The filter performs a single pass on the data, adjusting the depth values and updating the tracking history.
+- `enable_hole_filling_filter`: This filter fills all holes in the depth map using the specified mode.
 
 ## Frequently Asked Questions
 
@@ -305,8 +299,7 @@ The following launch parameters are available:
   SUBSYSTEM=="usb", ATTR{idProduct}=="your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root", GROUP:="video", SYMLINK+="your_device_name_here"
   ```
 
-  Replace `your_pid_here` with the PID of your device and `your_device_name_here` with the name you want to create for
-  the device (e.g., `gemini2R`).
+  Replace `your_pid_here` with the PID of your device and `your_device_name_here` with the name you want to create for the device (e.g., `gemini2R`).
 
   Then restart the udev service:
 
@@ -327,4 +320,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
 language governing permissions and limitations under the License.
 
-## Other names and brands may be claimed as the property of others
+Other names and brands may be claimed as the property of others.
