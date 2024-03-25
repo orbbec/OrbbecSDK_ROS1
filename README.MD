@@ -267,7 +267,7 @@ The following launch parameters are available:
 - `enable_threshold_filter`: This filter preserves depth values of interest and omits depth values out of scope.
 - `enable_noise_removal_filter`: This filter removes speckle noise in clusters and gives rise to a less-filled depth map.
 - `enable_spatial_filter`: This filter performs multiple iterations of processing as specified by the magnitude parameter, to enhance the smoothness of depth data. It is also capable of filling small holes in depth maps.
-- `enable_temporal_filter`:This filter is designed to enhance the persistence of depth data by manipulating per-pixel values based on previous frames. The filter performs a single pass on the data, adjusting the depth values and updating the tracking history.
+- `enable_temporal_filter`:This filter is intended to improve the depth data persistency by manipulating per-pixel values based on previous frames. The filter performs a single pass on the data, adjusting the depth values while also updating the tracking history.
 - `enable_hole_filling_filter`: This filter fills all holes in the depth map using the specified mode.
 
 ## Frequently Asked Questions
