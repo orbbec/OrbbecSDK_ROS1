@@ -226,7 +226,7 @@ class OBCameraNode {
   bool setFanWorkModeCallback(std_srvs::SetBoolRequest& request,
                               std_srvs::SetBoolResponse& response);
 
-  bool setFloorCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
+  bool setFloodCallback(std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response);
 
   bool getDeviceInfoCallback(GetDeviceInfoRequest& request, GetDeviceInfoResponse& response);
 
@@ -331,7 +331,7 @@ class OBCameraNode {
   ros::ServiceServer get_sdk_version_srv_;
   ros::ServiceServer get_device_info_srv_;
   ros::ServiceServer set_laser_srv_;
-  ros::ServiceServer set_floor_srv_;
+  ros::ServiceServer set_flood_srv_;
   ros::ServiceServer set_ldp_srv_;
   ros::ServiceServer get_ldp_status_srv_;
   ros::ServiceServer set_fan_work_mode_srv_;

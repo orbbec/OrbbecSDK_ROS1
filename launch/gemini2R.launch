@@ -4,7 +4,7 @@
     <arg name="camera_name" default="camera"/>
     <!-- open device delay time 100m-->
     <arg name="connection_delay" default="100"/>
-    <arg name="log_level" default="none"/>
+    <arg name="log_level" default="debug"/>
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="enable_frame_sync" default="true"/>
@@ -32,14 +32,14 @@
     <arg name="left_ir_width" default="1280"/>
     <arg name="left_ir_height" default="720"/>
     <arg name="left_ir_fps" default="15"/>
-    <arg name="enable_left_ir" default="false"/>
+    <arg name="enable_left_ir" default="true"/>
     <arg name="left_ir_format" default="Y8"/>
 
     <!-- Right IR camera parameters -->
     <arg name="right_ir_width" default="1280"/>
     <arg name="right_ir_height" default="720"/>
     <arg name="right_ir_fps" default="15"/>
-    <arg name="enable_right_ir" default="false"/>
+    <arg name="enable_right_ir" default="true"/>
     <arg name="right_ir_format" default="Y8"/>
 
     <!-- Common IR camera parameters -->

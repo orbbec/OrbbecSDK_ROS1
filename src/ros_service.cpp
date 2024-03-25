@@ -138,10 +138,10 @@ void OBCameraNode::setupCameraCtrlServices() {
 //            response.success = this->setFanWorkModeCallback(request, response);
 //            return response.success;
 //          });
-  set_floor_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_floor",
+  set_flood_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+      "/" + camera_name_ + "/" + "set_flood",
       [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setFloorCallback(request, response);
+        response.success = this->setFloodCallback(request, response);
         return response.success;
       });
   set_laser_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
@@ -487,13 +487,13 @@ bool OBCameraNode::setFanWorkModeCallback(std_srvs::SetBoolRequest& request,
   return true;
 }
 
-bool OBCameraNode::setFloorCallback(std_srvs::SetBoolRequest& request,
+bool OBCameraNode::setFloodCallback(std_srvs::SetBoolRequest& request,
                                     std_srvs::SetBoolResponse& response) {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     device_->setBoolProperty(OB_PROP_FLOOD_BOOL, request.data);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("set floor failed: " << e.getMessage());
+    ROS_ERROR_STREAM("set flood failed: " << e.getMessage());
     response.message = e.getMessage();
     return false;
   }

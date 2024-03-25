@@ -197,8 +197,7 @@ void OBCameraNode::getParameters() {
     enable_sequenced_filter_ = nh_private_.param<bool>("enable_sequenced_filter", false);
     enable_threshold_filter_ = nh_private_.param<bool>("enable_threshold_filter", false);
     enable_noise_removal_filter_ = nh_private_.param<bool>("enable_noise_removal_filter", true);
-    enable_spatial_filter_ =
-        nh_private_.param<bool>("enable_spatial_filter", true);
+    enable_spatial_filter_ = nh_private_.param<bool>("enable_spatial_filter", true);
     enable_temporal_filter_ = nh_private_.param<bool>("enable_temporal_filter", false);
     enable_hole_filling_filter_ = nh_private_.param<bool>("enable_hole_filling_filter", false);
   }
@@ -382,7 +381,11 @@ void OBCameraNode::stopStreams() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
-    pipeline_->stop();
+    try {
+      pipeline_->stop();
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to stop pipeline: " << e.getMessage());
+    }
     pipeline_started_ = false;
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
@@ -840,7 +843,7 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
   if (metadata_publishers_[COLOR].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
-  if(camera_info_publishers_[COLOR].getNumSubscribers() > 0) {
+  if (camera_info_publishers_[COLOR].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
   if (!has_subscriber) {

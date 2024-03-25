@@ -222,7 +222,7 @@ launch file's stream argument.
 - `/camera/set_depth_auto_exposure`
 - `/camera/set_depth_exposure`
 - `/camera/set_depth_gain`
-- `/camera/set_floor`
+- `/camera/set_flood`
 - `/camera/set_left_ir_auto_exposure`
 - `/camera/set_left_ir_exposure`
 - `/camera/set_left_ir_gain`
