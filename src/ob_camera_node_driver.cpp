@@ -167,6 +167,7 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
 }
 
 void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& device) {
+  auto start_time = std::chrono::steady_clock::now();
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (device_) {
     ROS_WARN("device_ is not null, reset device_");
@@ -196,6 +197,10 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device>& dev
   ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
   ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
   ROS_INFO_STREAM("device uid: " << device_info_->uid());
+  auto end_time = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+  ROS_INFO_STREAM("initializeDevice: device " << device_info_->serialNumber() << " connected in "
+                                              << duration.count() << " ms");
 }
 
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList>& list) {

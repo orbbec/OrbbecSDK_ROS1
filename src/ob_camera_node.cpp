@@ -133,7 +133,7 @@ void OBCameraNode::getParameters() {
   use_hardware_time_ = nh_private_.param<bool>("use_hardware_time", false);
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
-  enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", false);
+  enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", true);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");
   enable_d2c_viewer_ = nh_private_.param<bool>("enable_d2c_viewer", false);

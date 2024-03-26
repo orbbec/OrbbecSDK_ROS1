@@ -63,7 +63,7 @@
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="false"/>
     <arg name="depth_work_mode" default=""/>
-    <arg name="enable_frame_sync" default="false"/>
+    <arg name="enable_frame_sync" default="true"/>
     <group ns="$(arg camera_name)">
         <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
               output="$(arg output)" required="$(arg required)" respawn="$(arg respawn)"/>
