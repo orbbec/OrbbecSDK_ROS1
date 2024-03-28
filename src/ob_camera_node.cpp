@@ -1386,6 +1386,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   startStreams();
   CHECK_NOTNULL(pipeline_.get());
   auto camera_param = pipeline_->getCameraParam();
+  ROS_INFO_STREAM("camera_param: " << camera_param);
   auto ex = camera_param.transform;
   Q = rotationMatrixToQuaternion(ex.rot);
   Q = quaternion_optical * Q * quaternion_optical.inverse();

@@ -348,6 +348,15 @@ std::ostream &operator<<(std::ostream &os, const OBCameraParam &rhs) {
   os << "cy : " << rgb_intrinsic.cy << "\n";
   os << "width : " << rgb_intrinsic.width << "\n";
   os << "height : " << rgb_intrinsic.height << "\n";
+  os << "=====extrinsic=====\n";
+  for (float i : rhs.transform.rot) {
+    os << i << " ";
+  }
+  os << "\n";
+  for (float tran : rhs.transform.trans) {
+    os << tran << " ";
+  }
+  os << "\n";
   return os;
 }
 
