@@ -342,6 +342,7 @@ class OBCameraNode {
   ros::ServiceServer set_ir_long_exposure_srv_;
 
   bool publish_tf_ = true;
+  bool publish_imu_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
   std::shared_ptr<tf2_ros::TransformBroadcaster> dynamic_tf_broadcaster_ = nullptr;
   std::vector<geometry_msgs::TransformStamped> static_tf_msgs_;

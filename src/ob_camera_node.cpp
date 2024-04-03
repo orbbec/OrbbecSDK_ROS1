@@ -132,6 +132,7 @@ void OBCameraNode::getParameters() {
   }
   use_hardware_time_ = nh_private_.param<bool>("use_hardware_time", true);
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
+  publish_imu_tf_ = nh_private_.param<bool>("publish_imu_tf_", false);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
   enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", true);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
@@ -1424,9 +1425,11 @@ void OBCameraNode::calcAndPublishStaticTransform() {
     publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, frame_id_[stream_index],
                     optical_frame_id_[stream_index]);
   }
-  publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_, imu_frame_id_);
-  publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, imu_frame_id_,
-                  imu_optical_frame_id_);
+  if (publish_imu_tf_) {
+    publishStaticTF(tf_timestamp, zero_trans, zero_rot, camera_link_frame_id_, imu_frame_id_);
+    publishStaticTF(tf_timestamp, zero_trans, quaternion_optical, imu_frame_id_,
+                    imu_optical_frame_id_);
+  }
 }
 
 void OBCameraNode::publishDynamicTransforms() {
