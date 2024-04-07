@@ -16,6 +16,7 @@
 
 #include "orbbec_camera/ob_camera_node.h"
 #include "orbbec_camera/utils.h"
+#include <std_msgs/String.h>
 
 namespace orbbec_camera {
 
@@ -113,9 +114,46 @@ void OBCameraNode::setupDevices() {
       std::string filter_name = filter->type();
       ROS_INFO_STREAM("Setting " << filter_name << "......");
       if (filter_params.find(filter_name) != filter_params.end()) {
-        std::string value = filter_params[filter_name]? "true" : "false";
+        std::string value = filter_params[filter_name] ? "true" : "false";
         ROS_INFO_STREAM("set " << filter_name << " to " << value);
         filter->enable(filter_params[filter_name]);
+        filter_status_[filter_name] = filter_params[filter_name];
+      }
+      if (filter_name == "DecimationFilter") {
+        auto decimation_filter = filter->as<ob::DecimationFilter>();
+        decimation_filter->setScaleValue(decimation_filter_scale_range_);
+      } else if (filter_name == "ThresholdFilter") {
+        auto threshold_filter = filter->as<ob::ThresholdFilter>();
+        threshold_filter->setValueRange(threshold_filter_min_, threshold_filter_max_);
+      } else if (filter_name == "SpatialAdvancedFilter") {
+        auto spatial_filter = filter->as<ob::SpatialAdvancedFilter>();
+        OBSpatialAdvancedFilterParams params{};
+        params.alpha = spatial_filter_alpha_;
+        params.magnitude = spatial_filter_magnitude_;
+        params.radius = spatial_filter_radius_;
+        params.disp_diff = spatial_filter_diff_threshold_;
+        spatial_filter->setFilterParams(params);
+      } else if (filter_name == "TemporalFilter") {
+        auto temporal_filter = filter->as<ob::TemporalFilter>();
+        temporal_filter->setDiffScale(temporal_filter_diff_threshold_);
+        temporal_filter->setWeight(temporal_filter_weight_);
+      } else if (filter_name == "HoleFillingFilter") {
+        auto hole_filling_filter = filter->as<ob::HoleFillingFilter>();
+        OBHoleFillingMode hole_filling_mode = holeFillingModeFromString(hole_filling_filter_mode_);
+        hole_filling_filter->setFilterMode(hole_filling_mode);
+      } else if (filter_name == "SequenceIdFilter") {
+        auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
+        sequenced_filter->selectSequenceId(sequence_id_filter_id_);
+      } else if (filter_name == "NoiseRemovalFilter") {
+        auto noise_removal_filter = filter->as<ob::NoiseRemovalFilter>();
+        OBNoiseRemovalFilterParams params{};
+        params.disp_diff = noise_removal_filter_min_diff_;
+        params.max_size = noise_removal_filter_max_size_;
+        noise_removal_filter->setFilterParams(params);
+      } else if (filter_name == "HdrMerge") {
+        // do nothing
+      } else {
+        ROS_ERROR_STREAM("Unsupported filter: " << filter_name);
       }
     }
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
@@ -354,6 +392,11 @@ void OBCameraNode::setupPublishers() {
     depth_to_other_extrinsics_publishers_[INFRA2] = nh_.advertise<orbbec_camera::Extrinsics>(
         "/" + camera_name_ + "/depth_to_right_ir", 1, true);
   }
+  filter_status_pub_ =
+      nh_.advertise<std_msgs::String>("/" + camera_name_ + "/filter_status", 1, true);
+  std_msgs::String msg;
+  msg.data = filter_status_.dump(2);
+  filter_status_pub_.publish(msg);
 }
 
 void OBCameraNode::setupCameraInfo() {

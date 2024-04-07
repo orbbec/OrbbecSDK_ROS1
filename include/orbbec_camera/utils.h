@@ -73,4 +73,6 @@ std::string fourccToString(uint32_t fourcc);
 
 std::string metaDataTypeToString(const OBFrameMetadataType &meta_data_type);
 
+OBHoleFillingMode holeFillingModeFromString(const std::string &hole_filling_mode);
+
 }  // namespace orbbec_camera

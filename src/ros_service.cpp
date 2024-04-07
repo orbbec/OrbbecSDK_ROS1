@@ -63,14 +63,14 @@ void OBCameraNode::setupCameraCtrlServices() {
                                                std_srvs::EmptyResponse& response) {
               return this->resetCameraGainCallback(request, response, stream_index);
             });
-//    service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_mirror";
-//    set_mirror_srv_[stream_index] =
-//        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-//            service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
-//                                               std_srvs::SetBoolResponse& response) {
-//              response.success = this->setMirrorCallback(request, response, stream_index);
-//              return response.success;
-//            });
+    service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_mirror";
+    set_mirror_srv_[stream_index] =
+        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+            service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
+                                               std_srvs::SetBoolResponse& response) {
+              response.success = this->setMirrorCallback(request, response, stream_index);
+              return response.success;
+            });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_auto_exposure";
     set_auto_exposure_srv_[stream_index] =
         nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
@@ -85,14 +85,14 @@ void OBCameraNode::setupCameraCtrlServices() {
           response.success = this->getAutoExposureCallback(request, response, stream_index);
           return response.success;
         });
-//    service_name = "/" + camera_name_ + "/" + "toggle_" + stream_name;
-//    toggle_sensor_srv_[stream_index] =
-//        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-//            service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
-//                                               std_srvs::SetBoolResponse& response) {
-//              response.success = this->toggleSensorCallback(request, response, stream_index);
-//              return response.success;
-//            });
+    service_name = "/" + camera_name_ + "/" + "toggle_" + stream_name;
+    toggle_sensor_srv_[stream_index] =
+        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+            service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
+                                               std_srvs::SetBoolResponse& response) {
+              response.success = this->toggleSensorCallback(request, response, stream_index);
+              return response.success;
+            });
     service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_camera_info";
     get_camera_info_srv_[stream_index] =
         nh_.advertiseService<GetCameraInfoRequest, GetCameraInfoResponse>(
@@ -131,13 +131,13 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->resetCameraWhiteBalanceCallback(request, response);
       });
-//  set_fan_work_mode_srv_ =
-//      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-//          "/" + camera_name_ + "/" + "set_fan_work_mode",
-//          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-//            response.success = this->setFanWorkModeCallback(request, response);
-//            return response.success;
-//          });
+  set_fan_work_mode_srv_ =
+      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+          "/" + camera_name_ + "/" + "set_fan_work_mode",
+          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+            response.success = this->setFanWorkModeCallback(request, response);
+            return response.success;
+          });
   set_flood_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
       "/" + camera_name_ + "/" + "set_flood",
       [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {

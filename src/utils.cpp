@@ -659,4 +659,16 @@ std::string metaDataTypeToString(const OBFrameMetadataType &meta_data_type) {
   }
 }
 
+OBHoleFillingMode holeFillingModeFromString(const std::string &hole_filling_mode) {
+  if (hole_filling_mode == "FILL_TOP") {
+    return OB_HOLE_FILL_TOP;
+  } else if (hole_filling_mode == "FILL_NEAREST") {
+    return OB_HOLE_FILL_NEAREST;
+  } else if (hole_filling_mode == "FILL_FAREST") {
+    return OB_HOLE_FILL_FAREST;
+  } else {
+    return OB_HOLE_FILL_NEAREST;
+  }
+}
+
 }  // namespace orbbec_camera
