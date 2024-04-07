@@ -408,6 +408,11 @@ typedef enum {
     OB_PROP_LASER_CONTROL_INT = 182,
 
     /**
+     * @brief IR brightness
+     */
+    OB_PROP_IR_BRIGHTNESS_INT = 184,
+
+    /**
      * @brief Baseline calibration parameters
      */
     OB_STRUCT_BASELINE_CALIBRATION_PARAM = 1002,

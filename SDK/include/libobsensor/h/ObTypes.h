@@ -421,6 +421,7 @@ typedef struct {
 /** \brief Distortion model: defines how pixel coordinates should be mapped to sensor coordinates. */
 typedef enum {
     OB_DISTORTION_NONE,                  /**< Rectilinear images. No distortion compensation required. */
+    OB_DISTORTION_MODIFIED_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except that tangential distortion is applied to radially distorted points */
     OB_DISTORTION_INVERSE_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it */
     OB_DISTORTION_BROWN_CONRADY,         /**< Unmodified Brown-Conrady distortion model */
 } OBCameraDistortionModel,
@@ -727,7 +728,6 @@ typedef enum {
     OB_TOF_FILTER_RANGE_DEBUG  = 100, /**< Debug range */
 } OBTofFilterRange,
     ob_tof_filter_range, TOF_FILTER_RANGE;
-
 /**
  * @brief 3D point structure in the SDK
  */

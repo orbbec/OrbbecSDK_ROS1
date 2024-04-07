@@ -11,7 +11,6 @@
 #include <map>
 #include <string>
 #include <iostream>
-#include <stdexcept>
 
 namespace ob {
 class Frame;

@@ -67,6 +67,14 @@ ob_filter *ob_get_filter(ob_filter_list *filter_list, uint32_t index, ob_error *
 const char *ob_get_filter_name(ob_filter *filter, ob_error **error);
 
 /**
+ * @brief Delete a list of ob_filter objects.
+ *
+ * @param[in] filter_list The list of ob_filter objects to delete.
+ * @param[out] error Logs error messages.
+ */
+void ob_delete_filter_list(ob_filter_list *filter_list, ob_error **error);
+
+/**
  * @brief Open the current sensor and set the callback data frame.
  *
  * @param[in] sensor The sensor object.
