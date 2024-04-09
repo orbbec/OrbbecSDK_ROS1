@@ -62,6 +62,9 @@ void OBCameraNode::init() {
 #endif
   rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 3];
   rgb_is_decoded_ = false;
+  if (diagnostics_frequency_ > 0.0) {
+    diagnostics_thread_ = std::make_shared<std::thread>([this]() { setupDiagnosticUpdater(); });
+  }
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
@@ -78,6 +81,9 @@ OBCameraNode::~OBCameraNode() {
   if (colorFrameThread_ && colorFrameThread_->joinable()) {
     colorFrameCV_.notify_all();
     colorFrameThread_->join();
+  }
+  if (diagnostics_thread_ && diagnostics_thread_->joinable()) {
+    diagnostics_thread_->join();
   }
 
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() stop stream");
@@ -190,32 +196,32 @@ void OBCameraNode::getParameters() {
     param_name = stream_name_[stream_index] + "_optical_frame_id";
     optical_frame_id_[stream_index] =
         nh_private_.param<std::string>(param_name, default_optical_frame_id);
-    device_preset_ = nh_private_.param<std::string>("device_preset", "Default");
-    // filter switch
-    enable_decimation_filter_ = nh_private_.param<bool>("enable_decimation_filter", false);
-    enable_hdr_merge_ = nh_private_.param<bool>("enable_hdr_merge", false);
-    enable_sequenced_filter_ = nh_private_.param<bool>("enable_sequenced_filter", false);
-    enable_threshold_filter_ = nh_private_.param<bool>("enable_threshold_filter", false);
-    enable_noise_removal_filter_ = nh_private_.param<bool>("enable_noise_removal_filter", true);
-    enable_spatial_filter_ = nh_private_.param<bool>("enable_spatial_filter", true);
-    enable_temporal_filter_ = nh_private_.param<bool>("enable_temporal_filter", false);
-    enable_hole_filling_filter_ = nh_private_.param<bool>("enable_hole_filling_filter", false);
-    decimation_filter_scale_range_ = nh_private_.param<int>("decimation_filter_scale_range", 2);
-    sequence_id_filter_id_ = nh_private_.param<int>("sequence_id_filter_id", 1);
-    threshold_filter_max_ = nh_private_.param<int>("threshold_filter_max", 16000);
-    threshold_filter_min_ = nh_private_.param<int>("threshold_filter_min", 0);
-    noise_removal_filter_min_diff_ = nh_private_.param<int>("noise_removal_filter_min_diff", 8);
-    noise_removal_filter_max_size_ = nh_private_.param<int>("noise_removal_filter_max_size", 80);
-    spatial_filter_alpha_ = nh_private_.param<float>("spatial_filter_alpha", 0.5);
-    spatial_filter_diff_threshold_ = nh_private_.param<int>("spatial_filter_diff_threshold", 8);
-    spatial_filter_magnitude_ = nh_private_.param<int>("spatial_filter_magnitude", 1);
-    spatial_filter_radius_ = nh_private_.param<int>("spatial_filter_radius", 1);
-    temporal_filter_diff_threshold_ =
-        nh_private_.param<float>("temporal_filter_diff_threshold", 0.1);
-    temporal_filter_weight_ = nh_private_.param<float>("temporal_filter_weight", 0.4);
-    hole_filling_filter_mode_ =
-        nh_private_.param<std::string>("hole_filling_filter_mode", "FILL_TOP");
   }
+  device_preset_ = nh_private_.param<std::string>("device_preset", "Default");
+  // filter switch
+  enable_decimation_filter_ = nh_private_.param<bool>("enable_decimation_filter", false);
+  enable_hdr_merge_ = nh_private_.param<bool>("enable_hdr_merge", false);
+  enable_sequenced_filter_ = nh_private_.param<bool>("enable_sequenced_filter", false);
+  enable_threshold_filter_ = nh_private_.param<bool>("enable_threshold_filter", false);
+  enable_noise_removal_filter_ = nh_private_.param<bool>("enable_noise_removal_filter", true);
+  enable_spatial_filter_ = nh_private_.param<bool>("enable_spatial_filter", true);
+  enable_temporal_filter_ = nh_private_.param<bool>("enable_temporal_filter", false);
+  enable_hole_filling_filter_ = nh_private_.param<bool>("enable_hole_filling_filter", false);
+  decimation_filter_scale_range_ = nh_private_.param<int>("decimation_filter_scale_range", 2);
+  sequence_id_filter_id_ = nh_private_.param<int>("sequence_id_filter_id", 1);
+  threshold_filter_max_ = nh_private_.param<int>("threshold_filter_max", 16000);
+  threshold_filter_min_ = nh_private_.param<int>("threshold_filter_min", 0);
+  noise_removal_filter_min_diff_ = nh_private_.param<int>("noise_removal_filter_min_diff", 8);
+  noise_removal_filter_max_size_ = nh_private_.param<int>("noise_removal_filter_max_size", 80);
+  spatial_filter_alpha_ = nh_private_.param<float>("spatial_filter_alpha", 0.5);
+  spatial_filter_diff_threshold_ = nh_private_.param<int>("spatial_filter_diff_threshold", 8);
+  spatial_filter_magnitude_ = nh_private_.param<int>("spatial_filter_magnitude", 1);
+  spatial_filter_radius_ = nh_private_.param<int>("spatial_filter_radius", 1);
+  temporal_filter_diff_threshold_ = nh_private_.param<float>("temporal_filter_diff_threshold", 0.1);
+  temporal_filter_weight_ = nh_private_.param<float>("temporal_filter_weight", 0.4);
+  hole_filling_filter_mode_ =
+      nh_private_.param<std::string>("hole_filling_filter_mode", "FILL_TOP");
+  diagnostics_frequency_ = nh_private_.param<double> ("diagnostics_frequency", 1.0);
 }
 
 void OBCameraNode::startStreams() {

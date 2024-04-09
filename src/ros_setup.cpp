@@ -434,6 +434,40 @@ void OBCameraNode::setupPipelineConfig() {
   }
 }
 
+void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWrapper& stat) {
+  try {
+    OBDeviceTemperature temperature;
+    uint32_t data_size = sizeof(OBDeviceTemperature);
+    device_->getStructuredData(OB_STRUCT_DEVICE_TEMPERATURE, &temperature, &data_size);
+    stat.add("CPU Temperature", temperature.cpuTemp);
+    stat.add("IR Temperature", temperature.irTemp);
+    stat.add("LDM Temperature", temperature.ldmTemp);
+    stat.add("MainBoard Temperature", temperature.mainBoardTemp);
+    stat.add("TEC Temperature", temperature.tecTemp);
+    stat.add("IMU Temperature", temperature.imuTemp);
+    stat.add("RGB Temperature", temperature.rgbTemp);
+    stat.add("Left IR Temperature", temperature.irLeftTemp);
+    stat.add("Right IR Temperature", temperature.irRightTemp);
+    stat.add("Chip Top Temperature", temperature.chipTopTemp);
+    stat.add("Chip Bottom Temperature", temperature.chipBottomTemp);
+    stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Temperature is normal");
+  } catch (const ob::Error& e) {
+    stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, e.getMessage());
+  }
+}
+void OBCameraNode::setupDiagnosticUpdater() {
+  std::string serial_number = device_info_->serialNumber();
+  diagnostic_updater_ =
+      std::make_shared<diagnostic_updater::Updater>(nh_, nh_private_, "ob_camera_" + serial_number);
+  diagnostic_updater_->setHardwareID(serial_number);
+  ros::WallRate rate(diagnostics_frequency_);
+  diagnostic_updater_->add("Temperature", this, &OBCameraNode::diagnosticTemperature);
+  while (is_running_ && ros::ok()) {
+    diagnostic_updater_->force_update();
+    rate.sleep();
+  }
+}
+
 void OBCameraNode::readDefaultGain() {
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (!enable_stream_[stream_index]) {

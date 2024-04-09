@@ -11,6 +11,7 @@
     <arg name="use_hardware_time" default="true"/>
     <!-- Custom,Default,Hand, High Density, High Accuracy,Medium Density.-->
     <arg name="device_preset" default="Default"/>
+    <arg name="diagnostics_frequency" default="10.0"/>
 
     <!-- Color camera parameters -->
     <arg name="color_width" default="1280"/>
@@ -94,6 +95,7 @@
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="use_hardware_time" value="$(arg use_hardware_time)"/>
             <param name="device_preset" value="$(arg device_preset)"/>
+            <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
 
             <param name="color_width" value="$(arg color_width)"/>
             <param name="color_height" value="$(arg color_height)"/>

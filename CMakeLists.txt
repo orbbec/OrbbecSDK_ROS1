@@ -58,6 +58,7 @@ find_package(catkin REQUIRED
   tf2_ros
   pluginlib
   nodelet
+  diagnostic_updater
 )
 set(SERVICE_FILES
   GetBool.srv

@@ -24,6 +24,7 @@
     <depend>tf2</depend>
     <depend>pluginlib</depend>
     <depend>nodelet</depend>
+    <depend>diagnostic_updater</depend>
     <export>
         <nodelet plugin="${prefix}/nodelet_plugins.xml"/>
     </export>

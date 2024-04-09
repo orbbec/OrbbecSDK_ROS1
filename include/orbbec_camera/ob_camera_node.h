@@ -46,6 +46,8 @@
 
 #include "jpeg_decoder.h"
 
+#include <diagnostic_updater/diagnostic_updater.h>
+
 namespace orbbec_camera {
 class OBCameraNode {
  public:
@@ -134,6 +136,10 @@ class OBCameraNode {
   void setupPipelineConfig();
 
   void setupPublishers();
+
+  void setupDiagnosticUpdater();
+
+  void diagnosticTemperature(diagnostic_updater::DiagnosticStatusWrapper &stat);
 
   void publishStaticTF(const ros::Time &t, const tf2::Vector3 &trans, const tf2::Quaternion &q,
                        const std::string &from, const std::string &to);
@@ -466,6 +472,9 @@ class OBCameraNode {
   std::string hole_filling_filter_mode_ = "FILL_TOP";
   ros::Publisher filter_status_pub_;
   nlohmann::json filter_status_;
+  std::shared_ptr<diagnostic_updater::Updater> diagnostic_updater_ = nullptr;
+  double diagnostics_frequency_ = 1.0;
+  std::shared_ptr<std::thread> diagnostics_thread_ = nullptr;
 };
 
 }  // namespace orbbec_camera
