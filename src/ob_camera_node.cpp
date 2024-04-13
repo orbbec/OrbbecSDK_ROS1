@@ -221,7 +221,7 @@ void OBCameraNode::getParameters() {
   temporal_filter_weight_ = nh_private_.param<float>("temporal_filter_weight", 0.4);
   hole_filling_filter_mode_ =
       nh_private_.param<std::string>("hole_filling_filter_mode", "FILL_TOP");
-  diagnostics_frequency_ = nh_private_.param<double> ("diagnostics_frequency", 1.0);
+  diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
 }
 
 void OBCameraNode::startStreams() {
@@ -1497,6 +1497,10 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   zero_rot.setRPY(0.0, 0.0, 0.0);
   quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
   tf2::Vector3 zero_trans(0, 0, 0);
+  if (!stream_profile_.count(base_stream_)) {
+    ROS_ERROR_STREAM("Base stream is not available");
+    return;
+  }
   auto base_stream_profile = stream_profile_[base_stream_];
   CHECK_NOTNULL(base_stream_profile.get());
   for (const auto& item : stream_profile_) {
