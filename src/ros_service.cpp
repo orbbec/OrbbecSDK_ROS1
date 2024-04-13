@@ -506,8 +506,6 @@ bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   auto device_info = device_->getDeviceInfo();
   response.info.name = device_info->name();
-  response.info.pid = device_info->pid();
-  response.info.vid = device_info->vid();
   response.info.serial_number = device_info->serialNumber();
   response.info.firmware_version = device_info->firmwareVersion();
   response.info.supported_min_sdk_version = device_info->supportedMinSdkVersion();

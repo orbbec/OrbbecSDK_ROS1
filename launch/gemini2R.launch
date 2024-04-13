@@ -11,7 +11,7 @@
     <arg name="use_hardware_time" default="true"/>
     <!-- Custom,Default,Hand, High Density, High Accuracy,Medium Density.-->
     <arg name="device_preset" default="Default"/>
-    <arg name="diagnostics_frequency" default="10.0"/>
+    <arg name="diagnostics_frequency" default="1.0"/>
 
     <!-- Color camera parameters -->
     <arg name="color_width" default="1280"/>
