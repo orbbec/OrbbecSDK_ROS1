@@ -94,6 +94,13 @@ void OBCameraNode::setupDevices() {
   }
 
   try {
+    if (enable_hardware_d2d_ &&
+        device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
+      bool is_hardware_d2d = device_->getBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL);
+      std::string d2d_mode = is_hardware_d2d ? "HW D2D" : "SW D2D";
+      ROS_INFO_STREAM("Depth process is " << d2d_mode);
+    }
     device_->loadPreset(device_preset_.c_str());
     auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
     // set depth sensor to filter
