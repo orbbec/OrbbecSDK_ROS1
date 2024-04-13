@@ -598,7 +598,13 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
       boost::filesystem::create_directory(current_path + "/point_cloud");
     }
     ROS_INFO_STREAM("Saving point cloud to " << filename);
-    saveDepthPointCloudMsgToPly(cloud_msg_, filename);
+    try {
+      saveDepthPointCloudMsgToPly(cloud_msg_, filename);
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM("Failed to save point cloud: " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("Failed to save point cloud");
+    }
   }
 }
 
@@ -704,7 +710,13 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
       boost::filesystem::create_directory(current_path + "/point_cloud");
     }
     ROS_INFO_STREAM("Saving point cloud to " << filename);
-    saveRGBPointCloudMsgToPly(cloud_msg_, filename);
+    try {
+      saveRGBPointCloudMsgToPly(cloud_msg_, filename);
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM("Failed to save colored point cloud: " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("Failed to save colored point cloud with unknown error");
+    }
   }
 }
 
