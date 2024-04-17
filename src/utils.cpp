@@ -364,8 +364,16 @@ Extrinsics obExtrinsicsToMsg(const OBD2CTransform &extrinsics, const std::string
   return msg;
 }
 
-ros::Time frameTimeStampToROSTime(uint64_t ms) {
+ros::Time fromMsToROSTime(uint64_t ms) {
   auto total = static_cast<uint64_t>(ms * 1e6);
+  uint64_t sec = total / 1000000000;
+  uint64_t nano_sec = total % 1000000000;
+  ros::Time stamp(sec, nano_sec);
+  return stamp;
+}
+
+ros::Time fromUsToROSTime(uint64_t us) {
+  auto total = static_cast<uint64_t>(us * 1e3);
   uint64_t sec = total / 1000000000;
   uint64_t nano_sec = total % 1000000000;
   ros::Time stamp(sec, nano_sec);

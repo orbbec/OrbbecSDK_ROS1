@@ -49,7 +49,9 @@ std::ostream &operator<<(std::ostream &os, const OBCameraParam &rhs);
 
 Extrinsics obExtrinsicsToMsg(const OBD2CTransform &extrinsics, const std::string &frame_id);
 
-ros::Time frameTimeStampToROSTime(uint64_t ms);
+ros::Time fromMsToROSTime(uint64_t ms);
+
+ros::Time fromUsToROSTime(uint64_t us);
 
 bool isOpenNIDevice(int pid);
 

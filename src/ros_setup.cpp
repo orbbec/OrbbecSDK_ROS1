@@ -57,6 +57,22 @@ void OBCameraNode::setupConfig() {
   format_str_[INFRA2] = "Y16";
 }
 
+void OBCameraNode::selectBaseStream() {
+  if (enable_stream_[DEPTH]) {
+    base_stream_ = DEPTH;
+  } else if (enable_stream_[INFRA0]) {
+    base_stream_ = INFRA0;
+  } else if (enable_stream_[INFRA1]) {
+    base_stream_ = INFRA1;
+  } else if (enable_stream_[INFRA2]) {
+    base_stream_ = INFRA2;
+  } else if (enable_stream_[COLOR]) {
+    base_stream_ = COLOR;
+  } else {
+    ROS_ERROR_STREAM("No base stream is enabled!");
+  }
+}
+
 void OBCameraNode::setupDevices() {
   auto sensor_list = device_->getSensorList();
   for (size_t i = 0; i < sensor_list->count(); i++) {
