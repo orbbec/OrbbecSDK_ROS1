@@ -1134,8 +1134,8 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
       auto ex = video_stream_profile->getExtrinsicTo(left_video_profile);
       double fx = camera_info.K.at(0);
       double fy = camera_info.K.at(4);
-      camera_info.P.at(3) = -fx * ex.trans[0] + 0.0;
-      camera_info.P.at(7) = -fy * ex.trans[1] + 0.0;
+      camera_info.P.at(3) = fx * ex.trans[0] / 1000.0 + 0.0;
+      camera_info.P.at(7) = fy * ex.trans[1] / 1000.0 + 0.0;
     }
     camera_info_publisher.publish(camera_info);
   }

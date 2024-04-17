@@ -332,8 +332,8 @@ class OBCameraNode {
   int default_white_balance_ = 0;
   std::string camera_link_frame_id_ = "camera_link";
   std::string camera_name_ = "camera";
-  const std::string imu_optical_frame_id_ = "camera_gyro_accel_optical_frame";
-  const std::string imu_frame_id_ = "camera_gyro_accel_frame";
+  const std::string imu_optical_frame_id_ = "camera_gyro_optical_frame";
+  const std::string imu_frame_id_ = "camera_gyro_frame";
   std::map<stream_index_pair, ros::ServiceServer> get_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> reset_exposure_srv_;
