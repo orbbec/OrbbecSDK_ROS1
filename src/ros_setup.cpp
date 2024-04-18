@@ -125,7 +125,7 @@ void OBCameraNode::setupDevices() {
       auto filter = filter_list->getFilter(i);
       std::map<std::string, bool> filter_params = {
           {"DecimationFilter", enable_decimation_filter_},
-          {"HdrMerge", enable_hdr_merge_},
+          {"HDRMerge", enable_hdr_merge_},
           {"SequencedFilter", enable_sequenced_filter_},
           {"ThresholdFilter", enable_threshold_filter_},
           {"NoiseRemovalFilter", enable_noise_removal_filter_},
@@ -173,7 +173,7 @@ void OBCameraNode::setupDevices() {
         params.disp_diff = noise_removal_filter_min_diff_;
         params.max_size = noise_removal_filter_max_size_;
         noise_removal_filter->setFilterParams(params);
-      } else if (filter_name == "HdrMerge") {
+      } else if (filter_name == "HDRMerge") {
         // do nothing
       } else {
         ROS_ERROR_STREAM("Unsupported filter: " << filter_name);
