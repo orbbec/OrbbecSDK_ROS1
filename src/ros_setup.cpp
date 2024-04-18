@@ -142,13 +142,13 @@ void OBCameraNode::setupDevices() {
         filter->enable(filter_params[filter_name]);
         filter_status_[filter_name] = filter_params[filter_name];
       }
-      if (filter_name == "DecimationFilter") {
+      if (filter_name == "DecimationFilter" && enable_decimation_filter_) {
         auto decimation_filter = filter->as<ob::DecimationFilter>();
         decimation_filter->setScaleValue(decimation_filter_scale_range_);
-      } else if (filter_name == "ThresholdFilter") {
+      } else if (filter_name == "ThresholdFilter" && enable_threshold_filter_) {
         auto threshold_filter = filter->as<ob::ThresholdFilter>();
         threshold_filter->setValueRange(threshold_filter_min_, threshold_filter_max_);
-      } else if (filter_name == "SpatialAdvancedFilter") {
+      } else if (filter_name == "SpatialAdvancedFilter" && enable_spatial_filter_) {
         auto spatial_filter = filter->as<ob::SpatialAdvancedFilter>();
         OBSpatialAdvancedFilterParams params{};
         params.alpha = spatial_filter_alpha_;
@@ -156,7 +156,7 @@ void OBCameraNode::setupDevices() {
         params.radius = spatial_filter_radius_;
         params.disp_diff = spatial_filter_diff_threshold_;
         spatial_filter->setFilterParams(params);
-      } else if (filter_name == "TemporalFilter") {
+      } else if (filter_name == "TemporalFilter" && enable_temporal_filter_) {
         auto temporal_filter = filter->as<ob::TemporalFilter>();
         temporal_filter->setDiffScale(temporal_filter_diff_threshold_);
         temporal_filter->setWeight(temporal_filter_weight_);
@@ -164,10 +164,10 @@ void OBCameraNode::setupDevices() {
         auto hole_filling_filter = filter->as<ob::HoleFillingFilter>();
         OBHoleFillingMode hole_filling_mode = holeFillingModeFromString(hole_filling_filter_mode_);
         hole_filling_filter->setFilterMode(hole_filling_mode);
-      } else if (filter_name == "SequenceIdFilter") {
+      } else if (filter_name == "SequenceIdFilter" && enable_sequenced_filter_) {
         auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
         sequenced_filter->selectSequenceId(sequence_id_filter_id_);
-      } else if (filter_name == "NoiseRemovalFilter") {
+      } else if (filter_name == "NoiseRemovalFilter" && enable_noise_removal_filter_) {
         auto noise_removal_filter = filter->as<ob::NoiseRemovalFilter>();
         OBNoiseRemovalFilterParams params{};
         params.disp_diff = noise_removal_filter_min_diff_;
