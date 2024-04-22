@@ -398,7 +398,9 @@ class OBCameraNode {
   bool is_initialized_ = false;
   bool enable_soft_filter_ = true;
   bool enable_color_auto_exposure_ = true;
+  int color_exposure_ = -1;
   bool enable_ir_auto_exposure_ = true;
+  int ir_exposure_ = -1;
   bool enable_ir_long_exposure_ = false;
   int soft_filter_max_diff_ = -1;
   int soft_filter_speckle_size_ = -1;
@@ -415,8 +417,8 @@ class OBCameraNode {
   int trigger2image_delay_us_ = 0;
   int trigger_out_delay_us_ = 0;
   bool trigger_out_enabled_ = false;
-  std::string depth_unit_str_;
-  OB_DEPTH_PRECISION_LEVEL depth_unit_ = OB_PRECISION_1MM;
+  std::string depth_precision_str_;
+  OB_DEPTH_PRECISION_LEVEL depth_precision_level_ = OB_PRECISION_1MM;
   // IMU
   std::map<stream_index_pair, ros::Publisher> imu_publishers_;
   std::map<stream_index_pair, std::string> imu_rate_;
@@ -477,6 +479,8 @@ class OBCameraNode {
   std::shared_ptr<diagnostic_updater::Updater> diagnostic_updater_ = nullptr;
   double diagnostics_frequency_ = 1.0;
   std::shared_ptr<std::thread> diagnostics_thread_ = nullptr;
+  bool enable_laser_ = true;
+  int laser_on_off_mode_ = 0;
 };
 
 }  // namespace orbbec_camera

@@ -679,4 +679,14 @@ OBHoleFillingMode holeFillingModeFromString(const std::string &hole_filling_mode
   }
 }
 
+float depthPrecisionFromString(const std::string &depth_precision_level_str) {
+  // covert 0.8mm to 0.8
+  if (depth_precision_level_str.size() < 2) {
+    return 1.0;
+  }
+  std::string depth_precision_level_str_num =
+      depth_precision_level_str.substr(0, depth_precision_level_str.size() - 2);
+  return std::stof(depth_precision_level_str_num);
+}
+
 }  // namespace orbbec_camera

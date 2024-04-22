@@ -154,7 +154,9 @@ void OBCameraNode::getParameters() {
   depth_work_mode_ = nh_private_.param<std::string>("depth_work_mode", "");
   enable_soft_filter_ = nh_private_.param<bool>("enable_soft_filter", true);
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
+  color_exposure_ = nh_private_.param<int>("color_exposure_", -1);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
+  ir_exposure_ = nh_private_.param<int>("ir_exposure_", -1);
   enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);
   sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "free_run");
   std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(), ::toupper);
@@ -164,8 +166,10 @@ void OBCameraNode::getParameters() {
   trigger2image_delay_us_ = nh_private_.param<int>("trigger2image_delay_us", 0);
   trigger_out_delay_us_ = nh_private_.param<int>("trigger_out_delay_us", 0);
   trigger_out_enabled_ = nh_private_.param<bool>("trigger_out_enabled", false);
-  depth_unit_str_ = nh_private_.param<std::string>("depth_unit", "1mm");
-  depth_unit_ = DEPTH_PRECISION_STR2ENUM.at(depth_unit_str_);
+  depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "");
+  if(!depth_precision_str_.empty()) {
+    depth_precision_level_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
+  }
   if (enable_colored_point_cloud_) {
     depth_registration_ = true;
   }
@@ -223,6 +227,8 @@ void OBCameraNode::getParameters() {
   hole_filling_filter_mode_ =
       nh_private_.param<std::string>("hole_filling_filter_mode", "FILL_TOP");
   diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
+  enable_laser_ = nh_private_.param<bool>("enable_laser", true);
+  laser_on_off_mode_ = nh_private_.param<int>("laser_on_off_mode", 0);
 }
 
 void OBCameraNode::startStreams() {

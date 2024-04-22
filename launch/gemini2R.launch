@@ -12,6 +12,10 @@
     <!-- Custom,Default,Hand, High Density, High Accuracy,Medium Density.-->
     <arg name="device_preset" default="Default"/>
     <arg name="diagnostics_frequency" default="1.0"/>
+    <arg name="enable_laser" default="true"/>
+    <arg name="laser_on_off_mode" default="0"/>
+    <arg name="sync_mode" default="free_run"/>
+
 
     <!-- Color camera parameters -->
     <arg name="color_width" default="1280"/>
@@ -20,6 +24,8 @@
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="YUYV"/>
     <arg name="enable_color_auto_exposure" default="true"/>
+    <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
+    <arg name="color_exposure" default="-1"/>
 
     <!-- Depth camera parameters -->
     <arg name="depth_width" default="1280"/>
@@ -45,11 +51,16 @@
 
     <!-- Common IR camera parameters -->
     <arg name="enable_ir_auto_exposure" default="true"/>
+    <!-- Depth/IR/Left IR/Right IR exposure is same -->
+    <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
+    <arg name="ir_exposure" default="-1"/>
+    <arg name="enable_ir_long_exposure" default="false"/>
 
     <!-- Point cloud parameters -->
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="true"/>
     <arg name="ordered_pc" default="false"/>
+    <!-- Gemini2R only support SW align mode, Please DO NOT change it -->
     <arg name="align_mode" default="SW"/>
 
     <!-- filter switch -->
@@ -74,7 +85,7 @@
     <arg name="temporal_filter_weight" default="0.4"/>
     <arg name="hole_filling_filter_mode" default="FILL_TOP"/>
     <!-- IMU parameters -->
-    <arg name="enable_sync_output_accel_gyro" default="false"/>
+    <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="true"/>
     <arg name="accel_rate" default="200hz"/>
     <arg name="accel_range" default="4g"/>
@@ -82,6 +93,11 @@
     <arg name="gyro_rate" default="200hz"/>
     <arg name="gyro_range" default="1000dps"/>
     <arg name="liner_accel_cov" default="0.01"/>
+
+    <!-- Misc parameters -->
+    <arg name="usb_port" default=""/>
+    <arg name="serial_number" default=""/>
+    <arg name="device_num" default="1"/>
 
 
     <group ns="$(arg camera_name)">
@@ -96,6 +112,12 @@
             <param name="use_hardware_time" value="$(arg use_hardware_time)"/>
             <param name="device_preset" value="$(arg device_preset)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
+            <param name="align_mode" value="$(arg align_mode)"/>
+            <param name="enable_laser" value="$(arg enable_laser)"/>
+            <param name="laser_on_off_mode" value="$(arg laser_on_off_mode)"/>
+            <param name="sync_mode" value="$(arg sync_mode)"/>
+            <param name="ir_exposure" value="$(arg ir_exposure)"/>
+            <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
 
             <param name="color_width" value="$(arg color_width)"/>
             <param name="color_height" value="$(arg color_height)"/>
@@ -103,6 +125,7 @@
             <param name="enable_color" value="$(arg enable_color)"/>
             <param name="color_format" value="$(arg color_format)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="color_exposure" value="$(arg color_exposure)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
@@ -158,6 +181,10 @@
             <param name="gyro_rate" value="$(arg gyro_rate)"/>
             <param name="gyro_range" value="$(arg gyro_range)"/>
             <param name="liner_accel_cov" value="$(arg liner_accel_cov)"/>
+
+            <param name="usb_port" value="$(arg usb_port)"/>
+            <param name="serial_number" value="$(arg serial_number)"/>
+            <param name="device_num" value="$(arg device_num)"/>
 
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>

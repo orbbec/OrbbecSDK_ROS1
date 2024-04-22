@@ -119,6 +119,42 @@ void OBCameraNode::setupDevices() {
     }
     device_->loadPreset(device_preset_.c_str());
     auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
+    device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
+    device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
+    if (color_exposure_ != -1) {
+      device_->setIntProperty(OB_PROP_COLOR_EXPOSURE_INT, color_exposure_);
+    }
+    if (ir_exposure_ != -1) {
+      device_->setIntProperty(OB_PROP_DEPTH_EXPOSURE_INT, ir_exposure_);
+    }
+    device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, enable_laser_);
+    device_->setIntProperty(OB_PROP_LASER_ON_OFF_MODE_INT, laser_on_off_mode_);
+
+    if (!depth_precision_str_.empty() &&
+        device_->isPropertySupported(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PERMISSION_READ_WRITE)) {
+      auto default_precision_level = device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT);
+      if (default_precision_level != depth_precision_level_) {
+        device_->setIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT, depth_precision_level_);
+        ROS_INFO_STREAM("set depth precision to " << depth_precision_str_);
+      }
+    }
+    if (!depth_precision_str_.empty() &&
+        device_->isPropertySupported(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT,
+                                     OB_PERMISSION_READ_WRITE)) {
+      auto depth_unit_flexible_adjustment = depthPrecisionFromString(depth_precision_str_);
+      auto range = device_->getFloatPropertyRange(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT);
+      ROS_ERROR_STREAM("Depth unit flexible adjustment range: " << range.min << " - " << range.max);
+      if (depth_unit_flexible_adjustment < range.min ||
+          depth_unit_flexible_adjustment > range.max) {
+        ROS_ERROR_STREAM(
+            "depth unit flexible adjustment value is out of range, please check the value");
+      } else {
+        ROS_INFO_STREAM("set depth unit to " << depth_unit_flexible_adjustment << "mm");
+        device_->setFloatProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT,
+                                  depth_unit_flexible_adjustment);
+      }
+    }
+
     // set depth sensor to filter
     auto filter_list = depth_sensor->getRecommendedFilters();
     for (size_t i = 0; i < filter_list->count(); i++) {
@@ -176,7 +212,7 @@ void OBCameraNode::setupDevices() {
       } else if (filter_name == "HDRMerge") {
         // do nothing
       } else {
-        ROS_ERROR_STREAM("Unsupported filter: " << filter_name);
+        ROS_INFO_STREAM("Skip setting " << filter_name);
       }
     }
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {

@@ -270,6 +270,10 @@ The following launch parameters are available:
 - `enable_spatial_filter`: This filter performs multiple iterations of processing as specified by the magnitude parameter, to enhance the smoothness of depth data. It is also capable of filling small holes in depth maps.
 - `enable_temporal_filter`:This filter is intended to improve the depth data persistency by manipulating per-pixel values based on previous frames. The filter performs a single pass on the data, adjusting the depth values while also updating the tracking history.
 - `enable_hole_filling_filter`: This filter fills all holes in the depth map using the specified mode.
+- `depth_precision` : The depth precision, should be like `1mm` format. The default value is `1mm`.
+- `enable_laser` : Whether to enable the laser. The default value is `true`.
+- `laser_on_off_mode`: Laser on/off alternate mode, 0: off, 1: on-off alternate, 2: off-on alternate. The default value
+  is `0`.
 
 ## Frequently Asked Questions
 

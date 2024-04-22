@@ -77,4 +77,6 @@ std::string metaDataTypeToString(const OBFrameMetadataType &meta_data_type);
 
 OBHoleFillingMode holeFillingModeFromString(const std::string &hole_filling_mode);
 
+float depthPrecisionFromString(const std::string &depth_precision_level_str);
+
 }  // namespace orbbec_camera
