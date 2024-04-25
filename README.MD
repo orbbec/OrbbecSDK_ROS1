@@ -264,7 +264,7 @@ The following launch parameters are available:
 - `device_preset`: The device preset options are `Default` or `High Accuracy`.
 - `enable_decimation_filter`: This filter effectively reduces the depth scene complexity. The filter runs on kernel sizes [2x2] to [8x8] pixels. The image size is scaled down proportionally in both dimensions to preserve the aspect ratio.
 - `enable_hdr_merge`: This filter is used jointly with depth HDR function. By merging consecutive depth images of alternating exposure values, we can over come challenges in acquiring depth values for under-illuminated and over-illuminated objects simultaneously.
-- `enable_sequenceID_filter`: This filter is used jointly with depth HDR function and outputs only the sequence with specified sequence ID.
+- `sequence_id_filter_id`: This filter is used jointly with depth HDR function and outputs only the sequence with specified sequence ID.
 - `enable_threshold_filter`: This filter preserves depth values of interest and omits depth values out of scope.
 - `enable_noise_removal_filter`: This filter removes speckle noise in clusters and gives rise to a less-filled depth map.
 - `enable_spatial_filter`: This filter performs multiple iterations of processing as specified by the magnitude parameter, to enhance the smoothness of depth data. It is also capable of filling small holes in depth maps.
