@@ -451,6 +451,14 @@ void OBCameraNode::setupPublishers() {
     depth_to_other_extrinsics_publishers_[INFRA2] = nh_.advertise<orbbec_camera::Extrinsics>(
         "/" + camera_name_ + "/depth_to_right_ir", 1, true);
   }
+  if (enable_stream_[DEPTH] && enable_stream_[ACCEL]) {
+    depth_to_other_extrinsics_publishers_[ACCEL] =
+        nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_accel", 1, true);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[GYRO]) {
+    depth_to_other_extrinsics_publishers_[GYRO] =
+        nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_gyro", 1, true);
+  }
   filter_status_pub_ =
       nh_.advertise<std_msgs::String>("/" + camera_name_ + "/filter_status", 1, true);
   std_msgs::String msg;

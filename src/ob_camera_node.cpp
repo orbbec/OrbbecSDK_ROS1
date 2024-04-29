@@ -167,7 +167,7 @@ void OBCameraNode::getParameters() {
   trigger_out_delay_us_ = nh_private_.param<int>("trigger_out_delay_us", 0);
   trigger_out_enabled_ = nh_private_.param<bool>("trigger_out_enabled", false);
   depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "");
-  if(!depth_precision_str_.empty()) {
+  if (!depth_precision_str_.empty()) {
     depth_precision_level_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
   }
   if (enable_colored_point_cloud_) {
@@ -1646,6 +1646,32 @@ void OBCameraNode::publishStaticTransforms() {
     depth_to_other_extrinsics_[INFRA2] = ex;
     auto ex_msg = obExtrinsicsToMsg(ex, frame_id);
     depth_to_other_extrinsics_publishers_[INFRA2].publish(ex_msg);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[ACCEL]) {
+    static const char* frame_id = "depth_to_accel_extrinsics";
+    OBExtrinsic ex;
+    try {
+      ex = base_stream_profile->getExtrinsicTo(stream_profile_[ACCEL]);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << e.getMessage());
+      ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
+    }
+    depth_to_other_extrinsics_[ACCEL] = ex;
+    auto ex_msg = obExtrinsicsToMsg(ex, frame_id);
+    depth_to_other_extrinsics_publishers_[ACCEL].publish(ex_msg);
+  }
+  if (enable_stream_[DEPTH] && enable_stream_[GYRO]) {
+    static const char* frame_id = "depth_to_gyro_extrinsics";
+    OBExtrinsic ex;
+    try {
+      ex = base_stream_profile->getExtrinsicTo(stream_profile_[GYRO]);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << e.getMessage());
+      ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
+    }
+    depth_to_other_extrinsics_[GYRO] = ex;
+    auto ex_msg = obExtrinsicsToMsg(ex, frame_id);
+    depth_to_other_extrinsics_publishers_[GYRO].publish(ex_msg);
   }
   calcAndPublishStaticTransform();
   if (tf_publish_rate_ > 0) {

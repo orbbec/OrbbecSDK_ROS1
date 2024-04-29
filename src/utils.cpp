@@ -356,7 +356,7 @@ Extrinsics obExtrinsicsToMsg(const OBD2CTransform &extrinsics, const std::string
   for (int i = 0; i < 9; ++i) {
     msg.rotation[i] = extrinsics.rot[i];
     if (i < 3) {
-      msg.translation[i] = extrinsics.trans[i];
+      msg.translation[i] = extrinsics.trans[i] / 1000.0;
     }
   }
 
