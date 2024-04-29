@@ -68,7 +68,7 @@ int ROSOBSensor::getExposure() {
 }
 
 OBIntPropertyRange ROSOBSensor::getExposureRange() {
-  OBIntPropertyRange range { 0, 0 }
+  OBIntPropertyRange range{0, 0};
   switch (sensor_->type()) {
     case OB_SENSOR_DEPTH:
       range = device_->getIntPropertyRange(OB_PROP_DEPTH_EXPOSURE_INT);
@@ -129,7 +129,7 @@ int ROSOBSensor::getGain() {
 }
 
 OBIntPropertyRange ROSOBSensor::getGainRange() {
-  OBIntPropertyRange range { 0, 0 }
+  OBIntPropertyRange range{0, 0};
   switch (sensor_->type()) {
     case OB_SENSOR_DEPTH:
       range = device_->getIntPropertyRange(OB_PROP_DEPTH_GAIN_INT);
