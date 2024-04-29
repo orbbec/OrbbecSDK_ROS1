@@ -34,13 +34,19 @@ class ROSOBSensor {
 
   int getExposure();
 
+  OBIntPropertyRange getExposureRange();
+
   void setExposure(int data);
 
   int getGain();
 
+  OBIntPropertyRange getGainRange();
+
   void setGain(int data);
 
   int getWhiteBalance();
+
+  OBIntPropertyRange getWhiteBalanceRange();
 
   void setWhiteBalance(int data);
 

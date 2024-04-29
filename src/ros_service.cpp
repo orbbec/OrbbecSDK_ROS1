@@ -156,12 +156,12 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->setLdpEnableCallback(request, response);
         return response.success;
       });
-//  get_ldp_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
-//      "/" + camera_name_ + "/" + "get_ldp_status",
-//      [this](GetBoolRequest& request, GetBoolResponse& response) {
-//        response.success = this->getLdpStatusCallback(request, response);
-//        return response.success;
-//      });
+  get_ldp_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+      "/" + camera_name_ + "/" + "get_ldp_status",
+      [this](GetBoolRequest& request, GetBoolResponse& response) {
+        response.success = this->getLdpStatusCallback(request, response);
+        return response.success;
+      });
   get_device_info_srv_ = nh_.advertiseService<GetDeviceInfoRequest, GetDeviceInfoResponse>(
       "/" + camera_name_ + "/" + "get_device_info",
       [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
@@ -264,6 +264,13 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
   }
   auto sensor = sensors_[stream_index];
   try {
+    auto range = sensor->getExposureRange();
+    if (request.data < range.min || request.data > range.max) {
+      ROS_ERROR_STREAM("Exposure value " << request.data << " out of range" << range.min << " - "
+                                         << range.max);
+      response.success = false;
+      return false;
+    }
     sensor->setExposure(request.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set exposure: " << e.getMessage());
@@ -301,12 +308,16 @@ bool OBCameraNode::setGainCallback(SetInt32Request& request, SetInt32Response& r
   }
   auto sensor = sensors_[stream_index];
   try {
-    auto gain = sensor->getGain();
-    ROS_INFO_STREAM("Current gain: " << gain);
-    ROS_INFO_STREAM("Setting gain to: " << request.data);
+    auto range = sensor->getGainRange();
+    if (request.data < range.min || request.data > range.max) {
+      ROS_ERROR_STREAM("Gain value " << request.data << " out of range" << range.min << " - "
+                                     << range.max);
+      response.success = false;
+      return false;
+    }
     sensor->setGain(request.data);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    gain = sensor->getGain();
+    auto gain = sensor->getGain();
     ROS_INFO_STREAM("After set gain: " << gain);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set gain: " << e.getMessage());
@@ -384,6 +395,19 @@ bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Res
   }
   auto sensor = sensors_[COLOR];
   try {
+    auto range = sensor->getWhiteBalanceRange();
+    if (request.data < range.min || request.data > range.max) {
+      ROS_ERROR_STREAM("White balance value " << request.data << " out of range" << range.min
+                                              << " - " << range.max);
+      response.success = false;
+      return false;
+    }
+    bool is_auto_white_balance = sensor->getAutoWhiteBalance();
+    if (is_auto_white_balance) {
+      ROS_ERROR_STREAM("Auto white balance is enabled, please disable it first.");
+      response.success = false;
+      return false;
+    }
     sensor->setWhiteBalance(request.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set white balance: " << e.getMessage());
@@ -678,6 +702,11 @@ bool OBCameraNode::resetCameraGainCallback(std_srvs::EmptyRequest& request,
   auto sensor = sensors_[stream_index];
   if (sensor) {
     try {
+      auto range = sensor->getGainRange();
+      if (data < range.min || data > range.max) {
+        ROS_ERROR_STREAM("Failed to set gain: invalid value");
+        return false;
+      }
       sensor->setGain(data);
       return true;
     } catch (const ob::Error& e) {
@@ -719,6 +748,11 @@ bool OBCameraNode::resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& reque
   auto sensor = sensors_[COLOR];
   if (sensor) {
     try {
+      auto range = sensor->getWhiteBalanceRange();
+      if (data < range.min || data > range.max) {
+        ROS_ERROR_STREAM("Failed to set white balance: invalid value");
+        return false;
+      }
       sensor->setWhiteBalance(data);
       return true;
     } catch (const ob::Error& e) {
