@@ -229,7 +229,7 @@ void OBCameraNode::getParameters() {
   diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
   laser_on_off_mode_ = nh_private_.param<int>("laser_on_off_mode", 0);
-  align_mode_ = nh_private_.param<std::string>("align_mode", "hw");
+  align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
 }
 
 void OBCameraNode::startStreams() {
