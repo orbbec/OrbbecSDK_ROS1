@@ -20,6 +20,7 @@
 *.so
 *.dylib
 *.dll
+.obj-aarch64-linux-gnu/
 
 # Fortran module files
 *.mod
