@@ -240,7 +240,7 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${EXECUTABLES}
 
 if(DEFINED ENV{BUILDING_PACKAGE})
   # Install udev rules
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/scripts/99-obsensor-libusb.rules
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/scripts/99-obsensor-ros1-libusb.rules
     DESTINATION /etc/udev/rules.d
   )
 endif()
