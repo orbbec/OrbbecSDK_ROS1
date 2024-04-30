@@ -60,7 +60,7 @@
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="true"/>
     <arg name="ordered_pc" default="false"/>
-    <!-- Gemini2R only support SW align mode, Please DO NOT change it -->
+    <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
     <arg name="align_mode" default="SW"/>
 
     <!-- filter switch -->

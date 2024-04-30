@@ -491,8 +491,9 @@ void OBCameraNode::setupPipelineConfig() {
   pipeline_config_ = std::make_shared<ob::Config>();
   auto pid = device_info_->pid();
   if (depth_registration_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
-    ROS_INFO_STREAM("set align mode:  ALIGN_D2C_SW_MODE");
-    pipeline_config_->setAlignMode(ALIGN_D2C_SW_MODE);
+    OBAlignMode align_mode = align_mode_ == "HW" ? ALIGN_D2C_HW_MODE : ALIGN_D2C_SW_MODE;
+    ROS_INFO_STREAM("set align mode to " << align_mode_);
+    pipeline_config_->setAlignMode(align_mode);
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {

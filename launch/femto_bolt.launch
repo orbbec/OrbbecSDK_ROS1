@@ -56,6 +56,8 @@
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="false"/>
     <arg name="enable_frame_sync" default="true"/>
+    <!-- Bolt only support SW align mode, Please DO NOT change it -->
+    <arg name="align_mode" default="SW"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -112,6 +114,7 @@
             <param name="trigger_out_delay_us" value="$(arg trigger_out_delay_us)"/>
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
+            <param name="align_mode" value="$(arg align_mode)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>

@@ -481,6 +481,7 @@ class OBCameraNode {
   std::shared_ptr<std::thread> diagnostics_thread_ = nullptr;
   bool enable_laser_ = true;
   int laser_on_off_mode_ = 0;
+  std::string align_mode_ = "HW";
 };
 
 }  // namespace orbbec_camera
