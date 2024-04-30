@@ -154,7 +154,6 @@ void OBCameraNode::setupDevices() {
                                   depth_unit_flexible_adjustment);
       }
     }
-
     // set depth sensor to filter
     auto filter_list = depth_sensor->getRecommendedFilters();
     for (size_t i = 0; i < filter_list->count(); i++) {

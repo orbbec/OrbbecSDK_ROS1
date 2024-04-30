@@ -47,7 +47,6 @@
     <arg name="color_info_uri" default=""/>
     <arg name="log_level" default="none"/>
     <arg name="enable_d2c_viewer" default="false"/>
-    <arg name="enable_pipeline" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
     <arg name="sync_mode" default="free_run"/>
     <arg name="depth_delay_us" default="0"/>
@@ -104,7 +103,6 @@
             <param name="color_info_uri" value="$(arg color_info_uri)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
-            <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>

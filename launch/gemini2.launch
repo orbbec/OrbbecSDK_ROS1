@@ -48,7 +48,6 @@
     <arg name="color_info_uri" default=""/>
     <arg name="log_level" default="none"/>
     <arg name="enable_d2c_viewer" default="false"/>
-    <arg name="enable_pipeline" default="true"/>
     <arg name="enable_ldp" default="true"/>
     <!-- Configure the path for depth filter file, for example: /config/depthfilter/Gemini2_v1.7.json -->
     <arg name="depth_filter_config" default="" />
@@ -113,7 +112,6 @@
             <param name="color_info_uri" value="$(arg color_info_uri)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
-            <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="depth_filter_config" value="$(arg depth_filter_config)"/>

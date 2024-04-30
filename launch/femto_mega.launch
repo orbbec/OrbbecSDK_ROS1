@@ -53,7 +53,6 @@
     <arg name="ip_address" default=""/>
     <arg name="port" default="0"/>
     <arg name="enable_d2c_viewer" default="false"/>
-    <arg name="enable_pipeline" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
     <arg name="sync_mode" default="free_run"/>
     <arg name="depth_delay_us" default="0"/>
@@ -111,7 +110,6 @@
             <param name="ip_address" value="$(arg ip_address)"/>
             <param name="port" value="$(arg port)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
-            <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
