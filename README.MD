@@ -8,21 +8,21 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
 ## Table of Contents
 
 - [Orbbec ROS SDK](#orbbec-ros-sdk)
-  - [Table of Contents](#table-of-contents)
-  - [Install Dependencies](#install-dependencies)
-    - [ROS](#ros)
-    - [Other Dependencies](#other-dependencies)
-  - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-  - [Start the Camera](#start-the-camera)
-  - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-    - [Available Services for Camera Control](#available-services-for-camera-control)
-    - [Available Topics](#available-topics)
-  - [Launch Parameters](#launch-parameters)
-  - [Frequently Asked Questions](#frequently-asked-questions)
-    - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-    - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
-  - [License](#license)
-  - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
+    - [Table of Contents](#table-of-contents)
+    - [Install Dependencies](#install-dependencies)
+        - [ROS](#ros)
+        - [Other Dependencies](#other-dependencies)
+    - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+    - [Start the Camera](#start-the-camera)
+    - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+        - [Available Services for Camera Control](#available-services-for-camera-control)
+        - [Available Topics](#available-topics)
+    - [Launch Parameters](#launch-parameters)
+    - [Frequently Asked Questions](#frequently-asked-questions)
+        - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
+        - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+    - [License](#license)
+    - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
 
 ## Install Dependencies
 
@@ -182,7 +182,13 @@ rosservice call /camera/save_point_cloud "{}"
 NOTE: The images are saved under `~/.ros/image` and are only available when the sensor is on.
 
 ### Available Services for Camera Control
-The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or getting parameters—denoted as `set_*` and `get_*`—become available only when the respective `enable_*` parameters are activated. For instance, enabling features such as left infrared (IR)  with `enable_left_ir`, right IR with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer to [Launch Parameters](#Launch-Parameters)) is a prerequisite for their corresponding services to be operational. This configuration ensures that services are accessible only when their specific stream is enabled in the 
+
+The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or
+getting parameters—denoted as `set_*` and `get_*`—become available only when the respective `enable_*` parameters are
+activated. For instance, enabling features such as left infrared (IR)  with `enable_left_ir`, right IR
+with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer
+to [Launch Parameters](#Launch-Parameters)) is a prerequisite for their corresponding services to be operational. This
+configuration ensures that services are accessible only when their specific stream is enabled in the
 launch file's stream argument.
 
 - `/camera/get_auto_white_balance`
@@ -234,7 +240,8 @@ launch file's stream argument.
 - `/camera/depth/camera_info`: The depth camera info.
 - `/camera/depth/image_raw`: The depth stream image.
 - `/camera/depth/points`: The point cloud, only available when `enable_point_cloud` is `true`.
-- `/camera/depth_registered/points`: The colored point cloud, only available when `enable_colored_point_cloud` is `true`.
+- `/camera/depth_registered/points`: The colored point cloud, only available when `enable_colored_point_cloud`
+  is `true`.
 - `/camera/left_ir/camera_info`: The left IR camera info.
 - `/camera/left_ir/image_raw`: The left IR stream image.
 - `/camera/right_ir/camera_info`: The right IR camera info.
@@ -260,15 +267,25 @@ The following launch parameters are available:
   when `enable_colored_point_cloud` is set to `true`.
 - `log_level` for OrbbecSDK controls console log verbosity, with levels `none`, `info`, `debug`, `warn`, `fatal`. Logs
   save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
-- `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of points (`false`).
+- `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
+  points (`false`).
 - `device_preset`: The device preset options are `Default` or `High Accuracy`.
-- `enable_decimation_filter`: This filter effectively reduces the depth scene complexity. The filter runs on kernel sizes [2x2] to [8x8] pixels. The image size is scaled down proportionally in both dimensions to preserve the aspect ratio.
-- `enable_hdr_merge`: This filter is used jointly with depth HDR function. By merging consecutive depth images of alternating exposure values, we can over come challenges in acquiring depth values for under-illuminated and over-illuminated objects simultaneously.
-- `sequence_id_filter_id`: This filter is used jointly with depth HDR function and outputs only the sequence with specified sequence ID.
+- `enable_decimation_filter`: This filter effectively reduces the depth scene complexity. The filter runs on kernel
+  sizes [2x2] to [8x8] pixels. The image size is scaled down proportionally in both dimensions to preserve the aspect
+  ratio.
+- `enable_hdr_merge`: This filter is used jointly with depth HDR function. By merging consecutive depth images of
+  alternating exposure values, we can over come challenges in acquiring depth values for under-illuminated and
+  over-illuminated objects simultaneously.
+- `sequence_id_filter_id`: This filter is used jointly with depth HDR function and outputs only the sequence with
+  specified sequence ID.
 - `enable_threshold_filter`: This filter preserves depth values of interest and omits depth values out of scope.
-- `enable_noise_removal_filter`: This filter removes speckle noise in clusters and gives rise to a less-filled depth map.
-- `enable_spatial_filter`: This filter performs multiple iterations of processing as specified by the magnitude parameter, to enhance the smoothness of depth data. It is also capable of filling small holes in depth maps.
-- `enable_temporal_filter`:This filter is intended to improve the depth data persistency by manipulating per-pixel values based on previous frames. The filter performs a single pass on the data, adjusting the depth values while also updating the tracking history.
+- `enable_noise_removal_filter`: This filter removes speckle noise in clusters and gives rise to a less-filled depth
+  map.
+- `enable_spatial_filter`: This filter performs multiple iterations of processing as specified by the magnitude
+  parameter, to enhance the smoothness of depth data. It is also capable of filling small holes in depth maps.
+- `enable_temporal_filter`:This filter is intended to improve the depth data persistency by manipulating per-pixel
+  values based on previous frames. The filter performs a single pass on the data, adjusting the depth values while also
+  updating the tracking history.
 - `enable_hole_filling_filter`: This filter fills all holes in the depth map using the specified mode.
 - `depth_precision` : The depth precision, should be like `1mm` format. The default value is `1mm`.
 - `enable_laser` : Whether to enable the laser. The default value is `true`.
@@ -285,7 +302,7 @@ The following launch parameters are available:
 - The specific camera depth work mode support types can be found in the comments of the depth mode.
 
 ```XML
-  <!-- Depth work mode support is as follows： -->
+<!-- Depth work mode support is as follows： -->
 <!-- Unbinned Dense Default -->
 <!-- Unbinned Sparse Default -->
 <!-- Binned Sparse Default -->
@@ -319,6 +336,21 @@ resolutions is as follows:
   rosrun orbbec_camera list_camera_profile_mode_node
   ```
 
+## Building a Debian Package
+
+First, ensure the necessary tools are installed:
+
+```bash
+sudo apt install debhelper fakeroot python3-bloom
+```
+
+To create the Debian package, execute these commands:
+
+```bash
+cd ~/ros_ws/src/OrbbecSDK_ROS1
+bash .make_deb.sh
+```
+
 ## Launch files
 
 | product serials                     | launch file           |
@@ -351,7 +383,7 @@ resolutions is as follows:
 | dabai dw2                           | dabai_dw2.launch      |
 | gemini ew                           | gemini_ew.launch      |
 | gemini ew lite                      | gemini_ew_lite.launch |
-| gemini 335 /335 L                   | gemini2R.launch |
+| gemini 335 /335 L                   | gemini2R.launch       |
 
 Actually, All launch files all most the same, the only difference is the default value of the parameters.
 
@@ -412,7 +444,8 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
   SUBSYSTEM=="usb", ATTR{idProduct}=="your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root", GROUP:="video", SYMLINK+="your_device_name_here"
   ```
 
-  Replace `your_pid_here` with the PID of your device and `your_device_name_here` with the name you want to create for the device (e.g., `gemini2R`).
+  Replace `your_pid_here` with the PID of your device and `your_device_name_here` with the name you want to create for
+  the device (e.g., `gemini2R`).
 
   Then restart the udev service:
 
