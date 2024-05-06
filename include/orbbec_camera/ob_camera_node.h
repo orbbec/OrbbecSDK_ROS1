@@ -400,6 +400,7 @@ class OBCameraNode {
   bool enable_color_auto_exposure_ = true;
   int color_exposure_ = -1;
   bool enable_ir_auto_exposure_ = true;
+  bool enable_depth_scale_ = true;
   int ir_exposure_ = -1;
   bool enable_ir_long_exposure_ = false;
   int soft_filter_max_diff_ = -1;

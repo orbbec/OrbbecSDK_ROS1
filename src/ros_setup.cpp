@@ -117,7 +117,9 @@ void OBCameraNode::setupDevices() {
       std::string d2d_mode = is_hardware_d2d ? "HW D2D" : "SW D2D";
       ROS_INFO_STREAM("Depth process is " << d2d_mode);
     }
-    device_->loadPreset(device_preset_.c_str());
+    if (!device_preset_.empty()) {
+      device_->loadPreset(device_preset_.c_str());
+    }
     auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
     device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
@@ -127,8 +129,12 @@ void OBCameraNode::setupDevices() {
     if (ir_exposure_ != -1) {
       device_->setIntProperty(OB_PROP_DEPTH_EXPOSURE_INT, ir_exposure_);
     }
-    device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, enable_laser_);
-    device_->setIntProperty(OB_PROP_LASER_ON_OFF_MODE_INT, laser_on_off_mode_);
+    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, enable_laser_);
+    }
+    if (device_->isPropertySupported(OB_PROP_LASER_ON_OFF_MODE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_LASER_ON_OFF_MODE_INT, laser_on_off_mode_);
+    }
 
     if (!depth_precision_str_.empty() &&
         device_->isPropertySupported(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PERMISSION_READ_WRITE)) {
@@ -496,6 +502,7 @@ void OBCameraNode::setupPipelineConfig() {
     OBAlignMode align_mode = align_mode_ == "HW" ? ALIGN_D2C_HW_MODE : ALIGN_D2C_SW_MODE;
     ROS_INFO_STREAM("set align mode to " << align_mode_);
     pipeline_config_->setAlignMode(align_mode);
+    pipeline_config_->setDepthScaleRequire(enable_depth_scale_);
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {

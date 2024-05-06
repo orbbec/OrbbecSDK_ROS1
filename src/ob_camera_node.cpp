@@ -202,7 +202,7 @@ void OBCameraNode::getParameters() {
     optical_frame_id_[stream_index] =
         nh_private_.param<std::string>(param_name, default_optical_frame_id);
   }
-  device_preset_ = nh_private_.param<std::string>("device_preset", "Default");
+  device_preset_ = nh_private_.param<std::string>("device_preset", "");
   // filter switch
   enable_decimation_filter_ = nh_private_.param<bool>("enable_decimation_filter", false);
   enable_hdr_merge_ = nh_private_.param<bool>("enable_hdr_merge", false);
@@ -230,6 +230,7 @@ void OBCameraNode::getParameters() {
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
   laser_on_off_mode_ = nh_private_.param<int>("laser_on_off_mode", 0);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
+  enable_depth_scale_ = nh_private_.param<bool>("enable_depth_scale", true);
 }
 
 void OBCameraNode::startStreams() {
@@ -1000,10 +1001,11 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
     if (depth_registration_ && align_filter_) {
       auto new_frame = align_filter_->process(frame_set);
-      CHECK_NOTNULL(new_frame.get());
-      auto new_frame_set = new_frame->as<ob::FrameSet>();
-      if (new_frame_set) {
-        depth_frame_ = new_frame_set->getFrame(OB_FRAME_DEPTH);
+      if (new_frame) {
+        auto new_frame_set = new_frame->as<ob::FrameSet>();
+        if (new_frame_set) {
+          depth_frame_ = new_frame_set->getFrame(OB_FRAME_DEPTH);
+        }
       }
     }
     depth_frame_ = processDepthFrameFilter(depth_frame_);
