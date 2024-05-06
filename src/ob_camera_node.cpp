@@ -983,9 +983,6 @@ std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
       }
     }
   }
-  if (depth_registration_ && align_filter_) {
-    frame = align_filter_->process(frame);
-  }
   return frame;
 }
 
@@ -1001,6 +998,14 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     // rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
     std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
+    if (depth_registration_ && align_filter_) {
+      auto new_frame = align_filter_->process(frame_set);
+      CHECK_NOTNULL(new_frame.get());
+      auto new_frame_set = new_frame->as<ob::FrameSet>();
+      if (new_frame_set) {
+        depth_frame_ = new_frame_set->getFrame(OB_FRAME_DEPTH);
+      }
+    }
     depth_frame_ = processDepthFrameFilter(depth_frame_);
     if (enable_stream_[COLOR] && colorFrame) {
       std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
