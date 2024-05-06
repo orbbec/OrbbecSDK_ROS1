@@ -482,6 +482,8 @@ class OBCameraNode {
   bool enable_laser_ = true;
   int laser_on_off_mode_ = 0;
   std::string align_mode_ = "HW";
+  std::shared_ptr<ob::Align> align_filter_ = nullptr;
+  OBStreamType align_target_stream_ = OB_STREAM_COLOR;
 };
 
 }  // namespace orbbec_camera

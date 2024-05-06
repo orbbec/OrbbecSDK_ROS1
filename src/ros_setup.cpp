@@ -350,6 +350,9 @@ void OBCameraNode::setupProfiles() {
       ROS_ERROR_STREAM("set d2c error " << e.getMessage());
     }
   }
+  if (depth_registration_ || enable_colored_point_cloud_) {
+    align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
+  }
 }
 
 void OBCameraNode::setupTopics() {

@@ -983,6 +983,9 @@ std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
       }
     }
   }
+  if (depth_registration_ && align_filter_) {
+    frame = align_filter_->process(frame);
+  }
   return frame;
 }
 
