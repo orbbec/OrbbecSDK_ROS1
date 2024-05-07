@@ -390,13 +390,13 @@ void OBCameraNode::setupPublishers() {
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     CHECK_NOTNULL(device_info_.get());
-    if(isGemini335PID(device_info_->pid())) {
+    if (isGemini335PID(device_info_->pid())) {
       metadata_publishers_[stream_index] =
           nh_.advertise<orbbec_camera::Metadata>("/" + camera_name_ + "/" + name + "/metadata", 1,
                                                  image_subscribed_cb, image_unsubscribed_cb);
     }
   }
-  if (enable_point_cloud_) {
+  if (enable_point_cloud_ && enable_stream_[DEPTH]) {
     ros::SubscriberStatusCallback depth_cloud_subscribed_cb =
         boost::bind(&OBCameraNode::pointCloudSubscribedCallback, this);
     ros::SubscriberStatusCallback depth_cloud_unsubscribed_cb =
@@ -404,7 +404,7 @@ void OBCameraNode::setupPublishers() {
     depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth/points", 1, depth_cloud_subscribed_cb, depth_cloud_unsubscribed_cb);
   }
-  if (enable_colored_point_cloud_) {
+  if (enable_colored_point_cloud_ && enable_stream_[DEPTH] && enable_stream_[COLOR]) {
     ros::SubscriberStatusCallback depth_registered_cloud_subscribed_cb =
         boost::bind(&OBCameraNode::coloredPointCloudSubscribedCallback, this);
     ros::SubscriberStatusCallback depth_registered_cloud_unsubscribed_cb =
