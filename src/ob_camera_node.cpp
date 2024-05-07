@@ -1201,17 +1201,21 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   }
 
   CHECK(image_publishers_.count(stream_index));
+  if (!image_publishers_[stream_index].getNumSubscribers()) {
+    return;
+  }
   auto& image = images_[stream_index];
   if (image.empty() || image.cols != width || image.rows != height) {
     image.create(height, width, image_format_[stream_index]);
   }
   if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
-      frame->format() != OB_FORMAT_Y16 && !rgb_is_decoded_) {
+      frame->format() != OB_FORMAT_Y16 && !rgb_is_decoded_ &&
+      image_publishers_[COLOR].getNumSubscribers() > 0) {
     ROS_ERROR_STREAM("frame is not decoded");
     return;
   }
   if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
-      frame->format() != OB_FORMAT_Y16) {
+      frame->format() != OB_FORMAT_Y16 && image_publishers_[COLOR].getNumSubscribers() > 0) {
     memcpy(image.data, rgb_buffer_, width * height * 3);
   } else {
     memcpy(image.data, video_frame->data(), video_frame->dataSize());
