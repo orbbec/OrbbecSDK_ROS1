@@ -66,6 +66,7 @@
     <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="diagnostic_frequency" default="1.0"/>
+    <arg name="retry_on_usb3_detection_failure" default="false"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -127,6 +128,7 @@
             <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="diagnostic_frequency" value="$(arg diagnostic_frequency)"/>
+            <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>

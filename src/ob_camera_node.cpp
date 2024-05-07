@@ -140,7 +140,7 @@ void OBCameraNode::getParameters() {
   }
   depth_aligned_frame_id_[DEPTH] = optical_frame_id_[COLOR];
 
-  use_hardware_time_ = nh_private_.param<bool>("use_hardware_time", false);
+  use_hardware_time_ = nh_private_.param<bool>("use_hardware_time", true);
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
   enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", false);
@@ -231,6 +231,13 @@ void OBCameraNode::getParameters() {
   laser_on_off_mode_ = nh_private_.param<int>("laser_on_off_mode", 0);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
   enable_depth_scale_ = nh_private_.param<bool>("enable_depth_scale", true);
+  retry_on_usb3_detection_failure_ =
+      nh_private_.param<bool>("retry_on_usb3_detection_failure", false);
+  auto device_info = device_->getDeviceInfo();
+  CHECK_NOTNULL(device_info);
+  if (isOpenNIDevice(device_info->pid())) {
+    use_hardware_time_ = false;
+  }
 }
 
 void OBCameraNode::startStreams() {

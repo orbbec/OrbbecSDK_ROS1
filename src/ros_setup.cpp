@@ -110,6 +110,10 @@ void OBCameraNode::setupDevices() {
   }
 
   try {
+    if (device_->isPropertySupported(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL, retry_on_usb3_detection_failure_);
+    }
     if (enable_hardware_d2d_ &&
         device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
