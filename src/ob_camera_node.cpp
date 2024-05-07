@@ -639,9 +639,18 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
               color_width, color_height);
     return;
   }
-  auto color_profile = stream_profile_[COLOR]->as<ob::VideoStreamProfile>();
-  CHECK_NOTNULL(color_profile.get());
-  auto intrinsics = color_profile->getIntrinsic();
+
+  OBCameraIntrinsic intrinsics;
+  CHECK_NOTNULL(device_info_.get());
+  if (isGemini335PID(device_info_->pid())) {
+    auto color_profile = stream_profile_[COLOR]->as<ob::VideoStreamProfile>();
+    CHECK_NOTNULL(color_profile.get());
+    intrinsics = color_profile->getIntrinsic();
+  } else {
+    CHECK_NOTNULL(pipeline_.get());
+    auto camera_params = pipeline_->getCameraParam();
+    intrinsics = camera_params.rgbIntrinsic;
+  }
   float fdx = intrinsics.fx * ((float)(color_width) / intrinsics.width);
   float fdy = intrinsics.fy * ((float)(color_height) / intrinsics.height);
   fdx = 1 / fdx;
@@ -892,10 +901,11 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
   if (enable_colored_point_cloud_ && depth_registered_cloud_pub_.getNumSubscribers() > 0) {
     has_subscriber = true;
   }
-  if (metadata_publishers_[COLOR].getNumSubscribers() > 0) {
+  if (metadata_publishers_.count(COLOR) && metadata_publishers_[COLOR].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
-  if (camera_info_publishers_[COLOR].getNumSubscribers() > 0) {
+  if (camera_info_publishers_.count(COLOR) &&
+      camera_info_publishers_[COLOR].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
   if (!has_subscriber) {
@@ -999,16 +1009,19 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     // rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
     std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
-    if (depth_registration_ && align_filter_) {
-      auto new_frame = align_filter_->process(frame_set);
-      if (new_frame) {
-        auto new_frame_set = new_frame->as<ob::FrameSet>();
-        if (new_frame_set) {
-          depth_frame_ = new_frame_set->getFrame(OB_FRAME_DEPTH);
+    CHECK_NOTNULL(device_info_);
+    if (isGemini335PID(device_info_->pid())) {
+      if (depth_registration_ && align_filter_ && depth_frame_) {
+        auto new_frame = align_filter_->process(frame_set);
+        if (new_frame) {
+          auto new_frame_set = new_frame->as<ob::FrameSet>();
+          if (new_frame_set) {
+            depth_frame_ = new_frame_set->getFrame(OB_FRAME_DEPTH);
+          }
         }
       }
+      depth_frame_ = processDepthFrameFilter(depth_frame_);
     }
-    depth_frame_ = processDepthFrameFilter(depth_frame_);
     if (enable_stream_[COLOR] && colorFrame) {
       std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
@@ -1101,7 +1114,8 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
-  if (metadata_publishers_[stream_index].getNumSubscribers() > 0) {
+  if (metadata_publishers_.count(stream_index) &&
+      metadata_publishers_[stream_index].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
   if (!has_subscriber) {
@@ -1136,6 +1150,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
     camera_info_publisher.publish(camera_info);
+    publishMetadata(frame, stream_index, camera_info.header);
   } else if (ir_camera_info_manager_ && ir_camera_info_manager_->isCalibrated() &&
              (stream_index == INFRA0 || stream_index == DEPTH)) {
     auto camera_info_publisher = camera_info_publishers_[stream_index];
@@ -1143,13 +1158,24 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
     camera_info_publisher.publish(camera_info);
+    publishMetadata(frame, stream_index, camera_info.header);
   } else {
-    auto stream_profile = frame->getStreamProfile();
-    CHECK_NOTNULL(stream_profile);
-    auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
-    CHECK_NOTNULL(video_stream_profile);
-    const auto& intrinsic = video_stream_profile->getIntrinsic();
-    const auto& distortion = video_stream_profile->getDistortion();
+    OBCameraIntrinsic intrinsic;
+    OBCameraDistortion distortion;
+    CHECK_NOTNULL(device_info_.get());
+    if (isGemini335PID(device_info_->pid())) {
+      auto stream_profile = frame->getStreamProfile();
+      CHECK_NOTNULL(stream_profile.get());
+      auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
+      CHECK_NOTNULL(video_stream_profile);
+      intrinsic = video_stream_profile->getIntrinsic();
+      distortion = video_stream_profile->getDistortion();
+    } else {
+      auto camera_params = pipeline_->getCameraParam();
+      intrinsic = stream_index == COLOR ? camera_params.rgbIntrinsic : camera_params.depthIntrinsic;
+      distortion =
+          stream_index == COLOR ? camera_params.rgbDistortion : camera_params.depthDistortion;
+    }
     auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
     CHECK(camera_info_publishers_.count(stream_index) > 0);
     auto camera_info_publisher = camera_info_publishers_[stream_index];
@@ -1159,6 +1185,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     camera_info.header.frame_id = frame_id;
     if (frame->type() == OB_FRAME_IR_RIGHT && enable_stream_[INFRA1]) {
       auto left_video_profile = stream_profile_[INFRA1]->as<ob::VideoStreamProfile>();
+      CHECK_NOTNULL(left_video_profile.get());
+      auto stream_profile = frame->getStreamProfile();
+      CHECK_NOTNULL(stream_profile.get());
+      auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
+      CHECK_NOTNULL(video_stream_profile.get());
       auto ex = video_stream_profile->getExtrinsicTo(left_video_profile);
       double fx = camera_info.K.at(0);
       double fy = camera_info.K.at(4);
@@ -1166,7 +1197,9 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
       camera_info.P.at(7) = fy * ex.trans[1] / 1000.0 + 0.0;
     }
     camera_info_publisher.publish(camera_info);
+    publishMetadata(frame, stream_index, camera_info.header);
   }
+
   CHECK(image_publishers_.count(stream_index));
   auto& image = images_[stream_index];
   if (image.empty() || image.cols != width || image.rows != height) {
@@ -1198,7 +1231,6 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   image_msg->step = width * unit_step_size_[stream_index];
   image_msg->header.frame_id = frame_id;
   image_msg->header.seq = seq++;
-  publishMetadata(frame, stream_index, image_msg->header);
 
   if (!flip_images_[stream_index]) {
     image_publisher.publish(image_msg);
@@ -1691,6 +1723,23 @@ void OBCameraNode::publishStaticTransforms() {
     CHECK_NOTNULL(static_tf_broadcaster_.get());
     static_tf_broadcaster_->sendTransform(static_tf_msgs_);
   }
+}
+
+bool OBCameraNode::isGemini335PID(uint32_t pid) {
+  const uint16_t GEMINI_335_PID = 0x0800;    // Gemini 335 / 335e
+  const uint16_t GEMINI_330_PID = 0x0801;    // Gemini 330
+  const uint16_t GEMINI_336_PID = 0x0803;    // Gemini 336 / 336e
+  const uint16_t GEMINI_335L_PID = 0x0804;   // Gemini 335L
+  const uint16_t GEMINI_330L_PID = 0x0805;   // Gemini 336L
+  const uint16_t GEMINI_336L_PID = 0x0807;   // Gemini 335Lg
+  const uint16_t GEMINI_335LG_PID = 0x080B;  // Gemini 336Lg
+  const uint16_t GEMINI_336LG_PID = 0x080D;
+  const uint16_t GEMINI_335LE_PID = 0x080E;  // Gemini 335Le
+  const uint16_t GEMINI_336LE_PID = 0x0810;  // Gemini 335Le
+  return pid == GEMINI_335_PID || pid == GEMINI_330_PID || pid == GEMINI_336_PID ||
+         pid == GEMINI_335L_PID || pid == GEMINI_330L_PID || pid == GEMINI_336L_PID ||
+         pid == GEMINI_335LG_PID || pid == GEMINI_336LG_PID || pid == GEMINI_335LE_PID ||
+         pid == GEMINI_336LE_PID;
 }
 
 }  // namespace orbbec_camera

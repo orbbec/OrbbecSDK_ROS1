@@ -174,6 +174,8 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     device_.reset();
   }
   device_ = device;
+  device_info_ = device_->getDeviceInfo();
+  device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_.get());
   if (ob_camera_node_) {
     ob_camera_node_.reset();
@@ -186,8 +188,6 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     ob_camera_node_.reset();
     return;
   }
-  device_info_ = device_->getDeviceInfo();
-  device_uid_ = device_info_->uid();
   if (!isOpenNIDevice(device_info_->pid())) {
     ctx_->enableDeviceClockSync(1800000);
   }
@@ -197,6 +197,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
   ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
   ROS_INFO_STREAM("device uid: " << device_info_->uid());
+  ROS_INFO_STREAM("Current node pid: " << getpid());
 }
 
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList> &list) {
