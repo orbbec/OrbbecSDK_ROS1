@@ -79,4 +79,6 @@ OBHoleFillingMode holeFillingModeFromString(const std::string &hole_filling_mode
 
 float depthPrecisionFromString(const std::string &depth_precision_level_str);
 
+std::ostream &operator<<(std::ostream &os, const OBFormat &rhs);
+
 }  // namespace orbbec_camera

@@ -66,6 +66,8 @@ class ROSOBSensor {
 
   std::shared_ptr<ob::StreamProfileList> getStreamProfileList() const;
 
+  std::shared_ptr<ob::Sensor> getSensor() const;
+
  private:
   std::shared_ptr<ob::Device> device_ = nullptr;
   std::shared_ptr<ob::Sensor> sensor_ = nullptr;

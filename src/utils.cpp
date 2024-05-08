@@ -76,6 +76,26 @@ OBFormat OBFormatFromString(const std::string &format) {
     return OB_FORMAT_BGR;
   } else if (fixed_format == "Y14") {
     return OB_FORMAT_Y14;
+  } else if (fixed_format == "BGRA") {
+    return OB_FORMAT_BGRA;
+  } else if (fixed_format == "COMPRESSED") {
+    return OB_FORMAT_COMPRESSED;
+  } else if (fixed_format == "RVL") {
+    return OB_FORMAT_RVL;
+  } else if (fixed_format == "Z16") {
+    return OB_FORMAT_Z16;
+  } else if (fixed_format == "YV12") {
+    return OB_FORMAT_YV12;
+  } else if (fixed_format == "BA81") {
+    return OB_FORMAT_BA81;
+  } else if (fixed_format == "RGBA") {
+    return OB_FORMAT_RGBA;
+  } else if (fixed_format == "BYR2") {
+    return OB_FORMAT_BYR2;
+  } else if (fixed_format == "RW16") {
+    return OB_FORMAT_RW16;
+  } else if (fixed_format == "DISP16") {
+    return OB_FORMAT_DISP16;
   } else {
     return OB_FORMAT_UNKNOWN;
   }
@@ -131,6 +151,26 @@ std::string OBFormatToString(const OBFormat &format) {
       return "BGR";
     case OB_FORMAT_Y14:
       return "Y14";
+    case OB_FORMAT_BGRA:
+      return "BGRA";
+    case OB_FORMAT_COMPRESSED:
+      return "COMPRESSED";
+    case OB_FORMAT_RVL:
+      return "RVL";
+    case OB_FORMAT_Z16:
+      return "Z16";
+    case OB_FORMAT_YV12:
+      return "YV12";
+    case OB_FORMAT_BA81:
+      return "BA81";
+    case OB_FORMAT_RGBA:
+      return "RGBA";
+    case OB_FORMAT_BYR2:
+      return "BYR2";
+    case OB_FORMAT_RW16:
+      return "RW16";
+    case OB_FORMAT_DISP16:
+      return "DISP16";
     default:
       return "UNKNOWN";
   }
@@ -687,6 +727,11 @@ float depthPrecisionFromString(const std::string &depth_precision_level_str) {
   std::string depth_precision_level_str_num =
       depth_precision_level_str.substr(0, depth_precision_level_str.size() - 2);
   return std::stof(depth_precision_level_str_num);
+}
+
+std::ostream &operator<<(std::ostream &os, const OBFormat &rhs) {
+  os << OBFormatToString(rhs);
+  return os;
 }
 
 }  // namespace orbbec_camera

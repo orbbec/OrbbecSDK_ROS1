@@ -112,7 +112,8 @@ void OBCameraNode::setupDevices() {
   try {
     if (device_->isPropertySupported(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
-      device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL, retry_on_usb3_detection_failure_);
+      device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
+                               retry_on_usb3_detection_failure_);
     }
     if (enable_hardware_d2d_ &&
         device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE)) {
@@ -280,6 +281,41 @@ bool OBCameraNode::setupFormatConvertType(OBFormat type) {
   return true;
 }
 
+void OBCameraNode::printProfiles(const std::shared_ptr<ob::Sensor>& sensor) {
+  auto profiles = sensor->getStreamProfileList();
+  for (size_t j = 0; j < profiles->count(); j++) {
+    auto origin_profile = profiles->getProfile(j);
+    if (sensor->type() == OB_SENSOR_COLOR) {
+      auto profile = origin_profile->as<ob::VideoStreamProfile>();
+      ROS_INFO_STREAM("available color profile: " << profile->width() << "x" << profile->height()
+                                                  << " " << profile->fps() << "fps "
+                                                  << profile->format());
+    } else if (sensor->type() == OB_SENSOR_DEPTH) {
+      auto profile = origin_profile->as<ob::VideoStreamProfile>();
+      ROS_INFO_STREAM("available depth profile: " << profile->width() << "x" << profile->height()
+                                                  << " " << profile->fps() << "fps "
+                                                  << profile->format());
+    } else if (sensor->type() == OB_SENSOR_IR) {
+      auto profile = origin_profile->as<ob::VideoStreamProfile>();
+      ROS_INFO_STREAM("available ir profile: " << profile->width() << "x" << profile->height()
+                                               << " " << profile->fps() << "fps "
+                                               << profile->format());
+    } else if (sensor->type() == OB_SENSOR_ACCEL) {
+      auto profile = origin_profile->as<ob::AccelStreamProfile>();
+      ROS_INFO_STREAM("available accel profile: sampleRate "
+                      << sampleRateToString(profile->sampleRate()) << "  full scale_range "
+                      << fullAccelScaleRangeToString(profile->fullScaleRange()));
+    } else if (sensor->type() == OB_SENSOR_GYRO) {
+      auto profile = origin_profile->as<ob::GyroStreamProfile>();
+      ROS_INFO_STREAM("available gyro profile: sampleRate "
+                      << sampleRateToString(profile->sampleRate()) << "  full scale_range "
+                      << fullGyroScaleRangeToString(profile->fullScaleRange()));
+    } else {
+      ROS_INFO_STREAM("unknown profile: " << sensor->type());
+    }
+  }
+}
+
 void OBCameraNode::setupProfiles() {
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (!enable_stream_[stream_index] && stream_index != base_stream_) {
@@ -318,8 +354,16 @@ void OBCameraNode::setupProfiles() {
                                  << ", fps: " << fps_[stream_index] << ", "
                                  << "Format: " << OBFormatToString(format_[stream_index]));
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to setup << " << stream_name_[stream_index]
-                                             << " profile: " << e.getMessage());
+      ROS_ERROR_STREAM("Failed to setup  "
+                       << stream_name_[stream_index] << " profile: " << width_[stream_index] << "x"
+                       << height_[stream_index] << " " << fps_[stream_index] << "fps "
+                       << OBFormatToString(format_[stream_index]) << " ERROR:" << e.getMessage());
+      printProfiles(sensors_[stream_index]->getSensor());
+      ROS_ERROR(
+          "Error: The device might be connected via USB 2.0. Please verify your launch file "
+          "configuration and "
+          "try again. The current process will now exit.");
+      exit(1);
     }
   }
   // IMU

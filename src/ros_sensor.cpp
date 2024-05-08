@@ -288,4 +288,6 @@ std::shared_ptr<ob::StreamProfileList> ROSOBSensor::getStreamProfileList() const
   return sensor_->getStreamProfileList();
 }
 
+std::shared_ptr<ob::Sensor> ROSOBSensor::getSensor() const{ return sensor_; }
+
 }  // namespace orbbec_camera

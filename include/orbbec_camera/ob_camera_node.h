@@ -133,6 +133,8 @@ class OBCameraNode {
 
   void setupProfiles();
 
+  static void printProfiles(const std::shared_ptr<ob::Sensor> &sensor);
+
   void setupTopics();
 
   void setupPipelineConfig();
