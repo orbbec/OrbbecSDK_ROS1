@@ -583,6 +583,10 @@ void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWra
   }
 }
 void OBCameraNode::setupDiagnosticUpdater() {
+  if (!device_->isPropertySupported(OB_STRUCT_DEVICE_TEMPERATURE, OB_PERMISSION_READ)) {
+    ROS_WARN_STREAM("Device does not support temperature reading");
+    return;
+  }
   std::string serial_number = device_info_->serialNumber();
   diagnostic_updater_ =
       std::make_shared<diagnostic_updater::Updater>(nh_, nh_private_, "ob_camera_" + serial_number);
