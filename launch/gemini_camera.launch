@@ -39,14 +39,14 @@
     <arg name="left_ir_width" default="0"/>
     <arg name="left_ir_height" default="0"/>
     <arg name="left_ir_fps" default="0"/>
-    <arg name="enable_left_ir" default="true"/>
+    <arg name="enable_left_ir" default="false"/>
     <arg name="left_ir_format" default="ANY"/>
 
     <!-- Right IR camera parameters -->
     <arg name="right_ir_width" default="0"/>
     <arg name="right_ir_height" default="0"/>
     <arg name="right_ir_fps" default="0"/>
-    <arg name="enable_right_ir" default="true"/>
+    <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="ANY"/>
 
     <!-- Common IR camera parameters -->
