@@ -734,4 +734,32 @@ std::ostream &operator<<(std::ostream &os, const OBFormat &rhs) {
   return os;
 }
 
+std::string OBSensorTypeToString(const OBSensorType &type) {
+  switch (type) {
+    case OB_SENSOR_UNKNOWN:
+      return "UNKNOWN";
+    case OB_SENSOR_IR:
+      return "IR";
+    case OB_SENSOR_COLOR:
+      return "COLOR";
+    case OB_SENSOR_DEPTH:
+      return "DEPTH";
+    case OB_SENSOR_ACCEL:
+      return "ACCEL";
+    case OB_SENSOR_GYRO:
+      return "GYRO";
+    case OB_SENSOR_IR_LEFT:
+      return "LEFT_IR";
+    case OB_SENSOR_IR_RIGHT:
+      return "RIGHT_IR";
+    case OB_SENSOR_RAW_PHASE:
+      return "RAW_PHASE";
+    default:
+      return "UNKNOWN";
+  }
+}
+std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs) {
+  os << OBSensorTypeToString(rhs);
+  return os;
+}
 }  // namespace orbbec_camera

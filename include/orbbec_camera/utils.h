@@ -81,4 +81,8 @@ float depthPrecisionFromString(const std::string &depth_precision_level_str);
 
 std::ostream &operator<<(std::ostream &os, const OBFormat &rhs);
 
+std::string OBSensorTypeToString(const OBSensorType &type);
+
+std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs);
+
 }  // namespace orbbec_camera
