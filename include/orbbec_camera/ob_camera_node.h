@@ -34,6 +34,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <condition_variable>
 #include <thread>
+#include <atomic>
 #include <camera_info_manager/camera_info_manager.h>
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Empty.h>

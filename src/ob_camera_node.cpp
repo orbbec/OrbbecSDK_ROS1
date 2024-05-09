@@ -55,17 +55,20 @@ void OBCameraNode::init() {
   readDefaultExposure();
   readDefaultGain();
   readDefaultWhiteBalance();
-  is_initialized_ = true;
 #if defined(USE_RK_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
 #elif defined(USE_NV_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
 #endif
-  rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 3];
+  if(enable_stream_[COLOR]) {
+    CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
+    rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 3];
+  }
   rgb_is_decoded_ = false;
   if (diagnostics_frequency_ > 0.0) {
     diagnostics_thread_ = std::make_shared<std::thread>([this]() { setupDiagnosticUpdater(); });
   }
+  is_initialized_ = true;
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
@@ -805,6 +808,9 @@ sensor_msgs::Imu OBCameraNode::createUnitIMUMessage(const IMUData& accel_data,
 
 void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame>& accel_frame,
                                                    const std::shared_ptr<ob::Frame>& gyro_frame) {
+  if (!isInitialized()) {
+    return;
+  }
   if (!imu_gyro_accel_publisher_) {
     ROS_ERROR_STREAM("stream Accel Gyro publisher not initialized");
     return;
@@ -843,6 +849,9 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
 
 void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                                          const stream_index_pair& stream_index) {
+  if (!isInitialized()) {
+    return;
+  }
   if (!imu_publishers_.count(stream_index)) {
     ROS_ERROR_STREAM("stream " << stream_name_[stream_index] << " publisher not initialized");
     return;
@@ -992,12 +1001,13 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     // is_running_ is false means the node is shutting down
     return;
   }
+  if (!isInitialized()) {
+    return;
+  }
   if (frame_set == nullptr) {
     return;
   }
   try {
-    // rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
-    std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
     CHECK_NOTNULL(device_info_);
     if (isGemini335PID(device_info_->pid())) {
@@ -1012,6 +1022,7 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
       }
       depth_frame_ = processDepthFrameFilter(depth_frame_);
     }
+    std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
     if (enable_stream_[COLOR] && colorFrame) {
       std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
