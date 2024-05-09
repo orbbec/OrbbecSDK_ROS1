@@ -1,6 +1,6 @@
 <launch>
     <arg name="camera_name" default="ob_camera"/>
-    <arg name="3d_sensor" default="gemini_camera"/>
+    <arg name="3d_sensor" default="gemini_330_series"/>
     <arg name="camera1_prefix" default="01"/>
     <arg name="camera2_prefix" default="02"/>
     <arg name="camera1_usb_port" default="2-1.2.1"/>

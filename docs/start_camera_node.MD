@@ -7,7 +7,7 @@ This guide provides instructions on how to launch the camera node with a colored
 To start the camera node, execute the following command in your terminal:
 
 ```bash
-roslaunch orbbec_camera gemini_camera.launch enable_colored_point_cloud:=true enable_left_ir:=true enable_right_ir:=true 
+roslaunch orbbec_camera gemini_330_series.launch enable_colored_point_cloud:=true enable_left_ir:=true enable_right_ir:=true 
 ```
 
 This command initiates the camera node and enables the colored point cloud.
