@@ -525,6 +525,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
     ROS_ERROR_STREAM("depth frame is null");
     return;
   }
+  std::lock_guard<decltype(cloud_mutex_)> cloud_lock(cloud_mutex_);
   auto width = depth_frame->width();
   auto height = depth_frame->height();
   auto depth_profile = stream_profile_[DEPTH]->as<ob::VideoStreamProfile>();
@@ -612,6 +613,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
     return;
   }
   CHECK_NOTNULL(depth_frame_.get());
+  std::lock_guard<decltype(cloud_mutex_)> cloud_lock(cloud_mutex_);
   auto depth_frame = depth_frame_->as<ob::DepthFrame>();
   auto color_frame = frame_set->colorFrame();
   if (!depth_frame || !color_frame) {
