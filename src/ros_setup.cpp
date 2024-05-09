@@ -324,10 +324,16 @@ void OBCameraNode::setupProfiles() {
     try {
       auto profile_list = sensors_[stream_index]->getStreamProfileList();
       supported_profiles_[stream_index] = profile_list;
-      auto selected_profile = profile_list->getVideoStreamProfile(
-          width_[stream_index], height_[stream_index], format_[stream_index], fps_[stream_index]);
-      auto default_profile = profile_list->getVideoStreamProfile(
-          width_[stream_index], height_[stream_index], format_[stream_index]);
+      std::shared_ptr<ob::VideoStreamProfile> selected_profile = nullptr;
+      if (width_[stream_index] == 0 && height_[stream_index] == 0 && fps_[stream_index] == 0 &&
+          format_[stream_index] == OB_FORMAT_UNKNOWN) {
+        selected_profile = profile_list->getProfile(0)->as<ob::VideoStreamProfile>();
+      } else {
+        selected_profile = profile_list->getVideoStreamProfile(
+            width_[stream_index], height_[stream_index], format_[stream_index], fps_[stream_index]);
+      }
+
+      auto default_profile = profile_list->getProfile(0)->as<ob::VideoStreamProfile>();
       if (!selected_profile) {
         ROS_WARN_STREAM("Given stream configuration is not supported by the device! "
                         << " Stream: " << stream_name_[stream_index]
@@ -347,12 +353,18 @@ void OBCameraNode::setupProfiles() {
       }
       CHECK_NOTNULL(selected_profile.get());
       stream_profile_[stream_index] = selected_profile;
-      images_[stream_index] = cv::Mat(height_[stream_index], width_[stream_index],
-                                      image_format_[stream_index], cv::Scalar(0, 0, 0));
-      ROS_INFO_STREAM(" stream " << stream_name_[stream_index] << " is enabled - width: "
-                                 << width_[stream_index] << ", height: " << height_[stream_index]
-                                 << ", fps: " << fps_[stream_index] << ", "
-                                 << "Format: " << OBFormatToString(format_[stream_index]));
+      int width = static_cast<int>(selected_profile->width());
+      int height = static_cast<int>(selected_profile->height());
+      int fps = static_cast<int>(selected_profile->fps());
+      updateImageConfig(stream_index, selected_profile);
+      width_[stream_index] = width;
+      height_[stream_index] = height;
+      fps_[stream_index] = fps;
+      images_[stream_index] =
+          cv::Mat(height, width, image_format_[stream_index], cv::Scalar(0, 0, 0));
+      ROS_INFO_STREAM(" stream " << stream_name_[stream_index] << " is enabled - width: " << width
+                                 << ", height: " << height << ", fps: " << fps << ", "
+                                 << "Format: " << selected_profile->format());
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("Failed to setup  "
                        << stream_name_[stream_index] << " profile: " << width_[stream_index] << "x"
@@ -406,6 +418,30 @@ void OBCameraNode::setupProfiles() {
   }
   if (depth_registration_ || enable_colored_point_cloud_) {
     align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
+  }
+}
+void OBCameraNode::updateImageConfig(
+    const stream_index_pair& stream_index,
+    const std::shared_ptr<ob::VideoStreamProfile>& selected_profile) {
+  if (selected_profile->format() == OB_FORMAT_Y8) {
+    image_format_[stream_index] = CV_8UC1;
+    encoding_[stream_index] = stream_index.first == OB_STREAM_DEPTH
+                                  ? sensor_msgs::image_encodings::TYPE_8UC1
+                                  : sensor_msgs::image_encodings::MONO8;
+    unit_step_size_[stream_index] = sizeof(uint8_t);
+  }
+  if (selected_profile->format() == OB_FORMAT_MJPG) {
+    if (stream_index.first == OB_STREAM_IR || stream_index.first == OB_STREAM_IR_LEFT ||
+        stream_index.first == OB_STREAM_IR_RIGHT) {
+      image_format_[stream_index] = CV_8UC1;
+      encoding_[stream_index] = sensor_msgs::image_encodings::MONO8;
+      unit_step_size_[stream_index] = sizeof(uint8_t);
+    }
+  }
+  if (selected_profile->format() == OB_FORMAT_Y16 && stream_index == COLOR) {
+    image_format_[stream_index] = CV_16UC1;
+    encoding_[stream_index] = sensor_msgs::image_encodings::MONO16;
+    unit_step_size_[stream_index] = sizeof(uint16_t);
   }
 }
 

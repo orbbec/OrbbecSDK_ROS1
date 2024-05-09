@@ -80,7 +80,7 @@ In terminal 1:
 
 ```bash
 source ./devel/setup.bash 
-roslaunch orbbec_camera gemini2R.launch
+roslaunch orbbec_camera gemini_camera.launch
 ```
 
 In terminal 2:
@@ -385,7 +385,7 @@ bash .make_deb.sh
 | dabai dw2                           | dabai_dw2.launch      |
 | gemini ew                           | gemini_ew.launch      |
 | gemini ew lite                      | gemini_ew_lite.launch |
-| gemini 335 /335 L                   | gemini2R.launch       |
+| gemini 335 /335 L                   | gemini_camera.launch  |
 
 **All launch files are essentially similar, with the primary difference being the default values of the parameters set for different models
 within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you
@@ -450,7 +450,7 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
   ```
 
   Replace `your_pid_here` with the PID of your device and `your_device_name_here` with the name you want to create for
-  the device (e.g., `gemini2R`).
+  the device (e.g., `gemini_camera`).
 
   Then restart the udev service:
 

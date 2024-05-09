@@ -133,6 +133,8 @@ class OBCameraNode {
 
   void setupProfiles();
 
+  void updateImageConfig(const stream_index_pair &stream_index,
+                         const std::shared_ptr<ob::VideoStreamProfile> &selected_profile);
   static void printProfiles(const std::shared_ptr<ob::Sensor> &sensor);
 
   void setupTopics();

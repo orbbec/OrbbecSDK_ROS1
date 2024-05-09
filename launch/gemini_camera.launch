@@ -18,36 +18,36 @@
 
 
     <!-- Color camera parameters -->
-    <arg name="color_width" default="1280"/>
-    <arg name="color_height" default="720"/>
-    <arg name="color_fps" default="15"/>
+    <arg name="color_width" default="0"/>
+    <arg name="color_height" default="0"/>
+    <arg name="color_fps" default="0"/>
     <arg name="enable_color" default="true"/>
-    <arg name="color_format" default="YUYV"/>
+    <arg name="color_format" default="ANY"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
 
     <!-- Depth camera parameters -->
-    <arg name="depth_width" default="1280"/>
-    <arg name="depth_height" default="720"/>
-    <arg name="depth_fps" default="15"/>
+    <arg name="depth_width" default="0"/>
+    <arg name="depth_height" default="0"/>
+    <arg name="depth_fps" default="0"/>
     <arg name="enable_depth" default="true"/>
-    <arg name="depth_format" default="Y16"/>
+    <arg name="depth_format" default="ANY"/>
     <arg name="depth_registration" default="true"/>
 
     <!-- Left IR camera parameters -->
-    <arg name="left_ir_width" default="1280"/>
-    <arg name="left_ir_height" default="720"/>
-    <arg name="left_ir_fps" default="15"/>
-    <arg name="enable_left_ir" default="false"/>
-    <arg name="left_ir_format" default="Y8"/>
+    <arg name="left_ir_width" default="0"/>
+    <arg name="left_ir_height" default="0"/>
+    <arg name="left_ir_fps" default="0"/>
+    <arg name="enable_left_ir" default="true"/>
+    <arg name="left_ir_format" default="ANY"/>
 
     <!-- Right IR camera parameters -->
-    <arg name="right_ir_width" default="1280"/>
-    <arg name="right_ir_height" default="720"/>
-    <arg name="right_ir_fps" default="15"/>
-    <arg name="enable_right_ir" default="false"/>
-    <arg name="right_ir_format" default="Y8"/>
+    <arg name="right_ir_width" default="0"/>
+    <arg name="right_ir_height" default="0"/>
+    <arg name="right_ir_fps" default="0"/>
+    <arg name="enable_right_ir" default="true"/>
+    <arg name="right_ir_format" default="ANY"/>
 
     <!-- Common IR camera parameters -->
     <arg name="enable_ir_auto_exposure" default="true"/>

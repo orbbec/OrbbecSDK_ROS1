@@ -117,26 +117,6 @@ void OBCameraNode::getParameters() {
     format_str_[stream_index] =
         nh_private_.param<std::string>(param_name, format_str_[stream_index]);
     format_[stream_index] = OBFormatFromString(format_str_[stream_index]);
-    if (format_[stream_index] == OB_FORMAT_Y8) {
-      image_format_[stream_index] = CV_8UC1;
-      encoding_[stream_index] = stream_index.first == OB_STREAM_DEPTH
-                                    ? sensor_msgs::image_encodings::TYPE_8UC1
-                                    : sensor_msgs::image_encodings::MONO8;
-      unit_step_size_[stream_index] = sizeof(uint8_t);
-    }
-    if (format_[stream_index] == OB_FORMAT_MJPG) {
-      if (stream_index.first == OB_STREAM_IR || stream_index.first == OB_STREAM_IR_LEFT ||
-          stream_index.first == OB_STREAM_IR_RIGHT) {
-        image_format_[stream_index] = CV_8UC1;
-        encoding_[stream_index] = sensor_msgs::image_encodings::MONO8;
-        unit_step_size_[stream_index] = sizeof(uint8_t);
-      }
-    }
-    if (format_[stream_index] == OB_FORMAT_Y16 && stream_index == COLOR) {
-      image_format_[stream_index] = CV_16UC1;
-      encoding_[stream_index] = sensor_msgs::image_encodings::MONO16;
-      unit_step_size_[stream_index] = sizeof(uint16_t);
-    }
   }
   depth_aligned_frame_id_[DEPTH] = optical_frame_id_[COLOR];
 
@@ -946,6 +926,7 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
       return false;
     }
     CHECK_NOTNULL(rgb_buffer_);
+    CHECK_NOTNULL(dest);
     memcpy(dest, video_frame->data(), video_frame->dataSize());
     return true;
   }
