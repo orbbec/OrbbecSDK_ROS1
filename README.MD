@@ -1,28 +1,35 @@
 # Orbbec ROS SDK
 
-[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.0-green)
+[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.2-green)
 
 Orbbec ROS SDK is a wrapper for OrbbecSDK that supports ROS Kinetic, Melodic, and Noetic distributions.
 It enables smooth integration of Orbbec 3D cameras into ROS projects.
 
 ## Table of Contents
-
-- [Orbbec ROS SDK](#orbbec-ros-sdk)
-    - [Table of Contents](#table-of-contents)
-    - [Install Dependencies](#install-dependencies)
-        - [ROS](#ros)
-        - [Other Dependencies](#other-dependencies)
-    - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-    - [Start the Camera](#start-the-camera)
-    - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-        - [Available Services for Camera Control](#available-services-for-camera-control)
-        - [Available Topics](#available-topics)
-    - [Launch Parameters](#launch-parameters)
-    - [Frequently Asked Questions](#frequently-asked-questions)
-        - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-        - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
-    - [License](#license)
-    - [Other names and brands may be claimed as the property of others](#other-names-and-brands-may-be-claimed-as-the-property-of-others)
+<!-- TOC -->
+* [Orbbec ROS SDK](#orbbec-ros-sdk)
+  * [Table of Contents](#table-of-contents)
+  * [Install Dependencies](#install-dependencies)
+    * [ROS](#ros)
+    * [Other Dependencies](#other-dependencies)
+  * [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+  * [Start the Camera](#start-the-camera)
+  * [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+    * [Available Services for Camera Control](#available-services-for-camera-control)
+    * [Available Topics](#available-topics)
+  * [Launch Parameters](#launch-parameters)
+  * [Depth work mode switch:](#depth-work-mode-switch)
+  * [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
+  * [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
+  * [Building a Debian Package](#building-a-debian-package)
+  * [Launch files](#launch-files)
+  * [Use Nodelet](#use-nodelet)
+  * [Supported hardware products](#supported-hardware-products)
+  * [Frequently Asked Questions](#frequently-asked-questions)
+    * [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
+    * [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+  * [License](#license)
+<!-- TOC -->
 
 ## Install Dependencies
 
