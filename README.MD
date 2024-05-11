@@ -407,7 +407,9 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 
 ## Supported hardware products
 
-| **Products List** | **Firmware Version**        |
+## Product support
+
+| **products list** | **firmware version**        |
 | ----------------- | --------------------------- |
 | Gemini 335        | 1.2.20                      |
 | Gemini 335L       | 1.2.20                      |
