@@ -45,14 +45,14 @@ You can launch multiple cameras by specifying different USB ports for each camer
 
 ```XML
 <launch>
-    <include file="$(find orbbec_camera)/launch/gemini_camera.launch">
+    <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
         <arg name="camera_name" value="camera_01"/>
         <arg name="usb_port" value="2-3.4.4.4.1"/>
         <arg name="device_num" value="2"/>
         <arg name="sync_mode" value="free_run"/>
     </include>
 
-    <include file="$(find orbbec_camera)/launch/gemini_camera.launch">
+    <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
         <arg name="camera_name" value="camera_02"/>
         <arg name="usb_port" value="2-3.4.4.4.3"/>
         <arg name="device_num" value="2"/>

@@ -6,30 +6,32 @@ Orbbec ROS SDK is a wrapper for OrbbecSDK that supports ROS Kinetic, Melodic, an
 It enables smooth integration of Orbbec 3D cameras into ROS projects.
 
 ## Table of Contents
+
 <!-- TOC -->
-* [Orbbec ROS SDK](#orbbec-ros-sdk)
-  * [Table of Contents](#table-of-contents)
-  * [Install Dependencies](#install-dependencies)
-    * [ROS](#ros)
-    * [Other Dependencies](#other-dependencies)
-  * [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-  * [Start the Camera](#start-the-camera)
-  * [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-    * [Available Services for Camera Control](#available-services-for-camera-control)
-    * [Available Topics](#available-topics)
-  * [Launch Parameters](#launch-parameters)
-  * [Depth work mode switch:](#depth-work-mode-switch)
-  * [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
-  * [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
-  * [Building a Debian Package](#building-a-debian-package)
-  * [Launch files](#launch-files)
-  * [Use Nodelet](#use-nodelet)
-  * [Supported hardware products](#supported-hardware-products)
-  * [Frequently Asked Questions](#frequently-asked-questions)
-    * [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-    * [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
-  * [License](#license)
-<!-- TOC -->
+
+- [Orbbec ROS SDK](#orbbec-ros-sdk)
+  - [Table of Contents](#table-of-contents)
+  - [Install Dependencies](#install-dependencies)
+    - [ROS](#ros)
+    - [Other Dependencies](#other-dependencies)
+  - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+  - [Start the Camera](#start-the-camera)
+  - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+    - [Available Services for Camera Control](#available-services-for-camera-control)
+    - [Available Topics](#available-topics)
+  - [Launch Parameters](#launch-parameters)
+  - [Depth work mode switch:](#depth-work-mode-switch)
+  - [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
+  - [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
+  - [Building a Debian Package](#building-a-debian-package)
+  - [Launch files](#launch-files)
+  - [Use Nodelet](#use-nodelet)
+  - [Supported hardware products](#supported-hardware-products)
+  - [Frequently Asked Questions](#frequently-asked-questions)
+    - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
+    - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+  - [License](#license)
+  <!-- TOC -->
 
 ## Install Dependencies
 
@@ -77,7 +79,7 @@ cd ~/ros_ws
 source ./devel/setup.bash
 roscd orbbec_camera
 cd scripts
-sudo cp 99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules 
+sudo cp 99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
 sudo udevadm control --reload && sudo udevadm trigger
 ```
 
@@ -86,7 +88,7 @@ sudo udevadm control --reload && sudo udevadm trigger
 In terminal 1:
 
 ```bash
-source ./devel/setup.bash 
+source ./devel/setup.bash
 roslaunch orbbec_camera gemini_330_series.launch
 ```
 
@@ -107,7 +109,7 @@ rosservice list
 rosparam list
 ```
 
-Get camera parameters (*MUST* start stream first):
+Get camera parameters (_MUST_ start stream first):
 
 ```bash
 rosservice call /camera/get_camera_params "{}"
@@ -124,7 +126,7 @@ rostopic echo /camera/color/camera_info
 Check device information:
 
 ```bash
-rosservice call /camera/get_device_info "{}" 
+rosservice call /camera/get_device_info "{}"
 ```
 
 Get the SDK version (includes firmware and Orbbec SDK versions):
@@ -136,9 +138,9 @@ rosservice call /camera/get_sdk_version "{}"
 Set/get (auto) exposure:
 
 ```bash
-rosservice call /camera/set_color_auto_exposure '{data: false}' 
+rosservice call /camera/set_color_auto_exposure '{data: false}'
 rosservice call /camera/set_left_ir_auto_exposure "{data: false}"
-    
+
 # Setting exposure values (be careful with the data range; the following example may not be correct)
 rosservice call /camera/set_left_ir_exposure "{data: 2000}"
 rosservice call /camera/set_color_exposure "{data: 2000}"
@@ -153,7 +155,7 @@ Set/get gain:
 ```bash
 # Get gain
 rosservice call /camera/get_color_gain '{}'
-rosservice call /camera/get_left_ir_gain '{}' 
+rosservice call /camera/get_left_ir_gain '{}'
 
 # Setting the gain (be careful with the data range; the following example may not be correct)
 rosservice call /camera/set_color_gain "{data: 200}"
@@ -192,7 +194,7 @@ NOTE: The images are saved under `~/.ros/image` and are only available when the 
 
 The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or
 getting parameters—denoted as `set_*` and `get_*`—become available only when the respective `enable_*` parameters are
-activated. For instance, enabling features such as left infrared (IR)  with `enable_left_ir`, right IR
+activated. For instance, enabling features such as left infrared (IR) with `enable_left_ir`, right IR
 with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer
 to [Launch Parameters](#Launch-Parameters)) is a prerequisite for their corresponding services to be operational. This
 configuration ensures that services are accessible only when their specific stream is enabled in the
@@ -341,9 +343,9 @@ resolutions is as follows:
 
 ## Check which profiles the camera supports
 
-  ```bash
-  rosrun orbbec_camera list_camera_profile_mode_node
-  ```
+```bash
+rosrun orbbec_camera list_camera_profile_mode_node
+```
 
 ## Building a Debian Package
 
@@ -362,37 +364,37 @@ bash .make_deb.sh
 
 ## Launch files
 
-| product serials                     | launch file           |
-|-------------------------------------|-----------------------|
-| astra+                              | astra_adv.launch      |
-| astra mini/astra mini pro/astra pro | astra.launch          |
-| astra mini s pro                    | astra.launch          |
-| astra2                              | astra2.launch         |
-| astra stereo s                      | stereo_s_u3.launch    |
-| astra pro2                          | astra_pro2.launch     |
-| dabai                               | dabai.launch          |
-| dabai d1                            | dabai_d1.launch       |
-| dabai dcw                           | dabai_dcw.launch      |
-| dabai dw                            | dabai_dw.launch       |
-| dabai pro                           | dabai_pro.launch      |
-| deeya                               | deeya.launch          |
-| femto / femto w                     | femto.launch          |
-| femto mega                          | femto_mega.launch     |
-| femto bolt                          | femto_bolt.launch     |
-| gemini                              | gemini.launch         |
-| gemini                              | gemini.launch         |
-| gemini2 / dabai DCL                 | gemini2.launch        |
-| gemini2L                            | gemini2L.launch       |
-| gemini e                            | gemini_e.launch       |
-| gemini e lite                       | gemini_e_lite.launch  |
-| dabai max                           | dabai_max.launch      |
-| dabai max pro                       | dabai_max_pro.launch  |
-| gemini uw                           | gemini_uw.launch      |
-| dabai dcw2                          | dabai_dcw2.launch     |
-| dabai dw2                           | dabai_dw2.launch      |
-| gemini ew                           | gemini_ew.launch      |
-| gemini ew lite                      | gemini_ew_lite.launch |
-| gemini 335 /335 L                   | gemini_camera.launch  |
+| product serials                     | launch file              |
+| ----------------------------------- | ------------------------ |
+| astra+                              | astra_adv.launch         |
+| astra mini/astra mini pro/astra pro | astra.launch             |
+| astra mini s pro                    | astra.launch             |
+| astra2                              | astra2.launch            |
+| astra stereo s                      | stereo_s_u3.launch       |
+| astra pro2                          | astra_pro2.launch        |
+| dabai                               | dabai.launch             |
+| dabai d1                            | dabai_d1.launch          |
+| dabai dcw                           | dabai_dcw.launch         |
+| dabai dw                            | dabai_dw.launch          |
+| dabai pro                           | dabai_pro.launch         |
+| deeya                               | deeya.launch             |
+| femto / femto w                     | femto.launch             |
+| femto mega                          | femto_mega.launch        |
+| femto bolt                          | femto_bolt.launch        |
+| gemini                              | gemini.launch            |
+| gemini                              | gemini.launch            |
+| gemini2 / dabai DCL                 | gemini2.launch           |
+| gemini2L                            | gemini2L.launch          |
+| gemini e                            | gemini_e.launch          |
+| gemini e lite                       | gemini_e_lite.launch     |
+| dabai max                           | dabai_max.launch         |
+| dabai max pro                       | dabai_max_pro.launch     |
+| gemini uw                           | gemini_uw.launch         |
+| dabai dcw2                          | dabai_dcw2.launch        |
+| dabai dw2                           | dabai_dw2.launch         |
+| gemini ew                           | gemini_ew.launch         |
+| gemini ew lite                      | gemini_ew_lite.launch    |
+| gemini 335 /335 L                   | gemini_330_series.launch |
 
 **All launch files are essentially similar, with the primary difference being the default values of the parameters set for different models
 within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you
@@ -406,12 +408,12 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 ## Supported hardware products
 
 | **Products List** | **Firmware Version**        |
-|-------------------|-----------------------------|
+| ----------------- | --------------------------- |
 | Gemini 335        | 1.2.20                      |
 | Gemini 335L       | 1.2.20                      |
 | Femto Bolt        | 1.0.6/1.0.9                 |
 | Femto Mega        | 1.1.7/1.2.7                 |
-| Gemini 2 XL       | Obox: V1.2.5  VL:1.4.54     |
+| Gemini 2 XL       | Obox: V1.2.5 VL:1.4.54      |
 | Astra 2           | 2.8.20                      |
 | Gemini 2 L        | 1.4.32                      |
 | Gemini 2          | 1.4.60 /1.4.76              |
