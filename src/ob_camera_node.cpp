@@ -988,7 +988,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
   for (size_t i = 0; i < filter_list->count(); i++) {
     auto filter = filter_list->getFilter(i);
     CHECK_NOTNULL(filter.get());
-    if (filter->isEnabled()) {
+    if (filter->isEnabled() && frame != nullptr) {
       frame = filter->process(frame);
       if (frame == nullptr) {
         ROS_ERROR_STREAM("Depth filter process failed");
