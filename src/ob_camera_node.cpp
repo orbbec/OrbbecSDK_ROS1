@@ -60,7 +60,7 @@ void OBCameraNode::init() {
 #elif defined(USE_NV_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
 #endif
-  if(enable_stream_[COLOR]) {
+  if (enable_stream_[COLOR]) {
     CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
     rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 3];
   }
@@ -809,12 +809,14 @@ sensor_msgs::Imu OBCameraNode::createUnitIMUMessage(const IMUData& accel_data,
 void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame>& accel_frame,
                                                    const std::shared_ptr<ob::Frame>& gyro_frame) {
   if (!isInitialized()) {
+    ROS_WARN_ONCE("IMU sync output callback called before initialization");
     return;
   }
   if (!imu_gyro_accel_publisher_) {
     ROS_ERROR_STREAM("stream Accel Gyro publisher not initialized");
     return;
   }
+  ROS_INFO_STREAM_ONCE("IMU sync output callback called");
   auto has_subscriber = imu_gyro_accel_publisher_.getNumSubscribers() > 0;
   has_subscriber = has_subscriber || imu_info_publishers_[ACCEL].getNumSubscribers() > 0;
   has_subscriber = has_subscriber || imu_info_publishers_[GYRO].getNumSubscribers() > 0;
@@ -850,6 +852,7 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
 void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                                          const stream_index_pair& stream_index) {
   if (!isInitialized()) {
+    ROS_WARN_ONCE("IMU callback called before initialization");
     return;
   }
   if (!imu_publishers_.count(stream_index)) {
@@ -998,20 +1001,23 @@ std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
 
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (!is_running_) {
-    // is_running_ is false means the node is shutting down
+    ROS_WARN_ONCE("Frame callback called before initialization");
     return;
   }
   if (!isInitialized()) {
+    ROS_WARN_ONCE("Frame callback called before initialization");
     return;
   }
   if (frame_set == nullptr) {
     return;
   }
+  ROS_INFO_STREAM_ONCE("Received first frame set");
   try {
+    std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
     CHECK_NOTNULL(device_info_);
     if (isGemini335PID(device_info_->pid())) {
-      if (depth_registration_ && align_filter_ && depth_frame_) {
+      if (depth_registration_ && align_filter_ && depth_frame_ && color_frame) {
         auto new_frame = align_filter_->process(frame_set);
         if (new_frame) {
           auto new_frame_set = new_frame->as<ob::FrameSet>();
@@ -1022,8 +1028,7 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
       }
       depth_frame_ = processDepthFrameFilter(depth_frame_);
     }
-    std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
-    if (enable_stream_[COLOR] && colorFrame) {
+    if (enable_stream_[COLOR] && color_frame) {
       std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
       colorFrameCV_.notify_all();
