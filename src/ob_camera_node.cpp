@@ -399,7 +399,7 @@ void OBCameraNode::startIMU(const stream_index_pair& stream_index) {
 
 void OBCameraNode::stopStreams() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-  if (enable_pipeline_) {
+  if (enable_pipeline_ && pipeline_ && pipeline_started_) {
     CHECK_NOTNULL(pipeline_.get());
     try {
       pipeline_->stop();
