@@ -1,6 +1,6 @@
 # Orbbec ROS SDK
 
-[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.2-green)
+[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.3-green)
 
 Orbbec ROS SDK is a wrapper for OrbbecSDK that supports ROS Kinetic, Melodic, and Noetic distributions.
 It enables smooth integration of Orbbec 3D cameras into ROS projects.
@@ -10,27 +10,27 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
 <!-- TOC -->
 
 - [Orbbec ROS SDK](#orbbec-ros-sdk)
-  - [Table of Contents](#table-of-contents)
-  - [Install Dependencies](#install-dependencies)
-    - [ROS](#ros)
-    - [Other Dependencies](#other-dependencies)
-  - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-  - [Start the Camera](#start-the-camera)
-  - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-    - [Available Services for Camera Control](#available-services-for-camera-control)
-    - [Available Topics](#available-topics)
-  - [Launch Parameters](#launch-parameters)
-  - [Depth work mode switch:](#depth-work-mode-switch)
-  - [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
-  - [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
-  - [Building a Debian Package](#building-a-debian-package)
-  - [Launch files](#launch-files)
-  - [Use Nodelet](#use-nodelet)
-  - [Supported hardware products](#supported-hardware-products)
-  - [Frequently Asked Questions](#frequently-asked-questions)
-    - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-    - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
-  - [License](#license)
+    - [Table of Contents](#table-of-contents)
+    - [Install Dependencies](#install-dependencies)
+        - [ROS](#ros)
+        - [Other Dependencies](#other-dependencies)
+    - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+    - [Start the Camera](#start-the-camera)
+    - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+        - [Available Services for Camera Control](#available-services-for-camera-control)
+        - [Available Topics](#available-topics)
+    - [Launch Parameters](#launch-parameters)
+    - [Depth work mode switch:](#depth-work-mode-switch)
+    - [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
+    - [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
+    - [Building a Debian Package](#building-a-debian-package)
+    - [Launch files](#launch-files)
+    - [Use Nodelet](#use-nodelet)
+    - [Supported hardware products](#supported-hardware-products)
+    - [Frequently Asked Questions](#frequently-asked-questions)
+        - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
+        - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+    - [License](#license)
   <!-- TOC -->
 
 ## Install Dependencies
@@ -61,8 +61,8 @@ mkdir -p ~/ros_ws/src
 Get the source code:
 
 ```bash
-# Go to where your OrbbecSDK_ROS_xxx.tar.gz is located, xxx is the version, which may be different
-tar -xvf OrbbecSDK_ROS_xxx.tar.gz -C ~/ros_ws/src/
+cd ~/ros_ws/src
+git clone https://github.com/orbbec/OrbbecSDK_ROS1.git
 ```
 
 Build the package:
@@ -300,7 +300,9 @@ The following launch parameters are available:
 - `enable_laser` : Whether to enable the laser. The default value is `true`.
 - `laser_on_off_mode`: Laser on/off alternate mode, 0: off, 1: on-off alternate, 2: off-on alternate. The default value
   is `0`.
-- `retry_on_usb3_detection_failure`: If the camera is connected to a USB 2.0 port and is not detected, the system will attempt to reset the camera up to three times. This setting aims to prevent USB 3.0 devices from being incorrectly recognized as USB 2.0.
+- `retry_on_usb3_detection_failure`: If the camera is connected to a USB 2.0 port and is not detected, the system will
+  attempt to reset the camera up to three times. This setting aims to prevent USB 3.0 devices from being incorrectly
+  recognized as USB 2.0.
   It is recommended to set this parameter to `false` when using a USB 2.0 connection to avoid unnecessary resets.
 
 ## Depth work mode switch:
@@ -365,7 +367,7 @@ bash .make_deb.sh
 ## Launch files
 
 | product serials                     | launch file              |
-| ----------------------------------- | ------------------------ |
+|-------------------------------------|--------------------------|
 | astra+                              | astra_adv.launch         |
 | astra mini/astra mini pro/astra pro | astra.launch             |
 | astra mini s pro                    | astra.launch             |
@@ -410,7 +412,7 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 ## Product support
 
 | **products list** | **firmware version**        |
-| ----------------- | --------------------------- |
+|-------------------|-----------------------------|
 | Gemini 335        | 1.2.20                      |
 | Gemini 335L       | 1.2.20                      |
 | Femto Bolt        | 1.0.6/1.0.9                 |
