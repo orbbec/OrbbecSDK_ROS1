@@ -154,7 +154,7 @@ void OBCameraNode::setupDevices() {
                                      OB_PERMISSION_READ_WRITE)) {
       auto depth_unit_flexible_adjustment = depthPrecisionFromString(depth_precision_str_);
       auto range = device_->getFloatPropertyRange(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT);
-      ROS_ERROR_STREAM("Depth unit flexible adjustment range: " << range.min << " - " << range.max);
+      ROS_INFO_STREAM("Depth unit flexible adjustment range: " << range.min << " - " << range.max);
       if (depth_unit_flexible_adjustment < range.min ||
           depth_unit_flexible_adjustment > range.max) {
         ROS_ERROR_STREAM(
@@ -584,7 +584,8 @@ void OBCameraNode::setupPipelineConfig() {
   }
   pipeline_config_ = std::make_shared<ob::Config>();
   auto pid = device_info_->pid();
-  if (depth_registration_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
+  if (!isGemini335PID(pid) && depth_registration_ && enable_stream_[COLOR] &&
+      enable_stream_[DEPTH]) {
     OBAlignMode align_mode = align_mode_ == "HW" ? ALIGN_D2C_HW_MODE : ALIGN_D2C_SW_MODE;
     ROS_INFO_STREAM("set align mode to " << align_mode_);
     pipeline_config_->setAlignMode(align_mode);

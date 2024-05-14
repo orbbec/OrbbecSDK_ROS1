@@ -228,6 +228,7 @@ void OBCameraNode::startStreams() {
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
     if (enable_frame_sync_) {
+      ROS_INFO_STREAM("====Enable frame sync====");
       pipeline_->enableFrameSync();
     } else {
       pipeline_->disableFrameSync();
@@ -628,7 +629,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   auto color_width = color_frame->width();
   auto color_height = color_frame->height();
   if (depth_width != color_width || depth_height != color_height) {
-    ROS_ERROR("Depth (%d x %d) and color (%d x %d) frame size mismatch", depth_width, depth_height,
+    ROS_DEBUG("Depth (%d x %d) and color (%d x %d) frame size mismatch", depth_width, depth_height,
               color_width, color_height);
     return;
   }
@@ -1019,17 +1020,26 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
     CHECK_NOTNULL(device_info_);
-    if (isGemini335PID(device_info_->pid())) {
+    if (isGemini335PID(device_info_->pid()) && enable_stream_[DEPTH] && enable_stream_[COLOR]) {
+      depth_frame_ = processDepthFrameFilter(depth_frame_);
       if (depth_registration_ && align_filter_ && depth_frame_ && color_frame) {
         auto new_frame = align_filter_->process(frame_set);
         if (new_frame) {
           auto new_frame_set = new_frame->as<ob::FrameSet>();
           if (new_frame_set) {
             depth_frame_ = new_frame_set->getFrame(OB_FRAME_DEPTH);
+          } else {
+            ROS_ERROR_STREAM("cast to FrameSet failed");
+            return;
           }
+        } else {
+          ROS_ERROR_STREAM("Depth frame alignment failed");
+          return;
         }
+      } else {
+        ROS_DEBUG("drop frame set");
+        return;
       }
-      depth_frame_ = processDepthFrameFilter(depth_frame_);
     }
     if (enable_stream_[COLOR] && color_frame) {
       std::unique_lock<std::mutex> colorLock(colorFrameMtx_);

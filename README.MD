@@ -212,7 +212,9 @@ The following launch parameters are available:
 - `ordered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
 - `device_preset`: The default value is `Default`. Only the G330 series is supported. For more information, refer to
-  the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/).
+  the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/). Please refer to the table below to set
+  the `device_preset` value based on your use case. The value should be one of the preset names
+  listed [in the table](#predefined-presets).
 - `enable_decimation_filter`: Only the G330 series is supported. This filter effectively reduces the depth scene complexity. The filter runs on kernel
   sizes [2x2] to [8x8] pixels. The image size is scaled down proportionally in both dimensions to preserve the aspect
   ratio.
