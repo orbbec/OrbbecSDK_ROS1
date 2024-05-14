@@ -6,33 +6,32 @@ Orbbec ROS SDK is a wrapper for OrbbecSDK that supports ROS Kinetic, Melodic, an
 It enables smooth integration of Orbbec 3D cameras into ROS projects.
 
 ## Table of Contents
-
 <!-- TOC -->
-
-- [Orbbec ROS SDK](#orbbec-ros-sdk)
-    - [Table of Contents](#table-of-contents)
-    - [Install Dependencies](#install-dependencies)
-        - [ROS](#ros)
-        - [Other Dependencies](#other-dependencies)
-    - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-    - [Start the Camera](#start-the-camera)
-    - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-        - [Available Services for Camera Control](#available-services-for-camera-control)
-        - [Available Topics](#available-topics)
-    - [Launch Parameters](#launch-parameters)
-    - [Depth work mode switch:](#depth-work-mode-switch)
-    - [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
-    - [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
-    - [Building a Debian Package](#building-a-debian-package)
-    - [Launch files](#launch-files)
-    - [Use Nodelet](#use-nodelet)
-    - [Supported hardware products](#supported-hardware-products)
-    - [Frequently Asked Questions](#frequently-asked-questions)
-        - [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-        - [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
-    - [License](#license)
-  <!-- TOC -->
-
+* [Orbbec ROS SDK](#orbbec-ros-sdk)
+  * [Table of Contents](#table-of-contents)
+  * [Install Dependencies](#install-dependencies)
+    * [ROS](#ros)
+    * [Other Dependencies](#other-dependencies)
+  * [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+  * [Start the Camera](#start-the-camera)
+  * [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+    * [Available Services for Camera Control](#available-services-for-camera-control)
+    * [Available Topics](#available-topics)
+  * [Launch Parameters](#launch-parameters)
+  * [Depth work mode switch:](#depth-work-mode-switch)
+  * [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
+  * [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
+  * [Building a Debian Package](#building-a-debian-package)
+  * [Launch files](#launch-files)
+  * [Use Nodelet](#use-nodelet)
+  * [Supported hardware products](#supported-hardware-products)
+  * [Product support](#product-support)
+  * [Frequently Asked Questions](#frequently-asked-questions)
+    * [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
+    * [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+  * [Other useful links](#other-useful-links)
+  * [License](#license)
+<!-- TOC -->
 ## Install Dependencies
 
 ### ROS
@@ -278,7 +277,8 @@ The following launch parameters are available:
   save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
 - `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
-- `device_preset`: The default value is `Default`. Only the G330 series is supported. For more information, refer to the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/).
+- `device_preset`: The default value is `Default`. Only the G330 series is supported. For more information, refer to
+  the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/).
 - `enable_decimation_filter`: This filter effectively reduces the depth scene complexity. The filter runs on kernel
   sizes [2x2] to [8x8] pixels. The image size is scaled down proportionally in both dimensions to preserve the aspect
   ratio.
@@ -410,28 +410,7 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 ## Supported hardware products
 
 ## Product support
-
-| **products list** | **firmware version**        |
-|-------------------|-----------------------------|
-| Gemini 335        | 1.2.20                      |
-| Gemini 335L       | 1.2.20                      |
-| Femto Bolt        | 1.0.6/1.0.9                 |
-| Femto Mega        | 1.1.7/1.2.7                 |
-| Gemini 2 XL       | Obox: V1.2.5 VL:1.4.54      |
-| Astra 2           | 2.8.20                      |
-| Gemini 2 L        | 1.4.32                      |
-| Gemini 2          | 1.4.60 /1.4.76              |
-| Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19 |
-| Femto             | 1.6.7                       |
-| Femto W           | 1.1.8                       |
-| DaBai             | 2436                        |
-| DaBai DCW         | 2460                        |
-| DaBai DW          | 2606                        |
-| Astra Mini Pro    | 1007                        |
-| Gemini E          | 3460                        |
-| Gemini E Lite     | 3606                        |
-| Gemini            | 3.0.18                      |
-| Astra Mini S Pro  | 1.0.05                      |
+Please refer to the OrbbecSDK supported products: [Product Support](https://github.com/orbbec/OrbbecSDK?tab=readme-ov-file#product-support)
 
 ## Frequently Asked Questions
 
@@ -470,6 +449,11 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
   ```bash
   sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
   ```
+
+## Other useful links
+
+- [Orbbec SDK](https://orbbec.github.io/OrbbecSDK/)
+- [Gemini 330 depth presets](https://www.orbbec.com/docs/g330-use-depth-presets/)
 
 ## License
 
