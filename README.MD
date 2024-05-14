@@ -395,7 +395,7 @@ bash .make_deb.sh
 | dabai dw2                           | dabai_dw2.launch         |
 | gemini ew                           | gemini_ew.launch         |
 | gemini ew lite                      | gemini_ew_lite.launch    |
-| gemini 335 /335 L                   | gemini_330_series.launch |
+| gemini 330 series                   | gemini_330_series.launch |
 
 **All launch files are essentially similar, with the primary difference being the default values of the parameters set for different models
 within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you
