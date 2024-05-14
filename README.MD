@@ -15,12 +15,12 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   * [Create ROS Workspace and Build](#create-ros-workspace-and-build)
   * [Start the Camera](#start-the-camera)
   * [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-    * [Available Services for Camera Control](#available-services-for-camera-control)
-    * [Available Topics](#available-topics)
   * [Launch Parameters](#launch-parameters)
   * [Depth work mode switch:](#depth-work-mode-switch)
   * [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
   * [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
+  * [Available Services for Camera Control](#available-services-for-camera-control)
+  * [Available Topics](#available-topics)
   * [Building a Debian Package](#building-a-debian-package)
   * [Launch files](#launch-files)
   * [Use Nodelet](#use-nodelet)
@@ -31,6 +31,7 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   * [Other useful links](#other-useful-links)
   * [License](#license)
 <!-- TOC -->
+
 ## Install Dependencies
 
 ### ROS
@@ -188,72 +189,6 @@ rosservice call /camera/save_point_cloud "{}"
 
 NOTE: The images are saved under `~/.ros/image` and are only available when the sensor is on.
 
-### Available Services for Camera Control
-
-The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or
-getting parameters—denoted as `set_*` and `get_*`—become available only when the respective `enable_*` parameters are
-activated. For instance, enabling features such as left infrared (IR) with `enable_left_ir`, right IR
-with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer
-to [Launch Parameters](#Launch-Parameters)) is a prerequisite for their corresponding services to be operational. This
-configuration ensures that services are accessible only when their specific stream is enabled in the
-launch file's stream argument.
-
-- `/camera/get_auto_white_balance`
-- `/camera/get_camera_params`
-- `/camera/get_color_auto_exposure`
-- `/camera/get_color_camera_info`
-- `/camera/get_color_exposure`
-- `/camera/get_color_gain`
-- `/camera/get_depth_auto_exposure`
-- `/camera/get_depth_camera_info`
-- `/camera/get_depth_exposure`
-- `/camera/get_depth_gain`
-- `/camera/get_device_info`
-- `/camera/get_device_type`
-- `/camera/get_left_ir_auto_exposure`
-- `/camera/get_left_ir_camera_info`
-- `/camera/get_left_ir_exposure`
-- `/camera/get_left_ir_gain`
-- `/camera/get_serial`
-- `/camera/get_sdk_version`
-- `/camera/get_white_balance`
-- `/camera/reset_color_exposure`
-- `/camera/reset_color_gain`
-- `/camera/reset_depth_exposure`
-- `/camera/reset_depth_gain`
-- `/camera/reset_left_ir_exposure`
-- `/camera/reset_left_ir_gain`
-- `/camera/reset_white_balance`
-- `/camera/save_images`
-- `/camera/save_point_cloud`
-- `/camera/set_auto_white_balance`
-- `/camera/set_color_auto_exposure`
-- `/camera/set_color_exposure`
-- `/camera/set_color_gain`
-- `/camera/set_depth_auto_exposure`
-- `/camera/set_depth_exposure`
-- `/camera/set_depth_gain`
-- `/camera/set_flood`
-- `/camera/set_left_ir_auto_exposure`
-- `/camera/set_left_ir_exposure`
-- `/camera/set_left_ir_gain`
-- `/camera/set_laser`
-- `/camera/set_white_balance`
-
-### Available Topics
-
-- `/camera/color/camera_info`: The color camera info.
-- `/camera/color/image_raw`: The color stream image.
-- `/camera/depth/camera_info`: The depth camera info.
-- `/camera/depth/image_raw`: The depth stream image.
-- `/camera/depth/points`: The point cloud, only available when `enable_point_cloud` is `true`.
-- `/camera/depth_registered/points`: The colored point cloud, only available when `enable_colored_point_cloud`
-  is `true`.
-- `/camera/left_ir/camera_info`: The left IR camera info.
-- `/camera/left_ir/image_raw`: The left IR stream image.
-- `/camera/right_ir/camera_info`: The right IR camera info.
-- `/camera/right_ir/image_raw`: The right IR stream image.
-
 ## Launch Parameters
 
 The following launch parameters are available:
@@ -278,7 +213,7 @@ The following launch parameters are available:
   points (`false`).
 - `device_preset`: The default value is `Default`. Only the G330 series is supported. For more information, refer to
   the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/).
-- `enable_decimation_filter`: This filter effectively reduces the depth scene complexity. The filter runs on kernel
+- `enable_decimation_filter`: Only the G330 series is supported. This filter effectively reduces the depth scene complexity. The filter runs on kernel
   sizes [2x2] to [8x8] pixels. The image size is scaled down proportionally in both dimensions to preserve the aspect
   ratio.
 - `enable_hdr_merge`: This filter is used jointly with depth HDR function. By merging consecutive depth images of
@@ -330,7 +265,7 @@ rosrun orbbec_camera list_depth_work_mode_node
 
 ## Configuration of depth NFOV and WFOV modes
 
-For the Femto Mega and Femto Bolt devices, the NFOV and WFOV modes are implemented by configuring the resolution of
+For the **Femto Mega** and **Femto Bolt** devices, the NFOV and WFOV modes are implemented by configuring the resolution of
 Depth and IR in the launch file.
 In launch file, depth_width、depth_height、ir_width、ir_height represents the resolution of the depth and the resolution of
 the IR.
@@ -347,6 +282,72 @@ resolutions is as follows:
 ```bash
 rosrun orbbec_camera list_camera_profile_mode_node
 ```
+
+## Available Services for Camera Control
+
+The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or
+getting parameters—denoted as `set_*` and `get_*`—become available only when the respective `enable_*` parameters are
+activated. For instance, enabling features such as left infrared (IR) with `enable_left_ir`, right IR
+with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer
+to [Launch Parameters](#Launch-Parameters)) is a prerequisite for their corresponding services to be operational. This
+configuration ensures that services are accessible only when their specific stream is enabled in the
+launch file's stream argument.
+
+- `/camera/get_auto_white_balance`
+- `/camera/get_camera_params`
+- `/camera/get_color_auto_exposure`
+- `/camera/get_color_camera_info`
+- `/camera/get_color_exposure`
+- `/camera/get_color_gain`
+- `/camera/get_depth_auto_exposure`
+- `/camera/get_depth_camera_info`
+- `/camera/get_depth_exposure`
+- `/camera/get_depth_gain`
+- `/camera/get_device_info`
+- `/camera/get_device_type`
+- `/camera/get_left_ir_auto_exposure`
+- `/camera/get_left_ir_camera_info`
+- `/camera/get_left_ir_exposure`
+- `/camera/get_left_ir_gain`
+- `/camera/get_serial`
+- `/camera/get_sdk_version`
+- `/camera/get_white_balance`
+- `/camera/reset_color_exposure`
+- `/camera/reset_color_gain`
+- `/camera/reset_depth_exposure`
+- `/camera/reset_depth_gain`
+- `/camera/reset_left_ir_exposure`
+- `/camera/reset_left_ir_gain`
+- `/camera/reset_white_balance`
+- `/camera/save_images`
+- `/camera/save_point_cloud`
+- `/camera/set_auto_white_balance`
+- `/camera/set_color_auto_exposure`
+- `/camera/set_color_exposure`
+- `/camera/set_color_gain`
+- `/camera/set_depth_auto_exposure`
+- `/camera/set_depth_exposure`
+- `/camera/set_depth_gain`
+- `/camera/set_flood`
+- `/camera/set_left_ir_auto_exposure`
+- `/camera/set_left_ir_exposure`
+- `/camera/set_left_ir_gain`
+- `/camera/set_laser`
+- `/camera/set_white_balance`
+
+## Available Topics
+
+- `/camera/color/camera_info`: The color camera info.
+- `/camera/color/image_raw`: The color stream image.
+- `/camera/depth/camera_info`: The depth camera info.
+- `/camera/depth/image_raw`: The depth stream image.
+- `/camera/depth/points`: The point cloud, only available when `enable_point_cloud` is `true`.
+- `/camera/depth_registered/points`: The colored point cloud, only available when `enable_colored_point_cloud`
+  is `true`.
+- `/camera/left_ir/camera_info`: The left IR camera info.
+- `/camera/left_ir/image_raw`: The left IR stream image.
+- `/camera/right_ir/camera_info`: The right IR camera info.
+- `/camera/right_ir/image_raw`: The right IR stream image.
 
 ## Building a Debian Package
 
@@ -382,7 +383,6 @@ bash .make_deb.sh
 | femto / femto w                     | femto.launch             |
 | femto mega                          | femto_mega.launch        |
 | femto bolt                          | femto_bolt.launch        |
-| gemini                              | gemini.launch            |
 | gemini                              | gemini.launch            |
 | gemini2 / dabai DCL                 | gemini2.launch           |
 | gemini2L                            | gemini2L.launch          |
