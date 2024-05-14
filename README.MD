@@ -209,7 +209,7 @@ The following launch parameters are available:
   when `enable_colored_point_cloud` is set to `true`.
 - `log_level` for OrbbecSDK controls console log verbosity, with levels `none`, `info`, `debug`, `warn`, `fatal`. Logs
   save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
-- `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
+- `ordered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
 - `device_preset`: The default value is `Default`. Only the G330 series is supported. For more information, refer to
   the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/).
