@@ -76,7 +76,7 @@
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="16000"/>
     <arg name="threshold_filter_min" default="0"/>
-    <arg name="noise_removal_filter_min_diff" default="8"/>
+    <arg name="noise_removal_filter_min_diff" default="256"/>
     <arg name="noise_removal_filter_max_size" default="80"/>
     <arg name="spatial_filter_alpha" default="0.5"/>
     <arg name="spatial_filter_diff_threshold" default="8"/>
@@ -101,6 +101,7 @@
     <arg name="device_num" default="1"/>
 
     <arg name="retry_on_usb3_detection_failure" default="false"/>
+    <arg name="enable_d2c_viewer" default="true"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
@@ -188,6 +189,7 @@
             <param name="serial_number" value="$(arg serial_number)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
+            <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>

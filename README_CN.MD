@@ -4,7 +4,8 @@
 
 **注意：此文档是通过机器翻译生成且不会及时更新，仅供参考。具体内容请以英文原文为准。**
 
-Orbbec ROS SDK 是 OrbbecSDK 的一个封装，支持 ROS Kinetic、Melodic 和 Noetic 发行版。此 SDK 使 Orbbec 3D 摄像机能够平滑地集成到 ROS 项目中。
+Orbbec ROS SDK 是 OrbbecSDK 的一个封装，支持 ROS Kinetic、Melodic 和 Noetic 发行版。此 SDK 使 Orbbec 3D 摄像机能够平滑地集成到
+ROS 项目中。
 
 ## 目录
 
@@ -193,7 +194,10 @@ rosservice call /camera/save_point_cloud "{}"
 
 ### 可用的摄像头控制服务
 
-服务名称直观反映了其用途。至关重要的是要理解，与设置或获取参数相关的服务——标记为`set_*`和`get_*`——仅在相应的`enable_*`参数激活时可用。例如，激活左红外（IR）功能需要`enable_left_ir`，右红外功能需要`enable_right_ir`，深度感知功能需要`enable_depth`，或颜色处理功能需要`enable_color`（参考[启动参数](#启动参数)）是这些对应服务运行的先决条件。这种配置确保仅当在启动文件的流参数中启用了特定流时，服务才可访问。
+服务名称直观反映了其用途。至关重要的是要理解，与设置或获取参数相关的服务——标记为`set_*`和`get_*`——仅在相应的`enable_*`
+参数激活时可用。例如，激活左红外（IR）功能需要`enable_left_ir`，右红外功能需要`enable_right_ir`
+，深度感知功能需要`enable_depth`，或颜色处理功能需要`enable_color`（参考[启动参数](#启动参数)
+）是这些对应服务运行的先决条件。这种配置确保仅当在启动文件的流参数中启用了特定流时，服务才可访问。
 
 - `/camera/get_auto_white_balance`
 - `/camera/get_camera_params`
@@ -234,6 +238,7 @@ rosservice call /camera/save_point_cloud "{}"
 - `/camera/set
 
 _left_ir_auto_exposure`
+
 - `/camera/set_left_ir_exposure`
 - `/camera/set_left_ir_gain`
 - `/camera/set_laser`
@@ -268,7 +273,8 @@ _left_ir_auto_exposure`
 - `enable_left_ir`：启用左IR摄像头。
 - `enable_right_ir`：启用右IR摄像头。
 - `depth_registration`：启用深度帧到彩色帧的硬件对齐。当`enable_colored_point_cloud`设置为`true`时，此字段是必需的。
-- `log_level`用于OrbbecSDK控制台日志详细程度，级别为`none`、`info`、`debug`、`warn`、`fatal`。日志保存在`~/.ros/Log`中。要进行文件日志记录，请调整`config/OrbbecSDKConfig_v1.0.xml`中的`<FileLogLevel>`。
+- `log_level`用于OrbbecSDK控制台日志详细程度，级别为`none`、`info`、`debug`、`warn`、`fatal`。日志保存在`~/.ros/Log`
+  中。要进行文件日志记录，请调整`config/OrbbecSDKConfig_v1.0.xml`中的`<FileLogLevel>`。
 - `oredered_pc`：点云是否应组织为有序网格（`true`）或作为无序点集（`false`）。
 - `device_preset`：设备预设选项为`Default`或`High Accuracy`。
 - `enable_decimation_filter`：此滤波有效减少深度场景复杂性。滤波在[2x2]到[8x8]像素的核心大小上运行。图像大小在两个维度上按比例缩小，以保持宽高比。
@@ -279,12 +285,14 @@ _left_ir_auto_exposure`
 - `enable_spatial_filter`：此滤
 
 镜根据大小参数执行多次迭代处理，以增强深度数据的平滑性。它还能填充深度图中的小孔。
+
 - `enable_temporal_filter`：此滤波旨在通过操纵基于先前帧的每个像素值来提高深度数据的持久性。滤波对数据进行单次处理，调整深度值的同时也更新跟踪历史。
 - `enable_hole_filling_filter`：此滤波使用指定的模式填充深度图中的所有孔洞。
 - `depth_precision`：深度精度，应为`1mm`格式。默认值为`1mm`。
 - `enable_laser`：是否启用激光。默认值为`true`。
 - `laser_on_off_mode`：激光开/关交替模式，0：关闭，1：开-关交替，2：关-开交替。默认值为`0`。
-- `retry_on_usb3_detection_failure`：如果摄像头连接到USB 2.0端口未被检测到，系统将尝试重置摄像头最多三次。此设置旨在防止USB 3.0设备被错误地识别为USB 2.0。建议在使用USB 2.0连接时将此参数设置为`false`，以避免不必要的重置。
+- `retry_on_usb3_detection_failure`：如果摄像头连接到USB 2.0端口未被检测到，系统将尝试重置摄像头最多三次。此设置旨在防止USB
+  3.0设备被错误地识别为USB 2.0。建议在使用USB 2.0连接时将此参数设置为`false`，以避免不必要的重置。
 
 ## 深度工作模式切换：
 
@@ -310,7 +318,8 @@ rosrun orbbec_camera list_depth_work_mode_node
 
 ## 配置深度NFOV和WFOV模式
 
-对于Femto Mega和Femto Bolt设备，通过在启动文件中配置深度和IR的分辨率实现NFOV和WFOV模式。在启动文件中，depth_width、depth_height、ir_width、ir_height代表深度和IR的分辨率。IR的帧速率和分辨率必须与深度一致。不同模式与分辨率之间的对应关系如下：
+对于Femto Mega和Femto
+Bolt设备，通过在启动文件中配置深度和IR的分辨率实现NFOV和WFOV模式。在启动文件中，depth_width、depth_height、ir_width、ir_height代表深度和IR的分辨率。IR的帧速率和分辨率必须与深度一致。不同模式与分辨率之间的对应关系如下：
 
 - NFOV未合并：640 x 576。
 - NFOV合并：320 x 288。
@@ -340,7 +349,7 @@ bash .make_deb.sh
 
 ## 启动文件
 
-| 产品系列                     | 启动文件              |
+| 产品系列                                | 启动文件                     |
 |-------------------------------------|--------------------------|
 | astra+                              | astra_adv.launch         |
 | astra mini/astra mini pro/astra pro | astra.launch             |
@@ -348,8 +357,6 @@ bash .make_deb.sh
 | astra2                              | astra2.launch            |
 | astra stereo s                      | stereo_s_u3.launch       |
 | astra pro2                          | astra_pro2.launch        |
-
-
 | dabai                               | dabai.launch             |
 | dabai d1                            | dabai_d1.launch          |
 | dabai dcw                           | dabai_dcw.launch         |
@@ -386,27 +393,27 @@ bash .make_deb.sh
 
 ## 产品支持
 
-| **产品列表** | **固件版本**        |
-|-------------------|-----------------------------|
-| Gemini 335        | 1.2.20                      |
-| Gemini 335L       | 1.2.20                      |
-| Femto Bolt        | 1.0.6/1.0.9                 |
-| Femto Mega        | 1.1.7/1.2.7                 |
-| Gemini 2 XL       | Obox: V1.2.5 VL:1.4.54      |
-| Astra 2           | 2.8.20                      |
-| Gemini 2 L        | 1.4.32                      |
-| Gemini 2          | 1.4.60 /1.4.76              |
-| Astra+            | 1.0.22/1.0.21/1.0.20/1.0.19 |
-| Femto             | 1.6.7                       |
-| Femto W           | 1.1.8                       |
-| DaBai             | 2436                        |
-| DaBai DCW         | 2460                        |
-| DaBai DW          | 2606                        |
-| Astra Mini Pro    | 1007                        |
-| Gemini E          | 3460                        |
-| Gemini E Lite     | 3606                        |
-| Gemini            | 3.0.18                      |
-| Astra Mini S Pro  | 1.0.05                      |
+| **产品列表**         | **固件版本**                    |
+|------------------|-----------------------------|
+| Gemini 335       | 1.2.20                      |
+| Gemini 335L      | 1.2.20                      |
+| Femto Bolt       | 1.0.6/1.0.9                 |
+| Femto Mega       | 1.1.7/1.2.7                 |
+| Gemini 2 XL      | Obox: V1.2.5 VL:1.4.54      |
+| Astra 2          | 2.8.20                      |
+| Gemini 2 L       | 1.4.32                      |
+| Gemini 2         | 1.4.60 /1.4.76              |
+| Astra+           | 1.0.22/1.0.21/1.0.20/1.0.19 |
+| Femto            | 1.6.7                       |
+| Femto W          | 1.1.8                       |
+| DaBai            | 2436                        |
+| DaBai DCW        | 2460                        |
+| DaBai DW         | 2606                        |
+| Astra Mini Pro   | 1007                        |
+| Gemini E         | 3460                        |
+| Gemini E Lite    | 3606                        |
+| Gemini           | 3.0.18                      |
+| Astra Mini S Pro | 1.0.05                      |
 
 ## 常见问题
 
@@ -436,6 +443,7 @@ bash .make_deb.sh
   SUBSYSTEM=="usb", ATTR{idProduct}=="
 
 your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root", GROUP:="video", SYMLINK+="your_device_name_here"
+
   ```
 
   将`your_pid_here`替换为您设备的PID，将`your_device_name_here`替换为您想为设备创建的名称（例如，`gemini_camera`）。
