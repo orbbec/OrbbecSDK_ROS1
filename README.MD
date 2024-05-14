@@ -278,7 +278,7 @@ The following launch parameters are available:
   save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
 - `oredered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
-- `device_preset`: The device preset options are `Default` or `High Accuracy`.
+- `device_preset`: The default value is `Default`. Only the G330 series is supported. For more information, refer to the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/).
 - `enable_decimation_filter`: This filter effectively reduces the depth scene complexity. The filter runs on kernel
   sizes [2x2] to [8x8] pixels. The image size is scaled down proportionally in both dimensions to preserve the aspect
   ratio.
