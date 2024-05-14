@@ -25,7 +25,6 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   * [Launch files](#launch-files)
   * [Use Nodelet](#use-nodelet)
   * [Supported hardware products](#supported-hardware-products)
-  * [Product support](#product-support)
   * [Frequently Asked Questions](#frequently-asked-questions)
     * [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
     * [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
@@ -408,8 +407,6 @@ file, as well as other parameters, to ensure compatibility and optimal performan
 For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 
 ## Supported hardware products
-
-## Product support
 Please refer to the OrbbecSDK supported products: [Product Support](https://github.com/orbbec/OrbbecSDK?tab=readme-ov-file#product-support)
 
 ## Frequently Asked Questions
