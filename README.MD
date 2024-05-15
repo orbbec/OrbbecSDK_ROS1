@@ -351,6 +351,7 @@ launch file's stream argument.
 - `/camera/left_ir/image_raw`: The left IR stream image.
 - `/camera/right_ir/camera_info`: The right IR camera info.
 - `/camera/right_ir/image_raw`: The right IR stream image.
+- `/diagnostics`: The diagnostic information of the camera, Currently, the diagnostic information only includes the temperature of the camera.
 
 ## Building a Debian Package
 
