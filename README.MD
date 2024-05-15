@@ -241,6 +241,7 @@ The following launch parameters are available:
   recognized as USB 2.0.
   It is recommended to set this parameter to `false` when using a USB 2.0 connection to avoid unnecessary resets.
 
+**IMPORTANT**: *Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
 ## Depth work mode switch:
 
 - Before starting the camera, depth work mode (depth_work_mode) can be configured for the corresponding xxx.launch

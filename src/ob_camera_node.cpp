@@ -142,8 +142,6 @@ void OBCameraNode::getParameters() {
   ir_exposure_ = nh_private_.param<int>("ir_exposure_", -1);
   enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);
   sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "standalone");
-  std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(), ::toupper);
-  sync_mode_ = OBSyncModeFromString(sync_mode_str_);
   depth_delay_us_ = nh_private_.param<int>("depth_delay_us", 0);
   color_delay_us_ = nh_private_.param<int>("color_delay_us", 0);
   trigger2image_delay_us_ = nh_private_.param<int>("trigger2image_delay_us", 0);
@@ -199,7 +197,7 @@ void OBCameraNode::getParameters() {
   sequence_id_filter_id_ = nh_private_.param<int>("sequence_id_filter_id", -1);
   threshold_filter_max_ = nh_private_.param<int>("threshold_filter_max", -1);
   threshold_filter_min_ = nh_private_.param<int>("threshold_filter_min", -1);
-  noise_removal_filter_min_diff_ = nh_private_.param<int>("noise_removal_filter_min_diff", 250);
+  noise_removal_filter_min_diff_ = nh_private_.param<int>("noise_removal_filter_min_diff", 256);
   noise_removal_filter_max_size_ = nh_private_.param<int>("noise_removal_filter_max_size", 80);
   spatial_filter_alpha_ = nh_private_.param<float>("spatial_filter_alpha", -1.0);
   spatial_filter_diff_threshold_ = nh_private_.param<int>("spatial_filter_diff_threshold", -1);
