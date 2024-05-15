@@ -125,6 +125,19 @@ void OBCameraNode::setupDevices() {
     if (!device_preset_.empty()) {
       device_->loadPreset(device_preset_.c_str());
     }
+    if (sync_mode_ != OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN) {
+      auto sync_config = device_->getMultiDeviceSyncConfig();
+      sync_config.syncMode = sync_mode_;
+      sync_config.depthDelayUs = depth_delay_us_;
+      sync_config.colorDelayUs = color_delay_us_;
+      sync_config.trigger2ImageDelayUs = trigger2image_delay_us_;
+      sync_config.triggerOutDelayUs = trigger_out_delay_us_;
+      sync_config.triggerOutEnable = trigger_out_enabled_;
+      device_->setMultiDeviceSyncConfig(sync_config);
+      if (device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
+                                       OB_PERMISSION_READ_WRITE)) {
+      }
+    }
     auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
     device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
@@ -190,37 +203,65 @@ void OBCameraNode::setupDevices() {
       }
       if (filter_name == "DecimationFilter" && enable_decimation_filter_) {
         auto decimation_filter = filter->as<ob::DecimationFilter>();
-        decimation_filter->setScaleValue(decimation_filter_scale_range_);
+        if (decimation_filter_scale_range_ != -1) {
+          decimation_filter->setScaleValue(decimation_filter_scale_range_);
+        }
       } else if (filter_name == "ThresholdFilter" && enable_threshold_filter_) {
         auto threshold_filter = filter->as<ob::ThresholdFilter>();
-        threshold_filter->setValueRange(threshold_filter_min_, threshold_filter_max_);
+        if (threshold_filter_min_ != -1 && threshold_filter_max_ != -1) {
+          threshold_filter->setValueRange(threshold_filter_min_, threshold_filter_max_);
+        }
       } else if (filter_name == "SpatialAdvancedFilter" && enable_spatial_filter_) {
         auto spatial_filter = filter->as<ob::SpatialAdvancedFilter>();
         OBSpatialAdvancedFilterParams params{};
-        params.alpha = spatial_filter_alpha_;
-        params.magnitude = spatial_filter_magnitude_;
-        params.radius = spatial_filter_radius_;
-        params.disp_diff = spatial_filter_diff_threshold_;
-        spatial_filter->setFilterParams(params);
+        if (spatial_filter_alpha_ != -1.0 && spatial_filter_magnitude_ != -1 &&
+            spatial_filter_radius_ != -1 && spatial_filter_diff_threshold_ != -1) {
+          params.alpha = spatial_filter_alpha_;
+          params.magnitude = spatial_filter_magnitude_;
+          params.radius = spatial_filter_radius_;
+          params.disp_diff = spatial_filter_diff_threshold_;
+          spatial_filter->setFilterParams(params);
+        }
       } else if (filter_name == "TemporalFilter" && enable_temporal_filter_) {
         auto temporal_filter = filter->as<ob::TemporalFilter>();
-        temporal_filter->setDiffScale(temporal_filter_diff_threshold_);
-        temporal_filter->setWeight(temporal_filter_weight_);
-      } else if (filter_name == "HoleFillingFilter") {
+        if (temporal_filter_diff_threshold_ != -1 && temporal_filter_weight_ != -1) {
+          temporal_filter->setDiffScale(temporal_filter_diff_threshold_);
+          temporal_filter->setWeight(temporal_filter_weight_);
+        }
+      } else if (filter_name == "HoleFillingFilter" && enable_hole_filling_filter_ &&
+                 !hole_filling_filter_mode_.empty()) {
         auto hole_filling_filter = filter->as<ob::HoleFillingFilter>();
         OBHoleFillingMode hole_filling_mode = holeFillingModeFromString(hole_filling_filter_mode_);
         hole_filling_filter->setFilterMode(hole_filling_mode);
       } else if (filter_name == "SequenceIdFilter" && enable_sequenced_filter_) {
         auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
-        sequenced_filter->selectSequenceId(sequence_id_filter_id_);
+        if (sequence_id_filter_id_ != -1) {
+          sequenced_filter->selectSequenceId(sequence_id_filter_id_);
+        }
       } else if (filter_name == "NoiseRemovalFilter" && enable_noise_removal_filter_) {
         auto noise_removal_filter = filter->as<ob::NoiseRemovalFilter>();
         OBNoiseRemovalFilterParams params{};
-        params.disp_diff = noise_removal_filter_min_diff_;
-        params.max_size = noise_removal_filter_max_size_;
-        noise_removal_filter->setFilterParams(params);
-      } else if (filter_name == "HDRMerge") {
-        // do nothing
+        if (noise_removal_filter_min_diff_ != -1 && noise_removal_filter_max_size_ != -1) {
+          params.disp_diff = noise_removal_filter_min_diff_;
+          params.max_size = noise_removal_filter_max_size_;
+          noise_removal_filter->setFilterParams(params);
+        }
+      } else if (filter_name == "HDRMerge" && enable_hdr_merge_) {
+        auto hdr_merge_filter = filter->as<ob::HdrMerge>();
+        OBHdrConfig hdr_config{};
+        if (hdr_merge_exposure_1_ != -1 && hdr_merge_exposure_2_ != -1 && hdr_merge_gain_1_ != -1 &&
+            hdr_merge_gain_2_ != -1) {
+          hdr_config.exposure_1 = hdr_merge_exposure_1_;
+          hdr_config.exposure_2 = hdr_merge_exposure_2_;
+          hdr_config.gain_1 = hdr_merge_gain_1_;
+          hdr_config.gain_2 = hdr_merge_gain_2_;
+          ROS_INFO_STREAM("set HDRMerge exposure_1 to " << hdr_merge_exposure_1_);
+          ROS_INFO_STREAM("set HDRMerge exposure_2 to " << hdr_merge_exposure_2_);
+          ROS_INFO_STREAM("set HDRMerge gain_1 to " << hdr_merge_gain_1_);
+          ROS_INFO_STREAM("set HDRMerge gain_2 to " << hdr_merge_gain_2_);
+          device_->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, &hdr_config, sizeof(OBHdrConfig));
+        }
+
       } else {
         ROS_INFO_STREAM("Skip setting " << filter_name);
       }
@@ -236,7 +277,6 @@ void OBCameraNode::setupDevices() {
     if (device_->isPropertySupported(OB_PROP_IR_LONG_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_IR_LONG_EXPOSURE_BOOL, enable_ir_long_exposure_);
     }
-
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
   } catch (const std::exception& e) {

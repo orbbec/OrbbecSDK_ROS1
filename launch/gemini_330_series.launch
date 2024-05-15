@@ -15,7 +15,7 @@
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
     <arg name="laser_on_off_mode" default="0"/>
-    <arg name="sync_mode" default="free_run"/>
+    <arg name="sync_mode" default="standalone"/>
 
 
     <!-- Color camera parameters -->
@@ -58,7 +58,7 @@
     <arg name="enable_ir_long_exposure" default="false"/>
 
     <!-- Point cloud parameters -->
-    <arg name="enable_point_cloud" default="true"/>
+    <arg name="enable_point_cloud" default="false"/>
     <arg name="enable_colored_point_cloud" default="true"/>
     <arg name="ordered_pc" default="false"/>
     <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
@@ -74,17 +74,21 @@
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_hole_filling_filter" default="false"/>
     <arg name="sequence_id_filter_id" default="1"/>
-    <arg name="threshold_filter_max" default="16000"/>
-    <arg name="threshold_filter_min" default="0"/>
+    <arg name="threshold_filter_max" default="-1"/>
+    <arg name="threshold_filter_min" default="-1"/>
     <arg name="noise_removal_filter_min_diff" default="256"/>
     <arg name="noise_removal_filter_max_size" default="80"/>
-    <arg name="spatial_filter_alpha" default="0.5"/>
-    <arg name="spatial_filter_diff_threshold" default="8"/>
-    <arg name="spatial_filter_magnitude" default="1"/>
-    <arg name="spatial_filter_radius" default="1"/>
-    <arg name="temporal_filter_diff_threshold" default="0.1"/>
-    <arg name="temporal_filter_weight" default="0.4"/>
-    <arg name="hole_filling_filter_mode" default="FILL_TOP"/>
+    <arg name="spatial_filter_alpha" default="-1.0"/>
+    <arg name="spatial_filter_diff_threshold" default="-1"/>
+    <arg name="spatial_filter_magnitude" default="-1"/>
+    <arg name="spatial_filter_radius" default="-1"/>
+    <arg name="temporal_filter_diff_threshold" default="-1.-"/>
+    <arg name="temporal_filter_weight" default="-1.0"/>
+    <arg name="hole_filling_filter_mode" default=""/>
+    <arg name="hdr_merge_exposure_1" default="-1"/>
+    <arg name="hdr_merge_gain_1" default="-1"/>
+    <arg name="hdr_merge_exposure_2" default="-1"/>
+    <arg name="hdr_merge_gain_2" default="-1"/>
     <!-- IMU parameters -->
     <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="true"/>
@@ -175,6 +179,10 @@
             <param name="temporal_filter_diff_threshold" value="$(arg temporal_filter_diff_threshold)"/>
             <param name="temporal_filter_weight" value="$(arg temporal_filter_weight)"/>
             <param name="hole_filling_filter_mode" value="$(arg hole_filling_filter_mode)"/>
+            <param name="hdr_merge_exposure_1" value="$(arg hdr_merge_exposure_1)"/>
+            <param name="hdr_merge_gain_1" value="$(arg hdr_merge_gain_1)"/>
+            <param name="hdr_merge_exposure_2" value="$(arg hdr_merge_exposure_2)"/>
+            <param name="hdr_merge_gain_2" value="$(arg hdr_merge_gain_2)"/>
 
             <param name="enable_sync_output_accel_gyro" value="$(arg enable_sync_output_accel_gyro)"/>
             <param name="enable_accel" value="$(arg enable_accel)"/>

@@ -52,7 +52,7 @@
     <arg name="enable_soft_filter" default="true"/>
     <arg name="soft_filter_max_diff" default="-1"/>
     <arg name="soft_filter_speckle_size" default="-1"/>
-    <arg name="sync_mode" default="free_run"/>
+    <arg name="sync_mode" default="standalone"/>
     <arg name="depth_delay_us" default="0"/>
     <arg name="color_delay_us" default="0"/>
     <arg name="trigger2image_delay_us" default="0"/>
