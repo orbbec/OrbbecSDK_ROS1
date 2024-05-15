@@ -456,6 +456,32 @@ OBMultiDeviceSyncMode OBSyncModeFromString(const std::string &mode) {
   }
 }
 
+std::string OBSyncModeToString(const OBMultiDeviceSyncMode &mode) {
+  switch (mode) {
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN:
+      return "FREE_RUN";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_STANDALONE:
+      return "STANDALONE";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_PRIMARY:
+      return "PRIMARY";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_SECONDARY:
+      return "SECONDARY";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED:
+      return "SECONDARY_SYNCED";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING:
+      return "SOFTWARE_TRIGGERING";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING:
+      return "HARDWARE_TRIGGERING";
+    default:
+      return "FREE_RUN";
+  }
+}
+
+std::ostream &operator<<(std::ostream &os, const OBMultiDeviceSyncMode &rhs) {
+  os << OBSyncModeToString(rhs);
+  return os;
+}
+
 OB_SAMPLE_RATE sampleRateFromString(std::string &sample_rate) {
   // covert to lower case
   std::transform(sample_rate.begin(), sample_rate.end(), sample_rate.begin(), ::tolower);

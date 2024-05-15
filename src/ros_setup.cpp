@@ -125,8 +125,14 @@ void OBCameraNode::setupDevices() {
     if (!device_preset_.empty()) {
       device_->loadPreset(device_preset_.c_str());
     }
-    if (sync_mode_ != OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN) {
+    if (!sync_mode_str_.empty() &&
+        device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
       auto sync_config = device_->getMultiDeviceSyncConfig();
+      ROS_INFO_STREAM("current sync mode: " << sync_config.syncMode);
+      std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(),
+                     ::toupper);
+      sync_mode_ = OBSyncModeFromString(sync_mode_str_);
       sync_config.syncMode = sync_mode_;
       sync_config.depthDelayUs = depth_delay_us_;
       sync_config.colorDelayUs = color_delay_us_;
@@ -134,10 +140,10 @@ void OBCameraNode::setupDevices() {
       sync_config.triggerOutDelayUs = trigger_out_delay_us_;
       sync_config.triggerOutEnable = trigger_out_enabled_;
       device_->setMultiDeviceSyncConfig(sync_config);
-      if (device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
-                                       OB_PERMISSION_READ_WRITE)) {
-      }
+      sync_config = device_->getMultiDeviceSyncConfig();
+      ROS_INFO_STREAM("set sync mode to " << sync_config.syncMode);
     }
+
     auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
     device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
@@ -244,6 +250,8 @@ void OBCameraNode::setupDevices() {
         if (noise_removal_filter_min_diff_ != -1 && noise_removal_filter_max_size_ != -1) {
           params.disp_diff = noise_removal_filter_min_diff_;
           params.max_size = noise_removal_filter_max_size_;
+          ROS_INFO_STREAM("set NoiseRemovalFilter disp_diff to " << noise_removal_filter_min_diff_);
+          ROS_INFO_STREAM("set NoiseRemovalFilter max_size to " << noise_removal_filter_max_size_);
           noise_removal_filter->setFilterParams(params);
         }
       } else if (filter_name == "HDRMerge" && enable_hdr_merge_) {
@@ -255,6 +263,7 @@ void OBCameraNode::setupDevices() {
           hdr_config.exposure_2 = hdr_merge_exposure_2_;
           hdr_config.gain_1 = hdr_merge_gain_1_;
           hdr_config.gain_2 = hdr_merge_gain_2_;
+          hdr_config.enable = true;
           ROS_INFO_STREAM("set HDRMerge exposure_1 to " << hdr_merge_exposure_1_);
           ROS_INFO_STREAM("set HDRMerge exposure_2 to " << hdr_merge_exposure_2_);
           ROS_INFO_STREAM("set HDRMerge gain_1 to " << hdr_merge_gain_1_);
