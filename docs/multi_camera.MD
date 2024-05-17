@@ -1,7 +1,3 @@
-Here's a revised version of the document tailored for using multiple Orbbec cameras in a ROS 1 environment:
-
----
-
 ## Using Multiple Cameras with the Orbbec ROS Package
 
 This section describes how to configure and use multiple Orbbec cameras simultaneously in a ROS 1 environment.
