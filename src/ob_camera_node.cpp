@@ -523,7 +523,7 @@ void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_
 }
 
 void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
-  if (depth_cloud_pub_.getNumSubscribers() == 0 || !enable_point_cloud_) {
+  if (!enable_point_cloud_ || depth_cloud_pub_.getNumSubscribers() == 0) {
     return;
   }
   auto depth_frame = frame_set->depthFrame();
@@ -613,7 +613,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
 }
 
 void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
-  if (depth_registered_cloud_pub_.getNumSubscribers() == 0 || !enable_colored_point_cloud_) {
+  if (!enable_colored_point_cloud_ || depth_registered_cloud_pub_.getNumSubscribers() == 0) {
     return;
   }
   if (!depth_frame_) {
