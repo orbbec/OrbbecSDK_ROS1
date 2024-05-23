@@ -15,7 +15,6 @@
  *******************************************************************************/
 #include "orbbec_camera/rk_mpp_decoder.h"
 #include <ros/ros.h>
-#include <glog/logging.h>
 #ifdef USE_LIBYUV
 #include <libyuv.h>
 #else
