@@ -18,7 +18,6 @@
 #include "constants.h"
 #include "utils.h"
 #include "types.h"
-#include <glog/logging.h>
 
 namespace orbbec_camera {
 class ROSOBSensor {

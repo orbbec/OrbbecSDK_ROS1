@@ -77,7 +77,6 @@ find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-pkg_search_module(GLOG REQUIRED libglog)
 # Additional dependencies based on options
 if (USE_RK_HW_DECODER)
   pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
@@ -182,7 +181,6 @@ endif ()
 set(COMMON_LINK_LIBRARIES
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
-  ${GLOG_LIBRARIES}
   -lOrbbecSDK
   -L${ORBBEC_LIBS_DIR}
   Threads::Threads

@@ -21,7 +21,6 @@
 #include "json.hpp"
 #include <functional>
 #include <boost/optional.hpp>
-#include <glog/logging.h>
 #include <eigen3/Eigen/Dense>
 #include "orbbec_camera/DeviceInfo.h"
 #include "orbbec_camera/Extrinsics.h"
