@@ -77,9 +77,7 @@ Install udev rules:
 cd ~/ros_ws
 source ./devel/setup.bash
 roscd orbbec_camera
-cd scripts
-sudo cp 99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
-sudo udevadm control --reload && sudo udevadm trigger
+sudo bash ./scripts/install_udev_rules.sh
 ```
 
 ## Start the Camera
