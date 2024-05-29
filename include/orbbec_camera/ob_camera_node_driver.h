@@ -76,6 +76,7 @@ class OBCameraNodeDriver {
   std::shared_ptr<std::thread> query_thread_ = nullptr;
   std::recursive_mutex device_lock_;
   int device_num_ = 1;
+  bool enumerate_net_device_ = false;
   std::shared_ptr<std::thread> reset_device_thread_ = nullptr;
   std::condition_variable reset_device_cv_;
   std::atomic_bool reset_device_{false};

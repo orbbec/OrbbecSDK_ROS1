@@ -73,8 +73,7 @@ void OBCameraNodeDriver::init() {
   usb_port_ = nh_private_.param<std::string>("usb_port", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 100);
   device_num_ = static_cast<int>(nh_private_.param<int>("device_num", 1));
-  auto enumerate_net_device_ =
-      static_cast<int>(nh_private_.param<bool>("enumerate_net_device", false));
+  enumerate_net_device_ = nh_private_.param<bool>("enumerate_net_device", false);
   ip_address_ = nh_private_.param<std::string>("ip_address", "");
   port_ = nh_private_.param<int>("port", 0);
   ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
@@ -317,7 +316,7 @@ OBLogSeverity OBCameraNodeDriver::obLogSeverityFromString(const std::string &log
 void OBCameraNodeDriver::queryDevice() {
   while (is_alive_ && ros::ok() && !device_connected_) {
     ROS_INFO_STREAM("queryDevice: first query device");
-    if (!ip_address_.empty() && port_ != 0) {
+    if (enumerate_net_device_ && !ip_address_.empty() && port_ != 0) {
       ROS_INFO_STREAM("queryDevice: connect to net device " << ip_address_ << ":" << port_);
       connectNetDevice(ip_address_, port_);
     } else {
