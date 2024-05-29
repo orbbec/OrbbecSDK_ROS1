@@ -191,12 +191,20 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     ctx_->enableDeviceClockSync(1800000);
   }
   CHECK_NOTNULL(device_info_.get());
+  std::string connection_type = device_info_->connectionType();
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
   ROS_INFO_STREAM("Serial number: " << device_info_->serialNumber());
   ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
   ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
   ROS_INFO_STREAM("device uid: " << device_info_->uid());
+  ROS_INFO_STREAM("device connection Type: " << connection_type);
   ROS_INFO_STREAM("Current node pid: " << getpid());
+  if (device_info_->pid() == FEMTO_BOLT_PID) {
+    if (connection_type != "USB3.0" && connection_type != "USB3.1" && connection_type != "USB3.2") {
+      ROS_ERROR("Femto Bolt only supports USB3.0/3.1/3.2 connection, please reconnect the device");
+      std::terminate();
+    }
+  }
 }
 
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList> &list) {
