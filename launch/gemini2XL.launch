@@ -14,27 +14,27 @@
     <arg name="connection_delay" default="100"/>
     <arg name="color_width" default="640"/>
     <arg name="color_height" default="400"/>
-    <arg name="color_fps" default="20"/>
+    <arg name="color_fps" default="10"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="400"/>
-    <arg name="depth_fps" default="20"/>
+    <arg name="depth_fps" default="10"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="Y16"/>
     <arg name="flip_depth" default="false"/>
     <arg name="depth_precision" default="1mm"/>
     <arg name="left_ir_width" default="640"/>
     <arg name="left_ir_height" default="400"/>
-    <arg name="left_ir_fps" default="20"/>
+    <arg name="left_ir_fps" default="10"/>
     <arg name="enable_left_ir" default="false"/>
     <arg name="left_ir_format" default="Y8"/>
     <arg name="flip_left_ir" default="false"/>
     <arg name="right_ir_width" default="640"/>
     <arg name="right_ir_height" default="400"/>
-    <arg name="right_ir_fps" default="20"/>
+    <arg name="right_ir_fps" default="10"/>
     <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="Y8"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
@@ -69,7 +69,7 @@
     <!-- Unbinned Dense Default -->
     <!-- Unbinned Sparse Default -->
     <!-- Binned Sparse Default -->
-    <arg name="depth_work_mode" default="Binned Sparse Default"/>
+    <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="use_hardware_time" default="true"/>
     <arg name="retry_on_usb3_detection_failure" default="false"/>
