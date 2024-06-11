@@ -1039,9 +1039,6 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
           ROS_ERROR_STREAM("Depth frame alignment failed");
           return;
         }
-      } else {
-        ROS_DEBUG("drop frame set");
-        return;
       }
     }
     if (enable_stream_[COLOR] && color_frame) {
@@ -1753,20 +1750,10 @@ void OBCameraNode::publishStaticTransforms() {
 }
 
 bool OBCameraNode::isGemini335PID(uint32_t pid) {
-  const uint16_t GEMINI_335_PID = 0x0800;    // Gemini 335 / 335e
-  const uint16_t GEMINI_330_PID = 0x0801;    // Gemini 330
-  const uint16_t GEMINI_336_PID = 0x0803;    // Gemini 336 / 336e
-  const uint16_t GEMINI_335L_PID = 0x0804;   // Gemini 335L
-  const uint16_t GEMINI_330L_PID = 0x0805;   // Gemini 336L
-  const uint16_t GEMINI_336L_PID = 0x0807;   // Gemini 335Lg
-  const uint16_t GEMINI_335LG_PID = 0x080B;  // Gemini 336Lg
-  const uint16_t GEMINI_336LG_PID = 0x080D;
-  const uint16_t GEMINI_335LE_PID = 0x080E;  // Gemini 335Le
-  const uint16_t GEMINI_336LE_PID = 0x0810;  // Gemini 335Le
   return pid == GEMINI_335_PID || pid == GEMINI_330_PID || pid == GEMINI_336_PID ||
          pid == GEMINI_335L_PID || pid == GEMINI_330L_PID || pid == GEMINI_336L_PID ||
          pid == GEMINI_335LG_PID || pid == GEMINI_336LG_PID || pid == GEMINI_335LE_PID ||
-         pid == GEMINI_336LE_PID;
+         pid == GEMINI_336LE_PID || pid == DABAI_A_PID || pid == DABAI_AL_PID;
 }
 
 }  // namespace orbbec_camera
