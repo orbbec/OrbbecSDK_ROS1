@@ -1039,9 +1039,6 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
           ROS_ERROR_STREAM("Depth frame alignment failed");
           return;
         }
-      } else {
-        ROS_DEBUG("drop frame set");
-        return;
       }
     }
     if (enable_stream_[COLOR] && color_frame) {
