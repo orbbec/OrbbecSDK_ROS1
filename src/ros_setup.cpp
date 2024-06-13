@@ -115,6 +115,28 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
     }
+    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
+      auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
+      ROS_INFO_STREAM("default_soft_filter_max_diff: " << default_soft_filter_max_diff);
+      if (soft_filter_max_diff_ != -1 && default_soft_filter_max_diff != soft_filter_max_diff_) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
+        auto new_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
+        ROS_INFO_STREAM("after set soft_filter_max_diff: " << new_soft_filter_max_diff);
+      }
+    }
+
+    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
+      auto default_soft_filter_speckle_size =
+          device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+      ROS_INFO_STREAM("default_soft_filter_speckle_size: " << default_soft_filter_speckle_size);
+      if (soft_filter_speckle_size_ != -1 &&
+          default_soft_filter_speckle_size != soft_filter_speckle_size_) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
+        auto new_soft_filter_speckle_size =
+            device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+        ROS_INFO_STREAM("after set soft_filter_speckle_size: " << new_soft_filter_speckle_size);
+      }
+    }
     if (enable_color_hdr_ &&
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
@@ -159,7 +181,8 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_EXPOSURE_INT, color_exposure_);
     }
-    if (ir_exposure_ != -1 && device_->isPropertySupported(OB_PROP_DEPTH_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
+    if (ir_exposure_ != -1 &&
+        device_->isPropertySupported(OB_PROP_DEPTH_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_DEPTH_EXPOSURE_INT, ir_exposure_);
     }
     if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
