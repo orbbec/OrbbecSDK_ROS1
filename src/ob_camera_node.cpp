@@ -219,6 +219,7 @@ void OBCameraNode::getParameters() {
   enable_depth_scale_ = nh_private_.param<bool>("enable_depth_scale", true);
   retry_on_usb3_detection_failure_ =
       nh_private_.param<bool>("retry_on_usb3_detection_failure", false);
+  laser_energy_level_ = nh_private_.param<int>("laser_energy_level", -1);
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
   if (isOpenNIDevice(device_info->pid())) {

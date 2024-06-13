@@ -499,6 +499,7 @@ class OBCameraNode {
   OBStreamType align_target_stream_ = OB_STREAM_COLOR;
   bool retry_on_usb3_detection_failure_ = false;
   bool enable_color_hdr_ = false;
+  int laser_energy_level_ = -1;
 };
 
 }  // namespace orbbec_camera
