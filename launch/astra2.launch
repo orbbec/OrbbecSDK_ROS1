@@ -49,6 +49,7 @@
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_soft_filter" default="true"/>
     <arg name="depth_work_mode" default=""/>
+    <arg name="laser_energy_level" default="-1"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -97,6 +98,7 @@
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
             <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
+            <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>

@@ -63,6 +63,7 @@
     <arg name="trigger_out_enabled" default="false"/>
     <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="true"/>
+    <arg name="laser_energy_level" default="-1"/>
     <group ns="$(arg camera_name)">
         <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
               output="$(arg output)" required="$(arg required)" respawn="$(arg respawn)"/>
@@ -127,6 +128,7 @@
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
+            <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <remap from="/$(arg camera_name)/depth/color/points"
                    to="/$(arg camera_name)/depth_registered/points"/>
         </node>

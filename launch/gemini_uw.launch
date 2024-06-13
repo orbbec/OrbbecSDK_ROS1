@@ -42,6 +42,7 @@
   <arg name="enable_soft_filter" default="true" />
   <!-- Configure the path for depth filter file, for example: /config/depthfilter/Openni_device.json -->
   <arg name="depth_filter_config" default="" />
+  <arg name="laser_energy_level" default="-1"/>
   <group ns="$(arg camera_name)">
     <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
       <param name="camera_name" value="$(arg camera_name)" />
@@ -84,6 +85,7 @@
       <param name="device_num" value="$(arg device_num)" />
       <param name="enable_soft_filter" value="$(arg enable_soft_filter)" />
       <param name="depth_filter_config" value="$(arg depth_filter_config)"/>
+      <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
       <remap from="/$(arg camera_name)/depth/color/points"
         to="/$(arg camera_name)/depth_registered/points" />
     </node>

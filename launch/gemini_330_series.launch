@@ -106,6 +106,7 @@
 
     <arg name="retry_on_usb3_detection_failure" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
+    <arg name="laser_energy_level" default="-1"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
@@ -198,6 +199,7 @@
             <param name="device_num" value="$(arg device_num)"/>
             <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
+            <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
