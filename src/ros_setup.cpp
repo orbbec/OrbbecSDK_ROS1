@@ -136,6 +136,9 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("Laser energy level set to " << new_laser_energy_level << " (new value)");
       }
     }
+    if (device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
+    }
     if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
       auto default_soft_filter_speckle_size =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);

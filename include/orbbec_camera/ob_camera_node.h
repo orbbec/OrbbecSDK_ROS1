@@ -500,6 +500,7 @@ class OBCameraNode {
   bool retry_on_usb3_detection_failure_ = false;
   bool enable_color_hdr_ = false;
   int laser_energy_level_ = -1;
+  bool enable_ldp_ = true;
 };
 
 }  // namespace orbbec_camera

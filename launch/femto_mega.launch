@@ -62,6 +62,7 @@
     <arg name="trigger_out_enabled" default="false"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="laser_energy_level" default="-1"/>
+    <arg name="enable_ldp" default="true"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -121,6 +122,7 @@
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
+            <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>
