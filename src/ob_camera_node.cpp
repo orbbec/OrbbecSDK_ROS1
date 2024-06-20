@@ -877,7 +877,7 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
     return;
   }
   std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-  
+
   auto imu_msg = sensor_msgs::Imu();
   setDefaultIMUMessage(imu_msg);
   imu_msg.header.frame_id = optical_frame_id_[stream_index];
