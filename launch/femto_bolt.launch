@@ -20,7 +20,7 @@
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <arg name="enable_color_hdr" default="false"/>
-    <arg name="enable_sync_output_accel_gyro" default="true"/> 
+    <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="200hz"/>
     <arg name="accel_range" default="4g"/>
@@ -62,6 +62,7 @@
     <!-- Bolt only support SW align mode, Please DO NOT change it -->
     <arg name="align_mode" default="SW"/>
     <arg name="laser_energy_level" default="-1"/>
+    <arg name="enable_ldp" default="true"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -123,6 +124,7 @@
             <param name="use_hardware_time" value="$(arg use_hardware_time)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
+            <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>

@@ -19,7 +19,7 @@
     <arg name="color_format" default="RGB"/>
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
-    <arg name="enable_sync_output_accel_gyro" default="true"/> 
+    <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="100hz"/>
     <arg name="accel_range" default="4g"/>
@@ -49,6 +49,7 @@
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_soft_filter" default="true"/>
     <arg name="laser_energy_level" default="-1"/>
+    <arg name="enable_ldp" default="true"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -98,6 +99,7 @@
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
+            <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>
