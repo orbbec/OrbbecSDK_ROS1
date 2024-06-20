@@ -298,6 +298,9 @@ void OBCameraNode::startIMUSyncStream() {
   imuPipeline_->enableFrameSync();
   imuPipeline_->start(imuConfig, [&](std::shared_ptr<ob::Frame> frame) {
     auto frameSet = frame->as<ob::FrameSet>();
+    if (!frameSet) {
+      return;
+    }
     auto aFrame = frameSet->getFrame(OB_FRAME_ACCEL);
     auto gFrame = frameSet->getFrame(OB_FRAME_GYRO);
     if (aFrame && gFrame) {
@@ -831,6 +834,7 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
     return;
   }
 
+  std::this_thread::sleep_for(std::chrono::nanoseconds(1));
   auto imu_msg = sensor_msgs::Imu();
   setDefaultIMUMessage(imu_msg);
 
@@ -872,6 +876,8 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
   if (!has_subscriber) {
     return;
   }
+  std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+  
   auto imu_msg = sensor_msgs::Imu();
   setDefaultIMUMessage(imu_msg);
   imu_msg.header.frame_id = optical_frame_id_[stream_index];
