@@ -63,7 +63,7 @@ class OBCameraNode {
 
   OBCameraNode &operator=(OBCameraNode &&) = delete;
 
-  ~OBCameraNode();
+  ~OBCameraNode() noexcept;
 
   bool isInitialized() const;
 
@@ -501,6 +501,13 @@ class OBCameraNode {
   bool enable_color_hdr_ = false;
   int laser_energy_level_ = -1;
   bool enable_ldp_ = true;
+  ob::PointCloudFilter depth_point_cloud_filter_;
+  boost::optional<OBCalibrationParam> calibration_param_;
+  boost::optional<OBXYTables> xy_tables_;
+  float *xy_table_data_ = nullptr;
+  uint32_t xy_table_data_size_ = 0;
+  uint8_t *rgb_point_cloud_buffer_ = nullptr;
+  uint32_t rgb_point_cloud_buffer_size_ = 0;
 };
 
 }  // namespace orbbec_camera
