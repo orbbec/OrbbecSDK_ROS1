@@ -553,7 +553,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   }
   CHECK_NOTNULL(pipeline_);
   auto camera_params = pipeline_->getCameraParam();
-  if (depth_registration_) {
+  if (depth_registration_ && isGemini335PID(device_info_->pid())) {
     camera_params.depthIntrinsic = camera_params.rgbIntrinsic;
   }
   depth_point_cloud_filter_.setCameraParam(camera_params);

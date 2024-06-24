@@ -137,14 +137,15 @@ void OBCameraNode::setupDevices() {
       }
     }
     if (device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ_WRITE)) {
+      ROS_INFO_STREAM("Setting LDP to " << (enable_ldp_ ? "true" : "false"));
       device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
     }
     if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
       auto default_soft_filter_speckle_size =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-      ROS_INFO_STREAM("default_soft_filter_speckle_size: " << default_soft_filter_speckle_size);
       if (soft_filter_speckle_size_ != -1 &&
           default_soft_filter_speckle_size != soft_filter_speckle_size_) {
+        ROS_INFO_STREAM("default_soft_filter_speckle_size: " << default_soft_filter_speckle_size);
         device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
         auto new_soft_filter_speckle_size =
             device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
@@ -155,14 +156,14 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
     }
-    if (enable_hardware_d2d_ &&
-        device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE)) {
-      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
+    if (device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, enable_hardware_d2d_);
       bool is_hardware_d2d = device_->getBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL);
       std::string d2d_mode = is_hardware_d2d ? "HW D2D" : "SW D2D";
       ROS_INFO_STREAM("Depth process is " << d2d_mode);
     }
     if (!device_preset_.empty()) {
+      ROS_INFO_STREAM("Loading device preset: " << device_preset_);
       device_->loadPreset(device_preset_.c_str());
     }
     if (!sync_mode_str_.empty() &&
