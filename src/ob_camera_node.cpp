@@ -650,7 +650,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
               color_width, color_height);
     return;
   }
-  if (!xy_tables_.has_value()) {
+  if (!xy_tables_) {
     calibration_param_ = pipeline_->getCalibrationParam(pipeline_config_);
 
     uint32_t table_size =
