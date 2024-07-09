@@ -161,7 +161,7 @@ void OBCameraNode::getParameters() {
   if (!depth_precision_str_.empty()) {
     depth_precision_level_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
   }
-  if (enable_colored_point_cloud_) {
+  if (enable_colored_point_cloud_ || enable_d2c_viewer_) {
     depth_registration_ = true;
   }
   soft_filter_max_diff_ = nh_private_.param<int>("soft_filter_max_diff", -1);
