@@ -215,6 +215,12 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->switchIRDataSourceChannelCallback(request, response);
         return response.success;
       });
+  get_ldp_measure_distance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+      "/" + camera_name_ + "/" + "get_ldp_measure_distance",
+      [this](GetInt32Request& request, GetInt32Response& response) {
+        response.success = this->getLdpMeasureDistanceCallback(request, response);
+        return response.success;
+      });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -670,6 +676,20 @@ bool OBCameraNode::getDeviceTypeCallback(GetStringRequest& request, GetStringRes
   auto device_info = device_->getDeviceInfo();
   response.data = ObDeviceTypeToString(device_info->deviceType());
   response.success = true;
+  return true;
+}
+
+bool OBCameraNode::getLdpMeasureDistanceCallback(GetInt32Request& request,
+                                                 GetInt32Response& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    response.data = device_->getIntProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get ldp measure distance: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
   return true;
 }
 
