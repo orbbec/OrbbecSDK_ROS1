@@ -276,6 +276,8 @@ class OBCameraNode {
 
   bool getDeviceTypeCallback(GetStringRequest &request, GetStringResponse &response);
 
+  bool getLdpMeasureDistanceCallback(GetInt32Request &request, GetInt32Response &response);
+
   bool getCameraInfoCallback(GetCameraInfoRequest &request, GetCameraInfoResponse &response,
                              const stream_index_pair &stream_index);
 
@@ -373,6 +375,7 @@ class OBCameraNode {
   ros::ServiceServer save_images_srv_;
   ros::ServiceServer switch_ir_mode_srv_;
   ros::ServiceServer switch_ir_data_source_channel_srv_;
+  ros::ServiceServer get_ldp_measure_distance_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
