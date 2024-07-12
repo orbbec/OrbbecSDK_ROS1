@@ -654,6 +654,20 @@ void OBCameraNode::setupPublishers() {
   std_msgs::String msg;
   msg.data = filter_status_.dump(2);
   filter_status_pub_.publish(msg);
+  sdk_version_pub_ = nh_.advertise<std_msgs::String>("/" + camera_name_ + "/sdk_version", 1, true);
+  auto device_info = device_->getDeviceInfo();
+  nlohmann::json data;
+  std_msgs::String sdk_msg;
+  data["firmware_version"] = device_info->firmwareVersion();
+  data["supported_min_sdk_version"] = device_info->supportedMinSdkVersion();
+  data["ros_sdk_version"] = OB_ROS_VERSION_STR;
+  std::string major = std::to_string(ob::Version::getMajor());
+  std::string minor = std::to_string(ob::Version::getMinor());
+  std::string patch = std::to_string(ob::Version::getPatch());
+  std::string version = major + "." + minor + "." + patch;
+  data["ob_sdk_version"] = version;
+  sdk_msg.data = data.dump(2);
+  sdk_version_pub_.publish(sdk_msg);
 }
 
 void OBCameraNode::setupCameraInfo() {
