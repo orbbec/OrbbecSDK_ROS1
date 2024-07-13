@@ -383,7 +383,7 @@ class OBCameraNode {
   std::vector<geometry_msgs::TransformStamped> static_tf_msgs_;
   std::shared_ptr<std::thread> tf_thread_ = nullptr;
   std::condition_variable tf_cv_;
-  double tf_publish_rate_ = 10.0;
+  double tf_publish_rate_ = 0.0;
   bool depth_registration_ = false;
   bool enable_frame_sync_ = false;
   std::recursive_mutex device_lock_;
