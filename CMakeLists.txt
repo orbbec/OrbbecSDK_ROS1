@@ -88,6 +88,16 @@ find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Boost COMPONENTS filesystem system REQUIRED)  
+# check if boost was found
+if(Boost_FOUND)
+    message(STATUS "Boost found!")
+    message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+    message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
+else()
+    message(FATAL_ERROR "Boost not found!")
+endif()
+
 # Additional dependencies based on options
 if (USE_RK_HW_DECODER)
   pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
@@ -192,6 +202,7 @@ endif ()
 set(COMMON_LINK_LIBRARIES
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
+  ${Boost_LIBRARIES}
   -lOrbbecSDK
   -L${ORBBEC_LIBS_DIR}
   Threads::Threads

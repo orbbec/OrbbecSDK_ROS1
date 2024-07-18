@@ -26,6 +26,7 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   * [Use Nodelet](#use-nodelet)
   * [Supported hardware products](#supported-hardware-products)
   * [Frequently Asked Questions](#frequently-asked-questions)
+    * [Compilation Failure Due to OpenCV Version Issues](#compilation-failure-due-to-opencv-version-issues)
     * [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
     * [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
   * [Other useful links](#other-useful-links)
@@ -412,6 +413,21 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 Please refer to the OrbbecSDK supported products: [Product Support](https://github.com/orbbec/OrbbecSDK?tab=readme-ov-file#product-support)
 
 ## Frequently Asked Questions
+
+### Compilation Failure Due to OpenCV Version Issues
+In some cases, you may have multiple versions of OpenCV on your host, which can lead to compilation failures. You can resolve this by specifying the OpenCV version. Find the CMakeLists.txt file in the cmake folder and locate the following code:
+```cmake
+find_package(OpenCV REQUIRED)
+```
+Either add OpenCV_dir or specify the version before it:
+```cmake
+find_package(OpenCV 4.2.0 REQUIRED)
+```
+Or:
+```cmake
+set(OpenCV_DIR "/path_to_your_opencv_dir")
+find_package(OpenCV REQUIRED)
+```
 
 ### No Picture from Multiple Cameras
 
