@@ -53,7 +53,7 @@
     <!-- Common IR camera parameters -->
     <arg name="enable_ir_auto_exposure" default="true"/>
     <!-- Depth/IR/Left IR/Right IR exposure is same -->
-    <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
+    <!-- -1 means not set, other value bigger than 0, the value is the exposure time in us-->
     <arg name="ir_exposure" default="-1"/>
     <arg name="enable_ir_long_exposure" default="false"/>
 
