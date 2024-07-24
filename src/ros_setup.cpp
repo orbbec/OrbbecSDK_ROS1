@@ -304,6 +304,7 @@ void OBCameraNode::setupDevices() {
       } else if (filter_name == "HDRMerge" && enable_hdr_merge_) {
         auto hdr_merge_filter = filter->as<ob::HdrMerge>();
         OBHdrConfig hdr_config{};
+        hdr_merge_filter->enable(true);
         if (hdr_merge_exposure_1_ != -1 && hdr_merge_exposure_2_ != -1 && hdr_merge_gain_1_ != -1 &&
             hdr_merge_gain_2_ != -1) {
           hdr_config.exposure_1 = hdr_merge_exposure_1_;
