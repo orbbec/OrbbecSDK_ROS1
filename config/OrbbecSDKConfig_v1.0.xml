@@ -3872,19 +3872,19 @@
                 <Height>480</Height>
                 <!--The
                 frame rate of the resolution enabled by default, int type-->
-                <FPS>30</FPS>
+                <FPS>20</FPS>
                 <Format>Y16</Format>
             </Depth>
             <Color>
                 <!--The
                 resolution width is enabled by default, int type-->
-                <Width>1280</Width>
+                <Width>640</Width>
                 <!--High
                 resolution is enabled by default, int type-->
-                <Height>720</Height>
+                <Height>480</Height>
                 <!--The
                 frame rate of the resolution enabled by default, int type-->
-                <FPS>30</FPS>
+                <FPS>20</FPS>
                 <Format>YUYV</Format>
             </Color>
             <IR>
@@ -3896,7 +3896,7 @@
                 <Height>480</Height>
                 <!--The
                 frame rate of the resolution enabled by default, int type-->
-                <FPS>30</FPS>
+                <FPS>20</FPS>
                 <Format>Y8</Format>
             </IR>
             <IR_LEFT>
@@ -3908,7 +3908,7 @@
                 <Height>480</Height>
                 <!--The
                 frame rate of the resolution enabled by default, int type-->
-                <FPS>30</FPS>
+                <FPS>20</FPS>
                 <Format>Y8</Format>
             </IR_LEFT>
             <IR_RIGHT>
@@ -3920,7 +3920,7 @@
                 <Height>480</Height>
                 <!--The
                 frame rate of the resolution enabled by default, int type-->
-                <FPS>30</FPS>
+                <FPS>20</FPS>
                 <Format>Y8</Format>
             </IR_RIGHT>
         </OrbbecDaBaiA>
