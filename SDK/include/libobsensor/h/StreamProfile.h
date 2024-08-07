@@ -85,6 +85,15 @@ ob_camera_intrinsic ob_video_stream_get_intrinsic(ob_stream_profile *profile, ob
 ob_camera_distortion ob_video_stream_get_distortion(ob_stream_profile *profile, ob_error **error);
 
 /**
+ * @brief Return the camera to imu time shift.
+ *
+ * @param profile Stream profile object.If the profile is not for the accelerometer or gyroscope stream, an error will be returned.
+ * @param error   Log error messages
+ * @return double Return the camera to imu time shift in seconds.
+ */
+double ob_imu_stream_profile_get_camera_to_imu_timeshift(ob_stream_profile *profile, ob_error **error);
+
+/**
  * @brief Get the full-scale range of the accelerometer stream.
  *
  * @param[in] profile Stream profile object. If the profile is not for the accelerometer stream, an error will be returned.

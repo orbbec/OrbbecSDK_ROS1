@@ -15,6 +15,7 @@ struct StreamProfileListImpl;
 namespace ob {
 
 class VideoStreamProfile;
+class ImuStreamProfile;
 class GyroStreamProfile;
 class AccelStreamProfile;
 class Config;
@@ -124,10 +125,26 @@ public:
     OBCameraDistortion getDistortion();
 };
 
+class OB_EXTENSION_API ImuStreamProfile : public StreamProfile {
+public:
+    explicit ImuStreamProfile(StreamProfile &profile);
+
+    explicit ImuStreamProfile(std::unique_ptr<StreamProfileImpl> impl);
+
+    ~ImuStreamProfile() noexcept override;
+
+    /**
+     * @brief Return the camera to imu time shift.
+     *
+     * @return double Return the camera to imu time shift in seconds.
+     */
+    double getCameraToImuTimeShift() const;
+};
+
 /**
  * @brief Class representing an accelerometer stream profile.
  */
-class OB_EXTENSION_API AccelStreamProfile : public StreamProfile {
+class OB_EXTENSION_API AccelStreamProfile : public ImuStreamProfile {
 public:
     explicit AccelStreamProfile(StreamProfile &profile);
 
@@ -160,7 +177,7 @@ public:
 /**
  * @brief Class representing a gyroscope stream profile.
  */
-class OB_EXTENSION_API GyroStreamProfile : public StreamProfile {
+class OB_EXTENSION_API GyroStreamProfile : public ImuStreamProfile {
 public:
     explicit GyroStreamProfile(StreamProfile &profile);
 
