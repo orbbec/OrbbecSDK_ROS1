@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.0.2)
 project(orbbec_camera)
 
 # Compiler settings
+if(APPLE)
+  SET (CMAKE_CXX_COMPILER  "/usr/bin/clang++")
+endif(APPLE)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
@@ -26,15 +30,19 @@ option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" OFF)
 # Detect machine type
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
 execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
-if ((${MACHINES} MATCHES "x86_64") AND (${MACHINES_BIT} MATCHES "64"))
+if(APPLE)
+  set(HOST_PLATFORM "osx")
+else()
+  if ((${MACHINES} MATCHES "x86_64") AND (${MACHINES_BIT} MATCHES "64"))
   set(HOST_PLATFORM "x64")
-elseif (${MACHINES} MATCHES "arm")
+  elseif (${MACHINES} MATCHES "arm" AND (${MACHINES_BIT} MATCHES "32"))
   set(HOST_PLATFORM "arm32")
-elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "64"))
+  elseif ((${MACHINES} MATCHES "aarch64" OR ${MACHINES} MATCHES "arm" ) AND (${MACHINES_BIT} MATCHES "64"))
   set(HOST_PLATFORM "arm64")
-elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "32"))
+  elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "32"))
   set(HOST_PLATFORM "arm32")
-endif ()
+  endif ()
+endif(APPLE)
 
 # Paths
 set(ORBBEC_LIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SDK/lib/${HOST_PLATFORM})
@@ -199,15 +207,27 @@ if (USE_NV_HW_DECODER)
 endif ()
 
 # Link libraries
-set(COMMON_LINK_LIBRARIES
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-  ${Boost_LIBRARIES}
-  -lOrbbecSDK
-  -L${ORBBEC_LIBS_DIR}
-  Threads::Threads
-  -lrt
-)
+if(APPLE)
+  # rt is not required for MacOs
+  set(COMMON_LINK_LIBRARIES
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+    ${Boost_LIBRARIES}
+    -lOrbbecSDK
+    -L${ORBBEC_LIBS_DIR}
+    Threads::Threads
+    )
+else()
+  set(COMMON_LINK_LIBRARIES
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+    ${Boost_LIBRARIES}
+    -lOrbbecSDK
+    -L${ORBBEC_LIBS_DIR}
+    Threads::Threads
+    -lrt
+    )
+endif(APPLE)
 
 if (USE_RK_HW_DECODER)
   list(APPEND COMMON_LINK_LIBRARIES
