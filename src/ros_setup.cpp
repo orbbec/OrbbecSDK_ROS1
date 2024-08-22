@@ -125,6 +125,14 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("after set soft_filter_max_diff: " << new_soft_filter_max_diff);
       }
     }
+    if (!depth_filter_config_.empty() && enable_depth_filter_) {
+      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
+      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
+    } else {
+      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+      }
+    }
     if (laser_energy_level_ != -1 &&
         device_->isPropertySupported(OB_PROP_LASER_ENERGY_LEVEL_INT, OB_PERMISSION_READ_WRITE)) {
       ROS_INFO_STREAM("Setting laser energy level to " << laser_energy_level_);
