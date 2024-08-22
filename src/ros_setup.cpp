@@ -73,6 +73,100 @@ void OBCameraNode::selectBaseStream() {
   }
 }
 
+void OBCameraNode::setupRecommendedPostFilters() {
+  // set depth sensor to filter
+  auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
+  auto filter_list = depth_sensor->getRecommendedFilters();
+  for (size_t i = 0; i < filter_list->count(); i++) {
+    auto filter = filter_list->getFilter(i);
+    std::map<std::string, bool> filter_params = {
+        {"DecimationFilter", enable_decimation_filter_},
+        {"HDRMerge", enable_hdr_merge_},
+        {"SequencedFilter", enable_sequenced_filter_},
+        {"ThresholdFilter", enable_threshold_filter_},
+        {"NoiseRemovalFilter", enable_noise_removal_filter_},
+        {"SpatialAdvancedFilter", enable_spatial_filter_},
+        {"TemporalFilter", enable_temporal_filter_},
+        {"HoleFillingFilter", enable_hole_filling_filter_},
+
+    };
+    std::string filter_name = filter->type();
+    ROS_INFO_STREAM("Setting " << filter_name << "......");
+    if (filter_params.find(filter_name) != filter_params.end()) {
+      std::string value = filter_params[filter_name] ? "true" : "false";
+      ROS_INFO_STREAM("set " << filter_name << " to " << value);
+      filter->enable(filter_params[filter_name]);
+      filter_status_[filter_name] = filter_params[filter_name];
+    }
+    if (filter_name == "DecimationFilter" && enable_decimation_filter_) {
+      auto decimation_filter = filter->as<ob::DecimationFilter>();
+      if (decimation_filter_scale_range_ != -1) {
+        decimation_filter->setScaleValue(decimation_filter_scale_range_);
+      }
+    } else if (filter_name == "ThresholdFilter" && enable_threshold_filter_) {
+      auto threshold_filter = filter->as<ob::ThresholdFilter>();
+      if (threshold_filter_min_ != -1 && threshold_filter_max_ != -1) {
+        threshold_filter->setValueRange(threshold_filter_min_, threshold_filter_max_);
+      }
+    } else if (filter_name == "SpatialAdvancedFilter" && enable_spatial_filter_) {
+      auto spatial_filter = filter->as<ob::SpatialAdvancedFilter>();
+      OBSpatialAdvancedFilterParams params{};
+      if (spatial_filter_alpha_ != -1.0 && spatial_filter_magnitude_ != -1 &&
+          spatial_filter_radius_ != -1 && spatial_filter_diff_threshold_ != -1) {
+        params.alpha = spatial_filter_alpha_;
+        params.magnitude = spatial_filter_magnitude_;
+        params.radius = spatial_filter_radius_;
+        params.disp_diff = spatial_filter_diff_threshold_;
+        spatial_filter->setFilterParams(params);
+      }
+    } else if (filter_name == "TemporalFilter" && enable_temporal_filter_) {
+      auto temporal_filter = filter->as<ob::TemporalFilter>();
+      if (temporal_filter_diff_threshold_ != -1 && temporal_filter_weight_ != -1) {
+        temporal_filter->setDiffScale(temporal_filter_diff_threshold_);
+        temporal_filter->setWeight(temporal_filter_weight_);
+      }
+    } else if (filter_name == "HoleFillingFilter" && enable_hole_filling_filter_ &&
+               !hole_filling_filter_mode_.empty()) {
+      auto hole_filling_filter = filter->as<ob::HoleFillingFilter>();
+      OBHoleFillingMode hole_filling_mode = holeFillingModeFromString(hole_filling_filter_mode_);
+      hole_filling_filter->setFilterMode(hole_filling_mode);
+    } else if (filter_name == "SequenceIdFilter" && enable_sequenced_filter_) {
+      auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
+      if (sequence_id_filter_id_ != -1) {
+        sequenced_filter->selectSequenceId(sequence_id_filter_id_);
+      }
+    } else if (filter_name == "NoiseRemovalFilter" && enable_noise_removal_filter_) {
+      auto noise_removal_filter = filter->as<ob::NoiseRemovalFilter>();
+      OBNoiseRemovalFilterParams params{};
+      if (noise_removal_filter_min_diff_ != -1 && noise_removal_filter_max_size_ != -1) {
+        params.disp_diff = noise_removal_filter_min_diff_;
+        params.max_size = noise_removal_filter_max_size_;
+        ROS_INFO_STREAM("set NoiseRemovalFilter disp_diff to " << noise_removal_filter_min_diff_);
+        ROS_INFO_STREAM("set NoiseRemovalFilter max_size to " << noise_removal_filter_max_size_);
+        noise_removal_filter->setFilterParams(params);
+      }
+    } else if (filter_name == "HDRMerge" && enable_hdr_merge_) {
+      auto hdr_merge_filter = filter->as<ob::HdrMerge>();
+      OBHdrConfig hdr_config{};
+      if (hdr_merge_exposure_1_ != -1 && hdr_merge_exposure_2_ != -1 && hdr_merge_gain_1_ != -1 &&
+          hdr_merge_gain_2_ != -1) {
+        hdr_config.exposure_1 = hdr_merge_exposure_1_;
+        hdr_config.exposure_2 = hdr_merge_exposure_2_;
+        hdr_config.gain_1 = hdr_merge_gain_1_;
+        hdr_config.gain_2 = hdr_merge_gain_2_;
+        hdr_config.enable = true;
+        ROS_INFO_STREAM("set HDRMerge exposure_1 to " << hdr_merge_exposure_1_);
+        ROS_INFO_STREAM("set HDRMerge exposure_2 to " << hdr_merge_exposure_2_);
+        ROS_INFO_STREAM("set HDRMerge gain_1 to " << hdr_merge_gain_1_);
+        ROS_INFO_STREAM("set HDRMerge gain_2 to " << hdr_merge_gain_2_);
+        device_->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, &hdr_config, sizeof(OBHdrConfig));
+      }
+      hdr_merge_filter->enable(true);
+    } else {
+      ROS_INFO_STREAM("Skip setting " << filter_name);
+    }
+  }
+}
 void OBCameraNode::setupDevices() {
   auto sensor_list = device_->getSensorList();
   for (size_t i = 0; i < sensor_list->count(); i++) {
@@ -194,7 +288,6 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("set sync mode to " << sync_config.syncMode);
     }
 
-    auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
     if (device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     }
@@ -238,98 +331,6 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("set depth unit to " << depth_unit_flexible_adjustment << "mm");
         device_->setFloatProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT,
                                   depth_unit_flexible_adjustment);
-      }
-    }
-    // set depth sensor to filter
-    auto filter_list = depth_sensor->getRecommendedFilters();
-    for (size_t i = 0; i < filter_list->count(); i++) {
-      auto filter = filter_list->getFilter(i);
-      std::map<std::string, bool> filter_params = {
-          {"DecimationFilter", enable_decimation_filter_},
-          {"HDRMerge", enable_hdr_merge_},
-          {"SequencedFilter", enable_sequenced_filter_},
-          {"ThresholdFilter", enable_threshold_filter_},
-          {"NoiseRemovalFilter", enable_noise_removal_filter_},
-          {"SpatialAdvancedFilter", enable_spatial_filter_},
-          {"TemporalFilter", enable_temporal_filter_},
-          {"HoleFillingFilter", enable_hole_filling_filter_},
-
-      };
-      std::string filter_name = filter->type();
-      ROS_INFO_STREAM("Setting " << filter_name << "......");
-      if (filter_params.find(filter_name) != filter_params.end()) {
-        std::string value = filter_params[filter_name] ? "true" : "false";
-        ROS_INFO_STREAM("set " << filter_name << " to " << value);
-        filter->enable(filter_params[filter_name]);
-        filter_status_[filter_name] = filter_params[filter_name];
-      }
-      if (filter_name == "DecimationFilter" && enable_decimation_filter_) {
-        auto decimation_filter = filter->as<ob::DecimationFilter>();
-        if (decimation_filter_scale_range_ != -1) {
-          decimation_filter->setScaleValue(decimation_filter_scale_range_);
-        }
-      } else if (filter_name == "ThresholdFilter" && enable_threshold_filter_) {
-        auto threshold_filter = filter->as<ob::ThresholdFilter>();
-        if (threshold_filter_min_ != -1 && threshold_filter_max_ != -1) {
-          threshold_filter->setValueRange(threshold_filter_min_, threshold_filter_max_);
-        }
-      } else if (filter_name == "SpatialAdvancedFilter" && enable_spatial_filter_) {
-        auto spatial_filter = filter->as<ob::SpatialAdvancedFilter>();
-        OBSpatialAdvancedFilterParams params{};
-        if (spatial_filter_alpha_ != -1.0 && spatial_filter_magnitude_ != -1 &&
-            spatial_filter_radius_ != -1 && spatial_filter_diff_threshold_ != -1) {
-          params.alpha = spatial_filter_alpha_;
-          params.magnitude = spatial_filter_magnitude_;
-          params.radius = spatial_filter_radius_;
-          params.disp_diff = spatial_filter_diff_threshold_;
-          spatial_filter->setFilterParams(params);
-        }
-      } else if (filter_name == "TemporalFilter" && enable_temporal_filter_) {
-        auto temporal_filter = filter->as<ob::TemporalFilter>();
-        if (temporal_filter_diff_threshold_ != -1 && temporal_filter_weight_ != -1) {
-          temporal_filter->setDiffScale(temporal_filter_diff_threshold_);
-          temporal_filter->setWeight(temporal_filter_weight_);
-        }
-      } else if (filter_name == "HoleFillingFilter" && enable_hole_filling_filter_ &&
-                 !hole_filling_filter_mode_.empty()) {
-        auto hole_filling_filter = filter->as<ob::HoleFillingFilter>();
-        OBHoleFillingMode hole_filling_mode = holeFillingModeFromString(hole_filling_filter_mode_);
-        hole_filling_filter->setFilterMode(hole_filling_mode);
-      } else if (filter_name == "SequenceIdFilter" && enable_sequenced_filter_) {
-        auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
-        if (sequence_id_filter_id_ != -1) {
-          sequenced_filter->selectSequenceId(sequence_id_filter_id_);
-        }
-      } else if (filter_name == "NoiseRemovalFilter" && enable_noise_removal_filter_) {
-        auto noise_removal_filter = filter->as<ob::NoiseRemovalFilter>();
-        OBNoiseRemovalFilterParams params{};
-        if (noise_removal_filter_min_diff_ != -1 && noise_removal_filter_max_size_ != -1) {
-          params.disp_diff = noise_removal_filter_min_diff_;
-          params.max_size = noise_removal_filter_max_size_;
-          ROS_INFO_STREAM("set NoiseRemovalFilter disp_diff to " << noise_removal_filter_min_diff_);
-          ROS_INFO_STREAM("set NoiseRemovalFilter max_size to " << noise_removal_filter_max_size_);
-          noise_removal_filter->setFilterParams(params);
-        }
-      } else if (filter_name == "HDRMerge" && enable_hdr_merge_) {
-        auto hdr_merge_filter = filter->as<ob::HdrMerge>();
-        OBHdrConfig hdr_config{};
-        hdr_merge_filter->enable(true);
-        if (hdr_merge_exposure_1_ != -1 && hdr_merge_exposure_2_ != -1 && hdr_merge_gain_1_ != -1 &&
-            hdr_merge_gain_2_ != -1) {
-          hdr_config.exposure_1 = hdr_merge_exposure_1_;
-          hdr_config.exposure_2 = hdr_merge_exposure_2_;
-          hdr_config.gain_1 = hdr_merge_gain_1_;
-          hdr_config.gain_2 = hdr_merge_gain_2_;
-          hdr_config.enable = true;
-          ROS_INFO_STREAM("set HDRMerge exposure_1 to " << hdr_merge_exposure_1_);
-          ROS_INFO_STREAM("set HDRMerge exposure_2 to " << hdr_merge_exposure_2_);
-          ROS_INFO_STREAM("set HDRMerge gain_1 to " << hdr_merge_gain_1_);
-          ROS_INFO_STREAM("set HDRMerge gain_2 to " << hdr_merge_gain_2_);
-          device_->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, &hdr_config, sizeof(OBHdrConfig));
-        }
-
-      } else {
-        ROS_INFO_STREAM("Skip setting " << filter_name);
       }
     }
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
@@ -783,6 +784,9 @@ void OBCameraNode::readDefaultExposure() {
       auto sensor = sensors_[stream_index];
       CHECK_NOTNULL(sensor.get());
       auto exposure = sensor->getExposure();
+      bool is_auto_exposure = sensor->getAutoExposure();
+      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure
+                                 << " auto exposure " << is_auto_exposure);
       ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure);
       default_exposure_[stream_index] = exposure;
     } catch (ob::Error& e) {

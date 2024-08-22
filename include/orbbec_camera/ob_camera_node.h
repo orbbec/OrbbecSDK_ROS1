@@ -93,6 +93,8 @@ class OBCameraNode {
 
   void selectBaseStream();
 
+  void setupRecommendedPostFilters();
+
   void setupFrameCallback();
 
   void readDefaultGain();
