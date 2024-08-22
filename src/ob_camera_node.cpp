@@ -47,6 +47,7 @@ void OBCameraNode::init() {
   setupConfig();
   getParameters();
   setupDevices();
+  setupRecommendedPostFilters();
   selectBaseStream();
   setupProfiles();
   setupCameraInfo();

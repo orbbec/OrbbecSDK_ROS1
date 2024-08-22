@@ -85,10 +85,10 @@
     <arg name="temporal_filter_diff_threshold" default="-1.-"/>
     <arg name="temporal_filter_weight" default="-1.0"/>
     <arg name="hole_filling_filter_mode" default=""/>
-    <arg name="hdr_merge_exposure_1" default="-1"/>
-    <arg name="hdr_merge_gain_1" default="-1"/>
-    <arg name="hdr_merge_exposure_2" default="-1"/>
-    <arg name="hdr_merge_gain_2" default="-1"/>
+    <arg name="hdr_merge_exposure_1" default="7500"/>
+    <arg name="hdr_merge_gain_1" default="16"/>
+    <arg name="hdr_merge_exposure_2" default="1"/>
+    <arg name="hdr_merge_gain_2" default="16"/>
     <!-- IMU parameters -->
     <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="true"/>
