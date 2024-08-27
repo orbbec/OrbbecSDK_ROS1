@@ -227,6 +227,10 @@ void OBCameraNode::setupDevices() {
         device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
       }
     }
+    if (!depth_work_mode_.empty()) {
+      ROS_INFO_STREAM("Set depth work mode: " << depth_work_mode_);
+      device_->switchDepthWorkMode(depth_work_mode_.c_str());
+    }
     if (laser_energy_level_ != -1 &&
         device_->isPropertySupported(OB_PROP_LASER_ENERGY_LEVEL_INT, OB_PERMISSION_READ_WRITE)) {
       ROS_INFO_STREAM("Setting laser energy level to " << laser_energy_level_);
@@ -786,7 +790,7 @@ void OBCameraNode::readDefaultExposure() {
       auto exposure = sensor->getExposure();
       bool is_auto_exposure = sensor->getAutoExposure();
       ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure
-                                 << " auto exposure " << is_auto_exposure);
+                                << " auto exposure " << is_auto_exposure);
       ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure);
       default_exposure_[stream_index] = exposure;
     } catch (ob::Error& e) {
