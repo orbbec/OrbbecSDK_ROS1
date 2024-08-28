@@ -47,7 +47,8 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   # Assuming you have sourced the ROS environment, same below
   sudo apt install libgflags-dev ros-$ROS_DISTRO-image-geometry ros-$ROS_DISTRO-camera-info-manager \
   ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev \
-  ros-$ROS_DISTRO-diagnostic-updater ros-$ROS_DISTRO-diagnostic-msgs
+  ros-$ROS_DISTRO-diagnostic-updater ros-$ROS_DISTRO-diagnostic-msgs \
+  ros-$ROS_DISTRO-backward-ros libdw-dev
   ```
 
 ## Create ROS Workspace and Build

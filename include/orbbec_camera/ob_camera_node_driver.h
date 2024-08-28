@@ -20,6 +20,7 @@
 #include <mutex>
 #include <semaphore.h>
 #include <pthread.h>
+#include <backward_ros/backward.hpp>
 
 namespace orbbec_camera {
 
@@ -88,5 +89,6 @@ class OBCameraNodeDriver {
   // net work config
   std::string ip_address_;
   int port_ = 0;
+  static backward::SignalHandling sh;
 };
 }  // namespace orbbec_camera

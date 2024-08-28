@@ -55,6 +55,7 @@ if (USE_NV_HW_DECODER)
 endif ()
 # Dependencies
 find_package(catkin REQUIRED
+  backward_ros
   camera_info_manager
   cv_bridge
   dynamic_reconfigure
@@ -207,6 +208,7 @@ set(COMMON_LINK_LIBRARIES
   -L${ORBBEC_LIBS_DIR}
   Threads::Threads
   -lrt
+  -ldw # for stack trace
 )
 
 if (USE_RK_HW_DECODER)
