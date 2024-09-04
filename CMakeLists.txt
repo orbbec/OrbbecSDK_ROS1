@@ -55,7 +55,6 @@ if (USE_NV_HW_DECODER)
 endif ()
 # Dependencies
 find_package(catkin REQUIRED
-  backward_ros
   camera_info_manager
   cv_bridge
   dynamic_reconfigure
@@ -89,7 +88,7 @@ find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost COMPONENTS filesystem system REQUIRED)  
+find_package(Boost COMPONENTS filesystem system REQUIRED)
 # check if boost was found
 if(Boost_FOUND)
     message(STATUS "Boost found!")
