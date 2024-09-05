@@ -19,6 +19,7 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   * [Depth work mode switch:](#depth-work-mode-switch)
   * [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
   * [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
+  * [Multiple Camera Support](#multiple-camera-support)
   * [Available Services for Camera Control](#available-services-for-camera-control)
   * [Available Topics](#available-topics)
   * [Building a Debian Package](#building-a-debian-package)
@@ -26,9 +27,11 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
   * [Use Nodelet](#use-nodelet)
   * [Supported hardware products](#supported-hardware-products)
   * [Frequently Asked Questions](#frequently-asked-questions)
+    * [Unexpected Crash](#unexpected-crash)
+    * [No Data Stream from Multiple Cameras](#no-data-stream-from-multiple-cameras)
     * [Compilation Failure Due to OpenCV Version Issues](#compilation-failure-due-to-opencv-version-issues)
-    * [No Picture from Multiple Cameras](#no-picture-from-multiple-cameras)
-    * [Error: "Failed to start device: usbEnumerator createUsbDevice failed!"](#error-failed-to-start-device-usbenumerator-createusbdevice-failed)
+    * [Additional Troubleshooting](#additional-troubleshooting)
+    * [Why Are There So Many Launch Files?](#why-are-there-so-many-launch-files)
   * [Other useful links](#other-useful-links)
   * [License](#license)
 <!-- TOC -->
@@ -286,6 +289,10 @@ resolutions is as follows:
 rosrun orbbec_camera list_camera_profile_mode_node
 ```
 
+## Multiple Camera Support
+
+Please refer to the [Multiple Camera Support](./docs/multi_camera.MD) document for more information.
+
 ## Available Services for Camera Control
 
 The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or
@@ -415,6 +422,28 @@ Please refer to the OrbbecSDK supported products: [Product Support](https://gith
 
 ## Frequently Asked Questions
 
+### Unexpected Crash
+
+If the camera node crashes unexpectedly, it will generate a crash log in the current running directory: `Log/camera_crash_stack_trace_xx.log`.
+Please send this log to the support team or submit it to a GitHub issue for further assistance.
+
+### No Data Stream from Multiple Cameras
+
+**Insufficient Power Supply**:
+- Ensure that each camera is connected to a separate hub.
+- Use a powered hub to provide sufficient power to each camera.
+
+**High Resolution**:
+- Try lowering the resolution to resolve data stream issues.
+
+**Increase usbfs_memory_mb Value**:
+- Increase the `usbfs_memory_mb` value to 128MB (this is a reference value and can be adjusted based on your system’s needs)
+  by running the following command:
+```bash
+    echo 128 | sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb
+```
+- To make this change permanent, check [this link](https://github.com/OpenKinect/libfreenect2/issues/807).
+
 ### Compilation Failure Due to OpenCV Version Issues
 In some cases, you may have multiple versions of OpenCV on your host, which can lead to compilation failures. You can resolve this by specifying the OpenCV version. Find the CMakeLists.txt file in the cmake folder and locate the following code:
 ```cmake
@@ -430,41 +459,16 @@ set(OpenCV_DIR "/path_to_your_opencv_dir")
 find_package(OpenCV REQUIRED)
 ```
 
-### No Picture from Multiple Cameras
+### Additional Troubleshooting
 
-- It's possible that the power supply is insufficient. To avoid this, do not connect all cameras to the same hub and use
-  a powered hub instead.
+- If you encounter other issues, set the `log_level` parameter to `debug`. This will generate an SDK log file in the running directory: `Log/OrbbecSDK.log.txt`.
+  Please provide this file to the support team for further assistance.
+- If firmware logs are required, set `enable_heartbeat` to `true` to activate this feature.
 
-- It's also possible that the resolution is too high. To resolve this, try lowering the resolution.
+### Why Are There So Many Launch Files?
 
-### Error: "Failed to start device: usbEnumerator createUsbDevice failed!"
-
-- The current device does not have permission to access the device. Check the PID of the current device:
-
-  ```bash
-  lsusb | grep 2bc5
-  ```
-
-  Your output should look like this:
-
-  ```text
-  Bus 002 Device 007: ID 2bc5:your_pid_here
-  ```
-
-  Edit `/etc/udev/rules.d/99-obsensor-libusb.rules` and add the following line:
-
-  ```bash
-  SUBSYSTEM=="usb", ATTR{idProduct}=="your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root", GROUP:="video", SYMLINK+="your_device_name_here"
-  ```
-
-  Replace `your_pid_here` with the PID of your device and `your_device_name_here` with the name you want to create for
-  the device (e.g., `gemini_camera`).
-
-  Then restart the udev service:
-
-  ```bash
-  sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
-  ```
+- Different cameras have varying default resolutions and image formats.
+- To simplify usage, each camera has its own launch file.
 
 ## Other useful links
 
