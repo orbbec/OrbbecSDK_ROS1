@@ -424,7 +424,7 @@ Please refer to the OrbbecSDK supported products: [Product Support](https://gith
 
 ### Unexpected Crash
 
-If the camera node crashes unexpectedly, it will generate a crash log in the current running directory: `Log/camera_crash_stack_trace_xx.log`.
+If the camera node crashes unexpectedly, it will generate a crash log in the current running directory: `~/.ros/Log/camera_crash_stack_trace_xx.log`.
 Please send this log to the support team or submit it to a GitHub issue for further assistance.
 
 ### No Data Stream from Multiple Cameras
