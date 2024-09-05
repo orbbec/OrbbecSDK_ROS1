@@ -1,12 +1,29 @@
-## Using Multiple Cameras with the Orbbec ROS Package
+# Using Multiple Cameras with the Orbbec ROS Package
 
-This section describes how to configure and use multiple Orbbec cameras simultaneously in a ROS 1 environment.
+This guide describes how to configure and use multiple Orbbec cameras simultaneously in a ROS 1 environment.
 
-### Identifying Camera USB Ports
+## Prerequisites
+First asume that you have already installed the Orbbec ROS package. If not, please refer to the [Orbbec ROS Package Installation Guide](../README.MD).
 
-#### Script to List Connected Cameras
+## 1. Increase usbfs_memory_mb Value (CRITICAL STEP)
 
-To determine which USB ports the cameras are connected to, you can use the following bash script. This script lists all Orbbec devices attached to the system along with their USB port and serial number.
+**IMPORTANT: This step is crucial for multi-camera setups. Without increasing the usbfs_memory_mb value, you may not receive any data from your cameras.**
+
+For multi-camera setups, it's essential to increase the `usbfs_memory_mb` value. Set it to 128MB (adjustable based on your system's needs) by running:
+
+```bash
+echo 128 | sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb
+```
+
+To make this change permanent, refer to [this link](https://github.com/OpenKinect/libfreenect2/issues/807).
+
+If you skip this step or set the value too low, your cameras may not function properly or may not provide any data at all.
+
+## 2. Identifying Camera USB Ports
+
+### Script to List Connected Cameras
+
+Use this bash script to list all connected Orbbec devices with their USB ports and serial numbers:
 
 ```bash
 #!/bin/bash
@@ -18,28 +35,27 @@ for dev in /sys/bus/usb/devices/*; do
     vid=$(cat "$dev/idVendor")
     if [ "$vid" == "${VID}" ]; then
       port=$(basename $dev)
-      product=$(cat "$dev/product" 2>/dev/null) # product name
-      serial=$(cat "$dev/serial" 2>/dev/null) # serial number
+      product=$(cat "$dev/product" 2>/dev/null)
+      serial=$(cat "$dev/serial" 2>/dev/null)
       echo "Found Orbbec device $product, usb port $port, serial number $serial"
     fi
   fi
 done
 ```
 
-Save this script to a file and execute it in your terminal to output a list of connected cameras.
-Or you can run the following command to list all connected Orbbec cameras:
+Save and execute this script, or use the ROS command:
 
 ```bash
 rosrun orbbec_camera list_ob_devices.sh
 ```
 
-### Launching Multiple Cameras
+## 3. Launching Multiple Cameras
 
-#### Setup for Multiple Camera Launch
+### Setup for Multiple Camera Launch
 
-You can launch multiple cameras by specifying different USB ports for each camera. Below is an example XML file that uses the ROS 1 launch system to start two cameras with individual configurations.
+Create a launch file (e.g., `multi_camera.launch`) with individual configurations for each camera:
 
-```XML
+```xml
 <launch>
     <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
         <arg name="camera_name" value="camera_01"/>
@@ -57,29 +73,30 @@ You can launch multiple cameras by specifying different USB ports for each camer
 </launch>
 ```
 
-#### Running the Launch File
+### Running the Launch File
 
-To execute the launch configuration for multiple cameras, use the command:
+Execute the launch configuration with:
 
 ```bash
 roslaunch orbbec_camera multi_camera.launch
 ```
 
-### Configuring the TF Tree for Multiple Cameras
+## 4. Configuring the TF Tree for Multiple Cameras
 
-#### Example TF Configuration for Two Cameras
+Create a TF configuration file (e.g., `multi_camera_tf.launch`) for your calibrated camera setup:
 
-When using multiple cameras, it's essential to calibrate them and publish a static TF tree for each camera. The following ROS 1 XML launch configuration sets up the TF tree based on your calibration results:
-
-```XML
+```xml
 <launch>
     <node pkg="tf" type="static_transform_publisher" name="camera_01_tf" args="0 0 0 0 0 0 base_link camera_01_link" />
     <node pkg="tf" type="static_transform_publisher" name="camera_02_tf" args="0 0 0 0 0 0 base_link camera_02_link" />
 </launch>
 ```
 
-Save this configuration as `multi_camera_tf.launch` in the launch directory of the Orbbec camera package. To run it, use:
+Run the TF configuration:
 
 ```bash
 roslaunch orbbec_camera multi_camera_tf.launch
 ```
+
+This setup allows you to use multiple Orbbec cameras simultaneously in your ROS environment. Remember, 
+the first step of increasing the usbfs_memory_mb value is critical for ensuring your cameras function correctly in a multi-camera setup.
