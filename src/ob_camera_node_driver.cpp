@@ -24,7 +24,6 @@
 #include <sys/mman.h>
 #include <iomanip>  // For std::put_time
 
-#include <backward_ros/backward.hpp>
 #include <boost/filesystem.hpp>
 
 namespace orbbec_camera {
