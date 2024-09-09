@@ -1221,6 +1221,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
       intrinsic = stream_index == COLOR ? camera_params.rgbIntrinsic : camera_params.depthIntrinsic;
       distortion =
           stream_index == COLOR ? camera_params.rgbDistortion : camera_params.depthDistortion;
+      if(device_info_->pid() == DABAI_MAX_PID){
+        // use color extrinsic
+        intrinsic = camera_params.rgbIntrinsic;
+        distortion = camera_params.rgbDistortion;
+      }
     }
     auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
     CHECK(camera_info_publishers_.count(stream_index) > 0);
