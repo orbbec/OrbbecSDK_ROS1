@@ -556,6 +556,12 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   CHECK_NOTNULL(pipeline_);
   auto camera_params = pipeline_->getCameraParam();
   if (depth_registration_ && isGemini335PID(device_info_->pid())) {
+    // if depth registration is enabled and the device is a Gemini 335, use the rgb intrinsic as the
+    // depth intrinsic
+    camera_params.depthIntrinsic = camera_params.rgbIntrinsic;
+  }
+  if (device_info_->pid() == DABAI_MAX_PID) {
+    // if the device is a DABAI MAX, use the rgb intrinsic as the depth intrinsic
     camera_params.depthIntrinsic = camera_params.rgbIntrinsic;
   }
   depth_point_cloud_filter_.setCameraParam(camera_params);
