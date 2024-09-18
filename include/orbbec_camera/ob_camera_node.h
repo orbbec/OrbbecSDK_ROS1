@@ -67,6 +67,9 @@ class OBCameraNode {
 
   bool isInitialized() const;
 
+  void rebootDevice();
+
+  void clean();
  private:
   struct IMUData {
     IMUData() = default;

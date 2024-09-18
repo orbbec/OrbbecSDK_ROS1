@@ -82,7 +82,16 @@ void OBCameraNode::init() {
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
 
-OBCameraNode::~OBCameraNode() noexcept {
+void OBCameraNode::rebootDevice() {
+  ROS_INFO("Reboot device");
+  if (device_) {
+    device_->reboot();
+  }
+  ROS_INFO("Reboot device DONE");
+}
+
+
+void OBCameraNode::clean() {
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() start");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   is_running_ = false;
@@ -106,6 +115,10 @@ OBCameraNode::~OBCameraNode() noexcept {
   delete[] rgb_point_cloud_buffer_;
   delete[] xy_table_data_;
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() end");
+}
+
+OBCameraNode::~OBCameraNode() noexcept {
+  clean();
 }
 
 void OBCameraNode::getParameters() {

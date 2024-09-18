@@ -36,6 +36,8 @@ class OBCameraNodeDriver {
 
   std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
 
+  bool rebootDeviceServiceCallback(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res);
+
   std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
       const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number);
   std::shared_ptr<ob::Device> selectDeviceByUSBPort(const std::shared_ptr<ob::DeviceList>& list,
@@ -59,7 +61,6 @@ class OBCameraNodeDriver {
 
   static std::string parseUsbPort(const std::string& line);
 
- private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
   std::string config_path_;
@@ -90,6 +91,7 @@ class OBCameraNodeDriver {
   // net work config
   std::string ip_address_;
   int port_ = 0;
+  ros::ServiceServer reboot_service_srv_;
   static backward::SignalHandling sh;
 };
 }  // namespace orbbec_camera

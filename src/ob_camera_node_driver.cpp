@@ -32,7 +32,7 @@ backward::SignalHandling sh;
 std::string g_camera_name = "camera";
 
 void signalHandler(int signum) {
-   std::cout << "Received signal: " << signum << std::endl;
+  std::cout << "Received signal: " << signum << std::endl;
 
   std::string log_dir = "Log/";
 
@@ -125,6 +125,10 @@ void OBCameraNodeDriver::init() {
   enumerate_net_device_ = nh_private_.param<bool>("enumerate_net_device", false);
   ip_address_ = nh_private_.param<std::string>("ip_address", "");
   port_ = nh_private_.param<int>("port", 0);
+  reboot_service_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+      "reboot_device", [this](std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
+        return  rebootDeviceServiceCallback(request, response);
+      });
   ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
   check_connection_timer_ =
       nh_.createWallTimer(ros::WallDuration(1.0),
@@ -428,5 +432,20 @@ std::string OBCameraNodeDriver::parseUsbPort(const std::string &line) {
     }
   }
   return port_id;
+}
+
+bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req,
+                                                     std_srvs::EmptyResponse &res) {
+  (void)req;
+  (void)res;
+  if (!device_connected_) {
+    ROS_INFO("Device not connected");
+     return false;
+  }
+  ROS_INFO("Reboot device");
+  ob_camera_node_->rebootDevice();
+  device_connected_ = false;
+  device_ = nullptr;
+  return true;
 }
 }  // namespace orbbec_camera
