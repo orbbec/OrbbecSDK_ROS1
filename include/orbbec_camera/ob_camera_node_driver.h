@@ -93,5 +93,7 @@ class OBCameraNodeDriver {
   int port_ = 0;
   ros::ServiceServer reboot_service_srv_;
   static backward::SignalHandling sh;
+  bool enable_hardware_reset_ = false;
+  bool hardware_reset_done_ = false;
 };
 }  // namespace orbbec_camera

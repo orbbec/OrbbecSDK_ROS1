@@ -70,6 +70,7 @@ class OBCameraNode {
   void rebootDevice();
 
   void clean();
+
  private:
   struct IMUData {
     IMUData() = default;
@@ -517,6 +518,7 @@ class OBCameraNode {
   uint8_t *rgb_point_cloud_buffer_ = nullptr;
   uint32_t rgb_point_cloud_buffer_size_ = 0;
   ros::Publisher sdk_version_pub_;
+  bool enable_heartbeat_ = false;
 };
 
 }  // namespace orbbec_camera

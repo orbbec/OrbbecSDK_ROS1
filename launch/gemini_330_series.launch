@@ -108,6 +108,8 @@
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="laser_energy_level" default="-1"/>
     <arg name="enable_ldp" default="true"/>
+    <arg name="enable_heartbeat" default="false"/>
+    <arg name="enable_hardware_reset" default="false"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
@@ -202,6 +204,8 @@
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
+            <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
+            <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>

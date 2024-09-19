@@ -51,8 +51,9 @@ void signalHandler(int signum) {
   if (!boost::filesystem::exists(log_dir)) {
     boost::filesystem::create_directories(log_dir);
   }
-
-  std::cout << "Log crash stack trace to " << log_file_path << std::endl;
+  auto abs_path = boost::filesystem::absolute(log_dir);
+  std::cout << "Log crash stack trace to " << abs_path.string() << "/" << log_file_name
+            << std::endl;
   std::ofstream log_file(log_file_path, std::ios::app);
 
   if (log_file.is_open()) {
@@ -125,9 +126,10 @@ void OBCameraNodeDriver::init() {
   enumerate_net_device_ = nh_private_.param<bool>("enumerate_net_device", false);
   ip_address_ = nh_private_.param<std::string>("ip_address", "");
   port_ = nh_private_.param<int>("port", 0);
+  enable_hardware_reset_ = nh_private_.param<bool>("enable_hardware_reset", false);
   reboot_service_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
       "reboot_device", [this](std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
-        return  rebootDeviceServiceCallback(request, response);
+        return rebootDeviceServiceCallback(request, response);
       });
   ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
   check_connection_timer_ =
@@ -224,6 +226,14 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   if (device_) {
     ROS_WARN("device_ is not null, reset device_");
     device_.reset();
+  }
+  if (enable_hardware_reset_ && !hardware_reset_done_) {
+    ROS_INFO("Reboot device");
+    device->reboot();
+    ROS_INFO("Reboot device done");
+    device_connected_ = false;
+    hardware_reset_done_ = true;
+    return;
   }
   device_ = device;
   device_info_ = device_->getDeviceInfo();
@@ -388,6 +398,9 @@ void OBCameraNodeDriver::queryDevice() {
         return;
       }
       deviceConnectCallback(list);
+      if (hardware_reset_done_) {
+        break;
+      }
     }
   }
 }
@@ -440,7 +453,7 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
   (void)res;
   if (!device_connected_) {
     ROS_INFO("Device not connected");
-     return false;
+    return false;
   }
   ROS_INFO("Reboot device");
   ob_camera_node_->rebootDevice();

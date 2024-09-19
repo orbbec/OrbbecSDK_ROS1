@@ -246,6 +246,7 @@ void OBCameraNode::getParameters() {
   laser_energy_level_ = nh_private_.param<int>("laser_energy_level", -1);
   enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
+  enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
   if (isOpenNIDevice(device_info->pid())) {

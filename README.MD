@@ -243,6 +243,13 @@ The following launch parameters are available:
   attempt to reset the camera up to three times. This setting aims to prevent USB 3.0 devices from being incorrectly
   recognized as USB 2.0.
   It is recommended to set this parameter to `false` when using a USB 2.0 connection to avoid unnecessary resets.
+  Here is a refined version of the two sentences:
+
+- `enable_heartbeat`: This option enables the heartbeat function. By default, it is set to `false`. 
+If set to `true`, the camera will send heartbeat messages and generate firmware logs.
+
+- `enable_hardware_reset`: This option enables the hardware reset function. By default, it is set to `false`. 
+If set to `true`, the camera will reboot upon its first connection.
 
 **IMPORTANT**: *Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
 ## Depth work mode switch:
