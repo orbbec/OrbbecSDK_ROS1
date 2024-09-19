@@ -259,6 +259,11 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("after set soft_filter_speckle_size: " << new_soft_filter_speckle_size);
       }
     }
+    if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
+      ROS_INFO_STREAM("Setting heartbeat to " << (enable_heartbeat_ ? "true" : "false"));
+      device_->setBoolProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);
+    }
+
     if (enable_color_hdr_ &&
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
