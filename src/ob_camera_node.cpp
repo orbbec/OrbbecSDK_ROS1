@@ -90,7 +90,6 @@ void OBCameraNode::rebootDevice() {
   ROS_INFO("Reboot device DONE");
 }
 
-
 void OBCameraNode::clean() {
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() start");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
@@ -117,9 +116,7 @@ void OBCameraNode::clean() {
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() end");
 }
 
-OBCameraNode::~OBCameraNode() noexcept {
-  clean();
-}
+OBCameraNode::~OBCameraNode() noexcept { clean(); }
 
 void OBCameraNode::getParameters() {
   camera_name_ = nh_private_.param<std::string>("camera_name", "camera");
@@ -1063,14 +1060,17 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
     CHECK_NOTNULL(device_info_);
+    has_first_color_frame_ = has_first_color_frame_ || (enable_stream_[COLOR] && color_frame);
     if (isGemini335PID(device_info_->pid()) && enable_stream_[DEPTH]) {
       depth_frame_ = processDepthFrameFilter(depth_frame_);
-      if (depth_registration_ && align_filter_ && depth_frame_ && color_frame) {
+      bool align_success = false;
+      if (depth_registration_ && align_filter_ && depth_frame_ && has_first_color_frame_) {
         auto new_frame = align_filter_->process(frame_set);
         if (new_frame) {
           auto new_frame_set = new_frame->as<ob::FrameSet>();
           if (new_frame_set) {
             depth_frame_ = new_frame_set->getFrame(OB_FRAME_DEPTH);
+            align_success = true;
           } else {
             ROS_ERROR_STREAM("cast to FrameSet failed");
             return;
@@ -1079,6 +1079,12 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
           ROS_ERROR_STREAM("Depth frame alignment failed");
           return;
         }
+      }
+      // check if align filter failed, if so, return
+      if (depth_registration_ && !align_success) {
+        ROS_INFO_STREAM_THROTTLE(1.0,
+            "Depth frame alignment failed, maybe color frame is not ready, drop the frame set");
+        return;
       }
     }
     if (enable_stream_[COLOR] && color_frame) {
@@ -1235,7 +1241,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
       intrinsic = stream_index == COLOR ? camera_params.rgbIntrinsic : camera_params.depthIntrinsic;
       distortion =
           stream_index == COLOR ? camera_params.rgbDistortion : camera_params.depthDistortion;
-      if(device_info_->pid() == DABAI_MAX_PID){
+      if (device_info_->pid() == DABAI_MAX_PID) {
         // use color extrinsic
         intrinsic = camera_params.rgbIntrinsic;
         distortion = camera_params.rgbDistortion;
