@@ -519,6 +519,7 @@ class OBCameraNode {
   uint32_t rgb_point_cloud_buffer_size_ = 0;
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
+  bool has_first_color_frame_ = false;
 };
 
 }  // namespace orbbec_camera
