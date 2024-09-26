@@ -13,6 +13,7 @@
     <depend>image_geometry</depend>
     <depend>image_transport</depend>
     <depend>libudev-dev</depend>
+    <depend>libudw-dev</depend>
     <depend>libusb-1.0-dev</depend>
     <depend>message_filters</depend>
     <depend>message_generation</depend>
