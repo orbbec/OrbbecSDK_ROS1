@@ -67,6 +67,32 @@ int ROSOBSensor::getExposure() {
   return data;
 }
 
+void ROSOBSensor::setRotation(int rotation) {
+  // 0, 90, 180, 270
+  if (rotation % 90 != 0) {
+    ROS_INFO_STREAM(name_ << " does not support set rotation");
+    return;
+  }
+  switch (sensor_->type()) {
+    case OB_SENSOR_COLOR:
+      device_->setIntProperty(OB_PROP_COLOR_ROTATE_INT, rotation);
+      break;
+    case OB_SENSOR_DEPTH:
+      device_->setIntProperty(OB_PROP_DEPTH_ROTATE_INT, rotation);
+      break;
+    case OB_SENSOR_IR_LEFT:
+    case OB_SENSOR_IR:
+      device_->setIntProperty(OB_PROP_IR_ROTATE_INT, rotation);
+      break;
+    case OB_SENSOR_IR_RIGHT:
+      device_->setIntProperty(OB_PROP_IR_RIGHT_ROTATE_INT, rotation);
+      break;
+
+    default:
+      ROS_INFO_STREAM(name_ << " does not support set rotation");
+      break;
+  }
+}
 OBIntPropertyRange ROSOBSensor::getExposureRange() {
   OBIntPropertyRange range{0, 0};
   switch (sensor_->type()) {
@@ -288,6 +314,6 @@ std::shared_ptr<ob::StreamProfileList> ROSOBSensor::getStreamProfileList() const
   return sensor_->getStreamProfileList();
 }
 
-std::shared_ptr<ob::Sensor> ROSOBSensor::getSensor() const{ return sensor_; }
+std::shared_ptr<ob::Sensor> ROSOBSensor::getSensor() const { return sensor_; }
 
 }  // namespace orbbec_camera

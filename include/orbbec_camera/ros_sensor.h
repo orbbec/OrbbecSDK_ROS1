@@ -67,6 +67,8 @@ class ROSOBSensor {
 
   std::shared_ptr<ob::Sensor> getSensor() const;
 
+  void setRotation(int rotation);
+
  private:
   std::shared_ptr<ob::Device> device_ = nullptr;
   std::shared_ptr<ob::Sensor> sensor_ = nullptr;

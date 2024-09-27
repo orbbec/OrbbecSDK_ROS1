@@ -24,6 +24,8 @@
     <arg name="color_fps" default="0"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="ANY"/>
+    <!-- color rotation degree : 0, 90, 180, 270 -->
+    <arg name="color_rotation" default="0"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
@@ -35,6 +37,8 @@
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="ANY"/>
     <arg name="depth_registration" default="true"/>
+    <!-- depth rotation degree : 0, 90, 180, 270 -->
+    <arg name="depth_rotation" default="0"/>
 
     <!-- Left IR camera parameters -->
     <arg name="left_ir_width" default="0"/>
@@ -42,6 +46,8 @@
     <arg name="left_ir_fps" default="0"/>
     <arg name="enable_left_ir" default="false"/>
     <arg name="left_ir_format" default="ANY"/>
+    <!-- left ir rotation degree : 0, 90, 180, 270 -->
+    <arg name="left_ir_rotation" default="0"/>
 
     <!-- Right IR camera parameters -->
     <arg name="right_ir_width" default="0"/>
@@ -49,6 +55,8 @@
     <arg name="right_ir_fps" default="0"/>
     <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="ANY"/>
+    <!-- right ir rotation degree : 0, 90, 180, 270 -->
+    <arg name="right_ir_rotation" default="0"/>
 
     <!-- Common IR camera parameters -->
     <arg name="enable_ir_auto_exposure" default="true"/>
@@ -137,26 +145,26 @@
             <param name="color_format" value="$(arg color_format)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
-
+            <param name="color_rotation" value="$(arg color_rotation)"/>
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
             <param name="depth_fps" value="$(arg depth_fps)"/>
             <param name="enable_depth" value="$(arg enable_depth)"/>
             <param name="depth_format" value="$(arg depth_format)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
-
+            <param name="depth_rotation" value="$(arg depth_rotation)"/>
             <param name="left_ir_width" value="$(arg left_ir_width)"/>
             <param name="left_ir_height" value="$(arg left_ir_height)"/>
             <param name="left_ir_fps" value="$(arg left_ir_fps)"/>
             <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
             <param name="left_ir_format" value="$(arg left_ir_format)"/>
-
+            <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
             <param name="right_ir_width" value="$(arg right_ir_width)"/>
             <param name="right_ir_height" value="$(arg right_ir_height)"/>
             <param name="right_ir_fps" value="$(arg right_ir_fps)"/>
             <param name="enable_right_ir" value="$(arg enable_right_ir)"/>
             <param name="right_ir_format" value="$(arg right_ir_format)"/>
-
+            <param name="right_ir_rotation" value="$(arg right_ir_rotation)"/>
             <param name="enable_ir_auto_exposure" value="$(arg enable_ir_auto_exposure)"/>
 
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
