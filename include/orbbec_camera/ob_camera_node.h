@@ -520,6 +520,8 @@ class OBCameraNode {
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
   bool has_first_color_frame_ = false;
+  // rotation degree
+  std::map<stream_index_pair, int> image_rotation_;
 };
 
 }  // namespace orbbec_camera

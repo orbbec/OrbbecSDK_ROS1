@@ -141,6 +141,8 @@ void OBCameraNode::getParameters() {
     format_str_[stream_index] =
         nh_private_.param<std::string>(param_name, format_str_[stream_index]);
     format_[stream_index] = OBFormatFromString(format_str_[stream_index]);
+    param_name = stream_name_[stream_index] + "_rotation";
+    image_rotation_[stream_index] = nh_private_.param<int>(param_name, 0);
   }
   depth_aligned_frame_id_[DEPTH] = optical_frame_id_[COLOR];
 

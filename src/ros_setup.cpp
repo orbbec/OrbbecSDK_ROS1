@@ -191,6 +191,14 @@ void OBCameraNode::setupDevices() {
                       << "sensor isn't supported by current device! -- Skipping...");
       enable_stream_[stream_index] = false;
     }
+    if (enable) {
+      // set rotation
+      auto rotation = image_rotation_[stream_index];
+      if (rotation != 0) {
+        ROS_INFO_STREAM("set " << stream_name_[stream_index] << " rotation to " << rotation);
+        sensors_[stream_index]->setRotation(rotation);
+      }
+    }
   }
   if (enable_d2c_viewer_) {
     d2c_viewer_ = std::make_shared<D2CViewer>(nh_, nh_private_);
