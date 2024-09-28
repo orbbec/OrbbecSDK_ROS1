@@ -1,6 +1,6 @@
 <launch>
     <!-- unique camera name-->
-    <arg name="camera_name" default="camera"/>
+    <arg name="camera_name" default="camera_01"/>
     <arg name="output" default="screen"/>
     <!-- Hardware depth registration -->
     <arg name="depth_registration" default="false"/>
@@ -14,21 +14,21 @@
     <arg name="connection_delay" default="100"/>
     <arg name="color_width" default="640"/>
     <arg name="color_height" default="400"/>
-    <arg name="color_fps" default="15"/>
+    <arg name="color_fps" default="30"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="400"/>
-    <arg name="depth_fps" default="15"/>
+    <arg name="depth_fps" default="30"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="Y14"/>
     <arg name="flip_depth" default="false"/>
     <arg name="depth_precision" default="1mm"/>
     <arg name="ir_width" default="640"/>
     <arg name="ir_height" default="400"/>
-    <arg name="ir_fps" default="15"/>
+    <arg name="ir_fps" default="30"/>
     <arg name="enable_ir" default="true"/>
     <arg name="ir_format" default="Y8"/>
     <arg name="flip_ir" default="false"/>
