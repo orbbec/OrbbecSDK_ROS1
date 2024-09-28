@@ -1,6 +1,6 @@
 <launch>
     <!-- unique camera name-->
-    <arg name="camera_name" default="camera_02"/>
+    <arg name="camera_name" default="camera_03"/>
     <arg name="output" default="screen"/>
     <!-- Hardware depth registration -->
     <arg name="depth_registration" default="true"/>
