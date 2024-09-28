@@ -1,7 +1,7 @@
 <launch>
     <include file="$(find orbbec_camera)/launch/gemini2L.launch">
         <arg name="camera_name" value="camera_01"/>
-        <arg name="usb_port" value="2-1"/>
+        <arg name="usb_port" value="2-2"/>
         <!-- <arg name="serial" value="AY8ZA3300AV"/> -->
         <arg name="device_num" value="2"/>
     </include>
