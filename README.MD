@@ -431,8 +431,9 @@ Please refer to the OrbbecSDK supported products: [Product Support](https://gith
 
 ### Unexpected Crash
 
-If the camera node crashes unexpectedly, it will generate a crash log in the current running directory: `~/.ros/Log/camera_crash_stack_trace_xx.log`.
-Please send this log to the support team or submit it to a GitHub issue for further assistance.
+If the camera node crashes unexpectedly, it will generate a crash log in the current running directory: `~/.ros/Log/camera_crash_stack_trace_xx.log`. Additionally, **regardless of whether the camera node crashes or not**, the OrbbecSDK will always generate a log file: `~/.ros/Log/OrbbecSDK.log.txt`, which contains detailed records of the SDK's operations.
+
+Please send these log files to the support team or submit them to a GitHub issue for further assistance.
 
 ### No Data Stream from Multiple Cameras
 
@@ -468,7 +469,7 @@ find_package(OpenCV REQUIRED)
 
 ### Additional Troubleshooting
 
-- If you encounter other issues, set the `log_level` parameter to `debug`. This will generate an SDK log file in the running directory: `Log/OrbbecSDK.log.txt`.
+- If you encounter other issues, set the `log_level` parameter to `debug`. This will generate an SDK log file in the running directory: `~/.ros/Log/OrbbecSDK.log.txt`.
   Please provide this file to the support team for further assistance.
 - If firmware logs are required, set `enable_heartbeat` to `true` to activate this feature.
 
