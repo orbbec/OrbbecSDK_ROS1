@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="camera_01_tf" args="0 0 0 0 0 0 base_link camera_01_link 10" />
+    <node pkg="tf" type="static_transform_publisher" name="camera_02_tf" args="0 0 0 0 0 0 base_link camera_02_link 10" />
+</launch>
