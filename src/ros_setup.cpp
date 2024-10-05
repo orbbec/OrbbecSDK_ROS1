@@ -218,6 +218,33 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
     }
+    if (color_ae_roi_left_ != -1 && color_ae_roi_top_ != -1 && color_ae_roi_right_ != -1 &&
+        color_ae_roi_bottom_ != -1 &&
+        device_->isPropertySupported(OB_STRUCT_COLOR_AE_ROI, OB_PERMISSION_READ_WRITE)) {
+      ROS_INFO_STREAM("Setting color AE ROI to " << color_ae_roi_left_ << ", " << color_ae_roi_top_
+                                                 << ", " << color_ae_roi_right_ << ", "
+                                                 << color_ae_roi_bottom_);
+      AE_ROI roi;
+      roi.x0_left = color_ae_roi_left_;
+      roi.y0_top = color_ae_roi_top_;
+      roi.x1_right = color_ae_roi_right_;
+      roi.y1_bottom = color_ae_roi_bottom_;
+      device_->setStructuredData(OB_STRUCT_COLOR_AE_ROI, &roi, sizeof(AE_ROI));
+    }
+    // depth ae roi
+    if (depth_ae_roi_left_ != -1 && depth_ae_roi_top_ != -1 && depth_ae_roi_right_ != -1 &&
+        depth_ae_roi_bottom_ != -1 &&
+        device_->isPropertySupported(OB_STRUCT_DEPTH_AE_ROI, OB_PERMISSION_READ_WRITE)) {
+      ROS_INFO_STREAM("Setting depth AE ROI to " << depth_ae_roi_left_ << ", " << depth_ae_roi_top_
+                                                 << ", " << depth_ae_roi_right_ << ", "
+                                                 << depth_ae_roi_bottom_);
+      AE_ROI roi;
+      roi.x0_left = depth_ae_roi_left_;
+      roi.y0_top = depth_ae_roi_top_;
+      roi.x1_right = depth_ae_roi_right_;
+      roi.y1_bottom = depth_ae_roi_bottom_;
+      device_->setStructuredData(OB_STRUCT_DEPTH_AE_ROI, &roi, sizeof(AE_ROI));
+    }
     if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
       auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
       ROS_INFO_STREAM("default_soft_filter_max_diff: " << default_soft_filter_max_diff);

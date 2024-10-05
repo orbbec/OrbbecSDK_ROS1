@@ -522,6 +522,15 @@ class OBCameraNode {
   bool has_first_color_frame_ = false;
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;
+  // AE ROI
+  int color_ae_roi_left_ = -1;
+  int color_ae_roi_right_ = -1;
+  int color_ae_roi_top_ = -1;
+  int color_ae_roi_bottom_ = -1;
+  int depth_ae_roi_left_ = -1;
+  int depth_ae_roi_right_ = -1;
+  int depth_ae_roi_top_ = -1;
+  int depth_ae_roi_bottom_ = -1;
 };
 
 }  // namespace orbbec_camera

@@ -251,6 +251,15 @@ void OBCameraNode::getParameters() {
   if (isOpenNIDevice(device_info->pid())) {
     use_hardware_time_ = false;
   }
+  // AE roi
+  color_ae_roi_top_ = nh_private_.param<int>("color_ae_roi_top", -1);
+  color_ae_roi_bottom_ = nh_private_.param<int>("color_ae_roi_bottom", -1);
+  color_ae_roi_left_ = nh_private_.param<int>("color_ae_roi_left", -1);
+  color_ae_roi_right_ = nh_private_.param<int>("color_ae_roi_right", -1);
+  depth_ae_roi_top_ = nh_private_.param<int>("depth_ae_roi_top", -1);
+  depth_ae_roi_bottom_ = nh_private_.param<int>("depth_ae_roi_bottom", -1);
+  depth_ae_roi_left_ = nh_private_.param<int>("depth_ae_roi_left", -1);
+  depth_ae_roi_right_ = nh_private_.param<int>("depth_ae_roi_right", -1);
 }
 
 void OBCameraNode::startStreams() {
@@ -1084,7 +1093,8 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
       }
       // check if align filter failed, if so, return
       if (depth_registration_ && !align_success) {
-        ROS_INFO_STREAM_THROTTLE(1.0,
+        ROS_INFO_STREAM_THROTTLE(
+            1.0,
             "Depth frame alignment failed, maybe color frame is not ready, drop the frame set");
         return;
       }
