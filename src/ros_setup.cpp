@@ -168,6 +168,14 @@ void OBCameraNode::setupRecommendedPostFilters() {
   }
 }
 void OBCameraNode::setupDevices() {
+   if (!depth_filter_config_.empty() && enable_depth_filter_) {
+      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
+      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
+    } else {
+      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
+      }
+    }
   auto sensor_list = device_->getSensorList();
   for (size_t i = 0; i < sensor_list->count(); i++) {
     auto sensor = sensor_list->getSensor(i);
@@ -204,6 +212,12 @@ void OBCameraNode::setupDevices() {
     d2c_viewer_ = std::make_shared<D2CViewer>(nh_, nh_private_);
   }
   CHECK_NOTNULL(device_info_.get());
+   if (enable_pipeline_) {
+      pipeline_ = std::make_shared<ob::Pipeline>(device_);
+    }
+    if (enable_sync_output_accel_gyro_) {
+      imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
+    }
 
   try {
     if (retry_on_usb3_detection_failure_ &&
@@ -247,20 +261,6 @@ void OBCameraNode::setupDevices() {
         auto new_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
         ROS_INFO_STREAM("after set soft_filter_max_diff: " << new_soft_filter_max_diff);
       }
-    }
-    if (!depth_filter_config_.empty() && enable_depth_filter_) {
-      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
-      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
-    } else {
-      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
-        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
-      }
-    }
-    if (enable_pipeline_) {
-      pipeline_ = std::make_shared<ob::Pipeline>(device_);
-    }
-    if (enable_sync_output_accel_gyro_) {
-      imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
     }
     if (!depth_work_mode_.empty()) {
       ROS_INFO_STREAM("Set depth work mode: " << depth_work_mode_);
