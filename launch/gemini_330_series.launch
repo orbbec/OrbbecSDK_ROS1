@@ -19,11 +19,11 @@
 
 
     <!-- Color camera parameters -->
-    <arg name="color_width" default="0"/>
-    <arg name="color_height" default="0"/>
-    <arg name="color_fps" default="0"/>
+    <arg name="color_width" default="1280"/>
+    <arg name="color_height" default="720"/>
+    <arg name="color_fps" default="15"/>
     <arg name="enable_color" default="true"/>
-    <arg name="color_format" default="ANY"/>
+    <arg name="color_format" default="YUYV"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="0"/>
     <arg name="enable_color_auto_exposure" default="true"/>
@@ -36,11 +36,11 @@
     <arg name="color_ae_roi_right" default="-1"/>
 
     <!-- Depth camera parameters -->
-    <arg name="depth_width" default="0"/>
-    <arg name="depth_height" default="0"/>
-    <arg name="depth_fps" default="0"/>
+    <arg name="depth_width" default="424"/>
+    <arg name="depth_height" default="266"/>
+    <arg name="depth_fps" default="15"/>
     <arg name="enable_depth" default="true"/>
-    <arg name="depth_format" default="ANY"/>
+    <arg name="depth_format" default="Y16"/>
     <arg name="depth_registration" default="true"/>
     <!-- depth rotation degree : 0, 90, 180, 270 -->
     <arg name="depth_rotation" default="0"/>
