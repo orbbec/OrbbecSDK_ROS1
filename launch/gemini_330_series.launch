@@ -23,7 +23,7 @@
     <arg name="color_height" default="0"/>
     <arg name="color_fps" default="0"/>
     <arg name="enable_color" default="true"/>
-    <arg name="color_format" default="ANY"/>
+    <arg name="color_format" default="MJPG"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="0"/>
     <arg name="enable_color_auto_exposure" default="true"/>
@@ -40,7 +40,7 @@
     <arg name="depth_height" default="0"/>
     <arg name="depth_fps" default="0"/>
     <arg name="enable_depth" default="true"/>
-    <arg name="depth_format" default="ANY"/>
+    <arg name="depth_format" default="Y16"/>
     <arg name="depth_registration" default="true"/>
     <!-- depth rotation degree : 0, 90, 180, 270 -->
     <arg name="depth_rotation" default="0"/>
@@ -55,7 +55,7 @@
     <arg name="left_ir_height" default="0"/>
     <arg name="left_ir_fps" default="0"/>
     <arg name="enable_left_ir" default="false"/>
-    <arg name="left_ir_format" default="ANY"/>
+    <arg name="left_ir_format" default="Y8"/>
     <!-- left ir rotation degree : 0, 90, 180, 270 -->
     <arg name="left_ir_rotation" default="0"/>
 
@@ -64,7 +64,7 @@
     <arg name="right_ir_height" default="0"/>
     <arg name="right_ir_fps" default="0"/>
     <arg name="enable_right_ir" default="false"/>
-    <arg name="right_ir_format" default="ANY"/>
+    <arg name="right_ir_format" default="Y8"/>
     <!-- right ir rotation degree : 0, 90, 180, 270 -->
     <arg name="right_ir_rotation" default="0"/>
 
