@@ -19,12 +19,13 @@
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
-    <arg name="enable_sync_output_accel_gyro" default="true"/> 
+    <arg name="enable_color_hdr" default="false"/>
+    <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="false"/>
-    <arg name="accel_rate" default="100hz"/>
+    <arg name="accel_rate" default="200hz"/>
     <arg name="accel_range" default="4g"/>
     <arg name="enable_gyro" default="false"/>
-    <arg name="gyro_rate" default="100hz"/>
+    <arg name="gyro_rate" default="200hz"/>
     <arg name="gyro_range" default="1000dps"/>
     <arg name="liner_accel_cov" default="0.01"/>
     <arg name="angular_vel_cov" default="0.01"/>
@@ -47,15 +48,21 @@
     <arg name="color_info_uri" default=""/>
     <arg name="log_level" default="none"/>
     <arg name="enable_d2c_viewer" default="false"/>
-    <arg name="enable_pipeline" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
-    <arg name="sync_mode" default="free_run"/>
+    <arg name="soft_filter_max_diff" default="-1"/>
+    <arg name="soft_filter_speckle_size" default="-1"/>
+    <arg name="sync_mode" default="standalone"/>
     <arg name="depth_delay_us" default="0"/>
     <arg name="color_delay_us" default="0"/>
     <arg name="trigger2image_delay_us" default="0"/>
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="false"/>
     <arg name="enable_frame_sync" default="true"/>
+    <arg name="use_hardware_time" default="true"/>
+    <!-- Bolt only support SW align mode, Please DO NOT change it -->
+    <arg name="align_mode" default="SW"/>
+    <arg name="laser_energy_level" default="-1"/>
+    <arg name="enable_ldp" default="true"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -74,6 +81,7 @@
             <param name="color_format" value="$(arg color_format)"/>
             <param name="flip_color" value="$(arg flip_color)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="enable_color_hdr" value="$(arg enable_color_hdr)"/>
             <param name="enable_sync_output_accel_gyro" value="$(arg enable_sync_output_accel_gyro)"/>
             <param name="enable_accel" value="$(arg enable_accel)"/>
             <param name="accel_rate" value="$(arg accel_rate)"/>
@@ -102,9 +110,10 @@
             <param name="color_info_uri" value="$(arg color_info_uri)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
-            <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
+            <param name="soft_filter_max_diff" value="$(arg soft_filter_max_diff)"/>
+            <param name="soft_filter_speckle_size" value="$(arg soft_filter_speckle_size)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="depth_delay_us" value="$(arg depth_delay_us)"/>
             <param name="color_delay_us" value="$(arg color_delay_us)"/>
@@ -112,6 +121,10 @@
             <param name="trigger_out_delay_us" value="$(arg trigger_out_delay_us)"/>
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
+            <param name="use_hardware_time" value="$(arg use_hardware_time)"/>
+            <param name="align_mode" value="$(arg align_mode)"/>
+            <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
+            <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>

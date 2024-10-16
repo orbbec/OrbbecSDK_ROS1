@@ -48,12 +48,11 @@
     <arg name="color_info_uri" default=""/>
     <arg name="log_level" default="none"/>
     <arg name="enable_d2c_viewer" default="false"/>
-    <arg name="enable_pipeline" default="true"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
     <arg name="soft_filter_max_diff" default="-1"/>
     <arg name="soft_filter_speckle_size" default="-1"/>
-    <arg name="sync_mode" default="free_run"/>
+    <arg name="sync_mode" default="standalone"/>
     <arg name="depth_delay_us" default="0"/>
     <arg name="color_delay_us" default="0"/>
     <arg name="trigger2image_delay_us" default="0"/>
@@ -66,6 +65,9 @@
     <!-- Dimensioning -->
     <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="true"/>
+    <arg name="diagnostic_frequency" default="1.0"/>
+    <arg name="retry_on_usb3_detection_failure" default="false"/>
+    <arg name="laser_energy_level" default="-1"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -113,7 +115,6 @@
             <param name="color_info_uri" value="$(arg color_info_uri)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
-            <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
@@ -127,6 +128,9 @@
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
+            <param name="diagnostic_frequency" value="$(arg diagnostic_frequency)"/>
+            <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
+            <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>

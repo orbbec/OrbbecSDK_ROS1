@@ -76,6 +76,26 @@ OBFormat OBFormatFromString(const std::string &format) {
     return OB_FORMAT_BGR;
   } else if (fixed_format == "Y14") {
     return OB_FORMAT_Y14;
+  } else if (fixed_format == "BGRA") {
+    return OB_FORMAT_BGRA;
+  } else if (fixed_format == "COMPRESSED") {
+    return OB_FORMAT_COMPRESSED;
+  } else if (fixed_format == "RVL") {
+    return OB_FORMAT_RVL;
+  } else if (fixed_format == "Z16") {
+    return OB_FORMAT_Z16;
+  } else if (fixed_format == "YV12") {
+    return OB_FORMAT_YV12;
+  } else if (fixed_format == "BA81") {
+    return OB_FORMAT_BA81;
+  } else if (fixed_format == "RGBA") {
+    return OB_FORMAT_RGBA;
+  } else if (fixed_format == "BYR2") {
+    return OB_FORMAT_BYR2;
+  } else if (fixed_format == "RW16") {
+    return OB_FORMAT_RW16;
+  } else if (fixed_format == "DISP16") {
+    return OB_FORMAT_DISP16;
   } else {
     return OB_FORMAT_UNKNOWN;
   }
@@ -131,6 +151,26 @@ std::string OBFormatToString(const OBFormat &format) {
       return "BGR";
     case OB_FORMAT_Y14:
       return "Y14";
+    case OB_FORMAT_BGRA:
+      return "BGRA";
+    case OB_FORMAT_COMPRESSED:
+      return "COMPRESSED";
+    case OB_FORMAT_RVL:
+      return "RVL";
+    case OB_FORMAT_Z16:
+      return "Z16";
+    case OB_FORMAT_YV12:
+      return "YV12";
+    case OB_FORMAT_BA81:
+      return "BA81";
+    case OB_FORMAT_RGBA:
+      return "RGBA";
+    case OB_FORMAT_BYR2:
+      return "BYR2";
+    case OB_FORMAT_RW16:
+      return "RW16";
+    case OB_FORMAT_DISP16:
+      return "DISP16";
     default:
       return "UNKNOWN";
   }
@@ -325,8 +365,8 @@ tf2::Quaternion rotationMatrixToQuaternion(const float rotation[9]) {
   Eigen::Matrix3f m;
   // We need to be careful about the order, as RS2 rotation matrix is
   // column-major, while Eigen::Matrix3f expects row-major.
-  m << rotation[0], rotation[3], rotation[6], rotation[1], rotation[4], rotation[7], rotation[2],
-      rotation[5], rotation[8];
+  m << rotation[0], rotation[1], rotation[2], rotation[3], rotation[4], rotation[5], rotation[6],
+      rotation[7], rotation[8];
   Eigen::Quaternionf q(m);
   return {q.x(), q.y(), q.z(), q.w()};
 }
@@ -365,7 +405,7 @@ Extrinsics obExtrinsicsToMsg(const OBD2CTransform &extrinsics, const std::string
   for (int i = 0; i < 9; ++i) {
     msg.rotation[i] = extrinsics.rot[i];
     if (i < 3) {
-      msg.translation[i] = extrinsics.trans[i];
+      msg.translation[i] = extrinsics.trans[i] / 1000.0;
     }
   }
 
@@ -373,8 +413,16 @@ Extrinsics obExtrinsicsToMsg(const OBD2CTransform &extrinsics, const std::string
   return msg;
 }
 
-ros::Time frameTimeStampToROSTime(uint64_t ms) {
+ros::Time fromMsToROSTime(uint64_t ms) {
   auto total = static_cast<uint64_t>(ms * 1e6);
+  uint64_t sec = total / 1000000000;
+  uint64_t nano_sec = total % 1000000000;
+  ros::Time stamp(sec, nano_sec);
+  return stamp;
+}
+
+ros::Time fromUsToROSTime(uint64_t us) {
+  auto total = static_cast<uint64_t>(us * 1e3);
   uint64_t sec = total / 1000000000;
   uint64_t nano_sec = total % 1000000000;
   ros::Time stamp(sec, nano_sec);
@@ -387,7 +435,7 @@ bool isOpenNIDevice(int pid) {
       0x060e, 0x060f, 0x0610, 0x0613, 0x0614, 0x0616, 0x0617, 0x0618, 0x061b, 0x062b,
       0x062c, 0x062d, 0x0632, 0x0633, 0x0634, 0x0635, 0x0636, 0x0637, 0x0638, 0x0639,
       0x063a, 0x0650, 0x0651, 0x0654, 0x0655, 0x0656, 0x0657, 0x0658, 0x0659, 0x065a,
-      0x065b, 0x065c, 0x065d, 0x0698, 0x0699, 0x069a, 0x055c, 0x065e, 0x06a0};
+      0x065b, 0x065c, 0x065d, 0x0698, 0x0699, 0x069a, 0x055c, 0x065e, 0x06a0, 0x69e};
 
   for (const auto &pid_openni : OPENNI_DEVICE_PIDS) {
     if (pid == pid_openni) {
@@ -415,6 +463,32 @@ OBMultiDeviceSyncMode OBSyncModeFromString(const std::string &mode) {
   } else {
     return OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN;
   }
+}
+
+std::string OBSyncModeToString(const OBMultiDeviceSyncMode &mode) {
+  switch (mode) {
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN:
+      return "FREE_RUN";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_STANDALONE:
+      return "STANDALONE";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_PRIMARY:
+      return "PRIMARY";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_SECONDARY:
+      return "SECONDARY";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED:
+      return "SECONDARY_SYNCED";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING:
+      return "SOFTWARE_TRIGGERING";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING:
+      return "HARDWARE_TRIGGERING";
+    default:
+      return "FREE_RUN";
+  }
+}
+
+std::ostream &operator<<(std::ostream &os, const OBMultiDeviceSyncMode &rhs) {
+  os << OBSyncModeToString(rhs);
+  return os;
 }
 
 OB_SAMPLE_RATE sampleRateFromString(std::string &sample_rate) {
@@ -597,4 +671,130 @@ std::string fourccToString(const uint32_t fourcc) {
   return str;
 }
 
+std::string metaDataTypeToString(const OBFrameMetadataType &meta_data_type) {
+  switch (meta_data_type) {
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_TIMESTAMP:
+      return "timestamp";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP:
+      return "sensor_timestamp";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_FRAME_NUMBER:
+      return "frame_number";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE:
+      return "auto_exposure";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_EXPOSURE:
+      return "exposure";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_GAIN:
+      return "gain";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE:
+      return "auto_white_balance";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_WHITE_BALANCE:
+      return "white_balance";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_BRIGHTNESS:
+      return "brightness";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_CONTRAST:
+      return "contrast";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_SATURATION:
+      return "saturation";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_SHARPNESS:
+      return "sharpness";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION:
+      return "backlight_compensation";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_HUE:
+      return "hue";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_GAMMA:
+      return "gamma";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY:
+      return "power_line_frequency";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION:
+      return "low_light_compensation";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE:
+      return "manual_white_balance";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE:
+      return "actual_frame_rate";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_FRAME_RATE:
+      return "frame_rate";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_AE_ROI_LEFT:
+      return "ae_roi_left";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_AE_ROI_TOP:
+      return "ae_roi_top";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT:
+      return "ae_roi_right";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM:
+      return "ae_roi_bottom";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY:
+      return "exposure_priority";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME:
+      return "hdr_sequence_name";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE:
+      return "hdr_sequence_size";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX:
+      return "hdr_sequence_index";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_LASER_POWER:
+      return "laser_power";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_LASER_POWER_MODE:
+      return "laser_power_mode";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_EMITTER_MODE:
+      return "emitter_mode";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA:
+      return "gpio_input_data";
+    default:
+      return "unknown";
+  }
+}
+
+OBHoleFillingMode holeFillingModeFromString(const std::string &hole_filling_mode) {
+  if (hole_filling_mode == "FILL_TOP") {
+    return OB_HOLE_FILL_TOP;
+  } else if (hole_filling_mode == "FILL_NEAREST") {
+    return OB_HOLE_FILL_NEAREST;
+  } else if (hole_filling_mode == "FILL_FAREST") {
+    return OB_HOLE_FILL_FAREST;
+  } else {
+    return OB_HOLE_FILL_NEAREST;
+  }
+}
+
+float depthPrecisionFromString(const std::string &depth_precision_level_str) {
+  // covert 0.8mm to 0.8
+  if (depth_precision_level_str.size() < 2) {
+    return 1.0;
+  }
+  std::string depth_precision_level_str_num =
+      depth_precision_level_str.substr(0, depth_precision_level_str.size() - 2);
+  return std::stof(depth_precision_level_str_num);
+}
+
+std::ostream &operator<<(std::ostream &os, const OBFormat &rhs) {
+  os << OBFormatToString(rhs);
+  return os;
+}
+
+std::string OBSensorTypeToString(const OBSensorType &type) {
+  switch (type) {
+    case OB_SENSOR_UNKNOWN:
+      return "UNKNOWN";
+    case OB_SENSOR_IR:
+      return "IR";
+    case OB_SENSOR_COLOR:
+      return "COLOR";
+    case OB_SENSOR_DEPTH:
+      return "DEPTH";
+    case OB_SENSOR_ACCEL:
+      return "ACCEL";
+    case OB_SENSOR_GYRO:
+      return "GYRO";
+    case OB_SENSOR_IR_LEFT:
+      return "LEFT_IR";
+    case OB_SENSOR_IR_RIGHT:
+      return "RIGHT_IR";
+    case OB_SENSOR_RAW_PHASE:
+      return "RAW_PHASE";
+    default:
+      return "UNKNOWN";
+  }
+}
+std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs) {
+  os << OBSensorTypeToString(rhs);
+  return os;
+}
 }  // namespace orbbec_camera

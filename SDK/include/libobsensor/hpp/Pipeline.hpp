@@ -64,9 +64,14 @@ public:
     void start(std::shared_ptr<Config> config);
 
     /**
+     * @brief Start the pipeline with default configuration parameters
+     */
+    void start();
+
+    /**
      * @brief Start the pipeline and set the frameset data callback
      *
-     * @param config The parameter configuration of the pipeline
+     * @param config The configuration of the pipeline
      * @param callback The callback to be triggered when all frame data in the frameset arrives
      */
     void start(std::shared_ptr<Config> config, FrameSetCallback callback);
@@ -77,7 +82,12 @@ public:
     void stop();
 
     /**
+     * @brief get Enabled Stream Profile List,It must be called after the pipeline is started, otherwise it will return an empty list
+     */
+    std::shared_ptr<StreamProfileList> getEnabledStreamProfileList();
+    /**
      * @brief Get the pipeline configuration parameters
+     * @brief Returns the default configuration if the user has not configured it
      *
      * @return std::shared_ptr<Config> The configured parameters
      */
@@ -89,7 +99,7 @@ public:
      * @param timeout_ms The waiting timeout in milliseconds
      * @return std::shared_ptr<FrameSet> The waiting frameset data
      */
-    std::shared_ptr<FrameSet> waitForFrames(uint32_t timeout_ms);
+    std::shared_ptr<FrameSet> waitForFrames(uint32_t timeout_ms = 1000);
 
     /**
      * @brief Get the device object
@@ -220,9 +230,50 @@ public:
     void enableStream(std::shared_ptr<StreamProfile> streamProfile);
 
     /**
+     * @deprecated Use enableStream(std::shared_ptr<StreamProfile> streamProfile) instead
      * @brief Enable all streams to be used in the pipeline
      */
     void enableAllStream();
+
+    /**
+     * @brief Enable a video stream to be used in the pipeline.
+     *
+     * This function allows users to enable a video stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default resolution settings.
+     * Users who wish to set custom resolutions should refer to the product manual, as available resolutions vary by camera model.
+     *
+     * @param type The video stream type.
+     * @param width The video stream width (default is OB_WIDTH_ANY, which selects the default resolution).
+     * @param height The video stream height (default is OB_HEIGHT_ANY, which selects the default resolution).
+     * @param fps The video stream frame rate (default is OB_FPS_ANY, which selects the default frame rate).
+     * @param format The video stream format (default is OB_FORMAT_ANY, which selects the default format).
+     */
+    void enableVideoStream(ob_stream_type type, int width = OB_WIDTH_ANY, int height = OB_HEIGHT_ANY, int fps = OB_FPS_ANY, OBFormat format = OB_FORMAT_ANY);
+
+    /**
+     * @brief Enable an accelerometer stream to be used in the pipeline.
+     *
+     * This function allows users to enable an accelerometer stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default settings.
+     * Users who wish to set custom full-scale ranges or sample rates should refer to the product manual, as available settings vary by device model.
+     *
+     * @param fullScaleRange The full-scale range of the accelerometer (default is OB_ACCEL_FULL_SCALE_RANGE_ANY, which selects the default range).
+     * @param sampleRate The sample rate of the accelerometer (default is OB_ACCEL_SAMPLE_RATE_ANY, which selects the default rate).
+     */
+    void enableAccelStream(ob_accel_full_scale_range fullScaleRange = OB_ACCEL_FULL_SCALE_RANGE_ANY,
+                           ob_accel_sample_rate      sampleRate     = OB_ACCEL_SAMPLE_RATE_ANY);
+
+    /**
+     * @brief Enable a gyroscope stream to be used in the pipeline.
+     *
+     * This function allows users to enable a gyroscope stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default settings.
+     * Users who wish to set custom full-scale ranges or sample rates should refer to the product manual, as available settings vary by device model.
+     *
+     * @param fullScaleRange The full-scale range of the gyroscope (default is OB_GYRO_FULL_SCALE_RANGE_ANY, which selects the default range).
+     * @param sampleRate The sample rate of the gyroscope (default is OB_GYRO_SAMPLE_RATE_ANY, which selects the default rate).
+     */
+    void enableGyroStream(ob_gyro_full_scale_range fullScaleRange = OB_GYRO_FULL_SCALE_RANGE_ANY, ob_gyro_sample_rate sampleRate = OB_GYRO_SAMPLE_RATE_ANY);
 
     /**
      * @brief Disable a stream to be used in the pipeline
@@ -235,6 +286,13 @@ public:
      * @brief Disable all streams to be used in the pipeline
      */
     void disableAllStream();
+
+    /**
+     * @brief Get the Enabled Stream Profile List
+     *
+     * @return std::shared_ptr<StreamProfileList>
+     */
+    std::shared_ptr<StreamProfileList> getEnabledStreamProfileList() const;
 
     /**
      * @brief Set the alignment mode
@@ -267,7 +325,7 @@ public:
      * @brief The processing strategy when the FrameSet generated by the frame aggregation function does not contain the frames of all opened streams (which
      * can be caused by different frame rates of each stream, or by the loss of frames of one stream): drop directly or output to the user.
      *
-     * @param mode The frame aggregation output mode to be set (default mode is @ref OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION)
+     * @param mode The frame aggregation output mode to be set (default mode is @ref OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE)
      */
     void setFrameAggregateOutputMode(OBFrameAggregateOutputMode mode);
 

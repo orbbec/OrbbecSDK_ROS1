@@ -1,60 +1,80 @@
-/*******************************************************************************
- * Copyright (c) 2023 Orbbec 3D Technology, Inc
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
-
-#include <ros/ros.h>
+#include <orbbec_camera/ob_camera_node.h>
 #include <memory>
-#include <orbbec_camera/utils.h>
-int main() {
-  using namespace orbbec_camera;
-  auto context = std::make_shared<ob::Context>();
-  context->setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_NONE);
-  auto device_list = context->queryDeviceList();
-  auto device = device_list->getDevice(0);
+#include <iostream>
+
+using namespace orbbec_camera;
+
+std::shared_ptr<ob::Device> initializeDevice(std::shared_ptr<ob::Pipeline> pipeline) {
+  auto device = pipeline->getDevice();
+  if (!device) {
+    std::cout << "No device found" << std::endl;
+    return nullptr;
+  }
+  return device;
+}
+
+void listSensorProfiles(const std::shared_ptr<ob::Device>& device) {
   auto sensor_list = device->getSensorList();
   for (size_t i = 0; i < sensor_list->count(); i++) {
     auto sensor = sensor_list->getSensor(i);
     auto profile_list = sensor->getStreamProfileList();
     for (size_t j = 0; j < profile_list->count(); j++) {
       auto origin_profile = profile_list->getProfile(j);
-      if (sensor->type() == OB_SENSOR_COLOR) {
+      if (sensor->type() == OB_SENSOR_COLOR || sensor->type() == OB_SENSOR_DEPTH ||
+          sensor->type() == OB_SENSOR_IR || sensor->type() == OB_SENSOR_IR_LEFT ||
+          sensor->type() == OB_SENSOR_IR_RIGHT) {
         auto profile = origin_profile->as<ob::VideoStreamProfile>();
-        ROS_INFO_STREAM("color profile: " << profile->width() << "x" << profile->height() << " "
-                                          << profile->fps() << "fps " << profile->format());
-      } else if (sensor->type() == OB_SENSOR_DEPTH) {
-        auto profile = origin_profile->as<ob::VideoStreamProfile>();
-        ROS_INFO_STREAM("depth profile: " << profile->width() << "x" << profile->height() << " "
-                                          << profile->fps() << "fps " << profile->format());
-      } else if (sensor->type() == OB_SENSOR_IR) {
-        auto profile = origin_profile->as<ob::VideoStreamProfile>();
-        ROS_INFO_STREAM("ir profile: " << profile->width() << "x" << profile->height() << " "
-                                       << profile->fps() << "fps " << profile->format());
+        std::cout << sensor->type() << " profile: " << profile->width() << "x" << profile->height()
+                  << " " << profile->fps() << "fps " << profile->format() << std::endl;
       } else if (sensor->type() == OB_SENSOR_ACCEL) {
         auto profile = origin_profile->as<ob::AccelStreamProfile>();
-        ROS_INFO_STREAM("accel profile: sampleRate "
-                        << sampleRateToString(profile->sampleRate()) << "  full scale_range "
-                        << fullAccelScaleRangeToString(profile->fullScaleRange()));
+        std::cout << sensor->type() << " profile: " << profile->sampleRate()
+                  << "  full scale_range " << profile->fullScaleRange() << std::endl;
       } else if (sensor->type() == OB_SENSOR_GYRO) {
         auto profile = origin_profile->as<ob::GyroStreamProfile>();
-        ROS_INFO_STREAM("gyro profile: sampleRate "
-                        << sampleRateToString(profile->sampleRate()) << "  full scale_range "
-                        << fullGyroScaleRangeToString(profile->fullScaleRange()));
+        std::cout << sensor->type() << " profile: " << profile->sampleRate()
+                  << "  full scale_range " << profile->fullScaleRange() << std::endl;
       } else {
-        ROS_INFO_STREAM("unknown profile: " << sensor->type());
+        std::cout << "Unknown profile: " << sensor->type() << std::endl;
       }
     }
   }
+}
+
+void printDeviceProperties(const std::shared_ptr<ob::Device>& device) {
+  if (!device->isPropertySupported(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, OB_PERMISSION_READ_WRITE)) {
+    std::cout << "Current device not support depth work mode!" << std::endl;
+    return;
+  }
+  auto current_depth_mode = device->getCurrentDepthWorkMode();
+  std::cout << "Current depth mode: " << current_depth_mode.name << std::endl;
+  auto depth_mode_list = device->getDepthWorkModeList();
+  std::cout << "Depth mode list: " << std::endl;
+  for (uint32_t i = 0; i < depth_mode_list->count(); i++) {
+    std::cout << "Depth_mode_list[" << i << "]: " << (*depth_mode_list)[i].name << std::endl;
+  }
+}
+
+void printPreset(const std::shared_ptr<ob::Device>& device) {
+  auto preset_list = device->getAvailablePresetList();
+  if (!preset_list || preset_list->count() == 0) {
+    return;
+  }
+  std::cout << "Preset list:" << std::endl;
+  for (uint32_t i = 0; i < preset_list->count(); i++) {
+    auto name = preset_list->getName(i);
+    std::cout << "Preset list[" << i << "]: " << name << std::endl;
+  }
+}
+int main() {
+  ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_NONE);
+  auto pipeline = std::make_shared<ob::Pipeline>();
+  auto device = initializeDevice(pipeline);
+  if (!device) {
+    return -1;  // Device initialization failed
+  }
+  listSensorProfiles(device);
+  printDeviceProperties(device);
+  printPreset(device);
   return 0;
 }

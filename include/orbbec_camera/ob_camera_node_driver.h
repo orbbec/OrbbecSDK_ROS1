@@ -20,6 +20,8 @@
 #include <mutex>
 #include <semaphore.h>
 #include <pthread.h>
+#define BACKWARD_HAS_DW 1
+#include <backward-cpp/backward.hpp>
 
 namespace orbbec_camera {
 
@@ -33,6 +35,8 @@ class OBCameraNodeDriver {
   void init();
 
   std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
+
+  bool rebootDeviceServiceCallback(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res);
 
   std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
       const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number);
@@ -57,7 +61,6 @@ class OBCameraNodeDriver {
 
   static std::string parseUsbPort(const std::string& line);
 
- private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
   std::string config_path_;
@@ -76,6 +79,7 @@ class OBCameraNodeDriver {
   std::shared_ptr<std::thread> query_thread_ = nullptr;
   std::recursive_mutex device_lock_;
   int device_num_ = 1;
+  bool enumerate_net_device_ = false;
   std::shared_ptr<std::thread> reset_device_thread_ = nullptr;
   std::condition_variable reset_device_cv_;
   std::atomic_bool reset_device_{false};
@@ -87,5 +91,9 @@ class OBCameraNodeDriver {
   // net work config
   std::string ip_address_;
   int port_ = 0;
+  ros::ServiceServer reboot_service_srv_;
+  static backward::SignalHandling sh;
+  bool enable_hardware_reset_ = false;
+  bool hardware_reset_done_ = false;
 };
 }  // namespace orbbec_camera

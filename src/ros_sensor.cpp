@@ -67,6 +67,53 @@ int ROSOBSensor::getExposure() {
   return data;
 }
 
+void ROSOBSensor::setRotation(int rotation) {
+  // 0, 90, 180, 270
+  if (rotation % 90 != 0) {
+    ROS_INFO_STREAM(name_ << " does not support set rotation");
+    return;
+  }
+  switch (sensor_->type()) {
+    case OB_SENSOR_COLOR:
+      device_->setIntProperty(OB_PROP_COLOR_ROTATE_INT, rotation);
+      break;
+    case OB_SENSOR_DEPTH:
+      device_->setIntProperty(OB_PROP_DEPTH_ROTATE_INT, rotation);
+      break;
+    case OB_SENSOR_IR_LEFT:
+    case OB_SENSOR_IR:
+      device_->setIntProperty(OB_PROP_IR_ROTATE_INT, rotation);
+      break;
+    case OB_SENSOR_IR_RIGHT:
+      device_->setIntProperty(OB_PROP_IR_RIGHT_ROTATE_INT, rotation);
+      break;
+
+    default:
+      ROS_INFO_STREAM(name_ << " does not support set rotation");
+      break;
+  }
+}
+OBIntPropertyRange ROSOBSensor::getExposureRange() {
+  OBIntPropertyRange range{0, 0};
+  switch (sensor_->type()) {
+    case OB_SENSOR_DEPTH:
+      range = device_->getIntPropertyRange(OB_PROP_DEPTH_EXPOSURE_INT);
+      break;
+    case OB_SENSOR_COLOR:
+      range = device_->getIntPropertyRange(OB_PROP_COLOR_EXPOSURE_INT);
+      break;
+    case OB_SENSOR_IR_LEFT:
+    case OB_SENSOR_IR_RIGHT:
+    case OB_SENSOR_IR:
+      range = device_->getIntPropertyRange(OB_PROP_IR_EXPOSURE_INT);
+      break;
+    default:
+      ROS_INFO_STREAM(name_ << " does not support get exposure");
+      break;
+  }
+  return range;
+}
+
 void ROSOBSensor::setExposure(int data) {
   switch (sensor_->type()) {
     case OB_SENSOR_DEPTH:
@@ -107,6 +154,26 @@ int ROSOBSensor::getGain() {
   return data;
 }
 
+OBIntPropertyRange ROSOBSensor::getGainRange() {
+  OBIntPropertyRange range{0, 0};
+  switch (sensor_->type()) {
+    case OB_SENSOR_DEPTH:
+      range = device_->getIntPropertyRange(OB_PROP_DEPTH_GAIN_INT);
+      break;
+    case OB_SENSOR_IR_LEFT:
+    case OB_SENSOR_IR_RIGHT:
+    case OB_SENSOR_IR:
+      range = device_->getIntPropertyRange(OB_PROP_IR_GAIN_INT);
+      break;
+    case OB_SENSOR_COLOR:
+      range = device_->getIntPropertyRange(OB_PROP_COLOR_GAIN_INT);
+      break;
+    default:
+      ROS_INFO_STREAM(name_ << " does not support get gain");
+      break;
+  }
+  return range;
+}
 void ROSOBSensor::setGain(int data) {
   switch (sensor_->type()) {
     case OB_SENSOR_DEPTH:
@@ -136,8 +203,23 @@ int ROSOBSensor::getWhiteBalance() {
   return data;
 }
 
+OBIntPropertyRange ROSOBSensor::getWhiteBalanceRange() {
+  OBIntPropertyRange range{0, 0};
+  if (sensor_->type() == OB_SENSOR_COLOR) {
+    range = device_->getIntPropertyRange(OB_PROP_COLOR_WHITE_BALANCE_INT);
+  } else {
+    ROS_ERROR_STREAM(name_ << " does not support get white balance");
+  }
+  return range;
+}
+
 void ROSOBSensor::setWhiteBalance(int data) {
   if (sensor_->type() == OB_SENSOR_COLOR) {
+    auto range = device_->getIntPropertyRange(OB_PROP_COLOR_WHITE_BALANCE_INT);
+    if (data < range.min || data > range.max) {
+      ROS_ERROR_STREAM(name_ << " white balance value out of range");
+      return;
+    }
     device_->setIntProperty(OB_PROP_COLOR_WHITE_BALANCE_INT, data);
   } else {
     ROS_ERROR_STREAM(name_ << " does not support set white balance");
@@ -231,5 +313,7 @@ bool ROSOBSensor::isMirrored() const { return is_mirrored_; }
 std::shared_ptr<ob::StreamProfileList> ROSOBSensor::getStreamProfileList() const {
   return sensor_->getStreamProfileList();
 }
+
+std::shared_ptr<ob::Sensor> ROSOBSensor::getSensor() const { return sensor_; }
 
 }  // namespace orbbec_camera

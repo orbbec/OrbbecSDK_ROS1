@@ -18,7 +18,6 @@
 #include "constants.h"
 #include "utils.h"
 #include "types.h"
-#include <glog/logging.h>
 
 namespace orbbec_camera {
 class ROSOBSensor {
@@ -34,13 +33,19 @@ class ROSOBSensor {
 
   int getExposure();
 
+  OBIntPropertyRange getExposureRange();
+
   void setExposure(int data);
 
   int getGain();
 
+  OBIntPropertyRange getGainRange();
+
   void setGain(int data);
 
   int getWhiteBalance();
+
+  OBIntPropertyRange getWhiteBalanceRange();
 
   void setWhiteBalance(int data);
 
@@ -59,6 +64,10 @@ class ROSOBSensor {
   bool isMirrored() const;
 
   std::shared_ptr<ob::StreamProfileList> getStreamProfileList() const;
+
+  std::shared_ptr<ob::Sensor> getSensor() const;
+
+  void setRotation(int rotation);
 
  private:
   std::shared_ptr<ob::Device> device_ = nullptr;

@@ -17,6 +17,7 @@
 #include <orbbec_camera/types.h>
 #include <string>
 #include <regex>
+#include <thread>
 std::string parseUsbPort(const std::string& line) {
   std::string port_id;
   std::regex self_regex("(?:[^ ]+/usb[0-9]+[0-9./-]*/){0,1}([0-9.-]+)(:){0,1}[^ ]*",

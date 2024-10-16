@@ -29,13 +29,13 @@
     <arg name="left_ir_width" default="640"/>
     <arg name="left_ir_height" default="400"/>
     <arg name="left_ir_fps" default="10"/>
-    <arg name="enable_left_ir" default="true"/>
+    <arg name="enable_left_ir" default="false"/>
     <arg name="left_ir_format" default="Y8"/>
     <arg name="flip_left_ir" default="false"/>
     <arg name="right_ir_width" default="640"/>
     <arg name="right_ir_height" default="400"/>
     <arg name="right_ir_fps" default="10"/>
-    <arg name="enable_right_ir" default="true"/>
+    <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="Y8"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
     <arg name="enable_sync_output_accel_gyro" default="true"/> 
@@ -54,12 +54,11 @@
     <arg name="log_level" default="none"/>
     <arg name="enumerate_net_device" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
-    <arg name="enable_pipeline" default="true"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
     <arg name="soft_filter_max_diff" default="-1"/>
     <arg name="soft_filter_speckle_size" default="-1"/>
-    <arg name="sync_mode" default="free_run"/>
+    <arg name="sync_mode" default="standalone"/>
     <arg name="depth_delay_us" default="0"/>
     <arg name="color_delay_us" default="0"/>
     <arg name="frame_sync" default="true"/>
@@ -73,6 +72,10 @@
     <arg name="depth_work_mode" default=""/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="use_hardware_time" default="true"/>
+    <arg name="retry_on_usb3_detection_failure" default="false"/>
+    <arg name="ip_address" default="192.168.1.10"/>
+    <arg name="port" default="8090"/>
+    <arg name="laser_energy_level" default="-1"/>
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
@@ -126,7 +129,6 @@
             <param name="log_level" value="$(arg log_level)"/>
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
-            <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
@@ -142,6 +144,10 @@
             <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="use_hardware_time" value="$(arg use_hardware_time)"/>
+            <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
+            <param name="ip_address" value="$(arg ip_address)"/>
+            <param name="port" value="$(arg port)"/>
+            <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>
