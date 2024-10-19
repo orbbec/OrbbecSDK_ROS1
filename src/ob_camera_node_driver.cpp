@@ -284,7 +284,20 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
   try {
     std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
     ROS_INFO_STREAM("deviceConnectCallback : Before process lock lock");
-    pthread_mutex_lock(orb_device_lock_);
+    // use try lock to avoid deadlock
+    int max_try_lock_count = 5;
+    int try_lock_count = 0;
+    for (; try_lock_count < max_try_lock_count; try_lock_count++) {
+      if (pthread_mutex_trylock(orb_device_lock_) == 0) {
+        break;
+      }
+      ROS_WARN_STREAM("deviceConnectCallback : Failed to lock orb_device_lock_, wait for 100ms");
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    if (try_lock_count == max_try_lock_count) {
+      ROS_ERROR_STREAM("deviceConnectCallback : Failed to lock orb_device_lock_, return");
+      return;
+    }
     ROS_INFO_STREAM("deviceConnectCallback : After process lock lock");
     std::shared_ptr<int> lock_guard(nullptr,
                                     [this](int *) { pthread_mutex_unlock(orb_device_lock_); });

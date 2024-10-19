@@ -270,6 +270,7 @@ void OBCameraNode::startStreams() {
       ROS_INFO_STREAM("====Enable frame sync====");
       pipeline_->enableFrameSync();
     } else {
+      ROS_INFO_STREAM("====Disable frame sync====");
       pipeline_->disableFrameSync();
     }
     try {
