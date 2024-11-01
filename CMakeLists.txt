@@ -134,6 +134,7 @@ catkin_package(
   std_srvs
   tf2
   tf2_ros
+  backward_ros
 )
 
 # Include directories
@@ -277,4 +278,7 @@ install(DIRECTORY ${ORBBEC_LIBS_DIR}/
   DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/
   FILES_MATCHING PATTERN "*.so"
   PATTERN "*.so.*"
+)
+add_custom_target(copy_orbbec_files ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory  ${ORBBEC_LIBS_DIR}/extensions/  ${CATKIN_DEVEL_PREFIX}/lib/extensions/
 )

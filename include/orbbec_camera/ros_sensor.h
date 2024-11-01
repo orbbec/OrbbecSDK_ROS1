@@ -27,7 +27,7 @@ class ROSOBSensor {
 
   ~ROSOBSensor();
 
-  void startStream(std::shared_ptr<ob::StreamProfile> profile, ob::FrameCallback callback);
+  void startStream(std::shared_ptr<ob::StreamProfile> profile, ob::Sensor::FrameCallback callback);
 
   void stopStream();
 

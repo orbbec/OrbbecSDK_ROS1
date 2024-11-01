@@ -77,8 +77,8 @@ void OBCameraNode::setupRecommendedPostFilters() {
   // set depth sensor to filter
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
   auto filter_list = depth_sensor->getRecommendedFilters();
-  for (size_t i = 0; i < filter_list->count(); i++) {
-    auto filter = filter_list->getFilter(i);
+  for (size_t i = 0; i < filter_list.size(); i++) {
+    auto filter = filter_list[i];
     std::map<std::string, bool> filter_params = {
         {"DecimationFilter", enable_decimation_filter_},
         {"HDRMerge", enable_hdr_merge_},
@@ -159,7 +159,9 @@ void OBCameraNode::setupRecommendedPostFilters() {
         ROS_INFO_STREAM("set HDRMerge exposure_2 to " << hdr_merge_exposure_2_);
         ROS_INFO_STREAM("set HDRMerge gain_1 to " << hdr_merge_gain_1_);
         ROS_INFO_STREAM("set HDRMerge gain_2 to " << hdr_merge_gain_2_);
-        device_->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, &hdr_config, sizeof(OBHdrConfig));
+        device_->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG,
+                                   reinterpret_cast<const uint8_t*>(&hdr_config),
+                                   sizeof(OBHdrConfig));
       }
       hdr_merge_filter->enable(true);
     } else {
@@ -168,14 +170,6 @@ void OBCameraNode::setupRecommendedPostFilters() {
   }
 }
 void OBCameraNode::setupDevices() {
-   if (!depth_filter_config_.empty() && enable_depth_filter_) {
-      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
-      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
-    } else {
-      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
-        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
-      }
-    }
   auto sensor_list = device_->getSensorList();
   for (size_t i = 0; i < sensor_list->count(); i++) {
     auto sensor = sensor_list->getSensor(i);
@@ -212,12 +206,12 @@ void OBCameraNode::setupDevices() {
     d2c_viewer_ = std::make_shared<D2CViewer>(nh_, nh_private_);
   }
   CHECK_NOTNULL(device_info_.get());
-   if (enable_pipeline_) {
-      pipeline_ = std::make_shared<ob::Pipeline>(device_);
-    }
-    if (enable_sync_output_accel_gyro_) {
-      imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
-    }
+  if (enable_pipeline_) {
+    pipeline_ = std::make_shared<ob::Pipeline>(device_);
+  }
+  if (enable_sync_output_accel_gyro_) {
+    imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
+  }
 
   try {
     if (retry_on_usb3_detection_failure_ &&
@@ -226,33 +220,6 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
     }
-    if (color_ae_roi_left_ != -1 && color_ae_roi_top_ != -1 && color_ae_roi_right_ != -1 &&
-        color_ae_roi_bottom_ != -1 &&
-        device_->isPropertySupported(OB_STRUCT_COLOR_AE_ROI, OB_PERMISSION_READ_WRITE)) {
-      ROS_INFO_STREAM("Setting color AE ROI to " << color_ae_roi_left_ << ", " << color_ae_roi_top_
-                                                 << ", " << color_ae_roi_right_ << ", "
-                                                 << color_ae_roi_bottom_);
-      AE_ROI roi;
-      roi.x0_left = color_ae_roi_left_;
-      roi.y0_top = color_ae_roi_top_;
-      roi.x1_right = color_ae_roi_right_;
-      roi.y1_bottom = color_ae_roi_bottom_;
-      device_->setStructuredData(OB_STRUCT_COLOR_AE_ROI, &roi, sizeof(AE_ROI));
-    }
-    // depth ae roi
-    if (depth_ae_roi_left_ != -1 && depth_ae_roi_top_ != -1 && depth_ae_roi_right_ != -1 &&
-        depth_ae_roi_bottom_ != -1 &&
-        device_->isPropertySupported(OB_STRUCT_DEPTH_AE_ROI, OB_PERMISSION_READ_WRITE)) {
-      ROS_INFO_STREAM("Setting depth AE ROI to " << depth_ae_roi_left_ << ", " << depth_ae_roi_top_
-                                                 << ", " << depth_ae_roi_right_ << ", "
-                                                 << depth_ae_roi_bottom_);
-      AE_ROI roi;
-      roi.x0_left = depth_ae_roi_left_;
-      roi.y0_top = depth_ae_roi_top_;
-      roi.x1_right = depth_ae_roi_right_;
-      roi.y1_bottom = depth_ae_roi_bottom_;
-      device_->setStructuredData(OB_STRUCT_DEPTH_AE_ROI, &roi, sizeof(AE_ROI));
-    }
     if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
       auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
       ROS_INFO_STREAM("default_soft_filter_max_diff: " << default_soft_filter_max_diff);
@@ -260,6 +227,14 @@ void OBCameraNode::setupDevices() {
         device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
         auto new_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
         ROS_INFO_STREAM("after set soft_filter_max_diff: " << new_soft_filter_max_diff);
+      }
+    }
+    if (!depth_filter_config_.empty() && enable_depth_filter_) {
+      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
+      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
+    } else {
+      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
       }
     }
     if (!depth_work_mode_.empty()) {
@@ -436,33 +411,33 @@ void OBCameraNode::printProfiles(const std::shared_ptr<ob::Sensor>& sensor) {
   auto profiles = sensor->getStreamProfileList();
   for (size_t j = 0; j < profiles->count(); j++) {
     auto origin_profile = profiles->getProfile(j);
-    if (sensor->type() == OB_SENSOR_COLOR) {
+    if (sensor->getType() == OB_SENSOR_COLOR) {
       auto profile = origin_profile->as<ob::VideoStreamProfile>();
       ROS_INFO_STREAM("available color profile: " << profile->width() << "x" << profile->height()
                                                   << " " << profile->fps() << "fps "
                                                   << profile->format());
-    } else if (sensor->type() == OB_SENSOR_DEPTH) {
+    } else if (sensor->getType() == OB_SENSOR_DEPTH) {
       auto profile = origin_profile->as<ob::VideoStreamProfile>();
       ROS_INFO_STREAM("available depth profile: " << profile->width() << "x" << profile->height()
                                                   << " " << profile->fps() << "fps "
                                                   << profile->format());
-    } else if (sensor->type() == OB_SENSOR_IR) {
+    } else if (sensor->getType() == OB_SENSOR_IR) {
       auto profile = origin_profile->as<ob::VideoStreamProfile>();
       ROS_INFO_STREAM("available ir profile: " << profile->width() << "x" << profile->height()
                                                << " " << profile->fps() << "fps "
                                                << profile->format());
-    } else if (sensor->type() == OB_SENSOR_ACCEL) {
+    } else if (sensor->getType() == OB_SENSOR_ACCEL) {
       auto profile = origin_profile->as<ob::AccelStreamProfile>();
       ROS_INFO_STREAM("available accel profile: sampleRate "
                       << sampleRateToString(profile->sampleRate()) << "  full scale_range "
                       << fullAccelScaleRangeToString(profile->fullScaleRange()));
-    } else if (sensor->type() == OB_SENSOR_GYRO) {
+    } else if (sensor->getType() == OB_SENSOR_GYRO) {
       auto profile = origin_profile->as<ob::GyroStreamProfile>();
       ROS_INFO_STREAM("available gyro profile: sampleRate "
                       << sampleRateToString(profile->sampleRate()) << "  full scale_range "
                       << fullGyroScaleRangeToString(profile->fullScaleRange()));
     } else {
-      ROS_INFO_STREAM("unknown profile: " << sensor->type());
+      ROS_INFO_STREAM("unknown profile: " << sensor->getType());
     }
   }
 }
@@ -511,8 +486,21 @@ void OBCameraNode::setupProfiles() {
       width_[stream_index] = width;
       height_[stream_index] = height;
       fps_[stream_index] = fps;
-      images_[stream_index] =
-          cv::Mat(height, width, image_format_[stream_index], cv::Scalar(0, 0, 0));
+      if (selected_profile->format() == OB_FORMAT_BGRA) {
+        images_[stream_index] =
+            cv::Mat(height, width, CV_8UC4, cv::Scalar(0, 0, 0, 0));
+        encoding_[COLOR] = sensor_msgs::image_encodings::BGRA8;
+        unit_step_size_[stream_index]=4;
+      }else if(selected_profile->format() == OB_FORMAT_RGBA){
+        images_[stream_index] =
+            cv::Mat(height, width, CV_8UC4, cv::Scalar(0, 0, 0, 0));
+        encoding_[COLOR] = sensor_msgs::image_encodings::RGBA8;
+        unit_step_size_[stream_index]=4;
+      }
+      else {
+        images_[stream_index] =
+            cv::Mat(height, width, image_format_[stream_index], cv::Scalar(0, 0, 0));
+      }
       ROS_INFO_STREAM(" stream " << stream_name_[stream_index] << " is enabled - width: " << width
                                  << ", height: " << height << ", fps: " << fps << ", "
                                  << "Format: " << selected_profile->format());
@@ -767,7 +755,8 @@ void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWra
   try {
     OBDeviceTemperature temperature;
     uint32_t data_size = sizeof(OBDeviceTemperature);
-    device_->getStructuredData(OB_STRUCT_DEVICE_TEMPERATURE, &temperature, &data_size);
+    device_->getStructuredData(OB_STRUCT_DEVICE_TEMPERATURE,
+                               reinterpret_cast<uint8_t*>(&temperature), &data_size);
     stat.add("CPU Temperature", temperature.cpuTemp);
     stat.add("IR Temperature", temperature.irTemp);
     stat.add("LDM Temperature", temperature.ldmTemp);

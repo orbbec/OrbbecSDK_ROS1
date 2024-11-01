@@ -124,7 +124,7 @@ class OBCameraNode {
 
   std::shared_ptr<ob::Frame> decodeIRMJPGFrame(const std::shared_ptr<ob::Frame> &frame);
 
-  void onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet> &frame_set);
+  void onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set);
 
   std::shared_ptr<ob::Frame> processDepthFrameFilter(std::shared_ptr<ob::Frame> &frame);
 
@@ -328,7 +328,7 @@ class OBCameraNode {
   std::map<stream_index_pair, image_transport::Publisher> image_publishers_;
   std::map<stream_index_pair, uint32_t> image_seq_;
   std::map<stream_index_pair, ros::Publisher> camera_info_publishers_;
-  std::map<stream_index_pair, ob::FrameCallback> frame_callback_;
+  std::map<stream_index_pair, ob::Sensor::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
   std::map<stream_index_pair, ros::Publisher> metadata_publishers_;
   std::map<stream_index_pair, ros::Publisher> imu_info_publishers_;
@@ -389,7 +389,7 @@ class OBCameraNode {
   std::vector<geometry_msgs::TransformStamped> static_tf_msgs_;
   std::shared_ptr<std::thread> tf_thread_ = nullptr;
   std::condition_variable tf_cv_;
-  double tf_publish_rate_ = 0.0;
+  double tf_publish_rate_ = 10.0;
   bool depth_registration_ = false;
   bool enable_frame_sync_ = false;
   std::recursive_mutex device_lock_;
@@ -467,7 +467,6 @@ class OBCameraNode {
   bool use_hardware_time_ = false;
   // ordered point cloud
   bool ordered_pc_ = false;
-  std::shared_ptr<ob::Frame> depth_frame_ = nullptr;
   std::string device_preset_ = "Default";
   // filter switch
   bool enable_decimation_filter_ = false;
@@ -511,6 +510,7 @@ class OBCameraNode {
   int laser_energy_level_ = -1;
   bool enable_ldp_ = true;
   ob::PointCloudFilter depth_point_cloud_filter_;
+  ob::PointCloudFilter color_point_cloud_filter_;
   boost::optional<OBCalibrationParam> calibration_param_;
   boost::optional<OBXYTables> xy_tables_;
   float *xy_table_data_ = nullptr;
@@ -522,15 +522,6 @@ class OBCameraNode {
   bool has_first_color_frame_ = false;
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;
-  // AE ROI
-  int color_ae_roi_left_ = -1;
-  int color_ae_roi_right_ = -1;
-  int color_ae_roi_top_ = -1;
-  int color_ae_roi_bottom_ = -1;
-  int depth_ae_roi_left_ = -1;
-  int depth_ae_roi_right_ = -1;
-  int depth_ae_roi_top_ = -1;
-  int depth_ae_roi_bottom_ = -1;
 };
 
 }  // namespace orbbec_camera

@@ -6,7 +6,7 @@
     <arg name="connection_delay" default="100"/>
     <arg name="log_level" default="none"/>
     <arg name="publish_tf" default="true"/>
-    <arg name="tf_publish_rate" default="0.0"/>
+    <arg name="tf_publish_rate" default="10.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="use_hardware_time" default="true"/>
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
@@ -23,39 +23,29 @@
     <arg name="color_height" default="0"/>
     <arg name="color_fps" default="0"/>
     <arg name="enable_color" default="true"/>
-    <arg name="color_format" default="MJPG"/>
+    <arg name="color_format" default="ANY"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="0"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
-    <!-- color ae roi-->
-    <arg name="color_ae_roi_top" default="-1"/>
-    <arg name="color_ae_roi_bottom" default="-1"/>
-    <arg name="color_ae_roi_left" default="-1"/>
-    <arg name="color_ae_roi_right" default="-1"/>
 
     <!-- Depth camera parameters -->
     <arg name="depth_width" default="0"/>
     <arg name="depth_height" default="0"/>
     <arg name="depth_fps" default="0"/>
     <arg name="enable_depth" default="true"/>
-    <arg name="depth_format" default="Y16"/>
+    <arg name="depth_format" default="ANY"/>
     <arg name="depth_registration" default="true"/>
     <!-- depth rotation degree : 0, 90, 180, 270 -->
     <arg name="depth_rotation" default="0"/>
-    <!-- depth ae roi-->
-    <arg name="depth_ae_roi_top" default="-1"/>
-    <arg name="depth_ae_roi_bottom" default="-1"/>
-    <arg name="depth_ae_roi_left" default="-1"/>
-    <arg name="depth_ae_roi_right" default="-1"/>
 
     <!-- Left IR camera parameters -->
     <arg name="left_ir_width" default="0"/>
     <arg name="left_ir_height" default="0"/>
     <arg name="left_ir_fps" default="0"/>
     <arg name="enable_left_ir" default="false"/>
-    <arg name="left_ir_format" default="Y8"/>
+    <arg name="left_ir_format" default="ANY"/>
     <!-- left ir rotation degree : 0, 90, 180, 270 -->
     <arg name="left_ir_rotation" default="0"/>
 
@@ -64,8 +54,7 @@
     <arg name="right_ir_height" default="0"/>
     <arg name="right_ir_fps" default="0"/>
     <arg name="enable_right_ir" default="false"/>
-    <arg name="right_ir_format" default="Y8"/>
-    <!-- right ir rotation degree : 0, 90, 180, 270 -->
+    <arg name="right_ir_format" default="ANY"/>
     <arg name="right_ir_rotation" default="0"/>
 
     <!-- Common IR camera parameters -->
@@ -76,7 +65,7 @@
     <arg name="enable_ir_long_exposure" default="false"/>
 
     <!-- Point cloud parameters -->
-    <arg name="enable_point_cloud" default="false"/>
+    <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="false"/>
     <arg name="ordered_pc" default="false"/>
     <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
@@ -103,10 +92,10 @@
     <arg name="temporal_filter_diff_threshold" default="-1.-"/>
     <arg name="temporal_filter_weight" default="-1.0"/>
     <arg name="hole_filling_filter_mode" default=""/>
-    <arg name="hdr_merge_exposure_1" default="7500"/>
-    <arg name="hdr_merge_gain_1" default="16"/>
-    <arg name="hdr_merge_exposure_2" default="1"/>
-    <arg name="hdr_merge_gain_2" default="16"/>
+    <arg name="hdr_merge_exposure_1" default="-1"/>
+    <arg name="hdr_merge_gain_1" default="-1"/>
+    <arg name="hdr_merge_exposure_2" default="-1"/>
+    <arg name="hdr_merge_gain_2" default="-1"/>
     <!-- IMU parameters -->
     <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="true"/>
@@ -156,10 +145,6 @@
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
-            <param name="color_ae_roi_top" value="$(arg color_ae_roi_top)"/>
-            <param name="color_ae_roi_bottom" value="$(arg color_ae_roi_bottom)"/>
-            <param name="color_ae_roi_left" value="$(arg color_ae_roi_left)"/>
-            <param name="color_ae_roi_right" value="$(arg color_ae_roi_right)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
@@ -168,23 +153,22 @@
             <param name="depth_format" value="$(arg depth_format)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="depth_rotation" value="$(arg depth_rotation)"/>
-            <param name="depth_ae_roi_top" value="$(arg depth_ae_roi_top)"/>
-            <param name="depth_ae_roi_bottom" value="$(arg depth_ae_roi_bottom)"/>
-            <param name="depth_ae_roi_left" value="$(arg depth_ae_roi_left)"/>
-            <param name="depth_ae_roi_right" value="$(arg depth_ae_roi_right)"/>
 
             <param name="left_ir_width" value="$(arg left_ir_width)"/>
             <param name="left_ir_height" value="$(arg left_ir_height)"/>
             <param name="left_ir_fps" value="$(arg left_ir_fps)"/>
             <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
             <param name="left_ir_format" value="$(arg left_ir_format)"/>
-            <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
+             <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
+
             <param name="right_ir_width" value="$(arg right_ir_width)"/>
             <param name="right_ir_height" value="$(arg right_ir_height)"/>
             <param name="right_ir_fps" value="$(arg right_ir_fps)"/>
             <param name="enable_right_ir" value="$(arg enable_right_ir)"/>
             <param name="right_ir_format" value="$(arg right_ir_format)"/>
             <param name="right_ir_rotation" value="$(arg right_ir_rotation)"/>
+
+
             <param name="enable_ir_auto_exposure" value="$(arg enable_ir_auto_exposure)"/>
 
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>

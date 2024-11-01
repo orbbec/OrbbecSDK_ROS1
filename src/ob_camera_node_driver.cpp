@@ -68,12 +68,10 @@ void signalHandler(int signum) {
   log_file.close();
   exit(signum);  // Exit program
 }
-
 OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
     : nh_(nh),
       nh_private_(nh_private),
-      config_path_(ros::package::getPath("orbbec_camera") + "/config/OrbbecSDKConfig_v1.0.xml"),
-      ctx_(std::make_shared<ob::Context>(config_path_.c_str())) {
+      config_path_(ros::package::getPath("orbbec_camera") + "/config/OrbbecSDKConfig_v1.0.xml") {
   init();
 }
 
@@ -94,6 +92,12 @@ void OBCameraNodeDriver::init() {
   signal(SIGABRT, signalHandler);  // abort
   signal(SIGFPE, signalHandler);   // float point exception
   signal(SIGILL, signalHandler);   // illegal instruction
+  prefix_paths = std::getenv("CMAKE_PREFIX_PATH");
+  colon_pos = prefix_paths.find(':');
+  first_prefix = prefix_paths.substr(0, colon_pos);
+  extension_path_ = first_prefix + "/lib/extensions";
+  ob::Context::setExtensionsDirectory(extension_path_.c_str());
+  ctx_ = std::make_shared<ob::Context>(config_path_.c_str());
   auto log_level = nh_private_.param<std::string>("log_level", "info");
   g_camera_name = nh_private_.param<std::string>("camera_name", "camera");
   auto ob_log_level = obLogSeverityFromString(log_level);
@@ -146,10 +150,7 @@ void OBCameraNodeDriver::init() {
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
     const std::shared_ptr<ob::DeviceList> &list) {
-  if (device_num_ == 1) {
-    ROS_INFO_STREAM("Connecting to the default device");
-    return list->getDevice(0);
-  }
+
 
   std::shared_ptr<ob::Device> device = nullptr;
   if (!serial_number_.empty()) {
@@ -158,6 +159,9 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
   } else if (!usb_port_.empty()) {
     ROS_INFO_STREAM("Connecting to device with usb port: " << usb_port_);
     device = selectDeviceByUSBPort(list, usb_port_);
+  } else if (device_num_ == 1) {
+    ROS_INFO_STREAM("Connecting to the default device");
+    return list->getDevice(0);
   }
   if (device == nullptr) {
     ROS_WARN_THROTTLE(1.0, "Device with serial number %s not found", serial_number_.c_str());
@@ -284,20 +288,7 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
   try {
     std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
     ROS_INFO_STREAM("deviceConnectCallback : Before process lock lock");
-    // use try lock to avoid deadlock
-    int max_try_lock_count = 5;
-    int try_lock_count = 0;
-    for (; try_lock_count < max_try_lock_count; try_lock_count++) {
-      if (pthread_mutex_trylock(orb_device_lock_) == 0) {
-        break;
-      }
-      ROS_WARN_STREAM("deviceConnectCallback : Failed to lock orb_device_lock_, wait for 100ms");
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-    if (try_lock_count == max_try_lock_count) {
-      ROS_ERROR_STREAM("deviceConnectCallback : Failed to lock orb_device_lock_, return");
-      return;
-    }
+    pthread_mutex_lock(orb_device_lock_);
     ROS_INFO_STREAM("deviceConnectCallback : After process lock lock");
     std::shared_ptr<int> lock_guard(nullptr,
                                     [this](int *) { pthread_mutex_unlock(orb_device_lock_); });

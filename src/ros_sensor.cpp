@@ -28,7 +28,7 @@ ROSOBSensor::ROSOBSensor(std::shared_ptr<ob::Device> device, std::shared_ptr<ob:
 ROSOBSensor::~ROSOBSensor() { stopStream(); }
 
 void ROSOBSensor::startStream(std::shared_ptr<ob::StreamProfile> profile,
-                              ob::FrameCallback callback) {
+                              ob::Sensor::FrameCallback callback) {
   if (is_started_) {
     return;
   }
@@ -48,7 +48,7 @@ void ROSOBSensor::stopStream() {
 
 int ROSOBSensor::getExposure() {
   int data = 0;
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       data = device_->getIntProperty(OB_PROP_DEPTH_EXPOSURE_INT);
       break;
@@ -95,7 +95,7 @@ void ROSOBSensor::setRotation(int rotation) {
 }
 OBIntPropertyRange ROSOBSensor::getExposureRange() {
   OBIntPropertyRange range{0, 0};
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       range = device_->getIntPropertyRange(OB_PROP_DEPTH_EXPOSURE_INT);
       break;
@@ -115,7 +115,7 @@ OBIntPropertyRange ROSOBSensor::getExposureRange() {
 }
 
 void ROSOBSensor::setExposure(int data) {
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       device_->setIntProperty(OB_PROP_DEPTH_EXPOSURE_INT, data);
       break;
@@ -135,7 +135,7 @@ void ROSOBSensor::setExposure(int data) {
 
 int ROSOBSensor::getGain() {
   int data = 0;
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       data = device_->getIntProperty(OB_PROP_DEPTH_GAIN_INT);
       break;
@@ -156,7 +156,7 @@ int ROSOBSensor::getGain() {
 
 OBIntPropertyRange ROSOBSensor::getGainRange() {
   OBIntPropertyRange range{0, 0};
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       range = device_->getIntPropertyRange(OB_PROP_DEPTH_GAIN_INT);
       break;
@@ -175,7 +175,7 @@ OBIntPropertyRange ROSOBSensor::getGainRange() {
   return range;
 }
 void ROSOBSensor::setGain(int data) {
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       device_->setIntProperty(OB_PROP_DEPTH_GAIN_INT, data);
       break;
@@ -195,7 +195,7 @@ void ROSOBSensor::setGain(int data) {
 
 int ROSOBSensor::getWhiteBalance() {
   int data = 0;
-  if (sensor_->type() == OB_SENSOR_COLOR) {
+  if (sensor_->getType() == OB_SENSOR_COLOR) {
     data = device_->getIntProperty(OB_PROP_COLOR_WHITE_BALANCE_INT);
   } else {
     ROS_ERROR_STREAM(name_ << " does not support get white balance");
@@ -205,7 +205,7 @@ int ROSOBSensor::getWhiteBalance() {
 
 OBIntPropertyRange ROSOBSensor::getWhiteBalanceRange() {
   OBIntPropertyRange range{0, 0};
-  if (sensor_->type() == OB_SENSOR_COLOR) {
+  if (sensor_->getType() == OB_SENSOR_COLOR) {
     range = device_->getIntPropertyRange(OB_PROP_COLOR_WHITE_BALANCE_INT);
   } else {
     ROS_ERROR_STREAM(name_ << " does not support get white balance");
@@ -214,7 +214,7 @@ OBIntPropertyRange ROSOBSensor::getWhiteBalanceRange() {
 }
 
 void ROSOBSensor::setWhiteBalance(int data) {
-  if (sensor_->type() == OB_SENSOR_COLOR) {
+  if (sensor_->getType() == OB_SENSOR_COLOR) {
     auto range = device_->getIntPropertyRange(OB_PROP_COLOR_WHITE_BALANCE_INT);
     if (data < range.min || data > range.max) {
       ROS_ERROR_STREAM(name_ << " white balance value out of range");
@@ -228,7 +228,7 @@ void ROSOBSensor::setWhiteBalance(int data) {
 
 bool ROSOBSensor::getAutoWhiteBalance() {
   bool data = false;
-  if (sensor_->type() == OB_SENSOR_COLOR) {
+  if (sensor_->getType() == OB_SENSOR_COLOR) {
     data = device_->getBoolProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL);
   } else {
     ROS_ERROR_STREAM(name_ << " does not support get auto white balance");
@@ -237,7 +237,7 @@ bool ROSOBSensor::getAutoWhiteBalance() {
 }
 
 void ROSOBSensor::setAutoWhiteBalance(bool data) {
-  if (sensor_->type() == OB_SENSOR_COLOR) {
+  if (sensor_->getType() == OB_SENSOR_COLOR) {
     device_->setBoolProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, data);
   } else {
     ROS_ERROR_STREAM(name_ << " does not support set auto white balance");
@@ -245,7 +245,7 @@ void ROSOBSensor::setAutoWhiteBalance(bool data) {
 }
 
 void ROSOBSensor::setAutoExposure(bool data) {
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, data);
       break;
@@ -265,7 +265,7 @@ void ROSOBSensor::setAutoExposure(bool data) {
 
 bool ROSOBSensor::getAutoExposure() {
   bool data = false;
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       data = device_->getBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
       break;
@@ -284,11 +284,11 @@ bool ROSOBSensor::getAutoExposure() {
   return data;
 }
 
-OBSensorType ROSOBSensor::getSensorType() { return sensor_->type(); }
+OBSensorType ROSOBSensor::getSensorType() { return sensor_->getType(); }
 
 void ROSOBSensor::setMirror(bool data) {
   is_mirrored_ = data;
-  switch (sensor_->type()) {
+  switch (sensor_->getType()) {
     case OB_SENSOR_DEPTH:
       device_->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, data);
       break;

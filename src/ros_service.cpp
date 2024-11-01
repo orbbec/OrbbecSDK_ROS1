@@ -465,9 +465,15 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
                                     std_srvs::SetBoolResponse& response) {
   (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  auto device_info = device_->getDeviceInfo();
+  auto pid = device_info->getPid();
   try {
     int data = request.data ? 1 : 0;
-    device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
+    if (isGemini335PID(pid)) {
+      device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
+    } else {
+      device_->setIntProperty(OB_PROP_LASER_BOOL, data);
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set laser: " << e.getMessage());
     response.message = e.getMessage();

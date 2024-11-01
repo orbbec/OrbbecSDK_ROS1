@@ -95,5 +95,9 @@ class OBCameraNodeDriver {
   static backward::SignalHandling sh;
   bool enable_hardware_reset_ = false;
   bool hardware_reset_done_ = false;
+  std::string extension_path_;
+  std::string prefix_paths;
+  std::string first_prefix;
+  std::size_t colon_pos;
 };
 }  // namespace orbbec_camera
