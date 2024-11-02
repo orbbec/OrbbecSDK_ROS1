@@ -1,13 +1,17 @@
-# Orbbec ROS SDK
+# OrbbecSDK ROS
 
 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.12-green)
 
-Orbbec ROS SDK is a wrapper for Orbbec SDK that supports ROS Kinetic, Melodic, and Noetic distributions.
+OrbbecSDK_ROS1 is a wrapper for Orbbec SDK that supports ROS Kinetic, Melodic, and Noetic distributions.
 It enables smooth integration of Orbbec 3D cameras into ROS projects.
 
+With the major update of the new branch [v2-main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main) in October 2024, OrbbecSDK_ROS1 is connected to the open source version of [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases), which will make OrbbecSDK_ROS1 more flexible and extensible. This update in v2-main ensures compatibility with all new Orbbec USB products that comply with the UVC standard. However, OrbbecSDK_ROS1 v2 no longer supports Orbbec's traditional OpenNI protocol devices. We encourage you to check whether your device is supported by OrbbecSDK_ROS1 v2 and use the new version if supported.
+
 ## Table of Contents
+
 <!-- TOC -->
-* [Orbbec ROS SDK](#orbbec-ros-sdk)
+
+* [OrbbecSDK ROS](#orbbec-ros-sdk)
   * [Table of Contents](#table-of-contents)
   * [Install Dependencies](#install-dependencies)
     * [ROS](#ros)
@@ -34,6 +38,7 @@ It enables smooth integration of Orbbec 3D cameras into ROS projects.
     * [Why Are There So Many Launch Files?](#why-are-there-so-many-launch-files)
   * [Other useful links](#other-useful-links)
   * [License](#license)
+
 <!-- TOC -->
 
 ## Install Dependencies
@@ -244,14 +249,13 @@ The following launch parameters are available:
   recognized as USB 2.0.
   It is recommended to set this parameter to `false` when using a USB 2.0 connection to avoid unnecessary resets.
   Here is a refined version of the two sentences:
-
-- `enable_heartbeat`: This option enables the heartbeat function. By default, it is set to `false`. 
-If set to `true`, the camera will send heartbeat messages and generate firmware logs.
-
-- `enable_hardware_reset`: This option enables the hardware reset function. By default, it is set to `false`. 
-If set to `true`, the camera will reboot upon its first connection.
+- `enable_heartbeat`: This option enables the heartbeat function. By default, it is set to `false`.
+  If set to `true`, the camera will send heartbeat messages and generate firmware logs.
+- `enable_hardware_reset`: This option enables the hardware reset function. By default, it is set to `false`.
+  If set to `true`, the camera will reboot upon its first connection.
 
 **IMPORTANT**: *Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
+
 ## Depth work mode switch:
 
 - Before starting the camera, depth work mode (depth_work_mode) can be configured for the corresponding xxx.launch
@@ -385,7 +389,7 @@ bash .make_deb.sh
 ## Launch files
 
 | product serials                     | launch file              |
-|-------------------------------------|--------------------------|
+| ----------------------------------- | ------------------------ |
 | astra+                              | astra_adv.launch         |
 | astra mini/astra mini pro/astra pro | astra.launch             |
 | astra mini s pro                    | astra.launch             |
@@ -425,6 +429,7 @@ file, as well as other parameters, to ensure compatibility and optimal performan
 For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 
 ## Supported hardware products
+
 Please refer to the OrbbecSDK supported products: [Product Support](https://github.com/orbbec/OrbbecSDK?tab=readme-ov-file#product-support)
 
 ## Frequently Asked Questions
@@ -438,30 +443,41 @@ Please send these log files to the support team or submit them to a GitHub issue
 ### No Data Stream from Multiple Cameras
 
 **Insufficient Power Supply**:
+
 - Ensure that each camera is connected to a separate hub.
 - Use a powered hub to provide sufficient power to each camera.
 
 **High Resolution**:
+
 - Try lowering the resolution to resolve data stream issues.
 
 **Increase usbfs_memory_mb Value**:
+
 - Increase the `usbfs_memory_mb` value to 128MB (this is a reference value and can be adjusted based on your system’s needs)
   by running the following command:
+
 ```bash
     echo 128 | sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb
 ```
+
 - To make this change permanent, check [this link](https://github.com/OpenKinect/libfreenect2/issues/807).
 
 ### Compilation Failure Due to OpenCV Version Issues
+
 In some cases, you may have multiple versions of OpenCV on your host, which can lead to compilation failures. You can resolve this by specifying the OpenCV version. Find the CMakeLists.txt file in the cmake folder and locate the following code:
+
 ```cmake
 find_package(OpenCV REQUIRED)
 ```
+
 Either add OpenCV_dir or specify the version before it:
+
 ```cmake
 find_package(OpenCV 4.2.0 REQUIRED)
 ```
+
 Or:
+
 ```cmake
 set(OpenCV_DIR "/path_to_your_opencv_dir")
 find_package(OpenCV REQUIRED)
