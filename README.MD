@@ -10,8 +10,7 @@ With the major update of the new branch [v2-main](https://github.com/orbbec/Orbb
 ## Table of Contents
 
 <!-- TOC -->
-
-* [OrbbecSDK ROS](#orbbec-ros-sdk)
+* [OrbbecSDK ROS](#orbbecsdk-ros)
   * [Table of Contents](#table-of-contents)
   * [Install Dependencies](#install-dependencies)
     * [ROS](#ros)
@@ -38,7 +37,6 @@ With the major update of the new branch [v2-main](https://github.com/orbbec/Orbb
     * [Why Are There So Many Launch Files?](#why-are-there-so-many-launch-files)
   * [Other useful links](#other-useful-links)
   * [License](#license)
-
 <!-- TOC -->
 
 ## Install Dependencies
@@ -196,6 +194,12 @@ rosservice call /camera/save_point_cloud "{}"
 ```
 
 NOTE: The images are saved under `~/.ros/image` and are only available when the sensor is on.
+
+## Network camera
+For Femto Mega and Femto Mega I, the network camera feature is supported.
+```bash
+roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
+```
 
 ## Launch Parameters
 
