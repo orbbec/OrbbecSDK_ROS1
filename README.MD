@@ -403,7 +403,7 @@ bash .make_deb.sh
 | dabai pro                           | dabai_pro.launch         |
 | deeya                               | deeya.launch             |
 | femto / femto w                     | femto.launch             |
-| femto mega                          | femto_mega.launch        |
+| femto mega / femto mega I           | femto_mega.launch        |
 | femto bolt                          | femto_bolt.launch        |
 | gemini                              | gemini.launch            |
 | gemini2 / dabai DCL                 | gemini2.launch           |
