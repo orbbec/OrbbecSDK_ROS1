@@ -50,8 +50,8 @@
     If you don't want to use ip addr and port, set enumerate_net_device to true
     and  leave ip_address blank , it can enumerate automate -->
     <arg name="enumerate_net_device" default="false"/>
-    <arg name="ip_address" default=""/>
-    <arg name="port" default="0"/>
+    <arg name="ip_address" default="192.168.1.10"/>
+    <arg name="port" default="8090"/>
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_soft_filter" default="true"/>
     <arg name="sync_mode" default="standalone"/>
