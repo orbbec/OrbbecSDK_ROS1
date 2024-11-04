@@ -15,10 +15,11 @@
  *******************************************************************************/
 #include <ros/ros.h>
 #include <orbbec_camera/types.h>
+#include <orbbec_camera/utils.h>
 #include <string>
 #include <regex>
 #include <thread>
-std::string parseUsbPort(const std::string& line) {
+std::string parseUsbPort(const std::string &line) {
   std::string port_id;
   std::regex self_regex("(?:[^ ]+/usb[0-9]+[0-9./-]*/){0,1}([0-9.-]+)(:){0,1}[^ ]*",
                         std::regex_constants::ECMAScript);
@@ -38,17 +39,25 @@ std::string parseUsbPort(const std::string& line) {
   return port_id;
 }
 int main() {
-  auto context = std::make_shared<ob::Context>();
-  context->setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
-  auto list = context->queryDeviceList();
-  for (size_t i = 0; i < list->deviceCount(); i++) {
-    auto device = list->getDevice(i);
-    auto device_info = device->getDeviceInfo();
-    std::string serial = device_info->serialNumber();
-    std::string uid = device_info->uid();
-    auto port_id = parseUsbPort(uid);
-    ROS_INFO_STREAM("serial: " << serial);
-    ROS_INFO_STREAM("port id : " << port_id);
+  try {
+    auto context = std::make_shared<ob::Context>();
+    context->setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
+    auto list = context->queryDeviceList();
+    for (size_t i = 0; i < list->deviceCount(); i++) {
+      auto device = list->getDevice(i);
+      auto device_info = device->getDeviceInfo();
+      std::string serial = device_info->serialNumber();
+      std::string uid = device_info->uid();
+      auto port_id = parseUsbPort(uid);
+      ROS_INFO_STREAM("serial: " << serial);
+      ROS_INFO_STREAM("port id : " << port_id);
+    }
+  } catch (ob::Error &e) {
+    ROS_ERROR_STREAM("list_device_node: " << e.getMessage());
+  } catch (const std::exception &e) {
+    ROS_ERROR_STREAM("list_device_node: " << e.what());
+  } catch (...) {
+    ROS_ERROR_STREAM("list_device_node: " << "unknown error");
   }
   return 0;
 }

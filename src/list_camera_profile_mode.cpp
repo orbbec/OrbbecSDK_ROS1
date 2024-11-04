@@ -67,14 +67,22 @@ void printPreset(const std::shared_ptr<ob::Device>& device) {
   }
 }
 int main() {
-  ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_NONE);
-  auto pipeline = std::make_shared<ob::Pipeline>();
-  auto device = initializeDevice(pipeline);
-  if (!device) {
-    return -1;  // Device initialization failed
+  try {
+    ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_NONE);
+    auto pipeline = std::make_shared<ob::Pipeline>();
+    auto device = initializeDevice(pipeline);
+    if (!device) {
+      return -1;  // Device initialization failed
+    }
+    listSensorProfiles(device);
+    printDeviceProperties(device);
+    printPreset(device);
+  } catch (ob::Error& e) {
+    ROS_ERROR_STREAM("list_camera_profile_mode: " << e.getMessage());
+  } catch (const std::exception& e) {
+    ROS_ERROR_STREAM("list_camera_profile_mode: " << e.what());
+  } catch (...) {
+    ROS_ERROR_STREAM("list_camera_profile_mode: " << "unknown error");
   }
-  listSensorProfiles(device);
-  printDeviceProperties(device);
-  printPreset(device);
   return 0;
 }
