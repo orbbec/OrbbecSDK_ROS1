@@ -1036,6 +1036,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     return;
   }
   if (frame_set == nullptr) {
+    ROS_WARN_THROTTLE(10.0, "%s : frame_1 is null",camera_name_.c_str());
     return;
   }
   ROS_INFO_STREAM_ONCE("Received first frame set");
@@ -1062,6 +1063,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
       }
       // check if align filter failed, if so, return
       if (depth_registration_ && align_filter_ && !depth_aligned) {
+        ROS_WARN_THROTTLE(10.0, "%s : depth_aligned is no",camera_name_.c_str());
         return;
       }
     }
@@ -1154,6 +1156,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
 void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
                                       const stream_index_pair& stream_index) {
   if (frame == nullptr) {
+    ROS_WARN_THROTTLE(10.0, "%s : frame_2 is null",camera_name_.c_str());
     return;
   }
   bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
@@ -1165,6 +1168,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     has_subscriber = true;
   }
   if (!has_subscriber) {
+    ROS_WARN_THROTTLE(10.0, "%s : has_subscriber_1 is null",camera_name_.c_str());
     return;
   }
   std::shared_ptr<ob::VideoFrame> video_frame;
@@ -1254,6 +1258,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   CHECK(image_publishers_.count(stream_index));
   if (!image_publishers_[stream_index].getNumSubscribers()) {
+    ROS_WARN_THROTTLE(10.0, "%s : has_subscriber_2 is null",camera_name_.c_str());
     return;
   }
   auto& image = images_[stream_index];
@@ -1263,11 +1268,12 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
       frame->format() != OB_FORMAT_Y16 && !rgb_is_decoded_ &&
       image_publishers_[COLOR].getNumSubscribers() > 0) {
-    ROS_ERROR_STREAM("frame is not decoded");
+    ROS_WARN_THROTTLE(10.0, "%s : frame_3 is null",camera_name_.c_str());
     return;
   }
   if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
-      frame->format() != OB_FORMAT_Y16 &&  frame->format() != OB_FORMAT_BGRA && frame->format() != OB_FORMAT_RGBA &&image_publishers_[COLOR].getNumSubscribers() > 0) {
+      frame->format() != OB_FORMAT_Y16 && frame->format() != OB_FORMAT_BGRA &&
+      frame->format() != OB_FORMAT_RGBA && image_publishers_[COLOR].getNumSubscribers() > 0) {
     memcpy(image.data, rgb_buffer_, width * height * 3);
   } else {
     memcpy(image.data, video_frame->data(), video_frame->dataSize());
