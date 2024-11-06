@@ -168,14 +168,14 @@ void OBCameraNode::setupRecommendedPostFilters() {
   }
 }
 void OBCameraNode::setupDevices() {
-   if (!depth_filter_config_.empty() && enable_depth_filter_) {
-      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
-      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
-    } else {
-      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
-        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
-      }
+  if (!depth_filter_config_.empty() && enable_depth_filter_) {
+    ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
+    device_->loadDepthFilterConfig(depth_filter_config_.c_str());
+  } else {
+    if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
     }
+  }
   auto sensor_list = device_->getSensorList();
   for (size_t i = 0; i < sensor_list->count(); i++) {
     auto sensor = sensor_list->getSensor(i);
@@ -212,12 +212,12 @@ void OBCameraNode::setupDevices() {
     d2c_viewer_ = std::make_shared<D2CViewer>(nh_, nh_private_);
   }
   CHECK_NOTNULL(device_info_.get());
-   if (enable_pipeline_) {
-      pipeline_ = std::make_shared<ob::Pipeline>(device_);
-    }
-    if (enable_sync_output_accel_gyro_) {
-      imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
-    }
+  if (enable_pipeline_) {
+    pipeline_ = std::make_shared<ob::Pipeline>(device_);
+  }
+  if (enable_sync_output_accel_gyro_) {
+    imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
+  }
 
   try {
     if (retry_on_usb3_detection_failure_ &&
@@ -225,6 +225,55 @@ void OBCameraNode::setupDevices() {
                                      OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
+    }
+    if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,
+                               enable_color_auto_white_balance_);
+    }
+    if (color_gain_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_GAIN_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_GAIN_INT, color_gain_);
+    }
+    if (color_white_balance_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_WHITE_BALANCE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_WHITE_BALANCE_INT, color_white_balance_);
+    }
+    if (color_ae_max_exposure_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_AE_MAX_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_AE_MAX_EXPOSURE_INT, color_ae_max_exposure_);
+    }
+    if (color_brightness_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_BRIGHTNESS_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_BRIGHTNESS_INT, color_brightness_);
+    }
+    if (color_sharpness_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_SHARPNESS_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_SHARPNESS_INT, color_sharpness_);
+    }
+    if (color_contrast_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_CONTRAST_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_CONTRAST_INT, color_contrast_);
+    }
+    if (color_saturation_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_SATURATION_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_SATURATION_INT, color_saturation_);
+    }
+    if (color_gamma_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_GAMMA_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_GAMMA_INT, color_gamma_);
+    }
+    if (color_hue_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_HUE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_HUE_INT, color_hue_);
+    }
+    if (ir_gain_ != -1 &&
+        device_->isPropertySupported(OB_PROP_IR_GAIN_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_IR_GAIN_INT, ir_gain_);
+    }
+    if (ir_ae_max_exposure_ != -1 &&
+        device_->isPropertySupported(OB_PROP_IR_AE_MAX_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_IR_AE_MAX_EXPOSURE_INT, ir_ae_max_exposure_);
     }
     if (color_ae_roi_left_ != -1 && color_ae_roi_top_ != -1 && color_ae_roi_right_ != -1 &&
         color_ae_roi_bottom_ != -1 &&

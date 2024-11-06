@@ -246,6 +246,20 @@ void OBCameraNode::getParameters() {
   enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
+  enable_color_auto_white_balance_ =
+      nh_private_.param<bool>("enable_color_auto_white_balance", true);
+  color_exposure_ = nh_private_.param<int>("color_exposure", -1);
+  color_gain_ = nh_private_.param<int>("color_gain", -1);
+  color_white_balance_ = nh_private_.param<int>("color_white_balance", -1);
+  color_ae_max_exposure_ = nh_private_.param<int>("color_ae_max_exposure", -1);
+  color_brightness_ = nh_private_.param<int>("color_brightness", -1);
+  color_sharpness_ = nh_private_.param<int>("color_sharpness", -1);
+  color_contrast_ = nh_private_.param<int>("color_contrast", -1);
+  color_saturation_ = nh_private_.param<int>("color_saturation", -1);
+  color_gamma_ = nh_private_.param<int>("color_gamma", -1);
+  color_hue_ = nh_private_.param<int>("color_hue", -1);
+  ir_gain_ = nh_private_.param<int>("ir_gain", -1);
+  ir_ae_max_exposure_ = nh_private_.param<int>("ir_ae_max_exposure", -1);
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
   if (isOpenNIDevice(device_info->pid())) {
