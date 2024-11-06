@@ -395,6 +395,7 @@ class OBCameraNode {
   std::recursive_mutex device_lock_;
   std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_manager_ = nullptr;
   std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_manager_ = nullptr;
+  std::vector<std::shared_ptr<ob::Filter>> filter_list_;
   std::string ir_info_uri_;
   std::string color_info_uri_;
   bool enable_d2c_viewer_ = false;

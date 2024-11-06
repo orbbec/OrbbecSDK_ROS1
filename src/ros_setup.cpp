@@ -76,9 +76,9 @@ void OBCameraNode::selectBaseStream() {
 void OBCameraNode::setupRecommendedPostFilters() {
   // set depth sensor to filter
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
-  auto filter_list = depth_sensor->getRecommendedFilters();
-  for (size_t i = 0; i < filter_list.size(); i++) {
-    auto filter = filter_list[i];
+  auto filter_list_ = depth_sensor->createRecommendedFilters();
+  for (size_t i = 0; i < filter_list_.size(); i++) {
+    auto filter = filter_list_[i];
     std::map<std::string, bool> filter_params = {
         {"DecimationFilter", enable_decimation_filter_},
         {"HDRMerge", enable_hdr_merge_},

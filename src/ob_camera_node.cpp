@@ -1008,12 +1008,8 @@ std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
   if (frame == nullptr || frame->type() != OB_FRAME_DEPTH) {
     return nullptr;
   }
-  auto sensor = device_->getSensor(OB_SENSOR_DEPTH);
-  CHECK_NOTNULL(sensor.get());
-  auto filter_list = sensor->getRecommendedFilters();
-  for (size_t i = 0; i < filter_list.size(); i++) {
-    // auto filter = filter_list->getFilter(i);
-    auto filter = filter_list[i];
+  for (size_t i = 0; i < filter_list_.size(); i++) {
+    auto filter = filter_list_[i];
     CHECK_NOTNULL(filter.get());
     if (filter->isEnabled() && frame != nullptr) {
       frame = filter->process(frame);
@@ -1036,7 +1032,6 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     return;
   }
   if (frame_set == nullptr) {
-    ROS_WARN_THROTTLE(10.0, "%s : frame_1 is null",camera_name_.c_str());
     return;
   }
   ROS_INFO_STREAM_ONCE("Received first frame set");
@@ -1063,7 +1058,6 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
       }
       // check if align filter failed, if so, return
       if (depth_registration_ && align_filter_ && !depth_aligned) {
-        ROS_WARN_THROTTLE(10.0, "%s : depth_aligned is no",camera_name_.c_str());
         return;
       }
     }
@@ -1156,7 +1150,6 @@ std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
 void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
                                       const stream_index_pair& stream_index) {
   if (frame == nullptr) {
-    ROS_WARN_THROTTLE(10.0, "%s : frame_2 is null",camera_name_.c_str());
     return;
   }
   bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
@@ -1168,7 +1161,6 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     has_subscriber = true;
   }
   if (!has_subscriber) {
-    ROS_WARN_THROTTLE(10.0, "%s : has_subscriber_1 is null",camera_name_.c_str());
     return;
   }
   std::shared_ptr<ob::VideoFrame> video_frame;
@@ -1258,7 +1250,6 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   CHECK(image_publishers_.count(stream_index));
   if (!image_publishers_[stream_index].getNumSubscribers()) {
-    ROS_WARN_THROTTLE(10.0, "%s : has_subscriber_2 is null",camera_name_.c_str());
     return;
   }
   auto& image = images_[stream_index];
@@ -1268,7 +1259,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
       frame->format() != OB_FORMAT_Y16 && !rgb_is_decoded_ &&
       image_publishers_[COLOR].getNumSubscribers() > 0) {
-    ROS_WARN_THROTTLE(10.0, "%s : frame_3 is null",camera_name_.c_str());
+    ROS_ERROR_STREAM("frame is not decoded");
     return;
   }
   if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
