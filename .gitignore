@@ -698,6 +698,7 @@ paket-files/
 
 # CodeRush personal settings
 .cr/personal
+<<<<<<< Updated upstream
 
 # Python Tools for Visual Studio (PTVS)
 
@@ -761,6 +762,71 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
+=======
+
+# Python Tools for Visual Studio (PTVS)
+
+# Cake - Uncomment if you are using it
+# tools/**
+# !tools/packages.config
+
+# Tabs Studio
+*.tss
+
+# Telerik's JustMock configuration file
+*.jmconfig
+
+# BizTalk build output
+*.btp.cs
+*.btm.cs
+*.odx.cs
+*.xsd.cs
+
+# OpenCover UI analysis results
+OpenCover/
+
+# Azure Stream Analytics local run output
+ASALocalRun/
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# NVidia Nsight GPU debugger configuration file
+*.nvuser
+
+# MFractors (Xamarin productivity tool) working folder
+.mfractor/
+
+# Local History for Visual Studio
+.localhistory/
+
+# Visual Studio History (VSHistory) files
+.vshistory/
+
+# BeatPulse healthcheck temp database
+healthchecksdb
+
+# Backup folder for Package Reference Convert tool in Visual Studio 2017
+MigrationBackup/
+
+# Ionide (cross platform F# VS Code tools) working folder
+.ionide/
+
+# Fody - auto-generated XML schema
+FodyWeavers.xsd
+
+# VS Code files for those working on multiple tools
+
+# Local History for Visual Studio Code
+
+# Windows Installer files from build outputs
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+>>>>>>> Stashed changes
 # JetBrains Rider
 *.sln.iml
 .obj-x86_64-linux-gnu/*
@@ -769,5 +835,11 @@ obj-aarch64-linux-gnu/*
 debian/*
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
+<<<<<<< Updated upstream
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,c++,python,jetbrains+all,ros,ros2
+=======
+
+# End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,c++,python,jetbrains+all,ros,ros2
+
+>>>>>>> Stashed changes
