@@ -229,13 +229,8 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("after set soft_filter_max_diff: " << new_soft_filter_max_diff);
       }
     }
-    if (!depth_filter_config_.empty() && enable_depth_filter_) {
-      ROS_INFO_STREAM("Load depth filter config: " << depth_filter_config_);
-      device_->loadDepthFilterConfig(depth_filter_config_.c_str());
-    } else {
-      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
-        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_soft_filter_);
-      }
+    if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_noise_removal_filter_);
     }
     if (!depth_work_mode_.empty()) {
       ROS_INFO_STREAM("Set depth work mode: " << depth_work_mode_);
@@ -487,17 +482,14 @@ void OBCameraNode::setupProfiles() {
       height_[stream_index] = height;
       fps_[stream_index] = fps;
       if (selected_profile->format() == OB_FORMAT_BGRA) {
-        images_[stream_index] =
-            cv::Mat(height, width, CV_8UC4, cv::Scalar(0, 0, 0, 0));
+        images_[stream_index] = cv::Mat(height, width, CV_8UC4, cv::Scalar(0, 0, 0, 0));
         encoding_[COLOR] = sensor_msgs::image_encodings::BGRA8;
-        unit_step_size_[stream_index]=4;
-      }else if(selected_profile->format() == OB_FORMAT_RGBA){
-        images_[stream_index] =
-            cv::Mat(height, width, CV_8UC4, cv::Scalar(0, 0, 0, 0));
+        unit_step_size_[stream_index] = 4;
+      } else if (selected_profile->format() == OB_FORMAT_RGBA) {
+        images_[stream_index] = cv::Mat(height, width, CV_8UC4, cv::Scalar(0, 0, 0, 0));
         encoding_[COLOR] = sensor_msgs::image_encodings::RGBA8;
-        unit_step_size_[stream_index]=4;
-      }
-      else {
+        unit_step_size_[stream_index] = 4;
+      } else {
         images_[stream_index] =
             cv::Mat(height, width, image_format_[stream_index], cv::Scalar(0, 0, 0));
       }
