@@ -16,6 +16,7 @@
     <arg name="enable_laser" default="true"/>
     <arg name="laser_on_off_mode" default="0"/>
     <arg name="sync_mode" default="standalone"/>
+    <arg name="enable_hardware_d2d" default="true"/>
 
 
     <!-- Color camera parameters -->
@@ -36,7 +37,7 @@
     <arg name="depth_fps" default="0"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="ANY"/>
-    <arg name="depth_registration" default="true"/>
+    <arg name="depth_registration" default="false"/>
     <!-- depth rotation degree : 0, 90, 180, 270 -->
     <arg name="depth_rotation" default="0"/>
 
@@ -134,6 +135,7 @@
             <param name="enable_laser" value="$(arg enable_laser)"/>
             <param name="laser_on_off_mode" value="$(arg laser_on_off_mode)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
+            <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
 
