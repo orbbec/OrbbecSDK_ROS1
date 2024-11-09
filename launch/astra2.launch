@@ -10,6 +10,7 @@
     <arg name="device_num" default="1"/>
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default=""/>
+    <arg name="time_domain" default="device"/>
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="true"/>
     <arg name="connection_delay" default="100"/>
@@ -60,6 +61,7 @@
             <param name="usb_port" type="string" value="$(arg usb_port)"/>
             <param name="vendor_id" value="$(arg vendor_id)"/>
             <param name="product_id" value="$(arg product_id)"/>
+            <param name="time_domain" value="$(arg time_domain)"/>
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
             <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>

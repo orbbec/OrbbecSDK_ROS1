@@ -9,6 +9,7 @@
     <arg name="device_num" default="1"/>
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default=""/>
+    <arg name="time_domain" default="device"/>
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="false"/>
     <arg name="connection_delay" default="100"/>
@@ -33,7 +34,7 @@
     <arg name="ir_format" default="Y8"/>
     <arg name="flip_ir" default="false"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
-    <arg name="enable_sync_output_accel_gyro" default="true"/> 
+    <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="100hz"/>
     <arg name="accel_range" default="4g"/>
@@ -76,6 +77,7 @@
             <param name="usb_port" type="string" value="$(arg usb_port)"/>
             <param name="vendor_id" value="$(arg vendor_id)"/>
             <param name="product_id" value="$(arg product_id)"/>
+            <param name="time_domain" value="$(arg time_domain)"/>
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
             <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
