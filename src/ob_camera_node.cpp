@@ -245,14 +245,13 @@ void OBCameraNode::getParameters() {
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   time_domain_ = nh_private_.param<std::string>("time_domain", "device");
-    auto device_info = device_->getDeviceInfo();
+  auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info.get());
   auto pid = device_info->pid();
   if (isOpenNIDevice(pid)) {
     time_domain_ = "system";
   }
   ROS_INFO_STREAM("current time domain:" << time_domain_);
-
 }
 
 void OBCameraNode::startStreams() {
@@ -1025,7 +1024,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
   return frame;
 }
 
-uint64_t OBCameraNode::getFrameTimestampUs(const std::shared_ptr<ob::Frame> &frame) {
+uint64_t OBCameraNode::getFrameTimestampUs(const std::shared_ptr<ob::Frame>& frame) {
   if (frame == nullptr) {
     ROS_WARN_STREAM("getFrameTimestampUs: frame is nullptr, return 0");
     return 0;
@@ -1055,28 +1054,25 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   try {
     std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     auto depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
-    CHECK_NOTNULL(device_info_);
-    if (isGemini335PID(device_info_->pid()) && enable_stream_[DEPTH]) {
-      depth_frame = processDepthFrameFilter(depth_frame);
-      bool depth_aligned = false;
-      if (depth_frame) {
-        frame_set->pushFrame(depth_frame);
-      }
-      if (depth_registration_ && align_filter_ && depth_frame && color_frame) {
-        if (auto new_frame = align_filter_->process(frame_set)) {
-          auto new_frame_set = new_frame->as<ob::FrameSet>();
-          CHECK_NOTNULL(new_frame_set.get());
-          frame_set = new_frame_set;
-          depth_aligned = true;
-        } else {
-          ROS_ERROR_STREAM("Depth frame alignment failed");
-          return;
-        }
-      }
-      // check if align filter failed, if so, return
-      if (depth_registration_ && align_filter_ && !depth_aligned) {
+    depth_frame = processDepthFrameFilter(depth_frame);
+    bool depth_aligned = false;
+    if (depth_frame) {
+      frame_set->pushFrame(depth_frame);
+    }
+    if (depth_registration_ && align_filter_ && depth_frame && color_frame) {
+      if (auto new_frame = align_filter_->process(frame_set)) {
+        auto new_frame_set = new_frame->as<ob::FrameSet>();
+        CHECK_NOTNULL(new_frame_set.get());
+        frame_set = new_frame_set;
+        depth_aligned = true;
+      } else {
+        ROS_ERROR_STREAM("Depth frame alignment failed");
         return;
       }
+    }
+    // check if align filter failed, if so, return
+    if (depth_registration_ && align_filter_ && !depth_aligned) {
+      return;
     }
     if (enable_stream_[COLOR] && color_frame) {
       std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
