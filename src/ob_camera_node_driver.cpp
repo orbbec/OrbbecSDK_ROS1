@@ -71,7 +71,7 @@ void signalHandler(int signum) {
 OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
     : nh_(nh),
       nh_private_(nh_private),
-      config_path_(ros::package::getPath("orbbec_camera") + "/config/OrbbecSDKConfig_v1.0.xml") {
+      config_path_(ros::package::getPath("orbbec_camera") + "/config/OrbbecSDKConfig_v2.0.xml") {
   init();
 }
 
