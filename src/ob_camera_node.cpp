@@ -251,6 +251,10 @@ void OBCameraNode::getParameters() {
   if (isOpenNIDevice(pid)) {
     time_domain_ = "system";
   }
+  if (time_domain_ == "global") {
+    device_->enableGlobalTimestamp(true);
+  }
+
   ROS_INFO_STREAM("current time domain:" << time_domain_);
 }
 
@@ -1032,8 +1036,6 @@ uint64_t OBCameraNode::getFrameTimestampUs(const std::shared_ptr<ob::Frame>& fra
   if (time_domain_ == "device") {
     return frame->timeStampUs();
   } else if (time_domain_ == "global") {
-
-    device_->enableGlobalTimestamp(true);
     return frame->globalTimeStampUs();
   } else {
     return frame->systemTimeStampUs();
