@@ -8,7 +8,7 @@
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="enable_frame_sync" default="true"/>
-    <arg name="time_domain" default="device"/>
+    <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
     <arg name="device_preset" default="Default"/>
