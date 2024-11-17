@@ -23,7 +23,7 @@
 
 #define OB_ROS_MAJOR_VERSION 2
 #define OB_ROS_MINOR_VERSION 0
-#define OB_ROS_PATCH_VERSION 11
+#define OB_ROS_PATCH_VERSION 12
 
 #ifndef STRINGIFY
 #define STRINGIFY(arg) #arg
