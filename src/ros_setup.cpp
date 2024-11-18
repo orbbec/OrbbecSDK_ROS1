@@ -76,7 +76,7 @@ void OBCameraNode::selectBaseStream() {
 void OBCameraNode::setupRecommendedPostFilters() {
   // set depth sensor to filter
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
-  auto filter_list_ = depth_sensor->createRecommendedFilters();
+  filter_list_ = depth_sensor->createRecommendedFilters();
   for (size_t i = 0; i < filter_list_.size(); i++) {
     auto filter = filter_list_[i];
     std::map<std::string, bool> filter_params = {
