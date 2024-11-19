@@ -271,18 +271,6 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Setting LDP to " << (enable_ldp_ ? "true" : "false"));
       device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
     }
-    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
-      auto default_soft_filter_speckle_size =
-          device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-      if (soft_filter_speckle_size_ != -1 &&
-          default_soft_filter_speckle_size != soft_filter_speckle_size_) {
-        ROS_INFO_STREAM("default_soft_filter_speckle_size: " << default_soft_filter_speckle_size);
-        device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, soft_filter_speckle_size_);
-        auto new_soft_filter_speckle_size =
-            device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-        ROS_INFO_STREAM("after set soft_filter_speckle_size: " << new_soft_filter_speckle_size);
-      }
-    }
     if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
       ROS_INFO_STREAM("Setting heartbeat to " << (enable_heartbeat_ ? "true" : "false"));
       device_->setBoolProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);

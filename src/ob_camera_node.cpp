@@ -175,8 +175,6 @@ void OBCameraNode::getParameters() {
   if (enable_colored_point_cloud_ || enable_d2c_viewer_) {
     depth_registration_ = true;
   }
-  soft_filter_max_diff_ = nh_private_.param<int>("soft_filter_max_diff", -1);
-  soft_filter_speckle_size_ = nh_private_.param<int>("soft_filter_speckle_size", -1);
   depth_filter_config_ = nh_private_.param<std::string>("depth_filter_config", "");
   ordered_pc_ = nh_private_.param<bool>("ordered_pc", false);
   max_save_images_count_ = nh_private_.param<int>("max_save_images_count", 10);
