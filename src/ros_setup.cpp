@@ -225,10 +225,6 @@ void OBCameraNode::setupDevices() {
           device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
       ROS_INFO_STREAM(
           "default_noise_removal_filter_min_diff: " << default_noise_removal_filter_min_diff);
-      auto default_noise_removal_filter_max_size =
-          device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-      ROS_INFO_STREAM(
-          "default_noise_removal_filter_max_size: " << default_noise_removal_filter_max_size);
       if (noise_removal_filter_min_diff_ != -1 &&
           default_noise_removal_filter_min_diff != noise_removal_filter_min_diff_) {
         device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, noise_removal_filter_min_diff_);
@@ -237,6 +233,12 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM(
             "after set noise_removal_filter_min_diff: " << new_noise_removal_filter_min_diff);
       }
+    }
+    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
+      auto default_noise_removal_filter_max_size =
+          device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+      ROS_INFO_STREAM(
+          "default_noise_removal_filter_max_size: " << default_noise_removal_filter_max_size);
       if (noise_removal_filter_max_size_ != -1 &&
           default_noise_removal_filter_max_size != noise_removal_filter_max_size_) {
         device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, noise_removal_filter_max_size_);
