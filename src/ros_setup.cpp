@@ -221,12 +221,29 @@ void OBCameraNode::setupDevices() {
                                retry_on_usb3_detection_failure_);
     }
     if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
-      auto default_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-      ROS_INFO_STREAM("default_soft_filter_max_diff: " << default_soft_filter_max_diff);
-      if (soft_filter_max_diff_ != -1 && default_soft_filter_max_diff != soft_filter_max_diff_) {
-        device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, soft_filter_max_diff_);
-        auto new_soft_filter_max_diff = device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-        ROS_INFO_STREAM("after set soft_filter_max_diff: " << new_soft_filter_max_diff);
+      auto default_noise_removal_filter_min_diff =
+          device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
+      ROS_INFO_STREAM(
+          "default_noise_removal_filter_min_diff: " << default_noise_removal_filter_min_diff);
+      auto default_noise_removal_filter_max_size =
+          device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+      ROS_INFO_STREAM(
+          "default_noise_removal_filter_max_size: " << default_noise_removal_filter_max_size);
+      if (noise_removal_filter_min_diff_ != -1 &&
+          default_noise_removal_filter_min_diff != noise_removal_filter_min_diff_) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, noise_removal_filter_min_diff_);
+        auto new_noise_removal_filter_min_diff =
+            device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
+        ROS_INFO_STREAM(
+            "after set noise_removal_filter_min_diff: " << new_noise_removal_filter_min_diff);
+      }
+      if (noise_removal_filter_max_size_ != -1 &&
+          default_noise_removal_filter_max_size != noise_removal_filter_max_size_) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, noise_removal_filter_max_size_);
+        auto new_noise_removal_filter_max_size =
+            device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+        ROS_INFO_STREAM(
+            "after set noise_removal_filter_max_size: " << new_noise_removal_filter_max_size);
       }
     }
     if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
