@@ -641,8 +641,8 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   }
   if (!ordered_pc_) {
     cloud_msg_.is_dense = true;
-    cloud_msg_.width = valid_count;
-    cloud_msg_.height = 1;
+    cloud_msg_.width = depth_frame->width();
+    cloud_msg_.height = depth_frame->height();
     modifier.resize(valid_count);
   }
   auto timestamp = use_hardware_time_ ? fromUsToROSTime(depth_frame->timeStampUs())
@@ -766,8 +766,8 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   }
   if (!ordered_pc_) {
     cloud_msg_.is_dense = true;
-    cloud_msg_.width = valid_count;
-    cloud_msg_.height = 1;
+    cloud_msg_.width = depth_frame->width();
+    cloud_msg_.height = depth_frame->height();
     modifier.resize(valid_count);
   }
   auto timestamp = use_hardware_time_ ? fromUsToROSTime(depth_frame->timeStampUs())
