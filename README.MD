@@ -2,14 +2,128 @@
 
 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.12-green)
 
-OrbbecSDK_ROS1 is a wrapper for Orbbec SDK that supports ROS Kinetic, Melodic, and Noetic distributions.
-It enables smooth integration of Orbbec 3D cameras into ROS projects.
+> [!IMPORTANT]
+>
+> Welcome to the OrbbecSDK ROS Wrapper. Before you begin using this version of ROS wrapper, it's crucial to check the following device support list to verify the compatibility.
 
-With the major update of the new branch [v2-main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main) in October 2024, OrbbecSDK_ROS1 is connected to the open source version of [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases), which will make OrbbecSDK_ROS1 more flexible and extensible. This update in v2-main ensures compatibility with all new Orbbec USB products that comply with the UVC standard. However, OrbbecSDK_ROS1 v2 no longer supports Orbbec's traditional OpenNI protocol devices. We encourage you to check whether your device is supported by OrbbecSDK_ROS1 v2 and use the new version if supported.
+OrbbecSDK ROS Wrapper provides seamless integration of Orbbec cameras with ROS environment. It supports ROS Kinetic, Melodic, and Noetic distributions.
+
+With a major update in October 2024, we release the [OrbbecSDK ROS2 Wrapper v2](https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main) connected to the open source [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases) with enhanced flexibility and extensibility. This update ensures compatibility with all Orbbec USB products adhering to UVC standard. However, it no longer supports Orbbec's traditional OpenNI protocol devices. We strongly encourage you to use the v2-main branch if your device is supported.
+
+Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
+
+<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+  <thead>
+    <tr style="background-color: #1f4e78; color: white; text-align: center;">
+      <th>Product Series</th>
+      <th>Product</th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/main" style="color: black; text-decoration: none;">Branch main</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main" style="color: black; text-decoration: none;">Branch v2-main</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="7" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td>Gemini 335</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 336</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 330</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335L</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 336L</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 330L</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335Lg</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 2</td>
+      <td>Gemini 2</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 L</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 XL</td>
+      <td>recommended for new designs</td>
+      <td>to be supported</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td>
+      <td>Femto Bolt</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+    <tr>
+      <td>Femto Mega I</td>
+      <td>full maintenance</td>
+      <td>to be supported</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Astra</td>
+      <td>Astra 2</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Astra+</td>
+      <td>limited maintenance</td>
+      <td>not supported</td>
+    </tr>
+    <tr>
+      <td>Astra Pro Plus</td>
+      <td>limited maintenance</td>
+      <td>not supported</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Astra Mini</td>
+      <td>Astra Mini Pro</td>
+      <td>full maintenance</td>
+      <td>not supported</td>
+    </tr>
+  </tbody>
+</table>
+
+
+**Note**: If you do not find your device, please contact our FAE or sales representative for help.
+
+**Definition**:
+
+1. recommended for new designs: we will provide full supports with new features,  bug fix and performance optimization;
+2. full maintenance: we will provide bug fix support;
+3. limited maintenance: we will provide critical bug fix support;
+4. not supported: we will not support specific device in this version;
+5. to be supported: we will add support in the near future.
 
 ## Table of Contents
 
-<!-- TOC -->
 * [OrbbecSDK ROS](#orbbecsdk-ros)
   * [Table of Contents](#table-of-contents)
   * [Install Dependencies](#install-dependencies)
@@ -37,7 +151,6 @@ With the major update of the new branch [v2-main](https://github.com/orbbec/Orbb
     * [Why Are There So Many Launch Files?](#why-are-there-so-many-launch-files)
   * [Other useful links](#other-useful-links)
   * [License](#license)
-<!-- TOC -->
 
 ## Install Dependencies
 
