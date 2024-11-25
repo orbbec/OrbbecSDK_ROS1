@@ -1,15 +1,47 @@
-# OrbbecSDK ROS
+# OrbbecSDK ROS v2
 
 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-2.0.9-green)
 
-OrbbecSDK_ROS1 is a wrapper for Orbbec SDK that supports ROS Kinetic, Melodic, and Noetic distributions.
-It enables smooth integration of Orbbec 3D cameras into ROS projects.
+> [!IMPORTANT]
+>
+> Welcome to the OrbbecSDK ROS Wrapper v2. Before you begin using this version of ROS Wrapper, it's crucial to check the [device support list] (#product-support) to verify that your device is supported to ensure compatibility.
 
-With the major update of the new branch [v2-main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main) in October 2024, OrbbecSDK_ROS1 is connected to the open source version of [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases), which will make OrbbecSDK_ROS1 more flexible and extensible. This update in v2-main ensures compatibility with all new Orbbec USB products that comply with the UVC standard. However, OrbbecSDK_ROS1 v2 no longer supports Orbbec's traditional OpenNI protocol devices. We encourage you to check whether your device is supported by OrbbecSDK_ROS1 v2 and use the new version if supported.
+OrbbecSDK ROS Wrapper provides seamless integration of Orbbec cameras with ROS environment. It supports ROS Kinetic, Melodic, and Noetic distributions.
+With a major update in October 2024, we release the OrbbecSDK ROS2 Wrapper v2 connected to the open source OrbbecSDK v2 with enhanced flexibility and extensibility. This update ensures compatibility with all Orbbec USB products adhering to UVC standard. However, it no longer supports Orbbec's traditional OpenNI protocol devices. We strongly encourage you to use the v2-main branch if your device is supported.
+
+   Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
+
+   | Product Series | Product                     | [Branch main](https://github.com/orbbec/OrbbecSDK_ROS2/tree/main) | [Branch v2-main](https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main) |
+   | -------------- | --------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+   | Gemini 330     | Gemini 335                  | full maintenance                                             | recommended for new designs                                  |
+   | Gemini 336     | full maintenance            | recommended for new designs                                  |                                                              |
+   | Gemini 330     | full maintenance            | recommended for new designs                                  |                                                              |
+   | Gemini 335L    | full maintenance            | recommended for new designs                                  |                                                              |
+   | Gemini 336L    | full maintenance            | recommended for new designs                                  |                                                              |
+   | Gemini 330L    | full maintenance            | recommended for new designs                                  |                                                              |
+   | Gemini 335Lg   | not supported               | recommended for new designs                                  |                                                              |
+   | Gemini 2       | Gemini 2                    | full maintenance                                             | recommended for new designs                                  |
+   | Gemini 2 L     | full maintenance            | recommended for new designs                                  |                                                              |
+   | Gemini 2 XL    | recommended for new designs | to be supported                                              |                                                              |
+   | Femto          | Femto Bolt                  | full maintenance                                             | recommended for new designs                                  |
+   |                |                             |                                                              |                                                              |
+   | Femto Mega I   | full maintenance            | to be supported                                              |                                                              |
+   | Astra          | Astra 2                     | full maintenance                                             | recommended for new designs                                  |
+   | Astra+         | limited maintenance         | not supported                                                |                                                              |
+   | Astra Pro Plus | limited maintenance         | not supported                                                |                                                              |
+   | Astra Mini     | Astra Mini Pro              | full maintenance                                             | not supported                                                |
+
+   **Note**: If you do not find your device, please contact our FAE or sales representative for help.
+
+   **Definition**:
+
+   1. recommended for new designs: we will provide full supports with new features,  bug fix and performance optimization;
+   2. full maintenance: we will provide bug fix support;
+   3. limited maintenance: we will provide critical bug fix support;
+   4. not supported: we will not support specific device in this version;
+   5. to be supported: we will add support in the near future.
 
 ## Table of Contents
-
-<!-- TOC -->
 
 * [OrbbecSDK ROS](#orbbec-ros-sdk)
   * [Table of Contents](#table-of-contents)
@@ -38,8 +70,6 @@ With the major update of the new branch [v2-main](https://github.com/orbbec/Orbb
     * [Why Are There So Many Launch Files?](#why-are-there-so-many-launch-files)
   * [Other useful links](#other-useful-links)
   * [License](#license)
-
-<!-- TOC -->
 
 ## Install Dependencies
 
