@@ -465,13 +465,11 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
                                     std_srvs::SetBoolResponse& response) {
   (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-  auto device_info = device_->getDeviceInfo();
-  auto pid = device_info->getPid();
   try {
     int data = request.data ? 1 : 0;
-    if (isGemini335PID(pid)) {
+    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
-    } else {
+    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_LASER_BOOL, data);
     }
   } catch (const ob::Error& e) {

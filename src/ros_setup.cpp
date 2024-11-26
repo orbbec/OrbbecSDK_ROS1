@@ -288,7 +288,9 @@ void OBCameraNode::setupDevices() {
     }
     if (!device_preset_.empty()) {
       ROS_INFO_STREAM("Loading device preset: " << device_preset_);
-      device_->loadPreset(device_preset_.c_str());
+      if (isGemini335PID(device_info_->pid())) {
+        device_->loadPreset(device_preset_.c_str());
+      }
     }
     if (!sync_mode_str_.empty() &&
         device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
@@ -325,6 +327,9 @@ void OBCameraNode::setupDevices() {
     }
     if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, enable_laser_);
+    }
+    if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_LASER_BOOL, enable_laser_);
     }
     if (device_->isPropertySupported(OB_PROP_LASER_ON_OFF_MODE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_LASER_ON_OFF_MODE_INT, laser_on_off_mode_);
