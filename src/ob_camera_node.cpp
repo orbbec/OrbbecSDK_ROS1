@@ -617,8 +617,8 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   sensor_msgs::PointCloud2Modifier modifier(cloud_msg_);
   modifier.setPointCloud2FieldsByString(1, "xyz");
   modifier.resize(width * height);
-  cloud_msg_.width = depth_frame->width();
-  cloud_msg_.height = depth_frame->height();
+  cloud_msg_.width = 640;
+  cloud_msg_.height = 400;
   cloud_msg_.row_step = cloud_msg_.width * cloud_msg_.point_step;
   cloud_msg_.data.resize(cloud_msg_.height * cloud_msg_.row_step);
   sensor_msgs::PointCloud2Iterator<float> iter_x(cloud_msg_, "x");
@@ -641,8 +641,8 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   }
   if (!ordered_pc_) {
     cloud_msg_.is_dense = true;
-    cloud_msg_.width = valid_count;
-    cloud_msg_.height = 1;
+    cloud_msg_.width = 640;
+    cloud_msg_.height = 400;
     modifier.resize(valid_count);
   }
   auto timestamp = use_hardware_time_ ? fromUsToROSTime(depth_frame->timeStampUs())
@@ -766,8 +766,8 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   }
   if (!ordered_pc_) {
     cloud_msg_.is_dense = true;
-    cloud_msg_.width = valid_count;
-    cloud_msg_.height = 1;
+    cloud_msg_.width = 640;
+    cloud_msg_.height = 400;
     modifier.resize(valid_count);
   }
   auto timestamp = use_hardware_time_ ? fromUsToROSTime(depth_frame->timeStampUs())
