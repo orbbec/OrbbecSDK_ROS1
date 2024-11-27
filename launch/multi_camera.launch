@@ -1,12 +1,12 @@
 <launch>
     <arg name="camera_name" default="camera"/>
     <arg name="3d_sensor" default="astra_stereo_u3"/>
-    <arg name="camera1_prefix" default="topRGBD"/>
-    <arg name="camera2_prefix" default="botRGBD"/>
-    <arg name="camera1_usb_port" default="2-4.2"/>
-    <arg name="camera2_usb_port" default="2-3.2"/>
-
+    <arg name="camera1_prefix" default="botRGBD"/>
+    <arg name="camera2_prefix" default="topRGBD"/>
+    <arg name="camera1_usb_port" default="2-3.2"/>
+    <arg name="camera2_usb_port" default="2-4.2"/>
     <arg name="device_num" default="2"/>
+
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
