@@ -9,27 +9,112 @@
 OrbbecSDK ROS Wrapper provides seamless integration of Orbbec cameras with ROS environment. It supports ROS Kinetic, Melodic, and Noetic distributions.
 With a major update in October 2024, we release the OrbbecSDK ROS2 Wrapper v2 connected to the open source OrbbecSDK v2 with enhanced flexibility and extensibility. This update ensures compatibility with all Orbbec USB products adhering to UVC standard. However, it no longer supports Orbbec's traditional OpenNI protocol devices. We strongly encourage you to use the v2-main branch if your device is supported.
 
-   Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
+Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
 
-| Product Series | Product                     | [Branch main](https://github.com/orbbec/OrbbecSDK_ROS2/tree/main) | [Branch v2-main](https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main) |
-| -------------- | --------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Gemini 330     | Gemini 335                  | full maintenance                                               | recommended for new designs                                          |
-| Gemini 336     | full maintenance            | recommended for new designs                                    |                                                                      |
-| Gemini 330     | full maintenance            | recommended for new designs                                    |                                                                      |
-| Gemini 335L    | full maintenance            | recommended for new designs                                    |                                                                      |
-| Gemini 336L    | full maintenance            | recommended for new designs                                    |                                                                      |
-| Gemini 330L    | full maintenance            | recommended for new designs                                    |                                                                      |
-| Gemini 335Lg   | not supported               | recommended for new designs                                    |                                                                      |
-| Gemini 2       | Gemini 2                    | full maintenance                                               | recommended for new designs                                          |
-| Gemini 2 L     | full maintenance            | recommended for new designs                                    |                                                                      |
-| Gemini 2 XL    | recommended for new designs | to be supported                                                |                                                                      |
-| Femto          | Femto Bolt                  | full maintenance                                               | recommended for new designs                                          |
-|                |                             |                                                                |                                                                      |
-| Femto Mega I   | full maintenance            | to be supported                                                |                                                                      |
-| Astra          | Astra 2                     | full maintenance                                               | recommended for new designs                                          |
-| Astra+         | limited maintenance         | not supported                                                  |                                                                      |
-| Astra Pro Plus | limited maintenance         | not supported                                                  |                                                                      |
-| Astra Mini     | Astra Mini Pro              | full maintenance                                               | not supported                                                        |
+<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+  <thead>
+    <tr style="background-color: #1f4e78; color: white; text-align: center;">
+      <th>Product Series</th>
+      <th>Product</th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/main" style="color: black; text-decoration: none;">Branch main</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main" style="color: black; text-decoration: none;">Branch v2-main</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="7" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td>Gemini 335</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 336</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 330</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335L</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 336L</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 330L</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335Lg</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 2</td>
+      <td>Gemini 2</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 L</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 XL</td>
+      <td>recommended for new designs</td>
+      <td>to be supported</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td>
+      <td>Femto Bolt</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Femto Mega</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Femto Mega I</td>
+      <td>full maintenance</td>
+      <td>to be supported</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Astra</td>
+      <td>Astra 2</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Astra+</td>
+      <td>limited maintenance</td>
+      <td>not supported</td>
+    </tr>
+    <tr>
+      <td>Astra Pro Plus</td>
+      <td>limited maintenance</td>
+      <td>not supported</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Astra Mini</td>
+      <td>Astra Mini Pro</td>
+      <td>full maintenance</td>
+      <td>not supported</td>
+    </tr>
+  </tbody>
+</table>
+
+
 
    **Note**: If you do not find your device, please contact our FAE or sales representative for help.
 
