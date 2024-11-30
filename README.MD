@@ -11,13 +11,13 @@ With a major update in October 2024, we release the OrbbecSDK ROS2 Wrapper v2 co
 
 Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
 
-<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+<table border="1" style="border-collapse: collapse; text-align: center; width: 100%;">
   <thead>
     <tr style="background-color: #1f4e78; color: white; text-align: center;">
       <th>Product Series</th>
       <th>Product</th>
-      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/main" style="color: black; text-decoration: none;">Branch main</a></th>
-      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main" style="color: black; text-decoration: none;">Branch v2-main</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/main" style="color: black; text-decoration: none;">Branch main</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main" style="color: black; text-decoration: none;">Branch v2-main</a></th>
     </tr>
   </thead>
   <tbody>
