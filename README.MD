@@ -12,7 +12,7 @@ With a major update in October 2024, we release the [OrbbecSDK ROS2 Wrapper v2](
 
 Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
 
-<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+<table border="1" style="border-collapse: collapse; text-align: center; width: 100%;">
   <thead>
     <tr style="background-color: #1f4e78; color: white; text-align: center;">
       <th>Product Series</th>
@@ -114,6 +114,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
     </tr>
   </tbody>
 </table>
+
 
 
 
