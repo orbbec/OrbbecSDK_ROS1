@@ -467,7 +467,11 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     int data = request.data ? 1 : 0;
-    device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
+    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
+    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_LASER_BOOL, data);
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set laser: " << e.getMessage());
     response.message = e.getMessage();
