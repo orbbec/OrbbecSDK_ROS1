@@ -95,7 +95,7 @@
     <arg name="spatial_filter_diff_threshold" default="-1"/>
     <arg name="spatial_filter_magnitude" default="-1"/>
     <arg name="spatial_filter_radius" default="-1"/>
-    <arg name="temporal_filter_diff_threshold" default="-1.-"/>
+    <arg name="temporal_filter_diff_threshold" default="-1.0"/>
     <arg name="temporal_filter_weight" default="-1.0"/>
     <arg name="hole_filling_filter_mode" default=""/>
     <arg name="hdr_merge_exposure_1" default="-1"/>
