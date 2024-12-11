@@ -5,7 +5,7 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="gemini2l">
     <xacro:property name="mesh_path" value="package://orbbec_camera/meshes/gemini2l/" />
   <link
-    name="base_link">
+    name="camera_link">
     <inertial>
       <origin
         xyz="-0.0011764 -0.00036824 0.013857"
@@ -91,7 +91,7 @@
       xyz="0 0 0"
       rpy="0 0 0" />
     <parent
-      link="base_link" />
+      link="camera_link" />
     <child
       link="camera_bottom_screw_frame" />
     <axis

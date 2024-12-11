@@ -5,7 +5,7 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="astra2">
     <xacro:property name="mesh_path" value="package://orbbec_camera/meshes/astra2/" />
   <link
-    name="base_link">
+    name="camera_link">
     <inertial>
       <origin
         xyz="-0.0160938085585399 -0.00100885505248632 0.0279919581775268"
@@ -91,7 +91,7 @@
       xyz="0 0 0"
       rpy="0 0 0" />
     <parent
-      link="base_link" />
+      link="camera_link" />
     <child
       link="camera_bottom_screw_frame" />
     <axis
