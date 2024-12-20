@@ -38,6 +38,7 @@
     <arg name="color_saturation" default="-1"/>
     <arg name="color_gamma" default="-1"/>
     <arg name="color_hue" default="-1"/>
+    <arg name="color_backlight_compensation" default="-1"/>
     <!-- color ae roi-->
     <arg name="color_ae_roi_top" default="-1"/>
     <arg name="color_ae_roi_bottom" default="-1"/>
@@ -180,6 +181,7 @@
             <param name="color_gamma" value="$(arg color_gamma)"/>
             <param name="color_hue" value="$(arg color_hue)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
+            <param name="color_backlight_compensation" value="$(arg color_backlight_compensation)"/>
             <param name="color_ae_roi_top" value="$(arg color_ae_roi_top)"/>
             <param name="color_ae_roi_bottom" value="$(arg color_ae_roi_bottom)"/>
             <param name="color_ae_roi_left" value="$(arg color_ae_roi_left)"/>

@@ -267,6 +267,11 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_HUE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_HUE_INT, color_hue_);
     }
+    if (color_backlight_compensation_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
+                                     OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, color_backlight_compensation_);
+    }
     if (ir_gain_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_GAIN_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_IR_GAIN_INT, ir_gain_);
