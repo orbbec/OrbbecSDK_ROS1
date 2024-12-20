@@ -1364,10 +1364,12 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     // ROS_WARN_STREAM("device_timestamp_ms: " << device_timestamp_ms
     //                                         << " global_timestamp_ms: " << global_timestamp_ms
     //                                         << " system_timestamp_ms: " << system_timestamp_ms);
-    // ROS_WARN_STREAM("current_time_stamp_ms - device_timestamp_ms: "
-    //                 << (current_time_stamp_ms - device_timestamp_ms)
-    //                 << " current_time_stamp_ms - global_timestamp_ms: "
-    //                 << (current_time_stamp_ms - global_timestamp_ms));
+
+    // int64_t diff_device = device_timestamp_ms - current_time_stamp_ms;
+    // int64_t diff_global = system_timestamp_ms - current_time_stamp_ms;
+    // ROS_WARN_STREAM("device_timestamp_ms - current_time_stamp_ms: "
+    //                 << diff_device
+    //                 << " system_timestamp_ms - current_time_stamp_ms: " << diff_global);
   }
   auto image_publisher = image_publishers_[stream_index];
   auto image_msg =
