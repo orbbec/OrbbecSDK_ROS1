@@ -254,6 +254,20 @@ void OBCameraNode::getParameters() {
   }
 
   ROS_INFO_STREAM("current time domain:" << time_domain_);
+
+  enable_sync_host_time_ = nh_private_.param<bool>("enable_sync_host_time", "global");
+  ROS_INFO_STREAM("enable_sync_host_time:" << enable_sync_host_time_);
+  if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid())) {
+    device_->timerSyncWithHost();
+    if (time_domain_ != "global") {
+      sync_host_time_timer_ =
+          nh_private_.createTimer(ros::Duration(1800.0), [this](const ros::TimerEvent&) {
+            if (device_) {
+              device_->timerSyncWithHost();
+            }
+          });
+    }
+  }
 }
 
 void OBCameraNode::startStreams() {

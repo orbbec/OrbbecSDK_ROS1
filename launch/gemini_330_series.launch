@@ -8,7 +8,8 @@
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="enable_frame_sync" default="true"/>
-    <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
+    <arg name="time_domain" default="global"/><!-- "device", "global", "system" -->
+    <arg name="enable_sync_host_time" default="true"/>
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
     <arg name="device_preset" default="Default"/>
@@ -20,9 +21,9 @@
 
 
     <!-- Color camera parameters -->
-    <arg name="color_width" default="0"/>
-    <arg name="color_height" default="0"/>
-    <arg name="color_fps" default="0"/>
+    <arg name="color_width" default="1280"/>
+    <arg name="color_height" default="720"/>
+    <arg name="color_fps" default="6"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="ANY"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
@@ -32,9 +33,9 @@
     <arg name="color_exposure" default="-1"/>
 
     <!-- Depth camera parameters -->
-    <arg name="depth_width" default="0"/>
-    <arg name="depth_height" default="0"/>
-    <arg name="depth_fps" default="0"/>
+    <arg name="depth_width" default="848"/>
+    <arg name="depth_height" default="480"/>
+    <arg name="depth_fps" default="15"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="ANY"/>
     <arg name="depth_registration" default="false"/>
@@ -129,6 +130,7 @@
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="enable_sync_host_time" value="$(arg enable_sync_host_time)"/>
             <param name="device_preset" value="$(arg device_preset)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>

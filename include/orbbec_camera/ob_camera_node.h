@@ -522,7 +522,9 @@ class OBCameraNode {
   bool has_first_color_frame_ = false;
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;
-  std::string time_domain_ = "device";
+  std::string time_domain_ = "global";
+  bool enable_sync_host_time_ = true;
+  ros::Timer sync_host_time_timer_;
 };
 
 }  // namespace orbbec_camera
