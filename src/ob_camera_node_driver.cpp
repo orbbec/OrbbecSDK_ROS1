@@ -146,8 +146,6 @@ void OBCameraNodeDriver::init() {
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
     const std::shared_ptr<ob::DeviceList> &list) {
-
-
   std::shared_ptr<ob::Device> device = nullptr;
   if (!serial_number_.empty()) {
     ROS_INFO_STREAM("Connecting to device with serial number: " << serial_number_);
@@ -250,9 +248,9 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     ob_camera_node_.reset();
     return;
   }
-  if (!isOpenNIDevice(device_info_->pid())) {
-    ctx_->enableDeviceClockSync(1800000);
-  }
+  // if (!isOpenNIDevice(device_info_->pid())) {
+  //   ctx_->enableDeviceClockSync(1800000);
+  // }
   CHECK_NOTNULL(device_info_.get());
   std::string connection_type = device_info_->connectionType();
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");

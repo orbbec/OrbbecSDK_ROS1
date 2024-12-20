@@ -536,6 +536,8 @@ class OBCameraNode {
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;
   std::string time_domain_ = "global";
+  bool enable_sync_host_time_ = true;
+  ros::Timer sync_host_time_timer_;
   // AE ROI
   int color_ae_roi_left_ = -1;
   int color_ae_roi_right_ = -1;
