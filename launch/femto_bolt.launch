@@ -58,7 +58,7 @@
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="false"/>
     <arg name="enable_frame_sync" default="true"/>
-    <arg name="use_hardware_time" default="true"/>
+    <arg name="time_domain" default="global"/><!-- "device", "global", "system" -->
     <!-- Bolt only support SW align mode, Please DO NOT change it -->
     <arg name="align_mode" default="SW"/>
     <arg name="laser_energy_level" default="-1"/>
@@ -121,7 +121,7 @@
             <param name="trigger_out_delay_us" value="$(arg trigger_out_delay_us)"/>
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
-            <param name="use_hardware_time" value="$(arg use_hardware_time)"/>
+            <param name="time_domain" value="$(arg time_domain)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
