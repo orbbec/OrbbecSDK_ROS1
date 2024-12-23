@@ -1070,25 +1070,19 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   try {
     std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     auto depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
-    depth_frame = processDepthFrameFilter(depth_frame);
-    bool depth_aligned = false;
     if (depth_frame) {
+      depth_frame = processDepthFrameFilter(depth_frame);
       frame_set->pushFrame(depth_frame);
     }
-    if (depth_registration_ && align_filter_ && depth_frame && color_frame) {
+    if (depth_registration_ && align_filter_ && depth_frame) {
       if (auto new_frame = align_filter_->process(frame_set)) {
         auto new_frame_set = new_frame->as<ob::FrameSet>();
         CHECK_NOTNULL(new_frame_set.get());
         frame_set = new_frame_set;
-        depth_aligned = true;
       } else {
         ROS_ERROR_STREAM("Depth frame alignment failed");
         return;
       }
-    }
-    // check if align filter failed, if so, return
-    if (depth_registration_ && align_filter_ && !depth_aligned) {
-      return;
     }
     if (enable_stream_[COLOR] && color_frame) {
       std::unique_lock<std::mutex> colorLock(colorFrameMtx_);

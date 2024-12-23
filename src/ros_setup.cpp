@@ -750,6 +750,21 @@ void OBCameraNode::setupPipelineConfig() {
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
+      ROS_INFO_STREAM("Enable " << stream_name_[stream_index] << " stream");
+      auto profile = stream_profile_[stream_index]->as<ob::VideoStreamProfile>();
+
+      if (stream_index == COLOR && enable_stream_[COLOR] && align_filter_) {
+        auto video_profile = profile;
+        ROS_INFO_STREAM("color video_profile: "
+                        << video_profile->getWidth() << "x" << video_profile->getHeight() << " "
+                        << video_profile->getFps() << "fps " << video_profile->getFormat());
+        align_filter_->setAlignToStreamProfile(video_profile);
+      }
+
+      ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " width: " << profile->getWidth()
+                                << " height: " << profile->getHeight() << " fps: "
+                                << profile->getFps() << " format: " << profile->getFormat());
+
       pipeline_config_->enableStream(stream_profile_[stream_index]);
     }
   }
