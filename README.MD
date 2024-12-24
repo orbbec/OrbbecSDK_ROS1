@@ -114,8 +114,6 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   </tbody>
 </table>
 
-
-
    **Note**: If you do not find your device, please contact our FAE or sales representative for help.
 
    **Definition**:
@@ -169,6 +167,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   ```bash
   # Assuming you have sourced the ROS environment, same below
   sudo apt install libgflags-dev ros-$ROS_DISTRO-image-geometry ros-$ROS_DISTRO-camera-info-manager \
+  ros-${ROS_DISTRO}-image-transport-plugins ros-${ROS_DISTRO}-compressed-image-transport \
   ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev \
   ros-$ROS_DISTRO-diagnostic-updater ros-$ROS_DISTRO-diagnostic-msgs \
   libdw-dev
