@@ -99,11 +99,11 @@
     <arg name="hdr_merge_exposure_2" default="-1"/>
     <arg name="hdr_merge_gain_2" default="-1"/>
     <!-- IMU parameters -->
-    <arg name="enable_sync_output_accel_gyro" default="true"/>
-    <arg name="enable_accel" default="true"/>
+    <arg name="enable_sync_output_accel_gyro" default="false"/>
+    <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="200hz"/>
     <arg name="accel_range" default="4g"/>
-    <arg name="enable_gyro" default="true"/>
+    <arg name="enable_gyro" default="false"/>
     <arg name="gyro_rate" default="200hz"/>
     <arg name="gyro_range" default="1000dps"/>
     <arg name="liner_accel_cov" default="0.01"/>
