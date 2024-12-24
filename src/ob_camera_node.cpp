@@ -145,6 +145,8 @@ void OBCameraNode::getParameters() {
   }
   depth_aligned_frame_id_[DEPTH] = optical_frame_id_[COLOR];
 
+  accel_gyro_frame_id_ = camera_name_ + "_accel_gyro_optical_frame";
+
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
   enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", false);
@@ -881,7 +883,7 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
   accel_info.header = imu_msg.header;
   imu_info_publishers_[ACCEL].publish(accel_info);
 
-  imu_msg.header.frame_id = imu_optical_frame_id_;
+  imu_msg.header.frame_id = accel_gyro_frame_id_;
 
   auto gyro_cast_frame = gyro_frame->as<ob::GyroFrame>();
   auto gyroData = gyro_cast_frame->value();
