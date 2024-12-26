@@ -234,7 +234,6 @@ void OBCameraNode::getParameters() {
   hdr_merge_gain_2_ = nh_private_.param<int>("hdr_merge_gain_2", -1);
   diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
-  laser_on_off_mode_ = nh_private_.param<int>("laser_on_off_mode", 0);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
   enable_color_hdr_ = nh_private_.param<bool>("enable_color_hdr", false);
   enable_depth_scale_ = nh_private_.param<bool>("enable_depth_scale", true);

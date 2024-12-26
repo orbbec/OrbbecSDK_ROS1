@@ -16,7 +16,6 @@
     <arg name="device_preset" default="Default"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
-    <arg name="laser_on_off_mode" default="0"/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="enable_hardware_d2d" default="true"/>
 
@@ -137,7 +136,6 @@
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="enable_laser" value="$(arg enable_laser)"/>
-            <param name="laser_on_off_mode" value="$(arg laser_on_off_mode)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>

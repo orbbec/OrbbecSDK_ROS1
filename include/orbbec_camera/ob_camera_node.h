@@ -501,7 +501,6 @@ class OBCameraNode {
   double diagnostics_frequency_ = 1.0;
   std::shared_ptr<std::thread> diagnostics_thread_ = nullptr;
   bool enable_laser_ = true;
-  int laser_on_off_mode_ = 0;
   std::string align_mode_ = "HW";
   std::shared_ptr<ob::Align> align_filter_ = nullptr;
   OBStreamType align_target_stream_ = OB_STREAM_COLOR;

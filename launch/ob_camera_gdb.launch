@@ -9,12 +9,12 @@
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
+    <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
     <arg name="device_preset" default="Default"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
-    <arg name="laser_on_off_mode" default="0"/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="enable_hardware_d2d" default="true"/>
 
@@ -129,11 +129,11 @@
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="device_preset" value="$(arg device_preset)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="enable_laser" value="$(arg enable_laser)"/>
-            <param name="laser_on_off_mode" value="$(arg laser_on_off_mode)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>

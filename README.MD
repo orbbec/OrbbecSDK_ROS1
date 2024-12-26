@@ -356,8 +356,6 @@ The following launch parameters are available:
 - `enable_hole_filling_filter`: This filter fills all holes in the depth map using the specified mode.
 - `depth_precision` : The depth precision, should be like `1mm` format. The default value is `1mm`.
 - `enable_laser` : Whether to enable the laser. The default value is `true`.
-- `laser_on_off_mode`: Laser on/off alternate mode, 0: off, 1: on-off alternate, 2: off-on alternate. The default value
-  is `0`.
 - `retry_on_usb3_detection_failure`: If the camera is connected to a USB 2.0 port and is not detected, the system will
   attempt to reset the camera up to three times. This setting aims to prevent USB 3.0 devices from being incorrectly
   recognized as USB 2.0.
