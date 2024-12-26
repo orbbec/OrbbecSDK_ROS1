@@ -99,5 +99,6 @@ class OBCameraNodeDriver {
   std::string prefix_paths;
   std::string first_prefix;
   std::size_t colon_pos;
+  std::string uvc_backend_;
 };
 }  // namespace orbbec_camera
