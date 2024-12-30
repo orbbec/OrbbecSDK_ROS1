@@ -262,7 +262,7 @@ void OBCameraNode::getParameters() {
     device_->timerSyncWithHost();
     if (time_domain_ != "global") {
       sync_host_time_timer_ =
-          nh_private_.createTimer(ros::Duration(1800.0), [this](const ros::TimerEvent&) {
+          nh_private_.createTimer(ros::Duration(60.0), [this](const ros::TimerEvent&) {
             if (device_) {
               device_->timerSyncWithHost();
             }
