@@ -548,6 +548,7 @@ class OBCameraNode {
   int depth_ae_roi_top_ = -1;
   int depth_ae_roi_bottom_ = -1;
   int color_backlight_compensation_ = -1;
+  std::string frame_aggregate_mode_;
 };
 
 }  // namespace orbbec_camera

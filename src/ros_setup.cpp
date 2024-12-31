@@ -270,7 +270,8 @@ void OBCameraNode::setupDevices() {
     if (color_backlight_compensation_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
                                      OB_PERMISSION_READ_WRITE)) {
-      device_->setIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, color_backlight_compensation_);
+      device_->setIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
+                              color_backlight_compensation_);
     }
     if (ir_gain_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_GAIN_INT, OB_PERMISSION_READ_WRITE)) {
@@ -805,6 +806,7 @@ void OBCameraNode::setupPipelineConfig() {
     pipeline_config_.reset();
   }
   pipeline_config_ = std::make_shared<ob::Config>();
+
   auto pid = device_info_->pid();
   if (!isGemini335PID(pid) && depth_registration_ && enable_stream_[COLOR] &&
       enable_stream_[DEPTH]) {
@@ -817,6 +819,15 @@ void OBCameraNode::setupPipelineConfig() {
     if (enable_stream_[stream_index]) {
       pipeline_config_->enableStream(stream_profile_[stream_index]);
     }
+  }
+  if (frame_aggregate_mode_ == "full_frame") {
+    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE);
+  } else if (frame_aggregate_mode_ == "color_frame") {
+    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_COLOR_FRAME_REQUIRE);
+  } else if (frame_aggregate_mode_ == "disable") {
+    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_DISABLE);
+  } else {
+    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION);
   }
 }
 

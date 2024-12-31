@@ -263,6 +263,7 @@ void OBCameraNode::getParameters() {
   ir_ae_max_exposure_ = nh_private_.param<int>("ir_ae_max_exposure", -1);
   time_domain_ = nh_private_.param<std::string>("time_domain", "global");
   color_backlight_compensation_ = nh_private_.param<int>("color_backlight_compensation", -1);
+  frame_aggregate_mode_ = nh_private_.param<std::string>("frame_aggregate_mode", "ANY");
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info.get());
   auto pid = device_info->pid();
