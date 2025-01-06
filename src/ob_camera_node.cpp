@@ -1252,15 +1252,6 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (frame->type() == OB_FRAME_COLOR) {
     video_frame = frame->as<ob::ColorFrame>();
   } else if (frame->type() == OB_FRAME_DEPTH) {
-    if (frame->globalTimeStampUs() > frame->systemTimeStampUs()) {
-      ROS_INFO_STREAM("timeStampUs: " << frame->timeStampUs());
-      ROS_INFO_STREAM("systemTimeStampUs: " << frame->systemTimeStampUs());
-      ROS_INFO_STREAM("globalTimeStampUs: " << frame->globalTimeStampUs());
-      ROS_INFO_STREAM("globalTimeStampUs: " << count++);
-    }
-    
-    ROS_INFO_STREAM("systemTimeStampUs-globalTimeStampUs= "
-                    << static_cast<int>(frame->systemTimeStampUs() - frame->globalTimeStampUs()));
     video_frame = frame->as<ob::DepthFrame>();
   } else if (frame->type() == OB_FRAME_IR || frame->type() == OB_FRAME_IR_LEFT ||
              frame->type() == OB_FRAME_IR_RIGHT) {

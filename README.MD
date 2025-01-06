@@ -1,4 +1,4 @@
-# :OrbbecSDK ROS
+# OrbbecSDK ROS
 
 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.12-green)
 
