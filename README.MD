@@ -377,10 +377,10 @@ The following launch parameters are available:
 - `enable_hardware_reset`: This option enables the hardware reset function. By default, it is set to `false`.
   If set to `true`, the camera will reboot upon its first connection.
 - `frame_aggregate_mode`:Support full_frame, color_frame, ANY or disable mode
-  `full_frame`:Only FrameSet that contains all types of data frames will be output
-  `color_frame`:Color Frame Require output mode
-  `ANY`:FrameSet for any case will be output,the user may return null when getting the specified type of data frame from the acquired FrameSet
-  `disable`:All types of data frames will output independently
+  `full_frame`:When the frame data of all enabled video stream is valid, the video stream topic data will be output.If the frame data of any video stream is invalid, the frame data of other video streams cannot be output.
+  `color_frame`:When the frame data of the color stream is valid, the video stream topic data will be output,suitable for color using H264, H265 format,ensure that color frames are not dropped, because dropping color frames affects the decoding of H264 and H265.
+  `ANY`:When the frame data of the video stream is valid or invalid, the video stream will be output, but the invalid video stream frame data will be filtered out and output through the topic.
+  `disable`:Disable frame_aggregate_mode, all types of data frames will output independently.Primarily addresses the issue of frame output delay when users configure different frame rates for different video streams
 
 **IMPORTANT**: *Pleframe_aggregate_modease carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
 
