@@ -1,4 +1,4 @@
-# OrbbecSDK ROS
+# :OrbbecSDK ROS
 
 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.12-green)
 
@@ -376,8 +376,13 @@ The following launch parameters are available:
   If set to `true`, the camera will send heartbeat messages and generate firmware logs.
 - `enable_hardware_reset`: This option enables the hardware reset function. By default, it is set to `false`.
   If set to `true`, the camera will reboot upon its first connection.
+- `frame_aggregate_mode`:Support full_frame, color_frame, ANY or disable mode
+  `full_frame`:Only FrameSet that contains all types of data frames will be output
+  `color_frame`:Color Frame Require output mode
+  `ANY`:FrameSet for any case will be output,the user may return null when getting the specified type of data frame from the acquired FrameSet
+  `disable`:All types of data frames will output independently
 
-**IMPORTANT**: *Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
+**IMPORTANT**: *Pleframe_aggregate_modease carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
 
 ## Depth work mode switch:
 

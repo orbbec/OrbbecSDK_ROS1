@@ -142,7 +142,7 @@
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
-    <arg name="frame_aggregate_mode" default="ANY"/><!-- full_frame、color_frame、ANY or disable -->
+    <arg name="frame_aggregate_mode" default="ANY"/><!-- full_frame,color_frame,ANY or disable -->
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">

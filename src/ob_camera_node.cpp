@@ -276,7 +276,7 @@ void OBCameraNode::getParameters() {
   ROS_INFO_STREAM("enable_sync_host_time:" << enable_sync_host_time_);
   if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid())) {
     device_->timerSyncWithHost();
-    if (time_domain_ != "global") {
+    if (time_domain_ == "device") {
       sync_host_time_timer_ =
           nh_private_.createTimer(ros::Duration(1800.0), [this](const ros::TimerEvent&) {
             if (device_) {
@@ -1252,6 +1252,15 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (frame->type() == OB_FRAME_COLOR) {
     video_frame = frame->as<ob::ColorFrame>();
   } else if (frame->type() == OB_FRAME_DEPTH) {
+    if (frame->globalTimeStampUs() > frame->systemTimeStampUs()) {
+      ROS_INFO_STREAM("timeStampUs: " << frame->timeStampUs());
+      ROS_INFO_STREAM("systemTimeStampUs: " << frame->systemTimeStampUs());
+      ROS_INFO_STREAM("globalTimeStampUs: " << frame->globalTimeStampUs());
+      ROS_INFO_STREAM("globalTimeStampUs: " << count++);
+    }
+    
+    ROS_INFO_STREAM("systemTimeStampUs-globalTimeStampUs= "
+                    << static_cast<int>(frame->systemTimeStampUs() - frame->globalTimeStampUs()));
     video_frame = frame->as<ob::DepthFrame>();
   } else if (frame->type() == OB_FRAME_IR || frame->type() == OB_FRAME_IR_LEFT ||
              frame->type() == OB_FRAME_IR_RIGHT) {
