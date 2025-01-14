@@ -244,6 +244,10 @@ void OBCameraNode::getParameters() {
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   time_domain_ = nh_private_.param<std::string>("time_domain", "device");
+  disparity_search_offset_ = nh_private_.param<int>("disparity_search_offset", 0);
+  disparity_offset_config_ = nh_private_.param<bool>("disparity_offset_config", false);
+  offset_index0_ = nh_private_.param<int>("offset_index0", 0);
+  offset_index1_ = nh_private_.param<int>("offset_index1", 0);
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info.get());
   auto pid = device_info->pid();
@@ -1081,6 +1085,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     auto depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
     if (depth_frame) {
+      setDisparitySearchOffset();
       depth_frame = processDepthFrameFilter(depth_frame);
       frame_set->pushFrame(depth_frame);
     }

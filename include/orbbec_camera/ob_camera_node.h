@@ -303,6 +303,8 @@ class OBCameraNode {
 
   bool switchIRDataSourceChannelCallback(SetStringRequest &request, SetStringResponse &response);
 
+  void setDisparitySearchOffset();
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -524,6 +526,11 @@ class OBCameraNode {
   std::string time_domain_ = "global";
   bool enable_sync_host_time_ = true;
   ros::Timer sync_host_time_timer_;
+
+  int disparity_search_offset_ = 0;
+  bool disparity_offset_config_ = false;
+  int offset_index0_ = 0;
+  int offset_index1_ = 0;
 };
 
 }  // namespace orbbec_camera
