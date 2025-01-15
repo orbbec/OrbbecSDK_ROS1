@@ -123,10 +123,10 @@
 
     <!-- Disparity search offset parameters -->
     <arg name="disparity_range_mode" default="-1"/>
-    <arg name="disparity_search_offset" default="0"/>
+    <arg name="disparity_search_offset" default="-1"/>
     <arg name="disparity_offset_config" default="false"/>
-    <arg name="offset_index0" default="0"/>
-    <arg name="offset_index1" default="0"/>
+    <arg name="offset_index0" default="-1"/>
+    <arg name="offset_index1" default="-1"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">

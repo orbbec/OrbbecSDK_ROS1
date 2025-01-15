@@ -528,10 +528,10 @@ class OBCameraNode {
   ros::Timer sync_host_time_timer_;
 
   int disparity_range_mode_ = -1;
-  int disparity_search_offset_ = 0;
+  int disparity_search_offset_ = -1;
   bool disparity_offset_config_ = false;
-  int offset_index0_ = 0;
-  int offset_index1_ = 0;
+  int offset_index0_ = -1;
+  int offset_index1_ = -1;
 
   std::string frame_aggregate_mode_;
 };

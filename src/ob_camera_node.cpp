@@ -245,10 +245,10 @@ void OBCameraNode::getParameters() {
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   time_domain_ = nh_private_.param<std::string>("time_domain", "device");
   disparity_range_mode_ = nh_private_.param<int>("disparity_range_mode", -1);
-  disparity_search_offset_ = nh_private_.param<int>("disparity_search_offset", 0);
+  disparity_search_offset_ = nh_private_.param<int>("disparity_search_offset", -1);
   disparity_offset_config_ = nh_private_.param<bool>("disparity_offset_config", false);
-  offset_index0_ = nh_private_.param<int>("offset_index0", 0);
-  offset_index1_ = nh_private_.param<int>("offset_index1", 0);
+  offset_index0_ = nh_private_.param<int>("offset_index0", -1);
+  offset_index1_ = nh_private_.param<int>("offset_index1", -1);
   frame_aggregate_mode_ = nh_private_.param<std::string>("frame_aggregate_mode", "ANY");
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info.get());
