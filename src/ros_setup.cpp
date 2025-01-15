@@ -765,6 +765,15 @@ void OBCameraNode::setupPipelineConfig() {
       pipeline_config_->enableStream(stream_profile_[stream_index]);
     }
   }
+  if (frame_aggregate_mode_ == "full_frame") {
+    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE);
+  } else if (frame_aggregate_mode_ == "color_frame") {
+    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_COLOR_FRAME_REQUIRE);
+  } else if (frame_aggregate_mode_ == "disable") {
+    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_DISABLE);
+  } else {
+    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION);
+  }
 }
 
 void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWrapper& stat) {

@@ -248,6 +248,7 @@ void OBCameraNode::getParameters() {
   disparity_offset_config_ = nh_private_.param<bool>("disparity_offset_config", false);
   offset_index0_ = nh_private_.param<int>("offset_index0", 0);
   offset_index1_ = nh_private_.param<int>("offset_index1", 0);
+  frame_aggregate_mode_ = nh_private_.param<std::string>("frame_aggregate_mode", "ANY");
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info.get());
   auto pid = device_info->pid();
