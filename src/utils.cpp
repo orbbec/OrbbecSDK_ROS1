@@ -95,9 +95,9 @@ OBFormat OBFormatFromString(const std::string &format) {
   } else if (fixed_format == "RW16") {
     return OB_FORMAT_RW16;
   }
-//   else if (fixed_format == "DISP16") {
-//     return OB_FORMAT_DISP16;
-//   }
+  //   else if (fixed_format == "DISP16") {
+  //     return OB_FORMAT_DISP16;
+  //   }
   else {
     return OB_FORMAT_UNKNOWN;
   }
@@ -730,6 +730,10 @@ std::string metaDataTypeToString(const OBFrameMetadataType &meta_data_type) {
       return "emitter_mode";
     case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA:
       return "gpio_input_data";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_DISPARITY_SEARCH_OFFSET:
+      return "disparity_search_offset";
+    case OBFrameMetadataType::OB_FRAME_METADATA_TYPE_DISPARITY_SEARCH_RANGE:
+      return "disparity search range";
     default:
       return "unknown";
   }

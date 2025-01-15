@@ -367,6 +367,19 @@ void OBCameraNode::setupDevices() {
     if (device_->isPropertySupported(OB_PROP_IR_LONG_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_IR_LONG_EXPOSURE_BOOL, enable_ir_long_exposure_);
     }
+    if (disparity_range_mode_ != -1 &&
+        device_->isPropertySupported(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, OB_PERMISSION_WRITE)) {
+      ROS_INFO_STREAM("Setting disparity_range_mode: " << disparity_range_mode_);
+      if (disparity_range_mode_ == 64) {
+        device_->setIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, 0);
+      } else if (disparity_range_mode_ == 128) {
+        device_->setIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, 1);
+      } else if (disparity_range_mode_ == 256) {
+        device_->setIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, 2);
+      } else {
+        ROS_ERROR_STREAM("disparity_range_mode does not support this setting");
+      }
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
   } catch (const std::exception& e) {
@@ -885,12 +898,12 @@ void OBCameraNode::setDisparitySearchOffset() {
     config.offset0 = offset_index0_;
     config.offset1 = offset_index1_;
     config.reserved = 0;
+    has_run = true;
     device_->setStructuredData(OB_STRUCT_DISP_OFFSET_CONFIG,
                                reinterpret_cast<const uint8_t*>(&config), sizeof(config));
     ROS_INFO_STREAM("disparity_offset_config: " << disparity_offset_config_
                                                 << "  offset_index0: " << offset_index0_
                                                 << "  offset_index1: " << offset_index1_);
   }
-  has_run = true;
 }
 }  // namespace orbbec_camera

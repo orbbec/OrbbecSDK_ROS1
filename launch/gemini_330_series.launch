@@ -122,6 +122,7 @@
     <arg name="frame_aggregate_mode" default="ANY"/><!-- full_frame,color_frame,ANY or disable -->
 
     <!-- Disparity search offset parameters -->
+    <arg name="disparity_range_mode" default="-1"/>
     <arg name="disparity_search_offset" default="0"/>
     <arg name="disparity_offset_config" default="false"/>
     <arg name="offset_index0" default="0"/>
@@ -231,6 +232,7 @@
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
             <param name="frame_aggregate_mode" value="$(arg frame_aggregate_mode)"/>
 
+            <param name="disparity_range_mode" value="$(arg disparity_range_mode)"/>
             <param name="disparity_search_offset" value="$(arg disparity_search_offset)"/>
             <param name="disparity_offset_config" value="$(arg disparity_offset_config)"/>
             <param name="offset_index0" value="$(arg offset_index0)"/>

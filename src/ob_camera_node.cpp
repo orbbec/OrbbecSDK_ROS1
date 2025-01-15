@@ -244,6 +244,7 @@ void OBCameraNode::getParameters() {
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   time_domain_ = nh_private_.param<std::string>("time_domain", "device");
+  disparity_range_mode_ = nh_private_.param<int>("disparity_range_mode", -1);
   disparity_search_offset_ = nh_private_.param<int>("disparity_search_offset", 0);
   disparity_offset_config_ = nh_private_.param<bool>("disparity_offset_config", false);
   offset_index0_ = nh_private_.param<int>("offset_index0", 0);

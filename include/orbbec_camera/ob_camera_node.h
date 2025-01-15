@@ -527,6 +527,7 @@ class OBCameraNode {
   bool enable_sync_host_time_ = true;
   ros::Timer sync_host_time_timer_;
 
+  int disparity_range_mode_ = -1;
   int disparity_search_offset_ = 0;
   bool disparity_offset_config_ = false;
   int offset_index0_ = 0;
