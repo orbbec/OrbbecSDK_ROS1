@@ -26,46 +26,148 @@
 
 #include <boost/filesystem.hpp>
 
+#include <stdio.h>
+#include <sys/ioctl.h>
+#include <linux/usbdevice_fs.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+
 namespace orbbec_camera {
 backward::SignalHandling sh;
 
 std::string g_camera_name = "camera";
+static std::string g_current_device_uid = "";
+const std::string GMSL_TYPE = "gmsl";
+const std::string MIPI_TYPE = "mipi";
+
+bool startsWith(const std::string &str, const std::string &prefix) { return str.find(prefix) == 0; }
+
+std::pair<std::string, std::string> getFirstAndLastField(const std::string &str, char delimiter) {
+  std::string firstField, lastField;
+  size_t start = 0, end = str.find(delimiter);
+  // Find the first field
+  if (end != std::string::npos) {
+    firstField = str.substr(start, end - start);
+    start = end + 1;
+    // Find the last field starting from after the first field
+    end = str.find_last_of(delimiter, str.size() - 1);
+    if (end != std::string::npos) {
+      lastField = str.substr(end + 1);
+    } else {
+      // If no more delimiters are found, the rest of the string is the last field
+      lastField = str.substr(start);
+    }
+  } else {
+    // If no delimiter is found, the whole string is both the first and last field
+    firstField = "";
+    lastField = str;
+  }
+  return {firstField, lastField};
+}
+
+std::string get_device_bus_path() {
+  std::cout << "Original UID: " << g_current_device_uid << std::endl;
+  if (g_current_device_uid.empty()) {
+    std::cerr << "Error: current_device_uid is empty" << std::endl;
+    return "";
+  }
+  if (startsWith(g_current_device_uid, GMSL_TYPE) || startsWith(g_current_device_uid, MIPI_TYPE)) {
+    std::cout << "The string startswith 'gmsl/mipi'. GMSL/MIPI device skip usbdevfs_reset"
+              << std::endl;
+    return "";
+  }
+  std::pair<std::string, std::string> result = getFirstAndLastField(g_current_device_uid, '-');
+  std::string first_number = result.first;
+  std::string last_number = result.second;
+  if (first_number.empty() || last_number.empty()) {
+    std::cerr << "Error: Failed to extract numbers from device UID" << std::endl;
+    return "";
+  }
+  // Convert the number to a string and format it as a three-digit representation.
+  auto format_number = [](const std::string &number) {
+    std::ostringstream oss;
+    oss << std::setw(3) << std::setfill('0') << number;
+    return oss.str();
+  };
+  std::string first_number_str = format_number(first_number);
+  std::string last_number_str = format_number(last_number);
+  std::string device_bus_path = "/dev/bus/usb/" + first_number_str + "/" + last_number_str;
+  std::cout << "First Number: " << first_number_str << " Last Number: " << last_number_str
+            << std::endl;
+  std::cout << "device_bus_path: " << device_bus_path << std::endl;
+  return device_bus_path;
+}
+
+int usbdevfs_reset() {
+  // std::string device_bus_path = "/dev/bus/usb/002/007";
+  std::string device_bus_path = get_device_bus_path();
+  if (device_bus_path.empty()) {
+    std::cerr << "Error: device_bus_path is empty" << std::endl;
+    return -1;
+  }
+  const char *filename = device_bus_path.c_str();
+  std::cout << "usbdevfs_reset device bus: " << device_bus_path << std::endl;
+  int fd = open(filename, O_WRONLY);
+  if (fd < 0) {
+    std::cerr << "Error opening device " << filename << ": " << strerror(errno) << std::endl;
+    return -1;
+  }
+  std::cout << "Usbdevfs Resetting USB device " << filename << std::endl;
+  if (ioctl(fd, USBDEVFS_RESET, 0) < 0) {
+    std::cerr << "Error in ioctl: " << strerror(errno) << std::endl;
+    close(fd);
+    return -1;
+  }
+  std::cout << "Usbdevfs Reset successful" << std::endl;
+  close(fd);
+  return 0;
+}
 
 void signalHandler(int signum) {
   std::cout << "Received signal: " << signum << std::endl;
-
   std::string log_dir = "Log/";
 
-  // get current time
+  // Get current time and format it.format as "2024_05_20_12_34_56"
   std::time_t now = std::time(nullptr);
   std::tm *local_time = std::localtime(&now);
-
-  // format date and time to string, format as "2024_05_20_12_34_56"
   std::ostringstream time_stream;
   time_stream << std::put_time(local_time, "%Y_%m_%d_%H_%M_%S");
-
-  // generate log file name
   std::string log_file_name = g_camera_name + "_crash_stack_trace_" + time_stream.str() + ".log";
   std::string log_file_path = log_dir + log_file_name;
 
+  // Ensure log directory exists
   if (!boost::filesystem::exists(log_dir)) {
-    boost::filesystem::create_directories(log_dir);
+    if (!boost::filesystem::create_directories(log_dir)) {
+      std::cerr << "Failed to create log directory: " << log_dir << std::endl;
+      exit(signum);
+    }
   }
   auto abs_path = boost::filesystem::absolute(log_dir);
   std::cout << "Log crash stack trace to " << abs_path.string() << "/" << log_file_name
             << std::endl;
-  std::ofstream log_file(log_file_path, std::ios::app);
 
-  if (log_file.is_open()) {
-    log_file << "Received signal: " << signum << std::endl;
-
-    backward::StackTrace st;
-    st.load_here(32);  // Capture stack
-    backward::Printer p;
-    p.print(st, log_file);  // Print stack to log file
+  // Write stack trace to log file.
+  {
+    std::ofstream log_file(log_file_path, std::ios::app);
+    if (log_file.is_open()) {
+      log_file << "Received signal: " << signum << std::endl;
+      backward::StackTrace st;
+      st.load_here(32);  // Capture stack
+      backward::Printer p;
+      p.print(st, log_file);  // Print stack to log file
+    } else {
+      std::cerr << "Failed to open log file: " << log_file_path << std::endl;
+    }
+    log_file.close();
   }
 
-  log_file.close();
+  // usbdevfs reset before exit
+  std::cout << "start usbdevfs reset " << std::endl;
+  usbdevfs_reset();
+  std::cout << "start usbdevfs reset finish" << std::endl;
+
+  std::cout << "save crash stack trace log to file finish and exit program." << std::endl;
   exit(signum);  // Exit program
 }
 
@@ -90,14 +192,20 @@ OBCameraNodeDriver::~OBCameraNodeDriver() {
 
 void OBCameraNodeDriver::init() {
   is_alive_ = true;
-  signal(SIGSEGV, signalHandler);  // segment fault
-  signal(SIGABRT, signalHandler);  // abort
-  signal(SIGFPE, signalHandler);   // float point exception
-  signal(SIGILL, signalHandler);   // illegal instruction
+  struct sigaction sa;
+  sa.sa_handler = signalHandler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART;
+  sigaction(SIGSEGV, &sa, nullptr);
+  sigaction(SIGABRT, &sa, nullptr);
+  sigaction(SIGFPE, &sa, nullptr);
+  sigaction(SIGILL, &sa, nullptr);
+
   auto log_level = nh_private_.param<std::string>("log_level", "info");
   g_camera_name = nh_private_.param<std::string>("camera_name", "camera");
   auto ob_log_level = obLogSeverityFromString(log_level);
   ctx_->setLoggerToConsole(ob_log_level);
+
   orb_device_lock_shm_fd_ = shm_open(ORB_DEFAULT_LOCK_NAME.c_str(), O_CREAT | O_RDWR, 0666);
   if (orb_device_lock_shm_fd_ < 0) {
     ROS_ERROR_STREAM("Failed to open shared memory " << ORB_DEFAULT_LOCK_NAME);
@@ -106,6 +214,7 @@ void OBCameraNodeDriver::init() {
   int ret = ftruncate(orb_device_lock_shm_fd_, sizeof(pthread_mutex_t));
   if (ret < 0) {
     ROS_ERROR_STREAM("Failed to truncate shared memory " << ORB_DEFAULT_LOCK_NAME);
+    close(orb_device_lock_shm_fd_);
     return;
   }
   orb_device_lock_shm_addr_ =
@@ -113,12 +222,19 @@ void OBCameraNodeDriver::init() {
                                   orb_device_lock_shm_fd_, 0));
   if (orb_device_lock_shm_addr_ == MAP_FAILED) {
     ROS_ERROR_STREAM("Failed to map shared memory " << ORB_DEFAULT_LOCK_NAME);
+    close(orb_device_lock_shm_fd_);
     return;
   }
   pthread_mutexattr_init(&orb_device_lock_attr_);
   pthread_mutexattr_setpshared(&orb_device_lock_attr_, PTHREAD_PROCESS_SHARED);
   orb_device_lock_ = (pthread_mutex_t *)orb_device_lock_shm_addr_;
-  pthread_mutex_init(orb_device_lock_, &orb_device_lock_attr_);
+  if (pthread_mutex_init(orb_device_lock_, &orb_device_lock_attr_) != 0) {
+    ROS_ERROR_STREAM("Failed to initialize shared mutex " << ORB_DEFAULT_LOCK_NAME);
+    munmap(orb_device_lock_shm_addr_, sizeof(pthread_mutex_t));
+    close(orb_device_lock_shm_fd_);
+    return;
+  }
+
   serial_number_ = nh_private_.param<std::string>("serial_number", "");
   usb_port_ = nh_private_.param<std::string>("usb_port", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 100);
@@ -127,11 +243,13 @@ void OBCameraNodeDriver::init() {
   ip_address_ = nh_private_.param<std::string>("ip_address", "");
   port_ = nh_private_.param<int>("port", 0);
   enable_hardware_reset_ = nh_private_.param<bool>("enable_hardware_reset", false);
+
   reboot_service_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
       "reboot_device", [this](std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
         return rebootDeviceServiceCallback(request, response);
       });
   ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
+
   check_connection_timer_ =
       nh_.createWallTimer(ros::WallDuration(1.0),
                           [this](const ros::WallTimerEvent &) { this->checkConnectionTimer(); });
@@ -146,6 +264,15 @@ void OBCameraNodeDriver::init() {
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
     const std::shared_ptr<ob::DeviceList> &list) {
+  if (!list) {
+    ROS_ERROR("Invalid device list provided");
+    return nullptr;
+  }
+  if (list->deviceCount() == 0) {
+    ROS_WARN("No device found");
+    return nullptr;
+  }
+
   std::shared_ptr<ob::Device> device = nullptr;
   if (!serial_number_.empty()) {
     ROS_INFO_STREAM("Connecting to device with serial number: " << serial_number_);
@@ -168,8 +295,8 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceBySerialNumber(
     const std::shared_ptr<ob::DeviceList> &list, const std::string &serial_number) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   for (size_t i = 0; i < list->deviceCount(); i++) {
-    std::lock_guard<decltype(device_lock_)> lock(device_lock_);
     try {
       auto pid = list->pid(i);
       if (isOpenNIDevice(pid)) {
@@ -193,7 +320,7 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceBySerialNumber(
     } catch (std::exception &e) {
       ROS_ERROR_STREAM("Failed to get device info " << e.what());
     } catch (...) {
-      ROS_ERROR_STREAM("Failed to get device info");
+      ROS_ERROR_STREAM("Failed to get device info,Unknown exception");
     }
   }
   return nullptr;
@@ -236,6 +363,10 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   device_ = device;
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
+  ROS_INFO_STREAM("device uid: " << device_uid_);
+  g_current_device_uid = device_info_->uid();
+  ROS_INFO_STREAM("g_current_device_uid: " << g_current_device_uid);
+
   CHECK_NOTNULL(device_.get());
   if (ob_camera_node_) {
     ob_camera_node_.reset();
@@ -278,27 +409,57 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     ROS_WARN("No device found");
     return;
   }
+  ROS_INFO_STREAM("deviceCount: list->deviceCount() : " << list->deviceCount());
+
   bool start_device_failed = false;
   try {
     std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
-    ROS_INFO_STREAM("deviceConnectCallback : Before process lock lock");
+    ROS_INFO_STREAM("deviceConnectCallback : connection_delay_ : " << connection_delay_);
     // use try lock to avoid deadlock
-    int max_try_lock_count = 5;
+    int max_try_lock_count = 10;
     int try_lock_count = 0;
-    for (; try_lock_count < max_try_lock_count; try_lock_count++) {
-      if (pthread_mutex_trylock(orb_device_lock_) == 0) {
-        break;
+    bool is_orb_device_lock_locked = false;
+    bool has_orb_openni_device = false;
+
+    // check if has openni device
+    for (size_t i = 0; i < list->deviceCount(); i++) {
+      auto pid = list->pid(i);
+      ROS_INFO_STREAM("deviceConnectCallback : device pid: " << pid);
+      if (isOpenNIDevice(pid)) {
+        ROS_INFO_STREAM("deviceConnectCallback : has_orb_openni_device pid: " << pid);
+        has_orb_openni_device = true;
       }
-      ROS_WARN_STREAM("deviceConnectCallback : Failed to lock orb_device_lock_, wait for 100ms");
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    if (try_lock_count == max_try_lock_count) {
-      ROS_ERROR_STREAM("deviceConnectCallback : Failed to lock orb_device_lock_, return");
-      return;
+    if (has_orb_openni_device) {
+      ROS_INFO_STREAM("deviceConnectCallback : Before process lock lock");
+      for (; try_lock_count < max_try_lock_count; try_lock_count++) {
+        if (pthread_mutex_trylock(orb_device_lock_) == 0) {
+          ROS_INFO_STREAM("deviceConnectCallback : acquire orb_device_lock_ lock");
+          is_orb_device_lock_locked = true;
+          break;
+        }
+        ROS_INFO_STREAM("deviceConnectCallback : Try get lock orb_device_lock_, wait for 100ms");
+        if (try_lock_count < 5) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        } else {
+          std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+      }
+      if (try_lock_count == max_try_lock_count) {
+        ROS_ERROR_STREAM(
+            "deviceConnectCallback : has try maxcount, Failed get lock orb_device_lock_, return");
+        return;
+      }
+      ROS_INFO_STREAM("deviceConnectCallback : After process lock lock");
     }
-    ROS_INFO_STREAM("deviceConnectCallback : After process lock lock");
-    std::shared_ptr<int> lock_guard(nullptr,
-                                    [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
+
+    std::shared_ptr<int> lock_guard(nullptr, [&](int *) {
+      if (is_orb_device_lock_locked) {
+        pthread_mutex_unlock(orb_device_lock_);
+        ROS_INFO_STREAM("deviceConnectCallback : release orb_device_lock_ unlock");
+      }
+    });
+
     ROS_INFO_STREAM("deviceConnectCallback : selectDevice start");
     auto device = selectDevice(list);
     ROS_INFO_STREAM("deviceConnectCallback : selectDevice end");
@@ -312,7 +473,18 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
       ROS_WARN_STREAM("deviceConnectCallback : start device failed, return");
       return;
     }
+
+    auto pid = device->getDeviceInfo()->pid();
+    ROS_INFO_STREAM("deviceConnectCallback : current device pid: " << pid);
+    if ((!isOpenNIDevice(pid)) && (is_orb_device_lock_locked)) {
+      pthread_mutex_unlock(orb_device_lock_);
+      is_orb_device_lock_locked = false;
+      ROS_INFO_STREAM(
+          "deviceConnectCallback : not openni device, direct release orb_device_lock_ unlock");
+    }
+
     initializeDevice(device);
+    ROS_INFO_STREAM("deviceConnectCallback : initializeDevice end");
   } catch (ob::Error &e) {
     start_device_failed = true;
     ROS_ERROR_STREAM("Failed to initialize device " << e.getMessage());
