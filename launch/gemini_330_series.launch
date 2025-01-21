@@ -78,6 +78,7 @@
     <arg name="enable_hdr_merge" default="false"/>
     <arg name="enable_sequenced_filter" default="false"/>
     <arg name="enable_threshold_filter" default="false"/>
+    <arg name="enable_hardware_noise_removal_filter" default="true"/>
     <arg name="enable_noise_removal_filter" default="true"/>
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>

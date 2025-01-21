@@ -250,6 +250,7 @@ void OBCameraNode::setupDevices() {
     }
     if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_noise_removal_filter_);
+      ROS_INFO_STREAM("enable_noise_removal_filter:" << enable_noise_removal_filter_);
     }
     if (!depth_work_mode_.empty()) {
       ROS_INFO_STREAM("Set depth work mode: " << depth_work_mode_);
@@ -379,6 +380,10 @@ void OBCameraNode::setupDevices() {
       } else {
         ROS_ERROR_STREAM("disparity_range_mode does not support this setting");
       }
+    }
+    if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, OB_PERMISSION_WRITE)) {
+      device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, enable_hardware_noise_removal_filter_);
+      ROS_INFO_STREAM("Setting hardware_noise_removal_filter:" << enable_hardware_noise_removal_filter_);
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
