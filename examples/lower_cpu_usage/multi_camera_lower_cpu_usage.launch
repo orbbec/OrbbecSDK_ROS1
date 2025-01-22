@@ -1,0 +1,51 @@
+<launch>
+    <arg name="examples_path" default="examples/lower_cpu_usage"/>
+    <arg name="camera_name" default="ob_camera"/>
+    <arg name="3d_sensor" default="gemini_330_lower_cpu_usage"/>
+    <arg name="external_manager" default="true"/>
+    <arg name="manager" default="orbbec_camera_manager"/>
+    <arg name="camera1_prefix" default="01"/>
+    <arg name="camera2_prefix" default="02"/>
+    <arg name="camera3_prefix" default="03"/>
+    <arg name="camera4_prefix" default="04"/>
+    <arg name="camera1_usb_port" default="4-1"/>
+    <arg name="camera2_usb_port" default="4-2"/>
+    <arg name="camera3_usb_port" default="4-3"/>
+    <arg name="camera4_usb_port" default="4-4.1"/>
+    <arg name="device_num" default="4"/>
+
+    <node unless="false" pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
+              output="screen" required="false" respawn="false"/>
+
+    <include file="$(find orbbec_camera)/$(arg examples_path)/$(arg 3d_sensor).launch">
+        <arg name="manager" value="$(arg manager)"/>
+        <arg name="external_manager" value="$(arg external_manager)"/>
+        <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
+        <arg name="usb_port" value="$(arg camera1_usb_port)"/>
+        <arg name="device_num" value="$(arg device_num)"/>
+    </include>
+
+    <include file="$(find orbbec_camera)/$(arg examples_path)/$(arg 3d_sensor).launch">
+        <arg name="manager" value="$(arg manager)"/>
+        <arg name="external_manager" value="$(arg external_manager)"/>
+        <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
+        <arg name="usb_port" value="$(arg camera2_usb_port)"/>
+        <arg name="device_num" value="$(arg device_num)"/>
+    </include>
+
+    <include file="$(find orbbec_camera)/$(arg examples_path)/$(arg 3d_sensor).launch">
+        <arg name="manager" value="$(arg manager)"/>
+        <arg name="external_manager" value="$(arg external_manager)"/>
+        <arg name="camera_name" value="$(arg camera_name)_$(arg camera3_prefix)"/>
+        <arg name="usb_port" value="$(arg camera3_usb_port)"/>
+        <arg name="device_num" value="$(arg device_num)"/>
+    </include>
+
+    <include file="$(find orbbec_camera)/$(arg examples_path)/$(arg 3d_sensor).launch">
+        <arg name="manager" value="$(arg manager)"/>
+        <arg name="external_manager" value="$(arg external_manager)"/>
+        <arg name="camera_name" value="$(arg camera_name)_$(arg camera4_prefix)"/>
+        <arg name="usb_port" value="$(arg camera4_usb_port)"/>
+        <arg name="device_num" value="$(arg device_num)"/>
+    </include>
+</launch>

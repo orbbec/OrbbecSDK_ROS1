@@ -317,6 +317,7 @@ The following launch parameters are available:
 
 - `connection_delay`: The delay time in milliseconds for reopening the device. Some devices require
   a longer time to initialize, and reopening the device immediately can cause firmware crashes when hot-plugging.
+- `uvc_backend`:Global UVC Backend select on Linux,optional values: libuvc, v4l2.
 - `enable_point_cloud`: Enables the point cloud.
 - `enable_colored_point_cloud`: Enables the RGB point cloud.
 - `color_width`, `color_height`, `color_fps`: The resolution and frame rate of the color stream.
