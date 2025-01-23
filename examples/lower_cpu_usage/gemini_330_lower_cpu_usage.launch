@@ -17,7 +17,7 @@
     <arg name="uvc_backend" default="v4l2"/><!-- "libuvc" or "v4l2" -->
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
-    <arg name="device_preset" default="Default"/>
+    <arg name="device_preset" default="Clean Medium Confidence"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
     <arg name="sync_mode" default="standalone"/>
@@ -71,7 +71,7 @@
     <arg name="enable_ir_long_exposure" default="false"/>
 
     <!-- Point cloud parameters -->
-    <arg name="enable_point_cloud" default="false"/>
+    <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="false"/>
     <arg name="ordered_pc" default="false"/>
     <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
