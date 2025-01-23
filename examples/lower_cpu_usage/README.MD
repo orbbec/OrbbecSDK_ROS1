@@ -1,6 +1,6 @@
 ## Using the Orbbec ROS package to get lower CPU usage
 
-This section shows you how to reduce CPU usage for one or more cameras in a ROS 1 environment. This method only works with Gemini 330 series cameras, and the firmware version needs to be above 1.4.10.
+This section shows you how to reduce CPU usage for one or more cameras in a ROS 1 environment. This method only works with Gemini 330 series cameras, and the firmware version needs to be above 1.4.10(`device_preset `is set to Default).
 
 The example launch files used in this section are `gemini_330_lower_cpu_usage.launch` and `multi_camera_lower_cpu_usage.launch`.
 
