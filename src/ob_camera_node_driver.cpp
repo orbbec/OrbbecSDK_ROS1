@@ -133,7 +133,8 @@ void OBCameraNodeDriver::init() {
   enable_hardware_reset_ = nh_private_.param<bool>("enable_hardware_reset", false);
   uvc_backend_ = nh_private_.param<std::string>("uvc_backend", "libuvc");
   reboot_service_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
-      "reboot_device", [this](std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
+      "/" + g_camera_name + "/reboot_device",
+      [this](std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
         return rebootDeviceServiceCallback(request, response);
       });
   if (uvc_backend_ == "libuvc") {

@@ -6,12 +6,12 @@ The example launch files used in this section are `gemini_330_lower_cpu_usage.la
 
 ### Parameters that affect CPU usage
 
-`uvc_backend`:Global UVC Backend select on Linux,optional values: libuvc, v4l2.
-`color_format`:Color stream coding format.
-`depth_registration`: Enables alignment of the depth frame to the color frame.
+`uvc_backend`:Global UVC Backend select on Linux,optional values: libuvc, v4l2.(v4l2 is lower)
+`color_format`:Color stream coding format.(RGB is lower)
+`depth_registration`: Enables alignment of the depth frame to the color frame.(align_mode is set to HW lower)
 `enable_point_cloud`:Enables the point cloud.
 `enable_colored_point_cloud`:Enables the RGB point cloud.
-`filter`:decimation_filter,hdr_merge,sequenced_filter,threshold_filter,hardware_noise_removal_filter,noise_removal_filter,spatial_filter,temporal_filter,hole_filling_filter.
+`filter`:decimation_filter,hdr_merge,sequenced_filter,threshold_filter,hardware_noise_removal_filter,noise_removal_filter,spatial_filter,temporal_filter,hole_filling_filter.(hardware_noise_removal_filter is lower)
 `Video stream resolution and frame rate`
 
 ### Data comparison
