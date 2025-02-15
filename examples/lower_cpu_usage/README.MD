@@ -6,13 +6,14 @@ The example launch files used in this section are `gemini_330_lower_cpu_usage.la
 
 ### Parameters that affect CPU usage
 
-`uvc_backend`:Global UVC Backend select on Linux,optional values: libuvc, v4l2.(v4l2 is lower)
-`color_format`:Color stream coding format.(RGB is lower)
-`depth_registration`: Enables alignment of the depth frame to the color frame.(align_mode is set to HW lower)
-`enable_point_cloud`:Do not enable the point cloud.
-`enable_colored_point_cloud`:Do not enable the RGB point cloud.
-`filter`:decimation_filter,hdr_merge,sequenced_filter,threshold_filter,hardware_noise_removal_filter,noise_removal_filter,spatial_filter,temporal_filter,hole_filling_filter.(hardware_noise_removal_filter is lower)
-`Video stream resolution and frame rate`
+* `uvc_backend`:Global UVC Backend select on Linux,optional values: libuvc, v4l2.(v4l2 is lower)
+* `color_format`:Color stream coding format.(RGB is lower)
+
+* `depth_registration`: Enables alignment of the depth frame to the color frame.(align_mode is set to HW lower)
+* `enable_point_cloud`:Enables the point cloud.
+
+* `enable_colored_point_cloud`:Enables the RGB point cloud.
+* `filter`:decimation_filter,hdr_merge,sequenced_filter,threshold_filter,hardware_noise_removal_filter,noise_removal_filter,spatial_filter,temporal_filter,hole_filling_filter.(hardware_noise_removal_filter is lower)
 
 ### Test environment
 
@@ -61,11 +62,11 @@ The color stream setting RGB encoding and MJPG have no effect on filtering and a
 
 |             Filter Configuration             | libuvc(CPU improvement rate) | v4l2(CPU improvement rate) |
 | :------------------------------------------: | :--------------------------: | :------------------------: |
-|                  No filter                   |          43.1%(0%)           |          21%(0%)           |
-|        hardware_noise_removal_filter         |         42.7%(-0.9%)         |          21%(0%)           |
-| hardware_noise_removal_filter+spatial_filter |          43%(-0.2%)          |        21.7%(3.3%)         |
-|             noise_removal_filter             |          43.1%(0%)           |        22.1%(5.2%)         |
-|     noise_removal_filter+spatial_filter      |         43.2%(0.2%)          |         22.9%(9%)          |
+|                  No filter                  |          43.1%(0%)          |          21%(0%)          |
+|        hardware_noise_removal_filter        |         42.7%(-0.9%)         |          21%(0%)          |
+| hardware_noise_removal_filter+spatial_filter |          43%(-0.2%)          |        21.7%(3.3%)        |
+|             noise_removal_filter             |          43.1%(0%)          |        22.1%(5.2%)        |
+|     noise_removal_filter+spatial_filter     |         43.2%(0.2%)         |         22.9%(9%)         |
 
 #### Depth&Left_ir&Right_ir 848 * 480 30fps,Color 848 * 480 15fps
 
@@ -89,11 +90,11 @@ When the depth stream is configured at 848*480 30fps, the CPU usage is significa
 
 |             Filter Configuration             | libuvc(CPU improvement rate) | v4l2(CPU improvement rate) |
 | :------------------------------------------: | :--------------------------: | :------------------------: |
-|                  No filter                   |           116%(0%)           |         45.7%(0%)          |
-|        hardware_noise_removal_filter         |        115.7%(-0.3%)         |        45.6%(-0.2%)        |
+|                  No filter                  |           116%(0%)           |         45.7%(0%)         |
+|        hardware_noise_removal_filter        |        115.7%(-0.3%)        |        45.6%(-0.2%)        |
 | hardware_noise_removal_filter+spatial_filter |         124.5%(7.3%)         |         61.7%(35%)         |
-|             noise_removal_filter             |        148.2%(27.8%)         |        73.4%(60.6%)        |
-|     noise_removal_filter+spatial_filter      |        169.3%(45.9%)         |       93.3%(104.2%)        |
+|             noise_removal_filter             |        148.2%(27.8%)        |        73.4%(60.6%)        |
+|     noise_removal_filter+spatial_filter     |        169.3%(45.9%)        |       93.3%(104.2%)       |
 
 ### Example launch
 
