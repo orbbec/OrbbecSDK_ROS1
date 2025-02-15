@@ -381,9 +381,12 @@ void OBCameraNode::setupDevices() {
         ROS_ERROR_STREAM("disparity_range_mode does not support this setting");
       }
     }
-    if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, OB_PERMISSION_WRITE)) {
-      device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, enable_hardware_noise_removal_filter_);
-      ROS_INFO_STREAM("Setting hardware_noise_removal_filter:" << enable_hardware_noise_removal_filter_);
+    if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                                     OB_PERMISSION_WRITE)) {
+      device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                               enable_hardware_noise_removal_filter_);
+      ROS_INFO_STREAM(
+          "Setting hardware_noise_removal_filter:" << enable_hardware_noise_removal_filter_);
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
@@ -896,11 +899,12 @@ void OBCameraNode::setDisparitySearchOffset() {
     return;
   }
   if (device_->isPropertySupported(OB_PROP_DISP_SEARCH_OFFSET_INT, OB_PERMISSION_WRITE)) {
-    if (disparity_search_offset_ != -1) {
+    if (disparity_search_offset_ >= 0 && disparity_search_offset_ <= 127) {
       device_->setIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, disparity_search_offset_);
       ROS_INFO_STREAM("disparity_search_offset: " << disparity_search_offset_);
     }
-    if (offset_index0_ != -1 && offset_index1_ != -1) {
+    if (offset_index0_ >= 0 && offset_index0_ <= 127 && offset_index1_ >= 0 &&
+        offset_index1_ <= 127) {
       auto config = OBDispOffsetConfig();
       config.enable = disparity_offset_config_;
       config.offset0 = offset_index0_;
