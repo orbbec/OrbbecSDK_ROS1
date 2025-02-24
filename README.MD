@@ -5,7 +5,7 @@
 > Welcome to the OrbbecSDK ROS Wrapper v2. Before you begin using this version of ROS Wrapper, it's crucial to check the following [device support list](#supported-devices) to verify the compatibility.
 
 OrbbecSDK ROS Wrapper provides seamless integration of Orbbec cameras with ROS environment. It supports ROS Kinetic, Melodic, and Noetic distributions.
-With a major update in October 2024, we release the OrbbecSDK ROS1 Wrapper v2 connected to the open source OrbbecSDK v2 with enhanced flexibility and extensibility. This update ensures compatibility with all Orbbec USB products adhering to UVC standard. However, it no longer supports Orbbec's traditional OpenNI protocol devices. We strongly encourage you to use the v2-main branch if your device is supported.
+With a major update in October 2024, we release the [OrbbecSDK ROS1 Wrapper v2](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main) connected to the open source [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases) with enhanced flexibility and extensibility. This update ensures compatibility with all Orbbec USB products adhering to UVC standard. However, it no longer supports Orbbec's traditional OpenNI protocol devices. We strongly encourage you to use the v2-main branch if your device is supported.
 
 Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
 
@@ -503,7 +503,7 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 
 ## Supported Devices
 
-Currently, the following devices are supported by the OrbbecSDK ROS2 Wrapper v2-main branch.  More devices support will be added in the near future. If you can not find your device in the table below, try the [main](https://github.com/orbbec/OrbbecSDK_ROS2)  branch.
+Currently, the following devices are supported by the OrbbecSDK ROS2 Wrapper v2-main branch.  More devices support will be added in the near future. If you can not find your device in the table below, try the [main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main)  branch.
 
 For optimal performance, we strongly recommend updating to the latest firmware version. This ensures that you benefit from the most recent enhancements and bug fixes.
 
@@ -522,7 +522,7 @@ The following devices are supported by the OrbbecSDK ROS2 Wrapper.
 | Femto Mega   | 1.3.0                    | femto_mega.launch        |
 | Astra 2      | 2.8.20                   | astra2.launch            |
 | Gemini 2 L   | 1.4.53                   | gemini2L.launch          |
-| Gemini 2     | 1.4.92                   | gemini2.launc.py         |
+| Gemini 2     | 1.4.92                   | gemini2.launch           |
 
 All launch files are essentially similar, with the primary difference being the default values of the parameters set
 for different models within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch file, as well as other parameters, to ensure compatibility and optimal performance.
