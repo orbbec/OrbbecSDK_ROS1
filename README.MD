@@ -1,14 +1,12 @@
 # OrbbecSDK ROS
 
-[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.5.12-green)
-
 > [!IMPORTANT]
 >
 > Welcome to the OrbbecSDK ROS Wrapper. Before you begin using this version of ROS wrapper, it's crucial to check the following device support list to verify the compatibility.
 
 OrbbecSDK ROS Wrapper provides seamless integration of Orbbec cameras with ROS environment. It supports ROS Kinetic, Melodic, and Noetic distributions.
 
-With a major update in October 2024, we release the [OrbbecSDK ROS2 Wrapper v2](https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main) connected to the open source [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases) with enhanced flexibility and extensibility. This update ensures compatibility with all Orbbec USB products adhering to UVC standard. However, it no longer supports Orbbec's traditional OpenNI protocol devices. We strongly encourage you to use the v2-main branch if your device is supported.
+With a major update in October 2024, we release the [OrbbecSDK ROS1 Wrapper v2](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main) connected to the open source [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases) with enhanced flexibility and extensibility. This update ensures compatibility with all Orbbec USB products adhering to UVC standard. However, it no longer supports Orbbec's traditional OpenNI protocol devices. We strongly encourage you to use the v2-main branch if your device is supported.
 
 Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
 
@@ -514,51 +512,40 @@ cd ~/ros_ws/src/OrbbecSDK_ROS1
 bash .make_deb.sh
 ```
 
-## Launch files
-
-| product serials                     | launch file              |
-| ----------------------------------- | ------------------------ |
-| astra+                              | astra_adv.launch         |
-| astra mini/astra mini pro/astra pro | astra.launch             |
-| astra mini s pro                    | astra.launch             |
-| astra2                              | astra2.launch            |
-| astra stereo s                      | stereo_s_u3.launch       |
-| astra pro2                          | astra_pro2.launch        |
-| dabai                               | dabai.launch             |
-| dabai d1                            | dabai_d1.launch          |
-| dabai dcw                           | dabai_dcw.launch         |
-| dabai dw                            | dabai_dw.launch          |
-| dabai pro                           | dabai_pro.launch         |
-| deeya                               | deeya.launch             |
-| femto / femto w                     | femto.launch             |
-| femto mega / femto mega I           | femto_mega.launch        |
-| femto bolt                          | femto_bolt.launch        |
-| gemini                              | gemini.launch            |
-| gemini2 / dabai DCL                 | gemini2.launch           |
-| gemini2L                            | gemini2L.launch          |
-| gemini e                            | gemini_e.launch          |
-| gemini e lite                       | gemini_e_lite.launch     |
-| dabai max                           | dabai_max.launch         |
-| dabai max pro                       | dabai_max_pro.launch     |
-| gemini uw                           | gemini_uw.launch         |
-| dabai dcw2                          | dabai_dcw2.launch        |
-| dabai dw2                           | dabai_dw2.launch         |
-| gemini ew                           | gemini_ew.launch         |
-| gemini ew lite                      | gemini_ew_lite.launch    |
-| gemini 330 series                   | gemini_330_series.launch |
-
-**All launch files are essentially similar, with the primary difference being the default values of the parameters set for different models
-within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you
-encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch
-file, as well as other parameters, to ensure compatibility and optimal performance.**
-
 ## Use Nodelet
 
 For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 
-## Supported hardware products
+## Supported Devices
 
-Please refer to the OrbbecSDK supported products: [Product Support](https://github.com/orbbec/OrbbecSDK?tab=readme-ov-file#product-support)
+The following devices are supported by the OrbbecSDK ROS1 Wrapper.
+
+| Product                               | **Minimal Firmware Version** | launch file              |
+| ------------------------------------- | ---------------------------------- | ------------------------ |
+| Astra+                                | 1.0.19                             | astra_adv.launch         |
+| Astra Mini /Astra Mini Pro /Astra Pro | 1007                               | astra.launch             |
+| Astra Mini Pro S                      | 1005                               | astra.launch             |
+| Astra 2                               | 2.8.20                             | astra2.launch            |
+| Dabai                                 | 2436                               | dabai.launch             |
+| Dabai DW                              | 2606                               | dabai_dw.launch          |
+| Dabai DCW                             | 2460                               | dabai_dcw.launch         |
+| Femto/Femto W                         | 1.1.8                              | femto.launch             |
+| Femto Mega                            | 1.1.7                              | femto_mega.launch        |
+| Femto Bolt                            | 1.0.6                              | femto_bolt.launch        |
+| Femto Mega I                          | 2.0.2                              | femto_net_camera.launch  |
+| Gemini                                | 3018                               | gemini.launch            |
+| Gemini 2 / Dabai DCL                  | 1.4.60                             | gemini2.launch           |
+| Gemini 2 L                            | 1.4.32                             | gemini2L.launch          |
+| Gemini E                              | 3460                               | gemini_e.launch          |
+| Gemini E Lite                         | 3606                               | gemini_e_lite.launch     |
+| Gemini 335/335L/336/336L              | 1.2.20                             | gemini_330_series.launch |
+
+> [!IMPORTANT]
+>
+> We recommend using the [OrbbecSDK ROS1 Wrapper v2](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main) to get better flexibility and extensibility for the following devices: Astra 2, Femto Mega, Femto Bolt, Gemini 2, Gemini 2 L, Gemini 335, Gemini 335L, Gemini 336, Gemini 336L, Gemini 335Lg(only supported in v2-main branch).
+
+All launch files are essentially similar, with the primary difference being the default values of the parameters set
+for different models within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch file, as well as other parameters, to ensure compatibility and optimal performance.
 
 ## Frequently Asked Questions
 
