@@ -1,7 +1,5 @@
 # OrbbecSDK ROS v2
 
-[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-2.0.9-green)
-
 > [!IMPORTANT]
 >
 > Welcome to the OrbbecSDK ROS Wrapper v2. Before you begin using this version of ROS Wrapper, it's crucial to check the following device support list to verify the compatibility.
