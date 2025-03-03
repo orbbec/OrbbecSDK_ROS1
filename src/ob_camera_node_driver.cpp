@@ -132,6 +132,7 @@ void OBCameraNodeDriver::init() {
   port_ = nh_private_.param<int>("port", 0);
   enable_hardware_reset_ = nh_private_.param<bool>("enable_hardware_reset", false);
   uvc_backend_ = nh_private_.param<std::string>("uvc_backend", "libuvc");
+  preset_firmware_path_ = nh_private_.param<std::string>("preset_firmware_path", "");
   reboot_service_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
       "/" + g_camera_name + "/reboot_device",
       [this](std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
@@ -250,6 +251,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     return;
   }
   device_ = device;
+  updatePresetFirmware(preset_firmware_path_);
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_.get());
@@ -474,5 +476,109 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
   device_connected_ = false;
   device_ = nullptr;
   return true;
+}
+void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
+  if (path.empty()) {
+    return;
+  } else {
+    std::stringstream ss(path);
+    std::string path_segment;
+    std::vector<std::string> paths;
+    OBFwUpdateState updateState = STAT_START;
+    bool firstCall = true;
+
+    while (std::getline(ss, path_segment, ',')) {
+      paths.push_back(path_segment);
+    }
+    uint8_t index = 0;
+    uint8_t count = static_cast<uint8_t>(paths.size());
+    char(*filePaths)[OB_PATH_MAX] = new char[count][OB_PATH_MAX];
+    ROS_INFO_STREAM( "paths.cout : " << (uint32_t)count);
+    for (const auto &p : paths) {
+      strcpy(filePaths[index], p.c_str());
+      ROS_INFO_STREAM(
+                         "path: " << (uint32_t)index << ":" << filePaths[index]);
+      index++;
+    }
+    ROS_INFO_STREAM(
+                       "Start to update optional depth preset, please wait a moment...");
+    try {
+      device_->updateOptionalDepthPresets(
+          filePaths, count,
+          [this, &updateState, &firstCall](OBFwUpdateState state, const char *message,
+                                           uint8_t percent) {
+            updateState = state;
+            presetUpdateCallback(firstCall, state, message, percent);
+            // firstCall = false;
+          });
+
+      delete[] filePaths;
+      filePaths = nullptr;
+      if (updateState == STAT_DONE || updateState == STAT_DONE_WITH_DUPLICATES) {
+        ROS_INFO_STREAM( "After updating the preset: ");
+        auto presetList = device_->getAvailablePresetList();
+        ROS_INFO_STREAM( "Preset count: " << presetList->getCount());
+        for (uint32_t i = 0; i < presetList->getCount(); ++i) {
+          ROS_INFO_STREAM( "  - " << presetList->getName(i));
+        }
+        ROS_INFO_STREAM(
+                           "Current preset: " << device_->getCurrentPresetName());
+        std::string key = "PresetVer";
+        if (device_->isExtensionInfoExist(key)) {
+          std::string value = device_->getExtensionInfo(key);
+          ROS_INFO_STREAM( "Preset version: " << value);
+        } else {
+          ROS_INFO_STREAM( "PresetVer: ");
+        }
+      }
+    } catch (ob::Error &e) {
+      ROS_ERROR_STREAM( "Failed to update Preset Firmware " << e.getMessage());
+    } catch (std::exception &e) {
+      ROS_ERROR_STREAM( "Failed to update Preset Firmware " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM( "Failed to update Preset Firmware");
+    }
+  }
+}
+void OBCameraNodeDriver::presetUpdateCallback(bool firstCall, OBFwUpdateState state,
+                                              const char *message, uint8_t percent) {
+  if (!firstCall) {
+    std::cout << "\033[3F";
+  }
+
+  std::cout << "\033[K";
+  std::cout << "Progress: " << static_cast<uint32_t>(percent) << "%" << std::endl;
+
+  std::cout << "\033[K";
+  std::cout << "Status  : ";
+  switch (state) {
+    case STAT_VERIFY_SUCCESS:
+      std::cout << "Image file verification success" << std::endl;
+      break;
+    case STAT_FILE_TRANSFER:
+      std::cout << "File transfer in progress" << std::endl;
+      break;
+    case STAT_DONE:
+      std::cout << "Update completed" << std::endl;
+      break;
+    case STAT_DONE_WITH_DUPLICATES:
+      std::cout << "Update completed, duplicated presets have been ignored" << std::endl;
+      break;
+    case STAT_IN_PROGRESS:
+      std::cout << "Update in progress" << std::endl;
+      break;
+    case STAT_START:
+      std::cout << "Starting the update" << std::endl;
+      break;
+    case STAT_VERIFY_IMAGE:
+      std::cout << "Verifying image file" << std::endl;
+      break;
+    default:
+      std::cout << "Unknown status or error" << std::endl;
+      break;
+  }
+
+  std::cout << "\033[K";
+  std::cout << "Message : " << message << std::endl << std::flush;
 }
 }  // namespace orbbec_camera

@@ -61,6 +61,10 @@ class OBCameraNodeDriver {
 
   static std::string parseUsbPort(const std::string& line);
 
+  void presetUpdateCallback(bool firstCall, OBFwUpdateState state, const char* message,
+                            uint8_t percent);
+  void updatePresetFirmware(std::string path);
+
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
   std::string config_path_;
@@ -100,5 +104,6 @@ class OBCameraNodeDriver {
   std::string first_prefix;
   std::size_t colon_pos;
   std::string uvc_backend_;
+  std::string preset_firmware_path_;
 };
 }  // namespace orbbec_camera
