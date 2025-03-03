@@ -364,6 +364,7 @@ The following launch parameters are available:
   If set to `true`, the camera will send heartbeat messages and generate firmware logs.
 - `enable_hardware_reset`: This option enables the hardware reset function. By default, it is set to `false`.
   If set to `true`, the camera will reboot upon its first connection.
+- `preset_firmware_path`: Burn customized preset firmware by passing in the customized preset firmware path
 
 **IMPORTANT**: *Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
 
@@ -509,7 +510,7 @@ For optimal performance, we strongly recommend updating to the latest firmware v
 
 The following devices are supported by the OrbbecSDK ROS2 Wrapper.
 
-| Product List | Minimal Firmware Version | **Launch File**          |
+| Product List | Minimal Firmware Version | **Launch File**    |
 | :----------- | :----------------------- | :----------------------- |
 | Gemini 330   | 1.2.20                   | gemini_330_series.launch |
 | Gemini 330L  | 1.2.20                   | gemini_330_series.launch |

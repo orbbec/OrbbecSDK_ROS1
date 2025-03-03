@@ -493,15 +493,13 @@ void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
     uint8_t index = 0;
     uint8_t count = static_cast<uint8_t>(paths.size());
     char(*filePaths)[OB_PATH_MAX] = new char[count][OB_PATH_MAX];
-    ROS_INFO_STREAM( "paths.cout : " << (uint32_t)count);
+    ROS_INFO_STREAM("paths.cout : " << (uint32_t)count);
     for (const auto &p : paths) {
       strcpy(filePaths[index], p.c_str());
-      ROS_INFO_STREAM(
-                         "path: " << (uint32_t)index << ":" << filePaths[index]);
+      ROS_INFO_STREAM("path: " << (uint32_t)index << ":" << filePaths[index]);
       index++;
     }
-    ROS_INFO_STREAM(
-                       "Start to update optional depth preset, please wait a moment...");
+    ROS_INFO_STREAM("Start to update optional depth preset, please wait a moment...");
     try {
       device_->updateOptionalDepthPresets(
           filePaths, count,
@@ -515,28 +513,27 @@ void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
       delete[] filePaths;
       filePaths = nullptr;
       if (updateState == STAT_DONE || updateState == STAT_DONE_WITH_DUPLICATES) {
-        ROS_INFO_STREAM( "After updating the preset: ");
+        ROS_INFO_STREAM("After updating the preset: ");
         auto presetList = device_->getAvailablePresetList();
-        ROS_INFO_STREAM( "Preset count: " << presetList->getCount());
+        ROS_INFO_STREAM("Preset count: " << presetList->getCount());
         for (uint32_t i = 0; i < presetList->getCount(); ++i) {
-          ROS_INFO_STREAM( "  - " << presetList->getName(i));
+          ROS_INFO_STREAM("  - " << presetList->getName(i));
         }
-        ROS_INFO_STREAM(
-                           "Current preset: " << device_->getCurrentPresetName());
+        ROS_INFO_STREAM("Current preset: " << device_->getCurrentPresetName());
         std::string key = "PresetVer";
         if (device_->isExtensionInfoExist(key)) {
           std::string value = device_->getExtensionInfo(key);
-          ROS_INFO_STREAM( "Preset version: " << value);
+          ROS_INFO_STREAM("Preset version: " << value);
         } else {
-          ROS_INFO_STREAM( "PresetVer: ");
+          ROS_INFO_STREAM("PresetVer: ");
         }
       }
     } catch (ob::Error &e) {
-      ROS_ERROR_STREAM( "Failed to update Preset Firmware " << e.getMessage());
+      ROS_ERROR_STREAM("Failed to update Preset Firmware " << e.getMessage());
     } catch (std::exception &e) {
-      ROS_ERROR_STREAM( "Failed to update Preset Firmware " << e.what());
+      ROS_ERROR_STREAM("Failed to update Preset Firmware " << e.what());
     } catch (...) {
-      ROS_ERROR_STREAM( "Failed to update Preset Firmware");
+      ROS_ERROR_STREAM("Failed to update Preset Firmware");
     }
   }
 }
