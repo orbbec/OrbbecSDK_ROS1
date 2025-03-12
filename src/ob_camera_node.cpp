@@ -1127,7 +1127,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   }
   ROS_INFO_STREAM_ONCE("Received first frame set");
   try {
-    std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
+    // std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     auto depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
     auto color_frame = frame_set->getFrame(OB_FRAME_COLOR);
     if (depth_frame) {
