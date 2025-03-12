@@ -47,7 +47,8 @@ void OBCameraNode::init() {
   setupConfig();
   getParameters();
   setupDevices();
-  setupRecommendedPostFilters();
+  setupDepthPostProcessFilter();
+  setupColorPostProcessFilter();
   selectBaseStream();
   setupProfiles();
   setupCameraInfo();
@@ -160,9 +161,32 @@ void OBCameraNode::getParameters() {
   depth_work_mode_ = nh_private_.param<std::string>("depth_work_mode", "");
   enable_soft_filter_ = nh_private_.param<bool>("enable_soft_filter", true);
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
+  enable_color_auto_exposure_priority_ =
+      nh_private_.param<bool>("enable_color_auto_exposure_priority", false);
+  enable_color_auto_white_balance_ =
+      nh_private_.param<bool>("enable_color_auto_white_balance", true);
+  enable_color_backlight_compenstation_ =
+      nh_private_.param<bool>("enable_color_backlight_compenstation", false);
+  enable_color_decimation_filter_ =
+      nh_private_.param<bool>("enable_color_decimation_filter", false);
   color_exposure_ = nh_private_.param<int>("color_exposure_", -1);
+  color_gain_ = nh_private_.param<int>("color_gain", -1);
+  color_brightness_ = nh_private_.param<int>("color_brightness", -1);
+  color_sharpness_ = nh_private_.param<int>("color_sharpness", -1);
+  color_gamma_ = nh_private_.param<int>("color_gamma", -1);
+  color_white_balance_ = nh_private_.param<int>("color_white_balance", -1);
+  color_saturation_ = nh_private_.param<int>("color_saturation", -1);
+  color_constrast_ = nh_private_.param<int>("color_constrast", -1);
+  color_hue_ = nh_private_.param<int>("color_hue", -1);
+  color_ae_max_exposure_ = nh_private_.param<int>("color_ae_max_exposure", -1);
+  color_decimation_filter_scale_ = nh_private_.param<int>("color_decimation_filter_scale", -1);
+  enable_depth_auto_exposure_priority_ =
+      nh_private_.param<bool>("enable_depth_auto_exposure_priority", false);
+  depth_brightness_ = nh_private_.param<int>("depth_brightness", -1);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
   ir_exposure_ = nh_private_.param<int>("ir_exposure_", -1);
+  ir_brightness_ = nh_private_.param<int>("ir_brightness", -1);
+  ir_ae_max_exposure_ = nh_private_.param<int>("ir_ae_max_exposure", -1);
   enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);
   sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "standalone");
   depth_delay_us_ = nh_private_.param<int>("depth_delay_us", 0);
@@ -210,7 +234,8 @@ void OBCameraNode::getParameters() {
   enable_hdr_merge_ = nh_private_.param<bool>("enable_hdr_merge", false);
   enable_sequenced_filter_ = nh_private_.param<bool>("enable_sequenced_filter", false);
   enable_threshold_filter_ = nh_private_.param<bool>("enable_threshold_filter", false);
-  enable_hardware_noise_removal_filter_ = nh_private_.param<bool>("enable_hardware_noise_removal_filter", true);
+  enable_hardware_noise_removal_filter_ =
+      nh_private_.param<bool>("enable_hardware_noise_removal_filter", true);
   enable_noise_removal_filter_ = nh_private_.param<bool>("enable_noise_removal_filter", true);
   enable_spatial_filter_ = nh_private_.param<bool>("enable_spatial_filter", false);
   enable_temporal_filter_ = nh_private_.param<bool>("enable_temporal_filter", false);
@@ -1037,14 +1062,31 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(
 
   return nullptr;
 }
-
+std::shared_ptr<ob::Frame> OBCameraNode::processColorFrameFilter(
+    std::shared_ptr<ob::Frame>& frame) {
+  if (frame == nullptr || frame->getType() != OB_FRAME_COLOR) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < color_filter_list_.size(); i++) {
+    auto filter = color_filter_list_[i];
+    CHECK_NOTNULL(filter.get());
+    if (filter->isEnabled() && frame != nullptr) {
+      frame = filter->process(frame);
+      if (frame == nullptr) {
+        ROS_ERROR_STREAM("Depth filter process failed");
+        break;
+      }
+    }
+  }
+  return frame;
+}
 std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
     std::shared_ptr<ob::Frame>& frame) {
   if (frame == nullptr || frame->type() != OB_FRAME_DEPTH) {
     return nullptr;
   }
-  for (size_t i = 0; i < filter_list_.size(); i++) {
-    auto filter = filter_list_[i];
+  for (size_t i = 0; i < depth_filter_list_.size(); i++) {
+    auto filter = depth_filter_list_[i];
     CHECK_NOTNULL(filter.get());
     if (filter->isEnabled() && frame != nullptr) {
       frame = filter->process(frame);

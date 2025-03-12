@@ -97,7 +97,9 @@ class OBCameraNode {
 
   void selectBaseStream();
 
-  void setupRecommendedPostFilters();
+  void setupDepthPostProcessFilter();
+
+  void setupColorPostProcessFilter();
 
   void setupFrameCallback();
 
@@ -127,6 +129,8 @@ class OBCameraNode {
   void onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set);
 
   std::shared_ptr<ob::Frame> processDepthFrameFilter(std::shared_ptr<ob::Frame> &frame);
+
+  std::shared_ptr<ob::Frame> processColorFrameFilter(std::shared_ptr<ob::Frame> &frame);
 
   uint64_t getFrameTimestampUs(const std::shared_ptr<ob::Frame> &frame);
 
@@ -399,7 +403,8 @@ class OBCameraNode {
   std::recursive_mutex device_lock_;
   std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_manager_ = nullptr;
   std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_manager_ = nullptr;
-  std::vector<std::shared_ptr<ob::Filter>> filter_list_;
+  std::vector<std::shared_ptr<ob::Filter>> depth_filter_list_;
+  std::vector<std::shared_ptr<ob::Filter>> color_filter_list_;
   std::string ir_info_uri_;
   std::string color_info_uri_;
   bool enable_d2c_viewer_ = false;
@@ -420,10 +425,28 @@ class OBCameraNode {
   bool is_initialized_ = false;
   bool enable_soft_filter_ = true;
   bool enable_color_auto_exposure_ = true;
+  bool enable_color_auto_exposure_priority_ = false;
+  bool enable_color_auto_white_balance_ = true;
+  bool enable_color_backlight_compenstation_ = false;
+  bool enable_color_decimation_filter_ = false;
   int color_exposure_ = -1;
+  int color_gain_ = -1;
+  int color_brightness_ = -1;
+  int color_sharpness_ = -1;
+  int color_gamma_ = -1;
+  int color_white_balance_ = -1;
+  int color_saturation_ = -1;
+  int color_constrast_ = -1;
+  int color_hue_ = -1;
+  int color_ae_max_exposure_ = -1;
+  int color_decimation_filter_scale_ = -1;
   bool enable_ir_auto_exposure_ = true;
   bool enable_depth_scale_ = true;
+  bool enable_depth_auto_exposure_priority_ = false;
+  int depth_brightness_ = -1;
   int ir_exposure_ = -1;
+  int ir_brightness_ = -1;
+  int ir_ae_max_exposure_ = -1;
   bool enable_ir_long_exposure_ = false;
   std::string depth_filter_config_;
   bool enable_depth_filter_ = false;

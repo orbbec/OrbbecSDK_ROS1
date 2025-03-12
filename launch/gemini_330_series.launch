@@ -29,9 +29,23 @@
     <arg name="color_format" default="ANY"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="0"/>
+    <arg name="enable_color_auto_exposure_priority" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
+    <arg name="color_gain" default="-1"/>
+    <arg name="enable_color_auto_white_balance" default="true"/>
+    <arg name="color_white_balance" default="-1"/>
+    <arg name="color_ae_max_exposure" default="-1"/>
+    <arg name="color_brightness" default="-1"/>
+    <arg name="color_sharpness" default="-1"/>
+    <arg name="color_gamma" default="-1"/>
+    <arg name="color_saturation" default="-1"/>
+    <arg name="color_constrast" default="-1"/>
+    <arg name="color_hue" default="-1"/>
+    <arg name="enable_color_backlight_compenstation" default="false"/>
+    <arg name="enable_color_decimation_filter" default="false"/>
+    <arg name="color_decimation_filter_scale" default="-1"/>
 
     <!-- Depth camera parameters -->
     <arg name="depth_width" default="0"/>
@@ -42,6 +56,8 @@
     <arg name="depth_registration" default="true"/>
     <!-- depth rotation degree : 0, 90, 180, 270 -->
     <arg name="depth_rotation" default="0"/>
+    <arg name="enable_depth_auto_exposure_priority" default="false"/>
+    <arg name="depth_brightness" default="-1"/>
 
     <!-- Left IR camera parameters -->
     <arg name="left_ir_width" default="0"/>
@@ -62,9 +78,11 @@
 
     <!-- Common IR camera parameters -->
     <arg name="enable_ir_auto_exposure" default="true"/>
+    <arg name="ir_ae_max_exposure" default="-1"/>
     <!-- Depth/IR/Left IR/Right IR exposure is same -->
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in us-->
     <arg name="ir_exposure" default="-1"/>
+    <arg name="ir_brightness" default="-1"/>
     <arg name="enable_ir_long_exposure" default="false"/>
 
     <!-- Point cloud parameters -->
@@ -80,7 +98,7 @@
     <arg name="enable_sequenced_filter" default="false"/>
     <arg name="enable_threshold_filter" default="false"/>
     <arg name="enable_hardware_noise_removal_filter" default="true"/>
-    <arg name="enable_noise_removal_filter" default="true"/>
+    <arg name="enable_noise_removal_filter" default="false"/>
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_hole_filling_filter" default="false"/>
@@ -150,6 +168,7 @@
             <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
             <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
+            <param name="ir_brightness" value="$(arg ir_brightness)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
 
             <param name="color_width" value="$(arg color_width)"/>
@@ -159,7 +178,21 @@
             <param name="color_format" value="$(arg color_format)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
+            <param name="color_gain" value="$(arg color_gain)"/>
+            <param name="enable_color_auto_white_balance" value="$(arg enable_color_auto_white_balance)"/>
+            <param name="color_white_balance" value="$(arg color_white_balance)"/>
+            <param name="color_ae_max_exposure" value="$(arg color_ae_max_exposure)"/>
+            <param name="color_brightness" value="$(arg color_brightness)"/>
+            <param name="color_sharpness" value="$(arg color_sharpness)"/>
+            <param name="color_gamma" value="$(arg color_gamma)"/>
+            <param name="color_saturation" value="$(arg color_saturation)"/>
+            <param name="color_constrast" value="$(arg color_constrast)"/>
+            <param name="color_hue" value="$(arg color_hue)"/>
+            <param name="enable_color_backlight_compenstation" value="$(arg enable_color_backlight_compenstation)"/>
+            <param name="enable_color_decimation_filter" value="$(arg enable_color_decimation_filter)"/>
+            <param name="color_decimation_filter_scale" value="$(arg color_decimation_filter_scale)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
+            <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
@@ -168,6 +201,8 @@
             <param name="depth_format" value="$(arg depth_format)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="depth_rotation" value="$(arg depth_rotation)"/>
+            <param name="enable_depth_auto_exposure_priority" value="$(arg enable_depth_auto_exposure_priority)"/>
+            <param name="depth_brightness" value="$(arg depth_brightness)"/>
 
             <param name="left_ir_width" value="$(arg left_ir_width)"/>
             <param name="left_ir_height" value="$(arg left_ir_height)"/>
@@ -185,6 +220,7 @@
 
 
             <param name="enable_ir_auto_exposure" value="$(arg enable_ir_auto_exposure)"/>
+            <param name="ir_ae_max_exposure" value="$(arg ir_ae_max_exposure)"/>
 
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
             <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
