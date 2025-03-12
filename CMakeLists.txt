@@ -78,6 +78,7 @@ set(SERVICE_FILES
   GetCameraParams.srv
   GetDeviceInfo.srv
   GetInt32.srv
+  SetFilter.srv
   GetString.srv
   SetInt32.srv
   SetString.srv
