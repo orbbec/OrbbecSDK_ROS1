@@ -148,6 +148,33 @@
     <arg name="offset_index0" default="-1"/>
     <arg name="offset_index1" default="-1"/>
 
+    <arg name="interleave_ae_mode" default="laser"/><!-- hdr or laser -->
+    <arg name="interleave_frame_enable" default="false"/>
+    <arg name="interleave_skip_enable" default="false"/>
+    <arg name="interleave_skip_index" default="1"/><!-- 0:skip pattern ir  1: skip flood ir -->
+
+    <arg name="hdr_index1_laser_control" default="1"/><!-- interleave_hdr_param -->
+    <arg name="hdr_index1_depth_exposure" default="7500"/>
+    <arg name="hdr_index1_depth_gain" default="16"/>
+    <arg name="hdr_index1_ir_brightness" default="20"/>
+    <arg name="hdr_index1_ir_ae_max_exposure" default="2000"/>
+    <arg name="hdr_index0_laser_control" default="1"/>
+    <arg name="hdr_index0_depth_exposure" default="7500"/>
+    <arg name="hdr_index0_depth_gain" default="16"/>
+    <arg name="hdr_index0_ir_brightness" default="60"/>
+    <arg name="hdr_index0_ir_ae_max_exposure" default="10000"/>
+
+    <arg name="laser_index1_laser_control" default="0"/><!-- interleave_hdr_param -->
+    <arg name="laser_index1_depth_exposure" default="3000"/>
+    <arg name="laser_index1_depth_gain" default="16"/>
+    <arg name="laser_index1_ir_brightness" default="60"/>
+    <arg name="laser_index1_ir_ae_max_exposure" default="17000"/>
+    <arg name="laser_index0_laser_control" default="1"/>
+    <arg name="laser_index0_depth_exposure" default="3000"/>
+    <arg name="laser_index0_depth_gain" default="16"/>
+    <arg name="laser_index0_ir_brightness" default="60"/>
+    <arg name="laser_index0_ir_ae_max_exposure" default="30000"/>
+
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <!-- Use the parameters defined above -->
@@ -276,6 +303,33 @@
             <param name="disparity_offset_config" value="$(arg disparity_offset_config)"/>
             <param name="offset_index0" value="$(arg offset_index0)"/>
             <param name="offset_index1" value="$(arg offset_index1)"/>
+
+            <param name="interleave_ae_mode" value="$(arg interleave_ae_mode)"/>
+            <param name="interleave_frame_enable" value="$(arg interleave_frame_enable)"/>
+            <param name="interleave_skip_enable" value="$(arg interleave_skip_enable)"/>
+            <param name="interleave_skip_index" value="$(arg interleave_skip_index)"/>
+
+            <param name="hdr_index1_laser_control" value="$(arg hdr_index1_laser_control)"/>
+            <param name="hdr_index1_depth_exposure" value="$(arg hdr_index1_depth_exposure)"/>
+            <param name="hdr_index1_depth_gain" value="$(arg hdr_index1_depth_gain)"/>
+            <param name="hdr_index1_ir_brightness" value="$(arg hdr_index1_ir_brightness)"/>
+            <param name="hdr_index1_ir_ae_max_exposure" value="$(arg hdr_index1_ir_ae_max_exposure)"/>
+            <param name="hdr_index0_laser_control" value="$(arg hdr_index0_laser_control)"/>
+            <param name="hdr_index0_depth_exposure" value="$(arg hdr_index0_depth_exposure)"/>
+            <param name="hdr_index0_depth_gain" value="$(arg hdr_index0_depth_gain)"/>
+            <param name="hdr_index0_ir_brightness" value="$(arg hdr_index0_ir_brightness)"/>
+            <param name="hdr_index0_ir_ae_max_exposure" value="$(arg hdr_index0_ir_ae_max_exposure)"/>
+
+            <param name="laser_index1_laser_control" value="$(arg laser_index1_laser_control)"/>
+            <param name="laser_index1_depth_exposure" value="$(arg laser_index1_depth_exposure)"/>
+            <param name="laser_index1_depth_gain" value="$(arg laser_index1_depth_gain)"/>
+            <param name="laser_index1_ir_brightness" value="$(arg laser_index1_ir_brightness)"/>
+            <param name="laser_index1_ir_ae_max_exposure" value="$(arg laser_index1_ir_ae_max_exposure)"/>
+            <param name="laser_index0_laser_control" value="$(arg laser_index0_laser_control)"/>
+            <param name="laser_index0_depth_exposure" value="$(arg laser_index0_depth_exposure)"/>
+            <param name="laser_index0_depth_gain" value="$(arg laser_index0_depth_gain)"/>
+            <param name="laser_index0_ir_brightness" value="$(arg laser_index0_ir_brightness)"/>
+            <param name="laser_index0_ir_ae_max_exposure" value="$(arg laser_index0_ir_ae_max_exposure)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
