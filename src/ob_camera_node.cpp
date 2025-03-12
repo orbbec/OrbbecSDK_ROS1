@@ -1129,10 +1129,15 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   try {
     std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     auto depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+    auto color_frame = frame_set->getFrame(OB_FRAME_COLOR);
     if (depth_frame) {
       setDisparitySearchOffset();
       depth_frame = processDepthFrameFilter(depth_frame);
       frame_set->pushFrame(depth_frame);
+    }
+    if (color_frame) {
+      color_frame = processColorFrameFilter(color_frame);
+      frame_set->pushFrame(color_frame);
     }
     if (depth_registration_ && align_filter_ && depth_frame) {
       if (auto new_frame = align_filter_->process(frame_set)) {
