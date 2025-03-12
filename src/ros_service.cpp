@@ -215,10 +215,10 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->switchIRDataSourceChannelCallback(request, response);
         return response.success;
       });
-  get_ldp_measure_distance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
-      "/" + camera_name_ + "/" + "get_ldp_measure_distance",
+  get_lrm_measure_distance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+      "/" + camera_name_ + "/" + "get_lrm_measure_distance",
       [this](GetInt32Request& request, GetInt32Response& response) {
-        response.success = this->getLdpMeasureDistanceCallback(request, response);
+        response.success = this->getLrmMeasureDistanceCallback(request, response);
         return response.success;
       });
 }
@@ -683,7 +683,7 @@ bool OBCameraNode::getDeviceTypeCallback(GetStringRequest& request, GetStringRes
   return true;
 }
 
-bool OBCameraNode::getLdpMeasureDistanceCallback(GetInt32Request& request,
+bool OBCameraNode::getLrmMeasureDistanceCallback(GetInt32Request& request,
                                                  GetInt32Response& response) {
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
