@@ -82,6 +82,7 @@ set(SERVICE_FILES
   GetString.srv
   SetInt32.srv
   SetString.srv
+  SetArrays.srv
 )
 
 find_package(OpenCV REQUIRED)

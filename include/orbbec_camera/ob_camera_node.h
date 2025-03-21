@@ -236,6 +236,9 @@ class OBCameraNode {
   bool getGainCallback(GetInt32Request &request, GetInt32Response &response,
                        const stream_index_pair &stream_index);
 
+      bool setAeRoiCallback(SetArraysRequest &request, SetArraysResponse &response,
+                                       const stream_index_pair &stream_index);
+
   bool setGainCallback(SetInt32Request &request, SetInt32Response &response,
                        const stream_index_pair &stream_index);
 
@@ -368,6 +371,7 @@ class OBCameraNode {
   const std::string imu_frame_id_ = "camera_gyro_frame";
   std::map<stream_index_pair, ros::ServiceServer> get_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_exposure_srv_;
+  std::map<stream_index_pair, ros::ServiceServer> set_ae_roi_srv_;
   std::map<stream_index_pair, ros::ServiceServer> reset_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> get_gain_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_gain_srv_;

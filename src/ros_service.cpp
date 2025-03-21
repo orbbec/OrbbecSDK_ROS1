@@ -37,6 +37,12 @@ void OBCameraNode::setupCameraCtrlServices() {
           response.success = this->setExposureCallback(request, response, stream_index);
           return response.success;
         });
+service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_ae_roi";
+    set_ae_roi_srv_[stream_index] = nh_.advertiseService<SetArraysRequest, SetArraysResponse>(
+        service_name, [this, stream_index](SetArraysRequest& request, SetArraysResponse& response) {
+          response.success = this->setAeRoiCallback(request, response, stream_index);
+          return response.success;
+        });
     service_name = "/" + camera_name_ + "/" + "reset_" + stream_name + "_exposure";
     reset_exposure_srv_[stream_index] =
         nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
@@ -284,6 +290,59 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
     return false;
   }
   return true;
+}
+
+
+bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse& response,
+                                       const stream_index_pair& stream_index) {
+  auto stream = stream_index.first;
+  auto config = OBRegionOfInterest();
+  try {
+    switch (stream) {
+      case OB_STREAM_IR_LEFT:
+      case OB_STREAM_IR_RIGHT:
+      case OB_STREAM_IR:
+      case OB_STREAM_DEPTH:
+        config.x0_left = static_cast<short int>(request.data_param[0]);
+        config.x1_right = static_cast<short int>(request.data_param[1]);
+        config.y0_top = static_cast<short int>(request.data_param[2]);
+        config.y1_bottom = static_cast<short int>(request.data_param[3]);
+        device_->setStructuredData(OB_STRUCT_DEPTH_AE_ROI,
+                                   reinterpret_cast<const uint8_t*>(&config), sizeof(config));
+        ROS_INFO_STREAM(
+                           "set depth AE ROI : " << "[Left: " << config.x0_left << ", Right: "
+                                                 << config.x1_right << ", Top: " << config.y0_top
+                                                 << ", Bottom: " << config.y1_bottom << " ]");
+        break;
+      case OB_STREAM_COLOR:
+        config.x0_left = static_cast<short int>(request.data_param[0]);
+        config.x1_right = static_cast<short int>(request.data_param[1]);
+        config.y0_top = static_cast<short int>(request.data_param[2]);
+        config.y1_bottom = static_cast<short int>(request.data_param[3]);
+        device_->setStructuredData(OB_STRUCT_COLOR_AE_ROI,
+                                   reinterpret_cast<const uint8_t*>(&config), sizeof(config));
+        ROS_INFO_STREAM(
+                           "set color AE ROI : " << "[Left: " << config.x0_left << ", Right: "
+                                                 << config.x1_right << ", Top: " << config.y0_top
+                                                 << ", Bottom: " << config.y1_bottom << " ]");
+        break;
+      default:
+        ROS_ERROR_STREAM( " NOT a video stream"<<__FUNCTION__);
+        response.success = false;
+        response.message = "NOT a video stream";
+        return response.success = false;
+    }
+    return response.success = true;
+  } catch (const ob::Error& e) {
+    return response.success = false;
+    response.message = e.getMessage();
+  } catch (const std::exception& e) {
+    return response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    return response.success = false;
+    response.message = "unknown error";
+  }
 }
 
 bool OBCameraNode::getGainCallback(GetInt32Request& request, GetInt32Response& response,

@@ -35,6 +35,7 @@
 #include "orbbec_camera/SetString.h"
 #include "orbbec_camera/GetCameraParams.h"
 #include "orbbec_camera/SetFilter.h"
+#include "orbbec_camera/SetArrays.h"
 #include "std_srvs/SetBool.h"
 #include "std_srvs/Empty.h"
 #include <boost/filesystem.hpp>
