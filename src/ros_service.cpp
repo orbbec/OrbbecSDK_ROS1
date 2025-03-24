@@ -484,8 +484,22 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response) {
   (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  bool ldp_enable = request.data;
   try {
-    device_->setBoolProperty(OB_PROP_LDP_BOOL, request.data);
+    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+      auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
+      device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
+      device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, laser_enable);
+    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      if (!ldp_enable) {
+        auto laser_enable = device_->getIntProperty(OB_PROP_LASER_BOOL);
+        device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        device_->setIntProperty(OB_PROP_LASER_BOOL, laser_enable);
+      } else {
+        device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
+      }
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set LDP: " << e.getMessage());
     response.message = e.getMessage();
