@@ -304,7 +304,20 @@ void OBCameraNode::setupDevices() {
     }
     if (device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ_WRITE)) {
       ROS_INFO_STREAM("Setting LDP to " << (enable_ldp_ ? "true" : "false"));
-      device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
+      if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+        auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
+        device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
+        device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, laser_enable);
+      } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+        if (!enable_ldp_) {
+          auto laser_enable = device_->getIntProperty(OB_PROP_LASER_BOOL);
+          device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
+          std::this_thread::sleep_for(std::chrono::milliseconds(3));
+          device_->setIntProperty(OB_PROP_LASER_BOOL, laser_enable);
+        } else {
+          device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
+        }
+      }
     }
     if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
       ROS_INFO_STREAM("Setting heartbeat to " << (enable_heartbeat_ ? "true" : "false"));

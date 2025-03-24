@@ -37,7 +37,7 @@ void OBCameraNode::setupCameraCtrlServices() {
           response.success = this->setExposureCallback(request, response, stream_index);
           return response.success;
         });
-service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_ae_roi";
+    service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_ae_roi";
     set_ae_roi_srv_[stream_index] = nh_.advertiseService<SetArraysRequest, SetArraysResponse>(
         service_name, [this, stream_index](SetArraysRequest& request, SetArraysResponse& response) {
           response.success = this->setAeRoiCallback(request, response, stream_index);
@@ -292,9 +292,8 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
   return true;
 }
 
-
 bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse& response,
-                                       const stream_index_pair& stream_index) {
+                                    const stream_index_pair& stream_index) {
   auto stream = stream_index.first;
   auto config = OBRegionOfInterest();
   try {
@@ -309,10 +308,9 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         config.y1_bottom = static_cast<short int>(request.data_param[3]);
         device_->setStructuredData(OB_STRUCT_DEPTH_AE_ROI,
                                    reinterpret_cast<const uint8_t*>(&config), sizeof(config));
-        ROS_INFO_STREAM(
-                           "set depth AE ROI : " << "[Left: " << config.x0_left << ", Right: "
-                                                 << config.x1_right << ", Top: " << config.y0_top
-                                                 << ", Bottom: " << config.y1_bottom << " ]");
+        ROS_INFO_STREAM("set depth AE ROI : " << "[Left: " << config.x0_left << ", Right: "
+                                              << config.x1_right << ", Top: " << config.y0_top
+                                              << ", Bottom: " << config.y1_bottom << " ]");
         break;
       case OB_STREAM_COLOR:
         config.x0_left = static_cast<short int>(request.data_param[0]);
@@ -321,13 +319,12 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         config.y1_bottom = static_cast<short int>(request.data_param[3]);
         device_->setStructuredData(OB_STRUCT_COLOR_AE_ROI,
                                    reinterpret_cast<const uint8_t*>(&config), sizeof(config));
-        ROS_INFO_STREAM(
-                           "set color AE ROI : " << "[Left: " << config.x0_left << ", Right: "
-                                                 << config.x1_right << ", Top: " << config.y0_top
-                                                 << ", Bottom: " << config.y1_bottom << " ]");
+        ROS_INFO_STREAM("set color AE ROI : " << "[Left: " << config.x0_left << ", Right: "
+                                              << config.x1_right << ", Top: " << config.y0_top
+                                              << ", Bottom: " << config.y1_bottom << " ]");
         break;
       default:
-        ROS_ERROR_STREAM( " NOT a video stream"<<__FUNCTION__);
+        ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
         response.success = false;
         response.message = "NOT a video stream";
         return response.success = false;
@@ -543,8 +540,22 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response) {
   (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  bool ldp_enable = request.data;
   try {
-    device_->setBoolProperty(OB_PROP_LDP_BOOL, request.data);
+    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+      auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
+      device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
+      device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, laser_enable);
+    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      if (!ldp_enable) {
+        auto laser_enable = device_->getIntProperty(OB_PROP_LASER_BOOL);
+        device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        device_->setIntProperty(OB_PROP_LASER_BOOL, laser_enable);
+      } else {
+        device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
+      }
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set LDP: " << e.getMessage());
     response.message = e.getMessage();
