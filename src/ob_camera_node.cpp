@@ -169,6 +169,10 @@ void OBCameraNode::getParameters() {
       nh_private_.param<bool>("enable_color_backlight_compenstation", false);
   enable_color_decimation_filter_ =
       nh_private_.param<bool>("enable_color_decimation_filter", false);
+  color_ae_roi_left_ = nh_private_.param<int>("color_ae_roi_left", -1);
+  color_ae_roi_top_ = nh_private_.param<int>("color_ae_roi_top", -1);
+  color_ae_roi_right_ = nh_private_.param<int>("color_ae_roi_right", -1);
+  color_ae_roi_bottom_ = nh_private_.param<int>("color_ae_roi_bottom", -1);
   color_exposure_ = nh_private_.param<int>("color_exposure_", -1);
   color_gain_ = nh_private_.param<int>("color_gain", -1);
   color_brightness_ = nh_private_.param<int>("color_brightness", -1);
@@ -182,6 +186,10 @@ void OBCameraNode::getParameters() {
   color_decimation_filter_scale_ = nh_private_.param<int>("color_decimation_filter_scale", -1);
   enable_depth_auto_exposure_priority_ =
       nh_private_.param<bool>("enable_depth_auto_exposure_priority", false);
+  depth_ae_roi_left_ = nh_private_.param<int>("depth_ae_roi_left", -1);
+  depth_ae_roi_top_ = nh_private_.param<int>("depth_ae_roi_top", -1);
+  depth_ae_roi_right_ = nh_private_.param<int>("depth_ae_roi_right", -1);
+  depth_ae_roi_bottom_ = nh_private_.param<int>("depth_ae_roi_bottom", -1);
   depth_brightness_ = nh_private_.param<int>("depth_brightness", -1);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
   ir_exposure_ = nh_private_.param<int>("ir_exposure_", -1);
@@ -1273,10 +1281,12 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     auto color_frame = frame_set->getFrame(OB_FRAME_COLOR);
     if (depth_frame) {
       setDisparitySearchOffset();
+      setDepthAutoExposureROI();
       depth_frame = processDepthFrameFilter(depth_frame);
       frame_set->pushFrame(depth_frame);
     }
     if (color_frame) {
+      setColorAutoExposureROI();
       color_frame = processColorFrameFilter(color_frame);
       frame_set->pushFrame(color_frame);
     }

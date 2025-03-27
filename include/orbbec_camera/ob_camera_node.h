@@ -236,8 +236,8 @@ class OBCameraNode {
   bool getGainCallback(GetInt32Request &request, GetInt32Response &response,
                        const stream_index_pair &stream_index);
 
-      bool setAeRoiCallback(SetArraysRequest &request, SetArraysResponse &response,
-                                       const stream_index_pair &stream_index);
+  bool setAeRoiCallback(SetArraysRequest &request, SetArraysResponse &response,
+                        const stream_index_pair &stream_index);
 
   bool setGainCallback(SetInt32Request &request, SetInt32Response &response,
                        const stream_index_pair &stream_index);
@@ -311,6 +311,10 @@ class OBCameraNode {
   bool switchIRDataSourceChannelCallback(SetStringRequest &request, SetStringResponse &response);
 
   bool setFilterCallback(SetFilterRequest &request, SetFilterResponse &response);
+
+  // Set ROI
+  void setColorAutoExposureROI();
+  void setDepthAutoExposureROI();
 
   void setDisparitySearchOffset();
 
@@ -441,6 +445,11 @@ class OBCameraNode {
   bool enable_color_auto_white_balance_ = true;
   bool enable_color_backlight_compenstation_ = false;
   bool enable_color_decimation_filter_ = false;
+  // color ae roi
+  int color_ae_roi_left_ = -1;
+  int color_ae_roi_top_ = -1;
+  int color_ae_roi_right_ = -1;
+  int color_ae_roi_bottom_ = -1;
   int color_exposure_ = -1;
   int color_gain_ = -1;
   int color_brightness_ = -1;
@@ -455,6 +464,11 @@ class OBCameraNode {
   bool enable_ir_auto_exposure_ = true;
   bool enable_depth_scale_ = true;
   bool enable_depth_auto_exposure_priority_ = false;
+  // depth ae roi
+  int depth_ae_roi_left_ = -1;
+  int depth_ae_roi_top_ = -1;
+  int depth_ae_roi_right_ = -1;
+  int depth_ae_roi_bottom_ = -1;
   int depth_brightness_ = -1;
   int ir_exposure_ = -1;
   int ir_brightness_ = -1;
