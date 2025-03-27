@@ -269,6 +269,18 @@ rosservice call /camera/get_left_ir_exposure "{}"
 rosservice call /camera/get_color_exposure "{}"
 ```
 
+Set auto exposure ROI:
+
+```bash
+#In data_param, the first value is the Left setting, the second value is the Right setting, the third value is the Top setting, and the fourth value is the Bottom setting.
+
+#Set color ROI
+rosservice call /camera/set_color_ae_roi '{data_param:[0,1279,0,719]}'
+
+#Set depth ROI
+rosservice call /camera/set_depth_ae_roi '{data_param:[0,847,0,479]}'
+```
+
 Set/get gain:
 
 ```bash
@@ -328,6 +340,7 @@ The following launch parameters are available:
 - `enable_right_ir`: Enables the right IR camera.
 - `depth_registration`: Enables hardware alignment of the depth frame to the color frame. This field is required
   when `enable_colored_point_cloud` is set to `true`.
+- `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
 - `log_level` for OrbbecSDK controls console log verbosity, with levels `none`, `info`, `debug`, `warn`, `fatal`. Logs
   save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
 - `ordered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
@@ -365,6 +378,12 @@ The following launch parameters are available:
 - `enable_hardware_reset`: This option enables the hardware reset function. By default, it is set to `false`.
   If set to `true`, the camera will reboot upon its first connection.
 - `preset_firmware_path`: Burn customized preset firmware by passing in the customized preset firmware path
+
+* `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
+
+* `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
+
+* `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
 
 **IMPORTANT**: *Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
 
@@ -510,7 +529,7 @@ For optimal performance, we strongly recommend updating to the latest firmware v
 
 The following devices are supported by the OrbbecSDK ROS2 Wrapper.
 
-| Product List | Minimal Firmware Version | **Launch File**    |
+| Product List | Minimal Firmware Version | **Launch File**          |
 | :----------- | :----------------------- | :----------------------- |
 | Gemini 330   | 1.2.20                   | gemini_330_series.launch |
 | Gemini 330L  | 1.2.20                   | gemini_330_series.launch |
