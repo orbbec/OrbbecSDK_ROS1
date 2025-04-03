@@ -350,6 +350,29 @@ void OBCameraNode::setupDevices() {
         }
       }
     }
+    if (device_->isPropertySupported(OB_PROP_DEPTH_INDUSTRY_MODE_INT, OB_PERMISSION_READ_WRITE)) {
+      if (industry_mode_ == "default") {
+        OBDepthIndustryMode mode = OB_INDUSTRY_DEFAULT;
+        device_->setIntProperty(OB_PROP_DEPTH_INDUSTRY_MODE_INT, (int32_t)mode);
+      } else if (industry_mode_ == "mode1") {
+        OBDepthIndustryMode mode = OB_INDUSTRY_MODE1;
+        device_->setIntProperty(OB_PROP_DEPTH_INDUSTRY_MODE_INT, (int32_t)mode);
+      } else if (industry_mode_ == "mode2") {
+        OBDepthIndustryMode mode = OB_INDUSTRY_MODE2;
+        device_->setIntProperty(OB_PROP_DEPTH_INDUSTRY_MODE_INT, (int32_t)mode);
+      } else if (industry_mode_ == "mode3") {
+        OBDepthIndustryMode mode = OB_INDUSTRY_MODE3;
+        device_->setIntProperty(OB_PROP_DEPTH_INDUSTRY_MODE_INT, (int32_t)mode);
+      } else if (industry_mode_ == "mode4") {
+        OBDepthIndustryMode mode = OB_INDUSTRY_MODE4;
+        device_->setIntProperty(OB_PROP_DEPTH_INDUSTRY_MODE_INT, (int32_t)mode);
+      } else if (industry_mode_ == "mode5") {
+        OBDepthIndustryMode mode = OB_INDUSTRY_MODE5;
+        device_->setIntProperty(OB_PROP_DEPTH_INDUSTRY_MODE_INT, (int32_t)mode);
+      }
+      ROS_INFO_STREAM("Setting industry mode to "
+                      << device_->getIntProperty(OB_PROP_DEPTH_INDUSTRY_MODE_INT));
+    }
     if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
       auto default_soft_filter_speckle_size =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
