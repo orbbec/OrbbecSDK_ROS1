@@ -6,10 +6,10 @@ This document outlines strategies for minimizing CPU usage in the **OrbbecSDK_RO
 
 To achieve the lowest possible CPU usage in OrbbecSDK_ROS1, it is recommended to configure the following parameters.
 
-|   Parameter    |            Recommendation            |                      Note                      |
-| :------------: | :----------------------------------: | :--------------------------------------------: |
-| `uvc_backend`  |                `v4l2`                |      Lower CPU usage compared to `libuvc`      |
-| `color_format` |                `RGB`                 |          Lower CPU usage than `MJPG`           |
+|    Parameter    |             Recommendation             |                      Note                      |
+| :--------------: | :------------------------------------: | :--------------------------------------------: |
+| `uvc_backend` |                `v4l2`                |     Lower CPU usage compared to `libuvc`     |
+| `color_format` |                `RGB`                |         Lower CPU usage than `MJPG`         |
 |    `filter`    | Only `hardware_noise_removal_filter` | Other filters significantly increase CPU usage |
 
 ### Launch Files Used for Testing
@@ -51,7 +51,7 @@ Note: The following CPU usage data focuses on `uvc_backend`, `color_format` and 
 
 | libuvc CPU Usage | v4l2 CPU Usage | Absolute Change |
 | :--------------: | :------------: | :-------------: |
-|      116.0%      |     45.7%      |     -70.3%      |
+|      116.0%      |     45.7%     |     -70.3%     |
 
 The CPU usage can be significantly reduced with v4l2 backend. In our implementation, v4l2 works without requiring any patches to the Linux kernel, allowing users to easily switch between v4l2 and libuvc and maintaining full compatibility with standard Linux distributions.
 
@@ -59,27 +59,27 @@ The CPU usage can be significantly reduced with v4l2 backend. In our implementat
 
 | Backend | MJPG CPU Usage | RGB CPU Usage | Absolute Change |
 | :-----: | :------------: | :-----------: | :-------------: |
-| libuvc  |     132.6%     |    116.0%     |     -16.6%      |
-|  v4l2   |     56.0%      |     45.7%     |     -10.3%      |
+| libuvc |     132.6%     |    116.0%    |     -16.6%     |
+|  v4l2  |     56.0%     |     45.7%     |     -10.3%     |
 
 The CPU usage can be reduced if the RGB format is selected instead of MJPG, since the decoding of MJPG image will consume the host CPU resource.
 
 ### 3. Filter Configuration Impact
 
-| Filters Applied                                   | libuvc CPU Usage | Change w.r.t benchmark | v4l2 CPU Usage | Change w.r.t benchmark |
-| ------------------------------------------------- | ---------------- | ---------------------- | -------------- | ---------------------- |
-| No Filter (benchmark)                             | 116.0%           | 0.0%(benchmark)        | 45.7%          | 0.0%(benchmark)        |
-| `(software)noise_removal_filter`                  | 148.2%           | +32.2%                 | 73.4%          | +27.7%                 |
-| `(software)noise_removal_filter + spatial_filter` | 169.3%           | +53.3%                 | 93.3%          | +47.6%                 |
-| `hardware_noise_removal_filter`                   | 115.7%           | -0.3%                  | 45.6%          | -0.1%                  |
-| `hardware_noise_removal_filter + spatial_filter`  | 124.5%           | +8.5%                  | 61.7%          | +16.0%                 |
+| Filters Applied                                       | libuvc CPU Usage | CPU Usage Increase | v4l2 CPU Usage | CPU Usage Increase |
+| ----------------------------------------------------- | ---------------- | ------------------ | -------------- | ------------------ |
+| No Filter (benchmark)                                 | 116.0%           | 0.0%(benchmark)    | 45.7%          | 0.0%(benchmark)    |
+| `(software)noise_removal_filter`                    | 148.2%           | +32.2%             | 73.4%          | +27.7%             |
+| `(software)noise_removal_filter + spatial_filter` | 169.3%           | +53.3%             | 93.3%          | +47.6%             |
+| `hardware_noise_removal_filter`                     | 115.7%           | -0.3%              | 45.6%          | -0.1%              |
+| `hardware_noise_removal_filter + spatial_filter`  | 124.5%           | +8.5%              | 61.7%          | +16.0%             |
 
 Based on the test results, using only the `hardware_noise_removal_filter` results in a negligible change in CPU usage for both `libuvc` (-0.3%) and `v4l2` (-0.1%) compared to the no-filter benchmark, as this filter runs internally on the camera hardware. In contrast, other filters execute on the host system. Adding the `spatial_filter` to the hardware filter leads to a moderate increase in CPU usage, while applying the software-based `noise_removal_filter` —either alone or combined with `spatial_filter` —significantly increases CPU load. To maintain low CPU usage, it is recommended to avoid software-based filters and rely solely on the `hardware_noise_removal_filter`.
 
 ## Further Optimization
 
-|          Parameter           |             Recommendation             |                      Note                       |
-| :--------------------------: | :------------------------------------: | :---------------------------------------------: |
-|     `depth_registration`     | `false` or `true` with `align_mode=HW` |      Software alignment consumes more CPU       |
-|     `enable_point_cloud`     |                `false`                 |     Disabling point cloud reduces CPU usage     |
-| `enable_colored_point_cloud` |                `false`                 | Disabling colored point cloud reduces CPU usage |
+|           Parameter           |                  Recommendation                  |                      Note                      |
+| :----------------------------: | :----------------------------------------------: | :---------------------------------------------: |
+|     `depth_registration`     | `false` or `true` with `align_mode=HW` |      Software alignment consumes more CPU      |
+|     `enable_point_cloud`     |                    `false`                    |     Disabling point cloud reduces CPU usage     |
+| `enable_colored_point_cloud` |                    `false`                    | Disabling colored point cloud reduces CPU usage |
