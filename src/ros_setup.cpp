@@ -108,12 +108,81 @@ void OBCameraNode::setupColorPostProcessFilter() {
     }
   }
 }
+void OBCameraNode::setupLeftIrPostProcessFilter() {
+  auto device_info = device_->getDeviceInfo();
+  CHECK_NOTNULL(device_info);
+  auto pid = device_info->getPid();
+  if (isGemini335PID(pid)) {
+    auto left_ir_sensor = device_->getSensor(OB_SENSOR_IR_LEFT);
+    left_ir_filter_list_ = left_ir_sensor->createRecommendedFilters();
+    if (left_ir_filter_list_.empty()) {
+      ROS_WARN_STREAM("Failed to get left ir sensor filter list");
+      return;
+    }
+    for (size_t i = 0; i < left_ir_filter_list_.size(); i++) {
+      auto filter = left_ir_filter_list_[i];
+      std::map<std::string, bool> filter_params = {
+          {"SequenceIdFilter", enable_left_ir_sequence_id_filter_},
+      };
+      std::string filter_name = filter->type();
+      ROS_INFO_STREAM("Setting " << filter_name << "......");
+      if (filter_params.find(filter_name) != filter_params.end()) {
+        std::string value = filter_params[filter_name] ? "true" : "false";
+        ROS_INFO_STREAM("set left ir " << filter_name << " to " << value);
+        filter->enable(filter_params[filter_name]);
+      }
+      if (filter_name == "SequenceIdFilter" && enable_left_ir_sequence_id_filter_) {
+        auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
+        if (left_ir_sequence_id_filter_id_ != -1) {
+          sequenced_filter->selectSequenceId(left_ir_sequence_id_filter_id_);
+          ROS_INFO_STREAM("Set left ir SequenceIdFilter ID to " << left_ir_sequence_id_filter_id_);
+        }
+      }
+    }
+  }
+}
+
+void OBCameraNode::setupRightIrPostProcessFilter() {
+  auto device_info = device_->getDeviceInfo();
+  CHECK_NOTNULL(device_info);
+  auto pid = device_info->getPid();
+  if (isGemini335PID(pid)) {
+    auto right_ir_sensor = device_->getSensor(OB_SENSOR_IR_RIGHT);
+    right_ir_filter_list_ = right_ir_sensor->createRecommendedFilters();
+    if (right_ir_filter_list_.empty()) {
+      ROS_WARN_STREAM("Failed to get right ir sensor filter list");
+      return;
+    }
+    for (size_t i = 0; i < right_ir_filter_list_.size(); i++) {
+      auto filter = right_ir_filter_list_[i];
+      std::map<std::string, bool> filter_params = {
+          {"SequenceIdFilter", enable_right_ir_sequence_id_filter_},
+      };
+      std::string filter_name = filter->type();
+      ROS_INFO_STREAM("Setting " << filter_name << "......");
+      if (filter_params.find(filter_name) != filter_params.end()) {
+        std::string value = filter_params[filter_name] ? "true" : "false";
+        ROS_INFO_STREAM("set right ir " << filter_name << " to " << value);
+        filter->enable(filter_params[filter_name]);
+      }
+      if (filter_name == "SequenceIdFilter" && enable_right_ir_sequence_id_filter_) {
+        auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
+        if (right_ir_sequence_id_filter_id_ != -1) {
+          sequenced_filter->selectSequenceId(right_ir_sequence_id_filter_id_);
+          ROS_INFO_STREAM("Set right ir SequenceIdFilter ID to "
+                          << right_ir_sequence_id_filter_id_);
+        }
+      }
+    }
+  }
+}
+
 void OBCameraNode::setupDepthPostProcessFilter() {
   // set depth sensor to filter
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
   depth_filter_list_ = depth_sensor->createRecommendedFilters();
   if (depth_filter_list_.empty()) {
-    ROS_ERROR_STREAM("Failed to get depth sensor filter list");
+    ROS_WARN_STREAM("Failed to get depth sensor filter list");
     return;
   }
   for (size_t i = 0; i < depth_filter_list_.size(); i++) {
@@ -579,7 +648,7 @@ void OBCameraNode::setupDevices() {
     }
     if (disparity_range_mode_ != -1 &&
         device_->isPropertySupported(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, OB_PERMISSION_WRITE)) {
-      ROS_INFO_STREAM("Setting disparity_range_mode: " << disparity_range_mode_);
+      ROS_INFO_STREAM("Setting disparity range mode: " << disparity_range_mode_);
       if (disparity_range_mode_ == 64) {
         device_->setIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, 0);
       } else if (disparity_range_mode_ == 128) {
@@ -587,7 +656,7 @@ void OBCameraNode::setupDevices() {
       } else if (disparity_range_mode_ == 256) {
         device_->setIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, 2);
       } else {
-        ROS_ERROR_STREAM("disparity_range_mode does not support this setting");
+        ROS_ERROR_STREAM("disparity range mode does not support this setting");
       }
     }
     if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
@@ -595,7 +664,28 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                enable_hardware_noise_removal_filter_);
       ROS_INFO_STREAM(
-          "Setting hardware_noise_removal_filter:" << enable_hardware_noise_removal_filter_);
+          "Setting hardware noise removal filter:" << enable_hardware_noise_removal_filter_);
+      if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                       OB_PERMISSION_READ_WRITE)) {
+        if (hardware_noise_removal_filter_threshold_ != -1.0 &&
+            enable_hardware_noise_removal_filter_) {
+          device_->setFloatProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                    hardware_noise_removal_filter_threshold_);
+          ROS_INFO_STREAM("Setting hardware noise removal filter threshold :"
+                          << hardware_noise_removal_filter_threshold_);
+        }
+      }
+    }
+    if (exposure_range_mode_ != "default" &&
+        device_->isPropertySupported(OB_PROP_DEVICE_PERFORMANCE_MODE_INT, OB_PERMISSION_WRITE)) {
+      ROS_INFO_STREAM("Setting exposure range mode : " << exposure_range_mode_);
+      if (exposure_range_mode_ == "ultimate") {
+        device_->setIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT, 1);
+      } else if (exposure_range_mode_ == "regular") {
+        device_->setIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT, 0);
+      } else {
+        ROS_ERROR_STREAM("exposure range mode does not support this setting");
+      }
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
@@ -1260,6 +1350,15 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                                        OB_PERMISSION_READ_WRITE)) {
         device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, request.filter_enable);
         ROS_INFO_STREAM("Setting hardware_noise_removal_filter:" << request.filter_enable);
+        if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                         OB_PERMISSION_READ_WRITE)) {
+          if (request.filter_enable) {
+            device_->setFloatProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                      request.filter_param[0]);
+            ROS_INFO_STREAM(
+                "Setting hardware_noise_removal_filter_threshold :" << request.filter_param[0]);
+          }
+        }
       }
     } else if (request.filter_name == "SpatialAdvancedFilter") {
       auto spatial_filter = std::make_shared<ob::SpatialAdvancedFilter>();

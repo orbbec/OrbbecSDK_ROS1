@@ -345,6 +345,7 @@ The following launch parameters are available:
   save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
 - `ordered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
+- `preset_firmware_path` : The input parameter is the perset firmware path. If multiple paths are input, each path needs to be separated by `,`and a maximum of 3 firmware paths can be input
 - `device_preset`: The default value is `Default`. Only the G330 series is supported. For more information, refer to
   the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/). Please refer to the table below to set
   the `device_preset` value based on your use case. The value should be one of the preset names
@@ -380,9 +381,7 @@ The following launch parameters are available:
 - `preset_firmware_path`: Burn customized preset firmware by passing in the customized preset firmware path
 
 * `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
-
 * `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
-
 * `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
 
 **IMPORTANT**: *Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
@@ -529,7 +528,7 @@ For optimal performance, we strongly recommend updating to the latest firmware v
 
 The following devices are supported by the OrbbecSDK ROS2 Wrapper.
 
-| Product List | Minimal Firmware Version | **Launch File**          |
+| Product List | Minimal Firmware Version | **Launch File**    |
 | :----------- | :----------------------- | :----------------------- |
 | Gemini 330   | 1.2.20                   | gemini_330_series.launch |
 | Gemini 330L  | 1.2.20                   | gemini_330_series.launch |

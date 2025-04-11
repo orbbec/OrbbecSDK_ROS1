@@ -24,6 +24,10 @@
     <arg name="color_fps" default="0"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="ANY"/>
+    <arg name="color_ae_roi_left" default="-1"/>
+    <arg name="color_ae_roi_right" default="-1"/>
+    <arg name="color_ae_roi_top" default="-1"/>
+    <arg name="color_ae_roi_bottom" default="-1"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="0"/>
     <arg name="enable_color_auto_exposure" default="true"/>
@@ -36,6 +40,10 @@
     <arg name="depth_fps" default="0"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="ANY"/>
+    <arg name="depth_ae_roi_left" default="-1"/>
+    <arg name="depth_ae_roi_right" default="-1"/>
+    <arg name="depth_ae_roi_top" default="-1"/>
+    <arg name="depth_ae_roi_bottom" default="-1"/>
     <arg name="depth_registration" default="false"/>
     <!-- depth rotation degree : 0, 90, 180, 270 -->
     <arg name="depth_rotation" default="0"/>
@@ -133,6 +141,10 @@
             <param name="color_fps" value="$(arg color_fps)"/>
             <param name="enable_color" value="$(arg enable_color)"/>
             <param name="color_format" value="$(arg color_format)"/>
+            <param name="color_ae_roi_left" value="$(arg color_ae_roi_left)"/>
+            <param name="color_ae_roi_right" value="$(arg color_ae_roi_right)"/>
+            <param name="color_ae_roi_top" value="$(arg color_ae_roi_top)"/>
+            <param name="color_ae_roi_bottom" value="$(arg color_ae_roi_bottom)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
@@ -142,6 +154,10 @@
             <param name="depth_fps" value="$(arg depth_fps)"/>
             <param name="enable_depth" value="$(arg enable_depth)"/>
             <param name="depth_format" value="$(arg depth_format)"/>
+            <param name="depth_ae_roi_left" value="$(arg depth_ae_roi_left)"/>
+            <param name="depth_ae_roi_right" value="$(arg depth_ae_roi_right)"/>
+            <param name="depth_ae_roi_top" value="$(arg depth_ae_roi_top)"/>
+            <param name="depth_ae_roi_bottom" value="$(arg depth_ae_roi_bottom)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="depth_rotation" value="$(arg depth_rotation)"/>
 

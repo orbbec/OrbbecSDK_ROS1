@@ -101,6 +101,10 @@ class OBCameraNode {
 
   void setupColorPostProcessFilter();
 
+  void setupRightIrPostProcessFilter();
+
+  void setupLeftIrPostProcessFilter();
+
   void setupFrameCallback();
 
   void readDefaultGain();
@@ -131,6 +135,10 @@ class OBCameraNode {
   std::shared_ptr<ob::Frame> processDepthFrameFilter(std::shared_ptr<ob::Frame> &frame);
 
   std::shared_ptr<ob::Frame> processColorFrameFilter(std::shared_ptr<ob::Frame> &frame);
+
+  std::shared_ptr<ob::Frame> processRightIrFrameFilter(std::shared_ptr<ob::Frame>& frame);
+
+  std::shared_ptr<ob::Frame> processLeftIrFrameFilter(std::shared_ptr<ob::Frame>& frame);
 
   uint64_t getFrameTimestampUs(const std::shared_ptr<ob::Frame> &frame);
 
@@ -421,6 +429,8 @@ class OBCameraNode {
   std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_manager_ = nullptr;
   std::vector<std::shared_ptr<ob::Filter>> depth_filter_list_;
   std::vector<std::shared_ptr<ob::Filter>> color_filter_list_;
+  std::vector<std::shared_ptr<ob::Filter>> left_ir_filter_list_;
+  std::vector<std::shared_ptr<ob::Filter>> right_ir_filter_list_;
   std::string ir_info_uri_;
   std::string color_info_uri_;
   bool enable_d2c_viewer_ = false;
@@ -472,6 +482,10 @@ class OBCameraNode {
   int depth_brightness_ = -1;
   int ir_exposure_ = -1;
   int ir_brightness_ = -1;
+  bool enable_right_ir_sequence_id_filter_=false;
+  int right_ir_sequence_id_filter_id_=-1;
+  bool enable_left_ir_sequence_id_filter_=false;
+  int left_ir_sequence_id_filter_id_=-1;
   int ir_ae_max_exposure_ = -1;
   bool enable_ir_long_exposure_ = false;
   std::string depth_filter_config_;
@@ -534,6 +548,7 @@ class OBCameraNode {
   int sequence_id_filter_id_ = -1;
   int threshold_filter_max_ = -1;
   int threshold_filter_min_ = -1;
+  float hardware_noise_removal_filter_threshold_ = -1.0;
   int noise_removal_filter_min_diff_ = -1;
   int noise_removal_filter_max_size_ = -1;
   float spatial_filter_alpha_ = -1.0;
@@ -574,6 +589,7 @@ class OBCameraNode {
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;
   std::string time_domain_ = "global";
+  std::string exposure_range_mode_="default";
   bool enable_sync_host_time_ = true;
   ros::Timer sync_host_time_timer_;
 

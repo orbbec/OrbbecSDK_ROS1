@@ -194,7 +194,7 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
                                             OBCameraDistortion distortion, int width) {
   (void)width;
   sensor_msgs::CameraInfo info;
-  info.distortion_model = sensor_msgs::distortion_models::RATIONAL_POLYNOMIAL;
+  info.distortion_model = getDistortionModels(distortion);
   info.width = intrinsic.width;
   info.height = intrinsic.height;
   info.D.resize(8, 0.0);
@@ -794,4 +794,24 @@ std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs) {
   os << OBSensorTypeToString(rhs);
   return os;
 }
+std::string getDistortionModels(OBCameraDistortion distortion){
+    switch (distortion.model)
+    {
+    case OB_DISTORTION_NONE:
+        return sensor_msgs::distortion_models::PLUMB_BOB;
+    case OB_DISTORTION_MODIFIED_BROWN_CONRADY:
+        return sensor_msgs::distortion_models::PLUMB_BOB;
+    case OB_DISTORTION_INVERSE_BROWN_CONRADY:
+        return sensor_msgs::distortion_models::PLUMB_BOB;
+    case OB_DISTORTION_BROWN_CONRADY:
+        return sensor_msgs::distortion_models::PLUMB_BOB;
+    case OB_DISTORTION_BROWN_CONRADY_K6:
+        return sensor_msgs::distortion_models::PLUMB_BOB;
+    case OB_DISTORTION_KANNALA_BRANDT4:
+        return sensor_msgs::distortion_models::EQUIDISTANT;
+    default:
+        return sensor_msgs::distortion_models::PLUMB_BOB;
+    }
+}
+
 }  // namespace orbbec_camera

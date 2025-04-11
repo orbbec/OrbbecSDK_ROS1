@@ -49,6 +49,8 @@ void OBCameraNode::init() {
   setupDevices();
   setupDepthPostProcessFilter();
   setupColorPostProcessFilter();
+  setupRightIrPostProcessFilter();
+  setupLeftIrPostProcessFilter();
   selectBaseStream();
   setupProfiles();
   setupCameraInfo();
@@ -196,6 +198,12 @@ void OBCameraNode::getParameters() {
   ir_brightness_ = nh_private_.param<int>("ir_brightness", -1);
   ir_ae_max_exposure_ = nh_private_.param<int>("ir_ae_max_exposure", -1);
   enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);
+  enable_right_ir_sequence_id_filter_ =
+      nh_private_.param<bool>("enable_right_ir_sequence_id_filter", false);
+  right_ir_sequence_id_filter_id_ = nh_private_.param<int>("right_ir_sequence_id_filter_id", -1);
+  enable_left_ir_sequence_id_filter_ =
+      nh_private_.param<bool>("enable_left_ir_sequence_id_filter", false);
+  left_ir_sequence_id_filter_id_ = nh_private_.param<int>("left_ir_sequence_id_filter_id", -1);
   sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "standalone");
   depth_delay_us_ = nh_private_.param<int>("depth_delay_us", 0);
   color_delay_us_ = nh_private_.param<int>("color_delay_us", 0);
@@ -252,6 +260,8 @@ void OBCameraNode::getParameters() {
   sequence_id_filter_id_ = nh_private_.param<int>("sequence_id_filter_id", -1);
   threshold_filter_max_ = nh_private_.param<int>("threshold_filter_max", -1);
   threshold_filter_min_ = nh_private_.param<int>("threshold_filter_min", -1);
+  hardware_noise_removal_filter_threshold_ =
+      nh_private_.param<float>("hardware_noise_removal_filter_threshold", -1.0);
   noise_removal_filter_min_diff_ = nh_private_.param<int>("noise_removal_filter_min_diff", 256);
   noise_removal_filter_max_size_ = nh_private_.param<int>("noise_removal_filter_max_size", 80);
   spatial_filter_alpha_ = nh_private_.param<float>("spatial_filter_alpha", -1.0);
@@ -277,7 +287,8 @@ void OBCameraNode::getParameters() {
   enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
-  time_domain_ = nh_private_.param<std::string>("time_domain", "device");
+  time_domain_ = nh_private_.param<std::string>("time_domain", "global");
+  exposure_range_mode_ = nh_private_.param<std::string>("exposure_range_mode", "default");
   disparity_range_mode_ = nh_private_.param<int>("disparity_range_mode", -1);
   disparity_search_offset_ = nh_private_.param<int>("disparity_search_offset", -1);
   disparity_offset_config_ = nh_private_.param<bool>("disparity_offset_config", false);
@@ -626,7 +637,7 @@ void OBCameraNode::stopStreams() {
     try {
       pipeline_->stop();
       // disable interleave frame
-      if ((interleave_ae_mode_ == "hdr") || (interleave_ae_mode_ == "laser")) {
+      if ((interleave_ae_mode_ == "hdr") || (interleave_ae_mode_ == "laser") && !is_running_) {
         ROS_INFO_STREAM("current interleave_ae_mode_: " << interleave_ae_mode_);
         if (device_->isPropertySupported(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL,
                                          OB_PERMISSION_WRITE)) {
@@ -1211,6 +1222,44 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(
 
   return nullptr;
 }
+
+std::shared_ptr<ob::Frame> OBCameraNode::processRightIrFrameFilter(
+    std::shared_ptr<ob::Frame>& frame) {
+  if (frame == nullptr || frame->getType() != OB_FRAME_IR_RIGHT) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < right_ir_filter_list_.size(); i++) {
+    auto filter = right_ir_filter_list_[i];
+    CHECK_NOTNULL(filter.get());
+    if (filter->isEnabled() && frame != nullptr) {
+      frame = filter->process(frame);
+      if (frame == nullptr) {
+        ROS_ERROR_STREAM("Right Ir filter process failed");
+        break;
+      }
+    }
+  }
+  return frame;
+}
+std::shared_ptr<ob::Frame> OBCameraNode::processLeftIrFrameFilter(
+    std::shared_ptr<ob::Frame>& frame) {
+  if (frame == nullptr || frame->getType() != OB_FRAME_IR_LEFT) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < left_ir_filter_list_.size(); i++) {
+    auto filter = left_ir_filter_list_[i];
+    CHECK_NOTNULL(filter.get());
+    if (filter->isEnabled() && frame != nullptr) {
+      frame = filter->process(frame);
+      if (frame == nullptr) {
+        ROS_ERROR_STREAM("Left Ir filter process failed");
+        break;
+      }
+    }
+  }
+  return frame;
+}
+
 std::shared_ptr<ob::Frame> OBCameraNode::processColorFrameFilter(
     std::shared_ptr<ob::Frame>& frame) {
   if (frame == nullptr || frame->getType() != OB_FRAME_COLOR) {
@@ -1222,7 +1271,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::processColorFrameFilter(
     if (filter->isEnabled() && frame != nullptr) {
       frame = filter->process(frame);
       if (frame == nullptr) {
-        ROS_ERROR_STREAM("Depth filter process failed");
+        ROS_ERROR_STREAM("Color filter process failed");
         break;
       }
     }
@@ -1279,6 +1328,8 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     // std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     auto depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
     auto color_frame = frame_set->getFrame(OB_FRAME_COLOR);
+    auto left_ir_frame = frame_set->getFrame(OB_FRAME_IR_LEFT);
+    auto right_ir_frame = frame_set->getFrame(OB_FRAME_IR_RIGHT);
     if (depth_frame) {
       setDisparitySearchOffset();
       setDepthAutoExposureROI();
@@ -1290,6 +1341,15 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
       color_frame = processColorFrameFilter(color_frame);
       frame_set->pushFrame(color_frame);
     }
+    if (left_ir_frame) {
+      left_ir_frame = processLeftIrFrameFilter(left_ir_frame);
+      frame_set->pushFrame(left_ir_frame);
+    }
+    if (right_ir_frame) {
+      right_ir_frame = processRightIrFrameFilter(right_ir_frame);
+      frame_set->pushFrame(right_ir_frame);
+    }
+
     if (depth_registration_ && align_filter_ && depth_frame) {
       if (auto new_frame = align_filter_->process(frame_set)) {
         auto new_frame_set = new_frame->as<ob::FrameSet>();

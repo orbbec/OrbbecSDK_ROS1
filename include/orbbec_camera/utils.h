@@ -147,4 +147,6 @@ std::string OBSensorTypeToString(const OBSensorType &type);
 
 std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs);
 
+std::string getDistortionModels(OBCameraDistortion distortion);
+
 }  // namespace orbbec_camera

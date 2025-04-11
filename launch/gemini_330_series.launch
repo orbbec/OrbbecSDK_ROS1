@@ -24,6 +24,13 @@
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="true"/>
     <arg name="preset_firmware_path" default=""/>
+    <!-- Network device settings: default enumerate_net_device is set to true, which will automatically enumerate network devices -->
+    <!-- If you do not want to automatically enumerate network devices, -->
+    <!-- you can set enumerate_net_device to true, net_device_ip to the device's IP address, and net_device_port to the default value of 8090 -->
+    <arg name="enumerate_net_device" default="false"/>
+    <arg name="ip_address" default=""/>
+    <arg name="port" default="0"/>
+    <arg name="exposure_range_mode" default="default"/><!-- default, ultimate or regular -->
 
 
     <!-- Color camera parameters -->
@@ -80,6 +87,9 @@
     <arg name="left_ir_format" default="ANY"/>
     <!-- left ir rotation degree : 0, 90, 180, 270 -->
     <arg name="left_ir_rotation" default="0"/>
+    <arg name="enable_left_ir_sequence_id_filter" default="false"/>
+    <arg name="left_ir_sequence_id_filter_id" default="-1"/>
+
 
     <!-- Right IR camera parameters -->
     <arg name="right_ir_width" default="0"/>
@@ -88,6 +98,8 @@
     <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="ANY"/>
     <arg name="right_ir_rotation" default="0"/>
+    <arg name="enable_right_ir_sequence_id_filter" default="false"/>
+    <arg name="right_ir_sequence_id_filter_id" default="-1"/>
 
     <!-- Common IR camera parameters -->
     <arg name="enable_ir_auto_exposure" default="true"/>
@@ -110,14 +122,15 @@
     <arg name="enable_hdr_merge" default="false"/>
     <arg name="enable_sequenced_filter" default="false"/>
     <arg name="enable_threshold_filter" default="false"/>
-    <arg name="enable_hardware_noise_removal_filter" default="true"/>
-    <arg name="enable_noise_removal_filter" default="false"/>
+    <arg name="enable_hardware_noise_removal_filter" default="false"/>
+    <arg name="enable_noise_removal_filter" default="true"/>
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_hole_filling_filter" default="false"/>
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
     <arg name="threshold_filter_min" default="-1"/>
+    <arg name="hardware_noise_removal_filter_threshold" default="-1.0"/>
     <arg name="noise_removal_filter_min_diff" default="256"/>
     <arg name="noise_removal_filter_max_size" default="80"/>
     <arg name="spatial_filter_alpha" default="-1.0"/>
@@ -127,6 +140,7 @@
     <arg name="temporal_filter_diff_threshold" default="-1.0"/>
     <arg name="temporal_filter_weight" default="-1.0"/>
     <arg name="hole_filling_filter_mode" default=""/>
+    <arg name="decimation_filter_scale_range" default="-1"/>
     <arg name="hdr_merge_exposure_1" default="-1"/>
     <arg name="hdr_merge_gain_1" default="-1"/>
     <arg name="hdr_merge_exposure_2" default="-1"/>
@@ -206,6 +220,11 @@
             <param name="enable_laser" value="$(arg enable_laser)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
+            <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
+            <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
+            <param name="ip_address" value="$(arg ip_address)"/>
+            <param name="port" value="$(arg port)"/>
+            <param name="exposure_range_mode" value="$(arg exposure_range_mode)"/>
             <param name="depth_delay_us" value="$(arg depth_delay_us)"/>
             <param name="color_delay_us" value="$(arg color_delay_us)"/>
             <param name="trigger2image_delay_us" value="$(arg trigger2image_delay_us)"/>
@@ -263,6 +282,8 @@
             <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
             <param name="left_ir_format" value="$(arg left_ir_format)"/>
             <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
+            <param name="enable_left_ir_sequence_id_filter" value="$(arg enable_left_ir_sequence_id_filter)"/>
+            <param name="left_ir_sequence_id_filter_id" value="$(arg left_ir_sequence_id_filter_id)"/>
 
             <param name="right_ir_width" value="$(arg right_ir_width)"/>
             <param name="right_ir_height" value="$(arg right_ir_height)"/>
@@ -270,6 +291,8 @@
             <param name="enable_right_ir" value="$(arg enable_right_ir)"/>
             <param name="right_ir_format" value="$(arg right_ir_format)"/>
             <param name="right_ir_rotation" value="$(arg right_ir_rotation)"/>
+            <param name="enable_right_ir_sequence_id_filter" value="$(arg enable_right_ir_sequence_id_filter)"/>
+            <param name="right_ir_sequence_id_filter_id" value="$(arg right_ir_sequence_id_filter_id)"/>
 
 
             <param name="enable_ir_auto_exposure" value="$(arg enable_ir_auto_exposure)"/>
@@ -283,6 +306,7 @@
             <param name="enable_hdr_merge" value="$(arg enable_hdr_merge)"/>
             <param name="enable_sequenced_filter" value="$(arg enable_sequenced_filter)"/>
             <param name="enable_threshold_filter" value="$(arg enable_threshold_filter)"/>
+            <param name="enable_hardware_noise_removal_filter" value="$(arg enable_hardware_noise_removal_filter)"/>
             <param name="enable_noise_removal_filter" value="$(arg enable_noise_removal_filter)"/>
             <param name="enable_spatial_filter" value="$(arg enable_spatial_filter)"/>
             <param name="enable_temporal_filter" value="$(arg enable_temporal_filter)"/>
@@ -290,6 +314,7 @@
             <param name="sequence_id_filter_id" value="$(arg sequence_id_filter_id)"/>
             <param name="threshold_filter_max" value="$(arg threshold_filter_max)"/>
             <param name="threshold_filter_min" value="$(arg threshold_filter_min)"/>
+            <param name="hardware_noise_removal_filter_threshold" value="$(arg hardware_noise_removal_filter_threshold)"/>
             <param name="noise_removal_filter_min_diff" value="$(arg noise_removal_filter_min_diff)"/>
             <param name="noise_removal_filter_max_size" value="$(arg noise_removal_filter_max_size)"/>
             <param name="spatial_filter_alpha" value="$(arg spatial_filter_alpha)"/>
@@ -299,6 +324,7 @@
             <param name="temporal_filter_diff_threshold" value="$(arg temporal_filter_diff_threshold)"/>
             <param name="temporal_filter_weight" value="$(arg temporal_filter_weight)"/>
             <param name="hole_filling_filter_mode" value="$(arg hole_filling_filter_mode)"/>
+            <param name="decimation_filter_scale_range" value="$(arg decimation_filter_scale_range)"/>
             <param name="hdr_merge_exposure_1" value="$(arg hdr_merge_exposure_1)"/>
             <param name="hdr_merge_gain_1" value="$(arg hdr_merge_gain_1)"/>
             <param name="hdr_merge_exposure_2" value="$(arg hdr_merge_exposure_2)"/>

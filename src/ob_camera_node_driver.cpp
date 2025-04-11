@@ -164,7 +164,10 @@ void OBCameraNodeDriver::init() {
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
     const std::shared_ptr<ob::DeviceList> &list) {
   std::shared_ptr<ob::Device> device = nullptr;
-  if (!serial_number_.empty()) {
+  if (!ip_address_.empty() && port_ != 0) {
+    ROS_INFO_STREAM("Connecting to device with net ip: " << ip_address_);
+    device = selectDeviceByNetIP(list, ip_address_);
+  } else if (!serial_number_.empty()) {
     ROS_INFO_STREAM("Connecting to device with serial number: " << serial_number_);
     device = selectDeviceBySerialNumber(list, serial_number_);
   } else if (!usb_port_.empty()) {
@@ -231,6 +234,42 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
     ROS_ERROR_STREAM("Failed to get device info " << e.what());
   } catch (...) {
     ROS_ERROR_STREAM("Failed to get device info");
+  }
+
+  return nullptr;
+}
+
+std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByNetIP(
+    const std::shared_ptr<ob::DeviceList> &list, const std::string &net_ip) {
+    ROS_INFO_STREAM("Before lock: Select device net ip: " << net_ip);
+    std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+    ROS_INFO_STREAM("After lock: Select device net ip: " << net_ip);
+    std::shared_ptr<ob::Device> device = nullptr;
+    for (size_t i = 0; i < list->getCount(); i++) {
+    try {
+      device = list->getDevice(i);
+      auto device_info = device->getDeviceInfo();
+      if(std::string(device_info->getConnectionType())!="Ethernet"){
+        continue;
+      }
+      if (device_info->getIpAddress() == nullptr) {
+        continue;
+      }
+      ROS_INFO_STREAM("FindDeviceByNetIP device net ip " << device_info->getIpAddress());
+      if (std::string(device_info->getIpAddress()) == net_ip) {
+        ROS_INFO_STREAM( "getDeviceByNetIP device net ip " << net_ip << " done");
+        return list->getDevice(i);
+      }
+    } catch (ob::Error &e) {
+      ROS_INFO_STREAM( "Failed to get device info " << e.getMessage());
+      continue;
+    } catch (std::exception &e) {
+      ROS_INFO_STREAM( "Failed to get device info " << e.what());
+      continue;
+    } catch (...) {
+      ROS_INFO_STREAM( "Failed to get device info");
+      continue;
+    }
   }
 
   return nullptr;
@@ -403,7 +442,7 @@ OBLogSeverity OBCameraNodeDriver::obLogSeverityFromString(const std::string &log
 void OBCameraNodeDriver::queryDevice() {
   while (is_alive_ && ros::ok() && !device_connected_) {
     ROS_INFO_STREAM("queryDevice: first query device");
-    if (enumerate_net_device_ && !ip_address_.empty() && port_ != 0) {
+    if (!enumerate_net_device_ && !ip_address_.empty() && port_ != 0) {
       ROS_INFO_STREAM("queryDevice: connect to net device " << ip_address_ << ":" << port_);
       connectNetDevice(ip_address_, port_);
     } else {
