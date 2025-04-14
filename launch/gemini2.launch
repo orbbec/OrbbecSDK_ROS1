@@ -26,6 +26,11 @@
     <arg name="depth_format" default="Y14"/>
     <arg name="flip_depth" default="false"/>
     <arg name="depth_precision" default="1mm"/>
+    <!-- depth ae roi-->
+    <arg name="depth_ae_roi_top" default="-1"/>
+    <arg name="depth_ae_roi_bottom" default="-1"/>
+    <arg name="depth_ae_roi_left" default="-1"/>
+    <arg name="depth_ae_roi_right" default="-1"/>
     <arg name="ir_width" default="640"/>
     <arg name="ir_height" default="400"/>
     <arg name="ir_fps" default="15"/>
@@ -33,7 +38,7 @@
     <arg name="ir_format" default="Y8"/>
     <arg name="flip_ir" default="false"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
-    <arg name="enable_sync_output_accel_gyro" default="true"/>   
+    <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="100hz"/>
     <arg name="accel_range" default="4g"/>
@@ -92,6 +97,10 @@
             <param name="depth_format" value="$(arg depth_format)"/>
             <param name="flip_depth" value="$(arg flip_depth)"/>
             <param name="depth_precision" value="$(arg depth_precision)"/>
+            <param name="depth_ae_roi_top" value="$(arg depth_ae_roi_top)"/>
+            <param name="depth_ae_roi_bottom" value="$(arg depth_ae_roi_bottom)"/>
+            <param name="depth_ae_roi_left" value="$(arg depth_ae_roi_left)"/>
+            <param name="depth_ae_roi_right" value="$(arg depth_ae_roi_right)"/>
             <param name="ir_width" value="$(arg ir_width)"/>
             <param name="ir_height" value="$(arg ir_height)"/>
             <param name="ir_fps" value="$(arg ir_fps)"/>
