@@ -54,6 +54,8 @@
     <arg name="port" default="8090"/>
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_soft_filter" default="true"/>
+    <arg name="soft_filter_max_diff" default="-1"/>
+    <arg name="soft_filter_speckle_size" default="-1"/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="depth_delay_us" default="0"/>
     <arg name="color_delay_us" default="0"/>
@@ -114,6 +116,8 @@
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
+            <param name="soft_filter_max_diff" value="$(arg soft_filter_max_diff)"/>
+            <param name="soft_filter_speckle_size" value="$(arg soft_filter_speckle_size)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="depth_delay_us" value="$(arg depth_delay_us)"/>
             <param name="color_delay_us" value="$(arg color_delay_us)"/>
