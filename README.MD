@@ -20,7 +20,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   </thead>
   <tbody>
     <tr>
-      <td rowspan="7" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
       <td>Gemini 335</td>
       <td>full maintenance</td>
       <td>recommended for new designs</td>
@@ -52,6 +52,11 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
     </tr>
     <tr>
       <td>Gemini 335Lg</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335Le</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
@@ -378,11 +383,6 @@ The following launch parameters are available:
   If set to `true`, the camera will send heartbeat messages and generate firmware logs.
 - `enable_hardware_reset`: This option enables the hardware reset function. By default, it is set to `false`.
   If set to `true`, the camera will reboot upon its first connection.
-- `preset_firmware_path`: Burn customized preset firmware by passing in the customized preset firmware path
-
-* `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
-* `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
-* `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:Set Color and Depth auto exposure ROI.
 
 **IMPORTANT**: *Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.*
 
@@ -522,11 +522,11 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 
 ## Supported Devices
 
-Currently, the following devices are supported by the OrbbecSDK ROS2 Wrapper v2-main branch.  More devices support will be added in the near future. If you can not find your device in the table below, try the [main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main)  branch.
+Currently, the following devices are supported by the OrbbecSDK ROS Wrapper v2-main branch.  More devices support will be added in the near future. If you can not find your device in the table below, try the [main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main)  branch.
 
 For optimal performance, we strongly recommend updating to the latest firmware version. This ensures that you benefit from the most recent enhancements and bug fixes.
 
-The following devices are supported by the OrbbecSDK ROS2 Wrapper.
+The following devices are supported by the OrbbecSDK ROS Wrapper.
 
 | Product List | Minimal Firmware Version | **Launch File**    |
 | :----------- | :----------------------- | :----------------------- |
@@ -537,6 +537,7 @@ The following devices are supported by the OrbbecSDK ROS2 Wrapper.
 | Gemini 335Lg | 1.3.46                   | gemini_330_series.launch |
 | Gemini 336   | 1.2.20                   | gemini_330_series.launch |
 | Gemini 336L  | 1.2.20                   | gemini_330_series.launch |
+| Gemini 335Le | 1.5.31                   | gemini_330_series.launch |
 | Femto Bolt   | 1.1.2                    | femto_bolt.launch        |
 | Femto Mega   | 1.3.0                    | femto_mega.launch        |
 | Astra 2      | 2.8.20                   | astra2.launch            |

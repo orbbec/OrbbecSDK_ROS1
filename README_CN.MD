@@ -1,60 +1,182 @@
-# Orbbec ROS SDK
+# OrbbecSDK ROS v2
 
-![稳定](http://badges.github.io/stability-badges/dist/stable.svg)(http://github.com/badges/stability-badges) ![版本](https://img.shields.io/badge/version-1.5.3-green)
+> [!重要]
+>
+> 欢迎使用 OrbbecSDK ROS Wrapper v2。在开始使用本版本的 ROS 封装前，请务必查看以下的 [设备支持列表](#支持的设备)，以确认您的设备是否兼容。
 
-**注意：此文档是通过机器翻译生成且不会及时更新，仅供参考。具体内容请以英文原文为准。**
+OrbbecSDK ROS 封装包为 Orbbec 相机与 ROS 环境之间提供了无缝集成，支持 ROS的 Kinetic, Melodic, 和 Noetic发行版。
 
-Orbbec ROS SDK 是 OrbbecSDK 的一个封装，支持 ROS Kinetic、Melodic 和 Noetic 发行版。此 SDK 使 Orbbec 3D 摄像机能够平滑地集成到
-ROS 项目中。
+2024 年 10 月，我们发布了重大更新版本 —— [OrbbecSDK ROS1 Wrapper v2](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main)，该版本基于开源的[OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases)，具有更强的灵活性与可扩展性。
+
+此更新确保了对所有符合 UVC 标准的 Orbbec USB 产品的兼容性，但不再支持使用 Orbbec 传统 OpenNI 协议的设备。如果您的设备在支持列表中，我们强烈建议您使用 v2-main 分支。
+
+以下是 main 分支（v1.x）与 v2-main 分支（v2.x）对应的设备支持列表：
+
+<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+  <thead>
+    <tr style="background-color: #1f4e78; color: white; text-align: center;">
+      <th>产品系列</th>
+      <th>产品</th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/main" style="color: black; text-decoration: none;">main分支</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main" style="color: black; text-decoration: none;">v2-main分支</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td>Gemini 335</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 336</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 330</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 335L</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 336L</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 330L</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 335Lg</td>
+      <td>不支持</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 335Le</td>
+      <td>不支持</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 2</td>
+      <td>Gemini 2</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 L</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 XL</td>
+      <td>推荐用于新设计</td>
+      <td>即将支持</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td>
+      <td>Femto Bolt</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Femto Mega</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Femto Mega I</td>
+      <td>全面维护</td>
+      <td>即将支持</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Astra</td>
+      <td>Astra 2</td>
+      <td>全面维护</td>
+      <td>推荐用于新设计</td>
+    </tr>
+    <tr>
+      <td>Astra+</td>
+      <td>有限的维护</td>
+      <td>不支持</td>
+    </tr>
+    <tr>
+      <td>Astra Pro Plus</td>
+      <td>有限的维护</td>
+      <td>不支持</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Astra Mini</td>
+      <td>Astra Mini Pro</td>
+      <td>全面维护</td>
+      <td>不支持</td>
+    </tr>
+  </tbody>
+</table>
+
+注意：如果您未在列表中找到您的设备，请联系我们的 FAE 或销售代表获取支持。
+
+**定义说明**:
+
+1. 推荐用于新设计: 我们将提供全面支持，包括新功能、漏洞修复以及性能优化。
+2. 全面维护: 我们将提供漏洞修复支持。
+3. 有限的维护: 我们仅提供关键性问题的修复支持。
+4. 不支持: 本版本中不支持该设备。
+5. 即将支持: 我们将在近期添加对该设备的支持。
 
 ## 目录
 
-<!-- TOC -->
+- [OrbbecSDK ROS v2](#orbbecsdk-ros-v2)
+  - [目录](#目录)
+  - [安装说明](#安装说明)
+  - [创建 ROS 工作区并构建](#创建-ros-工作区并构建)
+  - [启动相机](#启动相机)
+  - [选择您想要显示的topic](#选择您想要显示的topic)
+  - [Launch参数](#launch参数)
+  - [深度工作模式开关](#深度工作模式开关)
+  - [深度 NFOV 和 WFOV 模式的配置](#深度-nfov-和-wfov-模式的配置)
+  - [检查相机支持哪些配置文件](#检查相机支持哪些配置文件)
+  - [多相机](#多相机)
+  - [所有可用的摄像机控制服务](#所有可用的摄像机控制服务)
+  - [所有可用主题](#所有可用主题)
+  - [构建Debian软件包](#构建debian软件包)
+  - [使用 Nodelet](#使用-nodelet)
+  - [支持的设备](#支持的设备)
+  - [常见问题](#常见问题)
+    - [意外崩溃](#意外崩溃)
+    - [没有来自多个摄像机的数据流](#没有来自多个摄像机的数据流)
+    - [由于 OpenCV 版本问题导致编译失败](#由于-opencv-版本问题导致编译失败)
+    - [其他故障排除](#其他故障排除)
+    - [为什么有这么多启动文件？](#为什么有这么多启动文件)
+  - [其他有用链接](#其他有用链接)
+  - [License](#license)
 
-- [Orbbec ROS SDK](#orbbec-ros-sdk)
-    - [目录](#目录)
-    - [安装依赖](#安装依赖)
-        - [ROS](#ros)
-        - [其他依赖](#其他依赖)
-    - [创建ROS工作区并构建](#创建ROS工作区并构建)
-    - [启动摄像头](#启动摄像头)
-    - [选择主题并控制摄像头](#选择主题并控制摄像头)
-        - [可用的摄像头控制服务](#可用的摄像头控制服务)
-        - [可用的主题](#可用的主题)
-    - [启动参数](#启动参数)
-    - [深度工作模式切换：](#深度工作模式切换)
-    - [配置深度NFOV和WFOV模式](#配置深度NFOV和WFOV模式)
-    - [检查摄像头支持哪些配置文件](#检查摄像头支持哪些配置文件)
-    - [构建Debian包](#构建Debian包)
-    - [启动文件](#启动文件)
-    - [使用Nodelet](#使用Nodelet)
-    - [支持的硬件产品](#支持的硬件产品)
-    - [常见问题](#常见问题)
-        - [多摄像头无画面](#多摄像头无画面)
-        - [错误："设备启动失败：usbEnumerator createUsbDevice失败！"](#错误："设备启动失败：usbEnumerator-createUsbDevice失败！")
-    - [许可证](#许可证)
-  <!-- TOC -->
+## 安装说明
 
-## 安装依赖
+下载ROS
 
-### ROS
+* 请直接参考 ROS [wiki](http://wiki.ros.org/ROS/Installation) 获取安装说明。
 
-- 请直接参阅ROS [wiki](http://wiki.ros.org/ROS/Installation)获取安装指南。
+安装 deb 依赖项
 
-### 其他依赖
+```bash
+# Assuming you have sourced the ROS environment, same below
+sudo apt install libgflags-dev ros-$ROS_DISTRO-image-geometry ros-$ROS_DISTRO-camera-info-manager \
+ros-${ROS_DISTRO}-image-transport-plugins ros-${ROS_DISTRO}-compressed-image-transport \
+ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev \
+ros-$ROS_DISTRO-diagnostic-updater ros-$ROS_DISTRO-diagnostic-msgs \
+libdw-dev
+```
 
-- 安装依赖（注意您的ROS发行版）：
+## 创建 ROS 工作区并构建
 
-  ```bash
-  # 假设您已经源设置了ROS环境，同下
-  sudo apt install libgflags-dev ros-$ROS_DISTRO-image-geometry ros-$ROS_DISTRO-camera-info-manager \
-  ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev \
-  ros-$ROS_DISTRO-diagnostic-updater ros-$ROS_DISTRO-diagnostic-msgs libdw-dev
-  ```
-
-## 创建ROS工作区并构建
-
-创建一个ROS工作区（如果您还没有）：
+创建 ROS 工作区（如果您没有）：
 
 ```bash
 mkdir -p ~/ros_ws/src
@@ -74,36 +196,34 @@ cd ~/ros_ws
 catkin_make
 ```
 
-安装udev规则：
+安装 udev 规则：
 
 ```bash
 cd ~/ros_ws
 source ./devel/setup.bash
 roscd orbbec_camera
-cd scripts
-sudo cp 99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
-sudo udevadm control --reload && sudo udevadm trigger
+sudo bash ./scripts/install_udev_rules.sh
 ```
 
-## 启动摄像头
+## 启动相机
 
-在终端1：
+- 第一个终端
 
 ```bash
 source ./devel/setup.bash
 roslaunch orbbec_camera gemini_330_series.launch
 ```
 
-在终端2：
+- 第二个终端
 
 ```bash
 source ./devel/setup.bash
 rviz
 ```
 
-## 选择主题并控制摄像头
+## 选择您想要显示的topic
 
-检查主题、服务和参数（开启一个新终端）：
+- 获取topics / services/ parameters列表 (第3个终端)
 
 ```bash
 rostopic list
@@ -111,14 +231,15 @@ rosservice list
 rosparam list
 ```
 
-获取摄像头参数（必须先启动流）：
+* 获取相机参数（必须先启动流）：
 
 ```bash
 rosservice call /camera/get_camera_params "{}"
 ```
 
-检查摄像头参数（请参考ROS文档了解
-[camera info](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html)中的具体字段含义）：
+检查相机参数（相机信息中具体字段的含义，请参阅 [ROS 文档](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html)）：
+
+- 获取设备信息
 
 ```bash
 rostopic echo /camera/depth/camera_info
@@ -131,7 +252,7 @@ rostopic echo /camera/color/camera_info
 rosservice call /camera/get_device_info "{}"
 ```
 
-获取SDK版本（包括固件和Orbbec SDK版本）：
+获取SDK版本（包含固件和Orbbec SDK版本）：
 
 ```bash
 rosservice call /camera/get_sdk_version "{}"
@@ -143,23 +264,35 @@ rosservice call /camera/get_sdk_version "{}"
 rosservice call /camera/set_color_auto_exposure '{data: false}'
 rosservice call /camera/set_left_ir_auto_exposure "{data: false}"
 
-# 设置曝光值（小心数据范围；下面的示例可能不正确）
+# Setting exposure values (be careful with the data range; the following example may not be correct)
 rosservice call /camera/set_left_ir_exposure "{data: 2000}"
 rosservice call /camera/set_color_exposure "{data: 2000}"
 
-# 获取曝光
+# Get exposure
 rosservice call /camera/get_left_ir_exposure "{}"
 rosservice call /camera/get_color_exposure "{}"
+```
+
+设置自动曝光ROI：
+
+```bash
+#In data_param, the first value is the Left setting, the second value is the Right setting, the third value is the Top setting, and the fourth value is the Bottom setting.
+
+#Set color ROI
+rosservice call /camera/set_color_ae_roi '{data_param:[0,1279,0,719]}'
+
+#Set depth ROI
+rosservice call /camera/set_depth_ae_roi '{data_param:[0,847,0,479]}'
 ```
 
 设置/获取增益：
 
 ```bash
-# 获取增益
+# Get gain
 rosservice call /camera/get_color_gain '{}'
 rosservice call /camera/get_left_ir_gain '{}'
 
-# 设置增益（小心数据范围；下面的示例可能不正确）
+# Setting the gain (be careful with the data range; the following example may not be correct)
 rosservice call /camera/set_color_gain "{data: 200}"
 rosservice call /camera/set_left_ir_gain "{data: 200}"
 ```
@@ -171,14 +304,14 @@ rosservice call /camera/set_auto_white_balance "{data: false}"
 rosservice call /camera/get_auto_white_balance "{data: false}"
 ```
 
-开启/关闭激光：
+打开/关闭激光：
 
 ```bash
-rosservice call /camera/set_laser '{data: true}' # 开启
-rosservice call /camera/set_laser '{data: false}' # 关闭
+rosservice call /camera/set_laser '{data: true}' # Turn on
+rosservice call /camera/set_laser '{data: false}' # Turn off
 ```
 
-保存图片：
+保存图像：
 
 ```bash
 rosservice call /camera/save_images "{}"
@@ -190,14 +323,93 @@ rosservice call /camera/save_images "{}"
 rosservice call /camera/save_point_cloud "{}"
 ```
 
-注意：图片保存在`~/.ros/image`目录下，只有当传感器开启时才可用。
+注意：图像保存在 `~/.ros/image`下，并且仅在传感器打开时可用。
 
-### 可用的摄像头控制服务
+## Launch参数
 
-服务名称直观反映了其用途。至关重要的是要理解，与设置或获取参数相关的服务——标记为`set_*`和`get_*`——仅在相应的`enable_*`
-参数激活时可用。例如，激活左红外（IR）功能需要`enable_left_ir`，右红外功能需要`enable_right_ir`
-，深度感知功能需要`enable_depth`，或颜色处理功能需要`enable_color`（参考[启动参数](#启动参数)
-）是这些对应服务运行的先决条件。这种配置确保仅当在启动文件的流参数中启用了特定流时，服务才可访问。
+以下是可用的launch启动参数：
+
+- `connection_delay`: 重新打开设备的延迟时间（以毫秒为单位）。
+- `uvc_backend`:Linux 上全局 UVC Backend 选择，可选值：`libuvc`、`v4l2`。
+- `enable_point_cloud`: 深度点云开关。
+- `enable_colored_point_cloud`: RGB点云开关。
+- `color_width`, `color_height`, `color_fps`: 彩色流的分辨率和帧率。
+- `left_ir_width`,`left_ir_height` ,`left_ir_fps` : 左红外流的分辨率和帧速率。
+- `right_ir_width`,`right_ir_height` ,`right_ir_fps` : 右红外流的分辨率和帧速率。
+- `depth_width`, `depth_height`, `depth_fps`: 深度流的分辨率和帧速率。
+- `enable_color`: 启用彩色流。
+- `enable_depth`: 启用深度流。
+- `enable_left_ir`: 启动左红外流。
+- `enable_right_ir`: 启动右红外流。
+- `depth_registration`: 启用深度帧与颜色帧的对齐。当 `enable_colored_point_cloud` 设置为 `true` 时，此字段为必填项。
+- `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:设置颜色和深度自动曝光 ROI。
+- `log_level` : SDK 日志级别，默认值为 `info`，可选值为 `debug`, `info`, `warn`, `error`, `fatal`。保存在 `~/.ros/Log` 中。对于文件日志记录，请调整 `config/OrbbecSDKConfig_v1.0.xml` 中的 `<FileLogLevel>`。
+- `ordered_pc`: 点云是否应按有序网格组织（`true`）或按无序点集组织（`false`）。
+- `preset_firmware_path` : 输入参数为预设的固件路径，若输入多个路径，每个路径之间需用 `,`分隔，最多可输入3个固件路径
+- `device_preset`: 默认值为 `Default`。仅支持 G330 系列。更多信息，请参阅 [G330 文档](https://www.orbbec.com/docs/g330-use-depth-presets/)。请参考下表，根据您的使用情况设置 `device_preset` 值。该值应为[表格](#预设presets) 中列出的预设名称之一。
+- `enable_decimation_filter`: 此滤波器有效降低了深度场景的复杂度。滤波器在核尺寸 [2x2] 至 [8x8] 像素上运行。图像尺寸在两个维度上均按比例缩小，以保持纵横比。
+- `enable_hdr_merge`: 此滤镜与深度 HDR 功能配合使用。通过合并交替曝光值的连续深度图像，我们可以克服同时获取欠照和过照物体深度值的挑战。
+- `enable_sequence_id_filter`: 此过滤器与深度 HDR 函数联合使用，仅输出具有指定序列 ID 的序列。
+- `enable_threshold_filter`: 该过滤器保留感兴趣的深度值并省略范围之外的深度值。
+- `enable_noise_removal_filter`: 该滤波器可消除簇状斑点噪声，并生成填充程度较低的深度图。
+- `enable_spatial_filter`: 此滤波器根据幅值参数的指定执行多次迭代处理，以增强深度数据的平滑度。它还能够填充深度图中的小孔。
+- `enable_temporal_filter`: 此滤镜旨在通过基于先前帧操纵每个像素的值来提高深度数据的持久性。该滤镜对数据执行单次传递，在调整深度值的同时更新追踪历史记录。
+- `enable_hole_filling_filter`: 此过滤器使用指定的模式填充深度图中的所有孔洞。
+- `depth_precision`: 深度精度应采用 `1mm`格式。默认值为 `1mm`。
+- `enable_laser` : 是否启用激光，默认值为 `true`。
+- `retry_on_usb3_detection_failure`:如果摄像头连接到 USB 2.0 端口但未被检测到，系统将尝试重置摄像头最多三次。此设置旨在防止 USB 3.0 设备被错误地识别为 USB 2.0。建议在使用 USB 2.0 连接时将此参数设置为 `false`，以避免不必要的重置。
+- `enable_heartbeat`: 此选项启用心跳功能。默认情况下，设置为 `false`。
+  如果设置为 `true`，摄像头将发送心跳消息并生成固件日志。
+- `enable_hardware_reset`: 此选项启用硬件重置功能。默认情况下，设置为 `false`。如果设置为 `true`，则摄像头将在首次连接时重新启动。
+
+**重要提示**：*请仔细阅读[此链接](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/)中关于软件过滤设置的说明。如果您不确定，请勿修改这些设置。*
+
+## 深度工作模式开关
+
+- 在启动相机之前，可以配置深度工作模式（depth_work_mode），以供相应的xxx.launch文件支持。
+- 深度工作模式切换支持 Gemini 2、Gemini 2 L 和 Gemini 2 XL 相机。
+- xxx.launch 默认的深度工作模式配置是相机的默认配置，如需修改，可根据需要切换到相应模式。
+- 具体的相机深度工作模式支持类型可以参见深度模式的注释。
+
+```python
+<!-- Depth work mode support is as follows： -->
+<!-- Unbinned Dense Default -->
+<!-- Unbinned Sparse Default -->
+<!-- Binned Sparse Default -->
+<!-- Obstacle Avoidance -->
+<arg name="depth_work_mode" default=""/>
+```
+
+- 查看深度工作模式：
+
+```bash
+rosrun orbbec_camera list_depth_work_mode_node
+```
+
+## 深度 NFOV 和 WFOV 模式的配置
+
+对于 Femto Mega 和 Femto Bolt 设备，NFOV 和 WFOV 模式是通过在启动文件中配置深度和红外分辨率来实现的。
+在启动文件中，depth_width、depth_height、ir_width、ir_height 分别表示深度分辨率和红外分辨率。
+红外的帧率和分辨率必须与深度分辨率一致。不同模式与分辨率的对应关系如下：
+
+- NFOV unbinned: 640 x 576.
+- NFOV binned: 320 x 288.
+- WFOV unbinned: 1024 x 1024.
+- WFOV binned: 512 x 512.
+
+## 检查相机支持哪些配置文件
+
+```bash
+rosrun orbbec_camera list_camera_profile_mode_node
+```
+
+## 多相机
+
+请参阅[多摄像头支持](./docs/multi_camera.MD)文档以了解更多信息。
+
+## 所有可用的摄像机控制服务
+
+服务名称直观地反映了它们的用途。务必理解，与设置或获取参数相关的服务（分别表示为 `set_`和 `get_`）只有在激活相应的 `enable_`参数后才可用。例如，使用 `enable_left_ir` 启用左红外 (IR)、使用 `enable_right_ir` 启用右红外、使用 `enable_depth` 启用深度感知或使用 `enable_color` 启用色彩处理等功能（请参阅[启动参数](#launch参数)）是相应服务正常运行的先决条件。此配置确保只有在启动文件的流参数中启用其特定流时，服务才可用。
 
 - `/camera/get_auto_white_balance`
 - `/camera/get_camera_params`
@@ -235,235 +447,141 @@ rosservice call /camera/save_point_cloud "{}"
 - `/camera/set_depth_exposure`
 - `/camera/set_depth_gain`
 - `/camera/set_flood`
-- `/camera/set
-
-_left_ir_auto_exposure`
-
+- `/camera/set_left_ir_auto_exposure`
 - `/camera/set_left_ir_exposure`
 - `/camera/set_left_ir_gain`
 - `/camera/set_laser`
 - `/camera/set_white_balance`
 
-### 可用的主题
+## 所有可用主题
 
-- `/camera/color/camera_info`：彩色摄像头信息。
-- `/camera/color/image_raw`：彩色流图像。
-- `/camera/depth/camera_info`：深度摄像头信息。
-- `/camera/depth/image_raw`：深度流图像。
-- `/camera/depth/points`：点云，仅在`enable_point_cloud`为`true`时可用。
-- `/camera/depth_registered/points`：彩色点云，仅在`enable_colored_point_cloud`为`true`时可用。
-- `/camera/left_ir/camera_info`：左IR摄像头信息。
-- `/camera/left_ir/image_raw`：左IR流图像。
-- `/camera/right_ir/camera_info`：右IR摄像头信息。
-- `/camera/right_ir/image_raw`：右IR流图像。
+- `/camera/color/camera_info` : 彩色相机信息。
+- `/camera/color/image_raw`: 彩色流图像。
+- `/camera/depth/camera_info`: 深度相机信息。
+- `/camera/depth/image_raw`: 深度流图像。
+- `/camera/depth/points` :点云，仅当 `enable_point_cloud`为 `true`时可用。
+- `/camera/depth_registered/points`: 彩色点云，仅当 `enable_colored_point_cloud` 为 `true` 时可用。
+- `/camera/left_ir/camera_info`: 左红外相机信息。
+- `/camera/left_ir/image_raw`: 左红外流图像。
+- `/camera/right_ir/camera_info`: 右红外相机信息。
+- `/camera/right_ir/image_raw`: 右红外流图像。。
+- `/diagnostics`: 摄像机的诊断信息。目前，诊断信息仅包括摄像机的温度。
 
-## 启动参数
+## 构建Debian软件包
 
-以下启动参数可用：
-
-- `connection_delay`：重新打开设备的延迟时间（毫秒）。某些设备需要较长时间初始化，立即重新打开设备可能会导致固件崩溃，特别是在热插拔时。
-- `enable_point_cloud`：启用点云。
-- `enable_colored_point_cloud`：启用RGB点云。
-- `color_width`、`color_height`、`color_fps`：彩色流的分辨率和帧率。
-- `left_ir_width`、`left_ir_height`、`left_ir_fps`：左IR流的分辨率和帧率。
-- `right_ir_width`、`right_ir_height`、`right_ir_fps`：右IR流的分辨率和帧率。
-- `depth_width`、`depth_height`、`depth_fps`：深度流的分辨率和帧率。
-- `enable_color`：启用RGB摄像头。
-- `enable_depth`：启用深度摄像头。
-- `enable_left_ir`：启用左IR摄像头。
-- `enable_right_ir`：启用右IR摄像头。
-- `depth_registration`：启用深度帧到彩色帧的硬件对齐。当`enable_colored_point_cloud`设置为`true`时，此字段是必需的。
-- `log_level`用于OrbbecSDK控制台日志详细程度，级别为`none`、`info`、`debug`、`warn`、`fatal`。日志保存在`~/.ros/Log`
-  中。要进行文件日志记录，请调整`config/OrbbecSDKConfig_v1.0.xml`中的`<FileLogLevel>`。
-- `oredered_pc`：点云是否应组织为有序网格（`true`）或作为无序点集（`false`）。
-- `device_preset`：设备预设选项为`Default`或`High Accuracy`。
-- `enable_decimation_filter`：此滤波有效减少深度场景复杂性。滤波在[2x2]到[8x8]像素的核心大小上运行。图像大小在两个维度上按比例缩小，以保持宽高比。
-- `enable_hdr_merge`：此滤波与深度HDR功能联用。通过合并交替曝光值的连续深度图像，我们可以同时克服获取过度照明和光照不足物体的深度值的挑战。
-- `sequence_id_filter_id`：此滤波与深度HDR功能联用，并仅输出指定序列ID的序列。
-- `enable_threshold_filter`：此滤波保留感兴趣的深度值，并省略超出范围的深度值。
-- `enable_noise_removal_filter`：此滤波去除簇状斑点噪声，并导致深度图更少填充。
-- `enable_spatial_filter`：此滤
-
-镜根据大小参数执行多次迭代处理，以增强深度数据的平滑性。它还能填充深度图中的小孔。
-
-- `enable_temporal_filter`：此滤波旨在通过操纵基于先前帧的每个像素值来提高深度数据的持久性。滤波对数据进行单次处理，调整深度值的同时也更新跟踪历史。
-- `enable_hole_filling_filter`：此滤波使用指定的模式填充深度图中的所有孔洞。
-- `depth_precision`：深度精度，应为`1mm`格式。默认值为`1mm`。
-- `enable_laser`：是否启用激光。默认值为`true`。
-- `laser_on_off_mode`：激光开/关交替模式，0：关闭，1：开-关交替，2：关-开交替。默认值为`0`。
-- `retry_on_usb3_detection_failure`：如果摄像头连接到USB 2.0端口未被检测到，系统将尝试重置摄像头最多三次。此设置旨在防止USB
-  3.0设备被错误地识别为USB 2.0。建议在使用USB 2.0连接时将此参数设置为`false`，以避免不必要的重置。
-
-## 深度工作模式切换：
-
-- 在启动摄像头之前，可以为相应的xxx.launch文件配置深度工作模式（depth_work_mode）。
-- 深度工作模式切换由Gemini 2、Gemini 2 L和Gemini 2 XL摄像头支持。
-- xxx.launch的默认深度工作模式配置是摄像头的默认配置。如果需要修改，请根据需要切换到相应模式。
-- 具体的摄像头深度工作模式支持类型可以在深度模式的注释中找到。
-
-```XML
-<!-- Depth work mode support is as follows： -->
-<!-- Unbinned Dense Default -->
-<!-- Unbinned Sparse Default -->
-<!-- Binned Sparse Default -->
-<!-- Obstacle Avoidance -->
-<arg name="depth_work_mode" default=""/>
-```
-
-- 查看深度工作模式：
-
-```bash
-rosrun orbbec_camera list_depth_work_mode_node
-```
-
-## 配置深度NFOV和WFOV模式
-
-对于Femto Mega和Femto
-Bolt设备，通过在启动文件中配置深度和IR的分辨率实现NFOV和WFOV模式。在启动文件中，depth_width、depth_height、ir_width、ir_height代表深度和IR的分辨率。IR的帧速率和分辨率必须与深度一致。不同模式与分辨率之间的对应关系如下：
-
-- NFOV未合并：640 x 576。
-- NFOV合并：320 x 288。
-- WFOV未合并：1024 x 1024。
-- WFOV合并：512 x 512。
-
-## 检查摄像头支持哪些配置文件
-
-```bash
-rosrun orbbec_camera list_camera_profile_mode_node
-```
-
-## 构建Debian包
-
-首先，确保安装了必要的工具：
+开始之前，请安装所需的工具：
 
 ```bash
 sudo apt install debhelper fakeroot python3-bloom
 ```
 
-要创建Debian包，请执行以下命令：
+要创建 Debian 包，请执行以下命令：
 
 ```bash
 cd ~/ros_ws/src/OrbbecSDK_ROS1
 bash .make_deb.sh
 ```
 
-## 启动文件
+## 使用 Nodelet
 
-| 产品系列                                | 启动文件                     |
-|-------------------------------------|--------------------------|
-| astra+                              | astra_adv.launch         |
-| astra mini/astra mini pro/astra pro | astra.launch             |
-| astra mini s pro                    | astra.launch             |
-| astra2                              | astra2.launch            |
-| astra stereo s                      | stereo_s_u3.launch       |
-| astra pro2                          | astra_pro2.launch        |
-| dabai                               | dabai.launch             |
-| dabai d1                            | dabai_d1.launch          |
-| dabai dcw                           | dabai_dcw.launch         |
-| dabai dw                            | dabai_dw.launch          |
-| dabai pro                           | dabai_pro.launch         |
-| deeya                               | deeya.launch             |
-| femto / femto w                     | femto.launch             |
-| femto mega                          | femto_mega.launch        |
-| femto bolt                          | femto_bolt.launch        |
-| gemini                              | gemini.launch            |
-| gemini                              | gemini.launch            |
-| gemini2 / dabai DCL                 | gemini2.launch           |
-| gemini2L                            | gemini2L.launch          |
-| gemini e                            | gemini_e.launch          |
-| gemini e lite                       | gemini_e_lite.launch     |
-| dabai max                           | dabai_max.launch         |
-| dabai max pro                       | dabai_max_pro.launch     |
-| gemini uw                           | gemini_uw.launch         |
-| dabai dcw2                          | dabai_dcw2.launch        |
-| dabai dw2                           | dabai_dw2.launch         |
-| gemini ew                           | gemini_ew.launch         |
-| gemini ew lite                      | gemini_ew_lite.launch    |
-| gemini 335 /335 L                   | gemini_330_series.launch |
+对于需要使用nodelet的用户，请参考 `gemini2_nodelet.launch`
 
-**所有启动文件基本相似，主要区别在于为不同模型设置的参数默认值不同
-在同一系列中。USB标准的差异，例如USB 2.0与USB 3.0，可能需要调整这些参数。如果您
-遇到启动失败，请仔细查看规格手册。特别注意启动文件中的分辨率设置，以及其他参数，以确保兼容性和最佳性能。**
+## 支持的设备
 
-## 使用Nodelet
+目前，OrbbecSDK ROS Wrapper v2-main 分支支持以下设备。不久的将来，我们将支持更多设备。如果您在下表中找不到您的设备，请尝试 [main](https://github.com/orbbec/OrbbecSDK_ROS2) 分支。
 
-对于需要使用nodelet的用户，请参考`gemini2_nodelet.launch`
+为了获得最佳性能，我们强烈建议您更新到最新固件版本。这可确保您受益于最新的增强功能和错误修复。
 
-## 支持的硬件产品
+| 产品列表     | 最低固件版本 | **Launch File**    |
+| :----------- | :----------- | :----------------------- |
+| Gemini 330   | 1.2.20       | gemini_330_series.launch |
+| Gemini 330L  | 1.2.20       | gemini_330_series.launch |
+| Gemini 335   | 1.2.20       | gemini_330_series.launch |
+| Gemini 335L  | 1.2.20       | gemini_330_series.launch |
+| Gemini 335Lg | 1.3.46       | gemini_330_series.launch |
+| Gemini 336   | 1.2.20       | gemini_330_series.launch |
+| Gemini 336L  | 1.2.20       | gemini_330_series.launch |
+| Gemini 335Le | 1.5.31       | gemini_330_series.launch |
+| Femto Bolt   | 1.1.2        | femto_bolt.launch        |
+| Femto Mega   | 1.3.0        | femto_mega.launch        |
+| Astra 2      | 2.8.20       | astra2.launch            |
+| Gemini 2 L   | 1.4.53       | gemini2L.launch          |
+| Gemini 2     | 1.4.92       | gemini2.launch           |
 
-## 产品支持
-
-| **产品列表**         | **固件版本**                    |
-|------------------|-----------------------------|
-| Gemini 335       | 1.2.20                      |
-| Gemini 335L      | 1.2.20                      |
-| Femto Bolt       | 1.0.6/1.0.9                 |
-| Femto Mega       | 1.1.7/1.2.7                 |
-| Gemini 2 XL      | Obox: V1.2.5 VL:1.4.54      |
-| Astra 2          | 2.8.20                      |
-| Gemini 2 L       | 1.4.32                      |
-| Gemini 2         | 1.4.60 /1.4.76              |
-| Astra+           | 1.0.22/1.0.21/1.0.20/1.0.19 |
-| Femto            | 1.6.7                       |
-| Femto W          | 1.1.8                       |
-| DaBai            | 2436                        |
-| DaBai DCW        | 2460                        |
-| DaBai DW         | 2606                        |
-| Astra Mini Pro   | 1007                        |
-| Gemini E         | 3460                        |
-| Gemini E Lite    | 3606                        |
-| Gemini           | 3.0.18                      |
-| Astra Mini S Pro | 1.0.05                      |
+所有启动文件本质上都类似，主要区别在于同一系列不同型号的参数默认值。USB 标准的差异（例如 USB 2.0 和 USB 3.0）可能需要调整这些参数。如果您遇到启动失败，请仔细阅读规格手册。请特别注意启动文件中的分辨率设置以及其他参数，以确保兼容性和最佳性能。
 
 ## 常见问题
 
-### 多相机无画面
+### 意外崩溃
 
-- 可能是电源供应不足。为避免这种情况，不要将所有摄像头连接到同一个集线器上，而应使用带电源的集线器。
+如果摄像头节点意外崩溃，它将在当前运行目录中生成崩溃日志：`~/.ros/Log/camera_crash_stack_trace_xx.log`。请将此日志发送给支持团队或将其提交至 GitHub 问题以获取进一步帮助。
 
-- 还可能是分辨率过高。解决这个问题，尝试降低分辨率。
+### 没有来自多个摄像机的数据流
 
-### 错误："设备启动失败：usbEnumerator createUsbDevice失败！"
+**电源不足**:
 
-- 当前设备没有权限访问设备。检查当前设备的PID：
+- 确保每个摄像头都连接到单独的集线器。
+- 使用有源集线器为每个摄像头提供足够的电力。
 
-  ```bash
-  lsusb | grep 2bc5
-  ```
+**高分辨率**:
 
-  您的输出应该看起来像这样：
+- 尝试降低分辨率来解决数据流问题。
 
-  ```text
-  Bus 002 Device 007: ID 2bc5:your_pid_here
-  ```
+**增加 usbfs_memory_mb 值**:
 
-  编辑`/etc/udev/rules.d/99-obsensor-libusb.rules`并添加以下行：
+- 运行以下命令，将 `usbfs_memory_mb` 值增加到 128MB（这是一个参考值，可以根据系统需求进行调整）：
 
-  ```bash
-  SUBSYSTEM=="usb", ATTR{idProduct}=="
+```bash
+    echo 128 | sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb
+```
 
-your_pid_here", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root", GROUP:="video", SYMLINK+="your_device_name_here"
+- 要使此更改永久生效，请检查[此链接](https://github.com/OpenKinect/libfreenect2/issues/807)。
 
-  ```
+### 由于 OpenCV 版本问题导致编译失败
 
-  将`your_pid_here`替换为您设备的PID，将`your_device_name_here`替换为您想为设备创建的名称（例如，`gemini_camera`）。
+在某些情况下，您的主机上可能有多个版本的 OpenCV，这可能会导致编译失败。您可以通过指定 OpenCV 版本来解决此问题。在 cmake 文件夹中找到 CMakeLists.txt 文件，并找到以下代码：
 
-  然后重启udev服务：
+```bash
+find_package(OpenCV REQUIRED)
+```
 
-  ```bash
-  sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
-  ```
+添加 OpenCV_dir 或在其之前指定版本：
 
-## 许可证
+```bash
+find_package(OpenCV 4.2.0 REQUIRED)
+```
 
-版权所有 2024 Orbbec Ltd.
+Or:
 
-根据Apache许可证，版本2.0（“许可证”）授权；除非符合许可证，否则您不得使用此项目。您可以在
+```bash
+set(OpenCV_DIR "/path_to_your_opencv_dir")
+find_package(OpenCV REQUIRED)
+```
+
+### 其他故障排除
+
+- 如果您遇到其他问题，请将 `log_level` 参数设置为 `debug`。这将在运行目录中生成一个 SDK 日志文件：`~/.ros/Log/OrbbecSDK.log.txt`。
+  请将此文件提供给支持团队以获取进一步帮助。
+- 如果需要固件日志，请将 `enable_heartbeat`设置为 `true`以激活此功能。
+
+### 为什么有这么多启动文件？
+
+- 不同的相机有不同的默认分辨率和图像格式。
+- 为了简化使用，每个相机都有自己的启动文件。
+
+## 其他有用链接
+
+- [OrbbecSDK_v2](https://github.com/orbbec/OrbbecSDK_v2/releases)
+- [Gemini 330 depth presets](https://www.orbbec.com/docs/g330-use-depth-presets/)
+
+## License
+
+版权所有 2024 Orbbec Ltd。
+
+根据 Apache 许可证 2.0 版（"许可证"）获得许可；除非遵守许可证，否则您不得使用此项目。您可以在以下网址获取许可证副本：
 
 [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-获得许可证副本。
+除非适用法律要求或书面同意，否则根据本许可证分发的软件均按“原样”分发，不附带任何明示或暗示的保证或条件。请参阅许可证，了解本许可证下特定语言的权限和限制规定。
 
-除非适用法律要求或书面同意，根据许可证分发的软件将按“原样”基础提供，不附带任何形式的明示或暗示的保证或条件。请参阅许可证了解权限和限制的具体语言。
-
-其他名称和品牌可能是其他所有者的财产。
+**Other names and brands may be claimed as the property of others**
