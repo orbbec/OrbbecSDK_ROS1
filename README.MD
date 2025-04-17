@@ -21,7 +21,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   </thead>
   <tbody>
     <tr>
-      <td rowspan="7" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
       <td>Gemini 335</td>
       <td>full maintenance</td>
       <td>recommended for new designs</td>
@@ -53,6 +53,11 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
     </tr>
     <tr>
       <td>Gemini 335Lg</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335Le</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
@@ -521,24 +526,24 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 The following devices are supported by the OrbbecSDK ROS1 Wrapper.
 
 | Product                               | **Minimal Firmware Version** | launch file              |
-| ------------------------------------- | ---------------------------- | ------------------------ |
-| Astra+                                | 1.0.19                       | astra_adv.launch         |
-| Astra Mini /Astra Mini Pro /Astra Pro | 1007                         | astra.launch             |
-| Astra Mini Pro S                      | 1005                         | astra.launch             |
-| Astra 2                               | 2.8.20                       | astra2.launch            |
-| Dabai                                 | 2436                         | dabai.launch             |
-| Dabai DW                              | 2606                         | dabai_dw.launch          |
-| Dabai DCW                             | 2460                         | dabai_dcw.launch         |
-| Femto/Femto W                         | 1.1.8                        | femto.launch             |
-| Femto Mega                            | 1.1.7                        | femto_mega.launch        |
-| Femto Bolt                            | 1.0.6                        | femto_bolt.launch        |
-| Femto Mega I                          | 2.0.2                        | femto_net_camera.launch  |
-| Gemini                                | 3018                         | gemini.launch            |
-| Gemini 2 / Dabai DCL                  | 1.4.60                       | gemini2.launch           |
-| Gemini 2 L                            | 1.4.32                       | gemini2L.launch          |
-| Gemini E                              | 3460                         | gemini_e.launch          |
-| Gemini E Lite                         | 3606                         | gemini_e_lite.launch     |
-| Gemini 335/335L/336/336L              | 1.2.20                       | gemini_330_series.launch |
+| ------------------------------------- | ---------------------------------- | ------------------------ |
+| Astra+                                | 1.0.19                             | astra_adv.launch         |
+| Astra Mini /Astra Mini Pro /Astra Pro | 1007                               | astra.launch             |
+| Astra Mini Pro S                      | 1005                               | astra.launch             |
+| Astra 2                               | 2.8.20                             | astra2.launch            |
+| Dabai                                 | 2436                               | dabai.launch             |
+| Dabai DW                              | 2606                               | dabai_dw.launch          |
+| Dabai DCW                             | 2460                               | dabai_dcw.launch         |
+| Femto/Femto W                         | 1.1.8                              | femto.launch             |
+| Femto Mega                            | 1.1.7                              | femto_mega.launch        |
+| Femto Bolt                            | 1.0.6                              | femto_bolt.launch        |
+| Femto Mega I                          | 2.0.2                              | femto_net_camera.launch  |
+| Gemini                                | 3018                               | gemini.launch            |
+| Gemini 2 / Dabai DCL                  | 1.4.60                             | gemini2.launch           |
+| Gemini 2 L                            | 1.4.32                             | gemini2L.launch          |
+| Gemini E                              | 3460                               | gemini_e.launch          |
+| Gemini E Lite                         | 3606                               | gemini_e_lite.launch     |
+| Gemini 335/335L/336/336L              | 1.2.20                             | gemini_330_series.launch |
 
 > [!IMPORTANT]
 >
