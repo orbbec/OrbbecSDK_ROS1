@@ -422,7 +422,30 @@ void OBCameraNode::setupDevices() {
       sync_config = device_->getMultiDeviceSyncConfig();
       ROS_INFO_STREAM("set sync mode to " << sync_config.syncMode);
     }
-
+    if (color_rotation_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_ROTATE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_ROTATE_INT, color_rotation_);
+      ROS_INFO_STREAM("set color rotation  to "
+                      << device_->getIntProperty(OB_PROP_COLOR_ROTATE_INT));
+    }
+    if (depth_rotation_ != -1 &&
+        device_->isPropertySupported(OB_PROP_DEPTH_ROTATE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_DEPTH_ROTATE_INT, depth_rotation_);
+      ROS_INFO_STREAM("set depth rotation  to "
+                      << device_->getIntProperty(OB_PROP_DEPTH_ROTATE_INT));
+    }
+    if (left_ir_rotation_ != -1 &&
+        device_->isPropertySupported(OB_PROP_IR_ROTATE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_IR_ROTATE_INT, left_ir_rotation_);
+      ROS_INFO_STREAM("set left ir rotation  to "
+                      << device_->getIntProperty(OB_PROP_IR_ROTATE_INT));
+    }
+    if (right_ir_rotation_ != -1 &&
+        device_->isPropertySupported(OB_PROP_IR_RIGHT_ROTATE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_IR_RIGHT_ROTATE_INT, right_ir_rotation_);
+      ROS_INFO_STREAM("set right ir rotation  to "
+                      << device_->getIntProperty(OB_PROP_IR_RIGHT_ROTATE_INT));
+    }
     if (device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     }

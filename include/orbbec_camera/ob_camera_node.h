@@ -416,6 +416,10 @@ class OBCameraNode {
   boost::optional<OBCameraParam> camera_params_;
   bool is_initialized_ = false;
   bool enable_soft_filter_ = true;
+  int color_rotation_ = -1;
+  int depth_rotation_ = -1;
+  int left_ir_rotation_ = -1;
+  int right_ir_rotation_ = -1;
   bool enable_color_auto_exposure_ = true;
   bool enable_color_auto_white_balance_ = true;
   int color_exposure_ = -1;
