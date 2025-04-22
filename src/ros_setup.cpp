@@ -350,7 +350,8 @@ void OBCameraNode::setupDevices() {
         }
       }
     }
-    if (device_->isPropertySupported(OB_PROP_DEPTH_INDUSTRY_MODE_INT, OB_PERMISSION_READ_WRITE)) {
+    if (!industry_mode_.empty() &&
+        device_->isPropertySupported(OB_PROP_DEPTH_INDUSTRY_MODE_INT, OB_PERMISSION_READ_WRITE)) {
       if (industry_mode_ == "default") {
         OBDepthIndustryMode mode = OB_INDUSTRY_DEFAULT;
         device_->setIntProperty(OB_PROP_DEPTH_INDUSTRY_MODE_INT, (int32_t)mode);

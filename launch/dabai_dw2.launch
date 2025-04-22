@@ -34,7 +34,7 @@
     <arg name="depth_filter_config" default="" />
     <arg name="laser_energy_level" default="-1"/>
     <arg name="enable_ldp" default="true"/>
-    <arg name="industry_mode" default="default" />
+    <arg name="industry_mode" default="" />
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>

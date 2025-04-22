@@ -248,7 +248,7 @@ void OBCameraNode::getParameters() {
       nh_private_.param<bool>("retry_on_usb3_detection_failure", false);
   laser_energy_level_ = nh_private_.param<int>("laser_energy_level", -1);
   enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
-  industry_mode_ = nh_private_.param<std::string>("industry_mode", "default");
+  industry_mode_ = nh_private_.param<std::string>("industry_mode", "");
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   enable_color_auto_white_balance_ =
