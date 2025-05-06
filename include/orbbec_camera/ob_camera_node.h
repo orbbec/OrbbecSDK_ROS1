@@ -136,9 +136,9 @@ class OBCameraNode {
 
   std::shared_ptr<ob::Frame> processColorFrameFilter(std::shared_ptr<ob::Frame> &frame);
 
-  std::shared_ptr<ob::Frame> processRightIrFrameFilter(std::shared_ptr<ob::Frame>& frame);
+  std::shared_ptr<ob::Frame> processRightIrFrameFilter(std::shared_ptr<ob::Frame> &frame);
 
-  std::shared_ptr<ob::Frame> processLeftIrFrameFilter(std::shared_ptr<ob::Frame>& frame);
+  std::shared_ptr<ob::Frame> processLeftIrFrameFilter(std::shared_ptr<ob::Frame> &frame);
 
   uint64_t getFrameTimestampUs(const std::shared_ptr<ob::Frame> &frame);
 
@@ -482,10 +482,10 @@ class OBCameraNode {
   int depth_brightness_ = -1;
   int ir_exposure_ = -1;
   int ir_brightness_ = -1;
-  bool enable_right_ir_sequence_id_filter_=false;
-  int right_ir_sequence_id_filter_id_=-1;
-  bool enable_left_ir_sequence_id_filter_=false;
-  int left_ir_sequence_id_filter_id_=-1;
+  bool enable_right_ir_sequence_id_filter_ = false;
+  int right_ir_sequence_id_filter_id_ = -1;
+  bool enable_left_ir_sequence_id_filter_ = false;
+  int left_ir_sequence_id_filter_id_ = -1;
   int ir_ae_max_exposure_ = -1;
   bool enable_ir_long_exposure_ = false;
   std::string depth_filter_config_;
@@ -589,7 +589,9 @@ class OBCameraNode {
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;
   std::string time_domain_ = "global";
-  std::string exposure_range_mode_="default";
+  std::string exposure_range_mode_ = "default";
+  std::string load_config_json_file_path_ = "";
+  std::string export_config_json_file_path_ = "";
   bool enable_sync_host_time_ = true;
   ros::Timer sync_host_time_timer_;
 

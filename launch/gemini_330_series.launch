@@ -24,6 +24,9 @@
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="true"/>
     <arg name="preset_firmware_path" default=""/>
+    <arg name="config_file_path" default=""/>
+    <arg name="load_config_json_file_path" default=""/>
+    <arg name="export_config_json_file_path" default=""/>
     <!-- Network device settings: default enumerate_net_device is set to true, which will automatically enumerate network devices -->
     <!-- If you do not want to automatically enumerate network devices, -->
     <!-- you can set enumerate_net_device to true, net_device_ip to the device's IP address, and net_device_port to the default value of 8090 -->
@@ -231,6 +234,9 @@
             <param name="trigger_out_delay_us" value="$(arg trigger_out_delay_us)"/>
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
+            <param name="config_file_path" value="$(arg config_file_path)"/>
+            <param name="load_config_json_file_path" value="$(arg load_config_json_file_path)"/>
+            <param name="export_config_json_file_path" value="$(arg export_config_json_file_path)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="ir_brightness" value="$(arg ir_brightness)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
@@ -385,5 +391,9 @@
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
+    </group>
+    <!-- Load config yaml file -->
+    <group if="$(eval config_file_path != '')">
+        <rosparam ns="$(arg camera_name)/$(arg camera_name)" file="$(arg config_file_path)" command="load" />
     </group>
 </launch>

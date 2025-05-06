@@ -289,6 +289,9 @@ void OBCameraNode::getParameters() {
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   time_domain_ = nh_private_.param<std::string>("time_domain", "global");
   exposure_range_mode_ = nh_private_.param<std::string>("exposure_range_mode", "default");
+  load_config_json_file_path_ = nh_private_.param<std::string>("load_config_json_file_path", "");
+  export_config_json_file_path_ =
+      nh_private_.param<std::string>("export_config_json_file_path", "");
   disparity_range_mode_ = nh_private_.param<int>("disparity_range_mode", -1);
   disparity_search_offset_ = nh_private_.param<int>("disparity_search_offset", -1);
   disparity_offset_config_ = nh_private_.param<bool>("disparity_offset_config", false);
@@ -2106,12 +2109,15 @@ bool OBCameraNode::isGemini335PID(uint32_t pid) {
   const uint16_t GEMINI_336L_PID = 0x0807;   // Gemini 335Lg
   const uint16_t GEMINI_335LG_PID = 0x080B;  // Gemini 336Lg
   const uint16_t GEMINI_336LG_PID = 0x080D;
-  const uint16_t GEMINI_335LE_PID = 0x080E;  // Gemini 335Le
-  const uint16_t GEMINI_336LE_PID = 0x0810;  // Gemini 335Le
+  const uint16_t GEMINI_335LE_PID = 0x080E;                 // Gemini 335Le
+  const uint16_t GEMINI_336LE_PID = 0x0810;                 // Gemini 335Le
+  const int32_t CUSTOM_ADVANTECH_GEMINI_336_PID = 0x0816;   // Custom Advantech Gemini 336
+  const int32_t CUSTOM_ADVANTECH_GEMINI_336L_PID = 0x0817;  // Custom Advantech Gemini 336L
   return pid == GEMINI_335_PID || pid == GEMINI_330_PID || pid == GEMINI_336_PID ||
          pid == GEMINI_335L_PID || pid == GEMINI_330L_PID || pid == GEMINI_336L_PID ||
          pid == GEMINI_335LG_PID || pid == GEMINI_336LG_PID || pid == GEMINI_335LE_PID ||
-         pid == GEMINI_336LE_PID;
+         pid == GEMINI_336LE_PID || pid == CUSTOM_ADVANTECH_GEMINI_336_PID ||
+         pid == CUSTOM_ADVANTECH_GEMINI_336L_PID;
 }
 
 }  // namespace orbbec_camera
