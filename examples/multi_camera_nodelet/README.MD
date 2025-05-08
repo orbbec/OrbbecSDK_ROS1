@@ -1,12 +1,12 @@
-## 使用Orbbec ROS包配置多个摄像头(Nodelet)
+## Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)
 
-本节描述了如何在ROS 1环境将多个摄像头的Node节点放进同一个Nodelet_manager，请确保你已查看过[multi_camera.MD](multi_camera.MD)
+This section describes how to set up multiple camera Node nodes in the same Nodelet Manager in a ROS 1 environment. Make sure you've already reviewed the [multi_camera document](../multi_camera/).
 
-本节所使用的案例launch文件为`multi_camera_nodelet.launch`与`gemini_330_series_nodelet.launch`
+The example launch files used in this section are `multi_camera_nodelet.launch` and `gemini_330_series_nodelet.launch`.
 
-### 配置Nodelet_manager
+### Configuring the Nodelet Manager
 
-你可以通过设置`manager`参数启动具体名称的**Nodelet_manager**。以下是一个使用ROS1启动一个名为`orbbec_camera_manager`的**Nodelet_manager**。
+You can start a specific **Nodelet Manager** by setting the `manager` parameter. Here's an example of launching a **Nodelet Manager** named `orbbec_camera_manager` in ROS 1.
 
 ```bash
 <launch>
@@ -15,11 +15,12 @@
     <node unless="false" pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
               output="screen" required="false" respawn="false"/>
 </launch>
+
 ```
 
-### 配置相机Nodelet
+### Configuring Camera Nodelets
 
-在这个示例中，我们启动了一个名为 `orbbec_camera_manager` 的  **Nodelet Manager** ，并且通过传递 `manager` 参数来启动两个 `gemini_330_series_nodelet.launch` 文件。通过这种方式，两个相机的 `nodelet` 都将由同一个 `orbbec_camera_manager` 来管理。
+In this example, we launch a **Nodelet Manager** called `orbbec_camera_manager`, and then use the `manager` parameter to launch two `gemini_330_series_nodelet.launch` files. By doing this, both camera nodelets will be managed by the same `orbbec_camera_manager`.
 
 ```bash
 <launch>
@@ -52,23 +53,24 @@
         <arg name="device_num" value="$(arg device_num)"/>
     </include>
 </launch>
+
 ```
 
-#### 运行启动文件
+#### Running the Launch File
 
 ```bash
 roslaunch orbbec_camera multi_camera_nodelet.launch
 ```
 
-### 配置相机参数
+### Configuring Camera Parameters
 
-#### 多台相机相同参数
+#### Identical Parameters for All Cameras
 
-当你需要将所有相机的配置修改为相同时，由于 `multi_camera_nodelet.launch` 中启动的相机节点是基于 `gemini_330_series_nodelet.launch` 文件的，因此你只需要修改 `gemini_330_series_nodelet.launch` 中的相关参数即可。
+When you need to apply the same configuration to all cameras, since the camera nodes launched in `multi_camera_nodelet.launch` are based on the `gemini_330_series_nodelet.launch` file, you only need to modify the relevant parameters in `gemini_330_series_nodelet.launch`.
 
-#### 多台相机不同参数
+#### Different Parameters for Each Camera
 
-当你需要为多个相机配置不同的参数时，例如修改 `enable_hardware_noise_removal_filter` 参数，你可以在 `multi_camera_nodelet.launch` 文件中为每个相机单独配置不同的值，从而实现每个相机的个性化配置。
+When you need to configure different parameters for each camera (for example, modifying the `enable_hardware_noise_removal_filter` parameter), you can set different values for each camera in the `multi_camera_nodelet.launch` file. This allows you to customize each camera's configuration.
 
 ```bash
 <launch>

@@ -1,6 +1,6 @@
-## Enabling and Visualizing Point Cloud in ROS 1
+## nabling and Visualizing Point Cloud in ROS 1
 
-This section demonstrates how to enable point cloud data output from the camera node and visualize it using RViz, similarly to the initial camera node setup discussed in the [Starting Camera Node](./start_camera_node.MD) document.
+This section demonstrates how to enable point cloud data output from the camera node and visualize it using RViz, similarly to the initial camera node setup discussed in the [Starting Camera Node](../start_camera_node/) document.
 
 ### Enabling Depth Point Cloud
 
@@ -25,7 +25,7 @@ After running the above command, perform the following steps to visualize the de
 
 Here is what the depth point cloud might look like in RViz:
 
-![Depth Point Cloud Visualization](./images/image5.jpg)
+![Depth Point Cloud Visualization](./image/image5.jpg)
 
 ### Enabling Colored Point Cloud
 
@@ -50,4 +50,4 @@ To visualize the colored point cloud data:
 
 The result of the colored point cloud in RViz should look similar to this:
 
-![Colored Point Cloud Visualization](./images/image6.jpg)
+![Colored Point Cloud Visualization](./image/image6.jpg)

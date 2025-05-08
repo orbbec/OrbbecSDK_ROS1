@@ -3,7 +3,8 @@
 This guide describes how to configure and use multiple Orbbec cameras simultaneously in a ROS 1 environment.
 
 ## Prerequisites
-First asume that you have already installed the Orbbec ROS package. If not, please refer to the [Orbbec ROS Package Installation Guide](../README.MD).
+
+First asume that you have already installed the Orbbec ROS package. If not, please refer to the [Orbbec ROS Package Installation Guide](../../README.MD).
 
 ## 1. Increase usbfs_memory_mb Value (CRITICAL STEP)
 
@@ -98,6 +99,5 @@ Run the TF configuration:
 roslaunch orbbec_camera multi_camera_tf.launch
 ```
 
-This setup allows you to use multiple Orbbec cameras simultaneously in your ROS environment. Remember, 
+This setup allows you to use multiple Orbbec cameras simultaneously in your ROS environment. Remember,
 the first step of increasing the usbfs_memory_mb value is critical for ensuring your cameras function correctly in a multi-camera setup.
-

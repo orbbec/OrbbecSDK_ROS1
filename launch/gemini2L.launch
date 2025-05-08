@@ -62,6 +62,13 @@
     <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
     <arg name="align_mode" default="SW"/>
 
+    <!-- Depth work mode support is as follows： -->
+    <!-- Unbinned Dense Default -->
+    <!-- Unbinned Sparse Default -->
+    <!-- Binned Sparse Default -->
+    <!-- Obstacle Avoidance -->
+    <arg name="depth_work_mode" default=""/>
+
     <!-- filter switch -->
     <arg name="enable_decimation_filter" default="false"/>
     <arg name="enable_hdr_merge" default="false"/>
@@ -157,6 +164,8 @@
             <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
             <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
             <param name="ordered_pc" value="$(arg ordered_pc)"/>
+
+            <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
 
             <param name="enable_decimation_filter" value="$(arg enable_decimation_filter)"/>
             <param name="enable_hdr_merge" value="$(arg enable_hdr_merge)"/>

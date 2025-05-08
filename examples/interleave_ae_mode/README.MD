@@ -57,4 +57,4 @@ roslaunch orbbec_camera gemini_330_series.launch
 
 ## Multi_camera_synced + Interleave_ae
 
-Please refer to [multi_camera_synced](../multi_camera_synced/README.MD) and [Parameter Introduction](#parameter-introduction)
+Please refer to [multi_camera_synced](../multi_camera_synced/) and [Parameter Introduction](#parameter-introduction)
