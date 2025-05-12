@@ -49,7 +49,9 @@ int main() {
       std::string serial = device_info->serialNumber();
       std::string uid = device_info->uid();
       auto port_id = parseUsbPort(uid);
-      ROS_INFO_STREAM("- Name: " << device_info->getName() << ", PID: 0x" << device_info->getPid()
+      std::stringstream pid_hex;
+      pid_hex<< std::hex << std::setw(4) << std::setfill('0') << device_info->getPid();
+      ROS_INFO_STREAM("- Name: " << device_info->getName() << ", PID: 0x" << pid_hex.str()
                                  << ", SN/ID: " << serial
                                  << ", Connection: " << device_info->getConnectionType());
       ROS_INFO_STREAM("serial: " << serial);
