@@ -454,6 +454,7 @@ class OBCameraNode {
   bool enable_color_auto_exposure_priority_ = false;
   bool enable_color_auto_white_balance_ = true;
   bool enable_color_backlight_compenstation_ = false;
+  std::string color_powerline_freq_;
   bool enable_color_decimation_filter_ = false;
   // color ae roi
   int color_ae_roi_left_ = -1;

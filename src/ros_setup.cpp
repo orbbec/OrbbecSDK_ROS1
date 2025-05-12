@@ -450,6 +450,19 @@ void OBCameraNode::setupDevices() {
       device_->setIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
                               set_enable_color_backlight_compenstation);
     }
+    if (!color_powerline_freq_.empty() &&
+        device_->isPropertySupported(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, OB_PERMISSION_WRITE)) {
+      if (color_powerline_freq_ == "disable") {
+        device_->setIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 2);
+      } else if (color_powerline_freq_ == "50hz") {
+        device_->setIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 0);
+      } else if (color_powerline_freq_ == "60hz") {
+        device_->setIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 1);
+      } else if (color_powerline_freq_ == "auto") {
+        device_->setIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 3);
+      }
+      ROS_INFO_STREAM("Setting color powerline freq to " << color_powerline_freq_);
+    }
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     }

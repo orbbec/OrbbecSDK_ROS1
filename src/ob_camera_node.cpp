@@ -169,6 +169,7 @@ void OBCameraNode::getParameters() {
       nh_private_.param<bool>("enable_color_auto_white_balance", true);
   enable_color_backlight_compenstation_ =
       nh_private_.param<bool>("enable_color_backlight_compenstation", false);
+  color_powerline_freq_ = nh_private_.param<std::string>("color_powerline_freq", "");
   enable_color_decimation_filter_ =
       nh_private_.param<bool>("enable_color_decimation_filter", false);
   color_ae_roi_left_ = nh_private_.param<int>("color_ae_roi_left", -1);
