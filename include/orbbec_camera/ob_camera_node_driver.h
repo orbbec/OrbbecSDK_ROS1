@@ -67,6 +67,8 @@ class OBCameraNodeDriver {
                             uint8_t percent);
   void updatePresetFirmware(std::string path);
 
+  void firmwareUpdateCallback(OBFwUpdateState state, const char* message, uint8_t percent);
+
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
   std::string config_path_;
@@ -107,5 +109,6 @@ class OBCameraNodeDriver {
   std::size_t colon_pos;
   std::string uvc_backend_;
   std::string preset_firmware_path_;
+  std::string upgrade_firmware_;
 };
 }  // namespace orbbec_camera
