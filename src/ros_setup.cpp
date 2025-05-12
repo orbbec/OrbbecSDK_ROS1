@@ -708,6 +708,20 @@ void OBCameraNode::setupDevices() {
       device_->exportSettingsAsPresetJsonFile(export_config_json_file_path_.c_str());
       ROS_INFO_STREAM("Exporting config json file path : " << export_config_json_file_path_);
     }
+    if (device_->isPropertySupported(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL,
+                                     OB_PERMISSION_WRITE)) {
+      ROS_INFO_STREAM("Setting accel data correction to "
+                      << (enable_accel_data_correction_ ? "ON" : "OFF"));
+      device_->setBoolProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL,
+                               enable_accel_data_correction_);
+    }
+    if (device_->isPropertySupported(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL,
+                                     OB_PERMISSION_WRITE)) {
+      ROS_INFO_STREAM("Setting gyro data correction to "
+                      << (enable_gyro_data_correction_ ? "ON" : "OFF"));
+      device_->setBoolProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL,
+                               enable_gyro_data_correction_);
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
   } catch (const std::exception& e) {
