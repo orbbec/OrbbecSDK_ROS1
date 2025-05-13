@@ -326,6 +326,10 @@ class OBCameraNode {
 
   bool setFilterCallback(SetFilterRequest &request, SetFilterResponse &response);
 
+  bool setWriteCustomerData(SetStringRequest &request, SetStringResponse &response);
+
+  bool setReadCustomerData(SetStringRequest &request, SetStringResponse &response);
+
   // Set ROI
   void setColorAutoExposureROI();
   void setDepthAutoExposureROI();
@@ -423,6 +427,8 @@ class OBCameraNode {
   ros::ServiceServer switch_ir_data_source_channel_srv_;
   ros::ServiceServer get_lrm_measure_distance_srv_;
   ros::ServiceServer set_filter_srv_;
+  ros::ServiceServer set_write_customerdata_srv_;
+  ros::ServiceServer set_read_customerdata_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;

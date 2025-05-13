@@ -241,6 +241,19 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getLrmMeasureDistanceCallback(request, response);
         return response.success;
       });
+
+  set_write_customerdata_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+      "/" + camera_name_ + "/" + "set_write_customer_data",
+      [this](SetStringRequest& request, SetStringResponse& response) {
+        response.success = this->setWriteCustomerData(request, response);
+        return response.success;
+      });
+  set_read_customerdata_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+      "/" + camera_name_ + "/" + "set_read_customer_data",
+      [this](SetStringRequest& request, SetStringResponse& response) {
+        response.success = this->setReadCustomerData(request, response);
+        return response.success;
+      });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -1044,6 +1057,48 @@ bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
   } catch (const ob::Error& e) {
     std::stringstream ss;
     ss << "Failed to switch IR data source channel: " << e.getMessage();
+    ROS_ERROR_STREAM(ss.str());
+    response.message = ss.str();
+    return false;
+  }
+  return false;
+}
+
+bool OBCameraNode::setWriteCustomerData(SetStringRequest& request, SetStringResponse& response) {
+  if (request.data.empty()) {
+    response.success = false;
+    response.message = "set write customer data is empty";
+    return false;
+  }
+  try {
+    device_->writeCustomerData(request.data.c_str(), request.data.size());
+    response.message = "set write customer data is " + request.data;
+    response.success = true;
+    return true;
+  } catch (const ob::Error& e) {
+    std::stringstream ss;
+    ss << "Failed to set write customer data: " << e.getMessage();
+    ROS_ERROR_STREAM(ss.str());
+    response.message = ss.str();
+    return false;
+  }
+  return false;
+}
+
+bool OBCameraNode::setReadCustomerData(SetStringRequest& request, SetStringResponse& response) {
+  (void)request;
+  try {
+    std::vector<uint8_t> customer_date;
+    customer_date.resize(40960);
+    uint32_t customer_date_len = 0;
+    device_->readCustomerData(customer_date.data(), &customer_date_len);
+    std::string customer_date_str(customer_date.begin(), customer_date.end());
+    response.message = "read customer data is " + customer_date_str;
+    response.success = true;
+    return true;
+  } catch (const ob::Error& e) {
+    std::stringstream ss;
+    ss << "Failed to read customer data: " << e.getMessage();
     ROS_ERROR_STREAM(ss.str());
     response.message = ss.str();
     return false;
