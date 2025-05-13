@@ -328,7 +328,7 @@ class OBCameraNode {
 
   bool setWriteCustomerData(SetStringRequest &request, SetStringResponse &response);
 
-  bool setReadCustomerData(SetStringRequest &request, SetStringResponse &response);
+  bool setReadCustomerData(GetStringRequest &request, GetStringResponse &response);
 
   // Set ROI
   void setColorAutoExposureROI();

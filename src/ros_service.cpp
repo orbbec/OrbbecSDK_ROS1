@@ -248,9 +248,9 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->setWriteCustomerData(request, response);
         return response.success;
       });
-  set_read_customerdata_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+  set_read_customerdata_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
       "/" + camera_name_ + "/" + "set_read_customer_data",
-      [this](SetStringRequest& request, SetStringResponse& response) {
+      [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->setReadCustomerData(request, response);
         return response.success;
       });
@@ -1085,7 +1085,7 @@ bool OBCameraNode::setWriteCustomerData(SetStringRequest& request, SetStringResp
   return false;
 }
 
-bool OBCameraNode::setReadCustomerData(SetStringRequest& request, SetStringResponse& response) {
+bool OBCameraNode::setReadCustomerData(GetStringRequest& request, GetStringResponse& response) {
   (void)request;
   try {
     std::vector<uint8_t> customer_date;
