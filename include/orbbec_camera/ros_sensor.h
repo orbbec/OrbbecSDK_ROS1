@@ -59,15 +59,11 @@ class ROSOBSensor {
 
   OBSensorType getSensorType();
 
-  void setMirror(bool data);
-
   bool isMirrored() const;
 
   std::shared_ptr<ob::StreamProfileList> getStreamProfileList() const;
 
   std::shared_ptr<ob::Sensor> getSensor() const;
-
-  void setRotation(int rotation);
 
  private:
   std::shared_ptr<ob::Device> device_ = nullptr;

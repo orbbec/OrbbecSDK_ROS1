@@ -299,10 +299,59 @@ void OBCameraNode::setupDevices() {
     }
     if (enable) {
       // set rotation
-      auto rotation = image_rotation_[stream_index];
-      if (rotation != 0) {
-        ROS_INFO_STREAM("set " << stream_name_[stream_index] << " rotation to " << rotation);
-        sensors_[stream_index]->setRotation(rotation);
+      OBPropertyID rotationPropertyID = OB_PROP_DEPTH_ROTATE_INT;
+      if (stream_index == COLOR) {
+        rotationPropertyID = OB_PROP_COLOR_ROTATE_INT;
+      } else if (stream_index == DEPTH) {
+        rotationPropertyID = OB_PROP_DEPTH_ROTATE_INT;
+      } else if (stream_index == INFRA0) {
+        rotationPropertyID = OB_PROP_IR_ROTATE_INT;
+      } else if (stream_index == INFRA1) {
+        rotationPropertyID = OB_PROP_IR_ROTATE_INT;
+      } else if (stream_index == INFRA2) {
+        rotationPropertyID = OB_PROP_IR_RIGHT_ROTATE_INT;
+      }
+      if (image_rotation_[stream_index] != -1 &&
+          device_->isPropertySupported(rotationPropertyID, OB_PERMISSION_WRITE)) {
+        ROS_INFO_STREAM("Setting " << stream_name_[stream_index] << " rotation to "
+                                   << image_rotation_[stream_index]);
+        device_->setIntProperty(rotationPropertyID, image_rotation_[stream_index]);
+      }
+      // set flip
+      OBPropertyID flipPropertyID = OB_PROP_DEPTH_FLIP_BOOL;
+      if (stream_index == COLOR) {
+        flipPropertyID = OB_PROP_COLOR_FLIP_BOOL;
+      } else if (stream_index == DEPTH) {
+        flipPropertyID = OB_PROP_DEPTH_FLIP_BOOL;
+      } else if (stream_index == INFRA0) {
+        flipPropertyID = OB_PROP_IR_FLIP_BOOL;
+      } else if (stream_index == INFRA1) {
+        flipPropertyID = OB_PROP_IR_FLIP_BOOL;
+      } else if (stream_index == INFRA2) {
+        flipPropertyID = OB_PROP_IR_RIGHT_FLIP_BOOL;
+      }
+      if (device_->isPropertySupported(flipPropertyID, OB_PERMISSION_WRITE)) {
+        ROS_INFO_STREAM("Setting " << stream_name_[stream_index] << " flip to "
+                                   << (image_flip_[stream_index] ? "ON" : "OFF"));
+        device_->setBoolProperty(flipPropertyID, image_flip_[stream_index]);
+      }
+      // set mirror
+      OBPropertyID mirrorPropertyID = OB_PROP_DEPTH_MIRROR_BOOL;
+      if (stream_index == COLOR) {
+        mirrorPropertyID = OB_PROP_COLOR_MIRROR_BOOL;
+      } else if (stream_index == DEPTH) {
+        mirrorPropertyID = OB_PROP_DEPTH_MIRROR_BOOL;
+      } else if (stream_index == INFRA0) {
+        mirrorPropertyID = OB_PROP_IR_MIRROR_BOOL;
+      } else if (stream_index == INFRA1) {
+        mirrorPropertyID = OB_PROP_IR_MIRROR_BOOL;
+      } else if (stream_index == INFRA2) {
+        mirrorPropertyID = OB_PROP_IR_RIGHT_MIRROR_BOOL;
+      }
+      if (device_->isPropertySupported(mirrorPropertyID, OB_PERMISSION_WRITE)) {
+        ROS_INFO_STREAM("Setting " << stream_name_[stream_index] << " mirror to "
+                                   << (image_mirror_[stream_index] ? "ON" : "OFF"));
+        device_->setBoolProperty(mirrorPropertyID, image_mirror_[stream_index]);
       }
     }
   }

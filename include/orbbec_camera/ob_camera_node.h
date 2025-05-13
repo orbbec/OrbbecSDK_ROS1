@@ -235,6 +235,12 @@ class OBCameraNode {
   bool setMirrorCallback(std_srvs::SetBoolRequest &request, std_srvs::SetBoolResponse &response,
                          const stream_index_pair &stream_index);
 
+  bool setFlipCallback(std_srvs::SetBoolRequest &request, std_srvs::SetBoolResponse &response,
+                       const stream_index_pair &stream_index);
+
+  bool setRotationCallback(SetInt32Request &request, SetInt32Response &response,
+                           const stream_index_pair &stream_index);
+
   bool getExposureCallback(GetInt32Request &request, GetInt32Response &response,
                            const stream_index_pair &stream_index);
 
@@ -364,7 +370,8 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::Publisher> imu_info_publishers_;
   std::map<stream_index_pair, ros::Publisher> depth_to_other_extrinsics_publishers_;
   std::map<stream_index_pair, OBExtrinsic> depth_to_other_extrinsics_;
-  std::map<stream_index_pair, bool> flip_images_;
+  std::map<stream_index_pair, bool> image_flip_;
+  std::map<stream_index_pair, bool> image_mirror_;
   std::map<stream_index_pair, bool> stream_started_;
   std::vector<int> compression_params_;
   ob::FormatConvertFilter format_convert_filter_;
@@ -389,6 +396,8 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::ServiceServer> set_gain_srv_;
   std::map<stream_index_pair, ros::ServiceServer> reset_gain_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_mirror_srv_;
+  std::map<stream_index_pair, ros::ServiceServer> set_flip_srv_;
+  std::map<stream_index_pair, ros::ServiceServer> set_rotation_srv_;
   std::map<stream_index_pair, ros::ServiceServer> toggle_sensor_srv_;
   std::map<stream_index_pair, ros::ServiceServer> set_auto_exposure_srv_;
   std::map<stream_index_pair, ros::ServiceServer> get_auto_exposure_srv_;

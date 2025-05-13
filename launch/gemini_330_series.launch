@@ -45,7 +45,9 @@
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="ANY"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
-    <arg name="color_rotation" default="0"/>
+    <arg name="color_rotation" default="-1"/>
+    <arg name="color_flip" default="false"/>
+    <arg name="color_mirror" default="false"/>
     <arg name="enable_color_auto_exposure_priority" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
@@ -77,7 +79,9 @@
     <arg name="depth_format" default="ANY"/>
     <arg name="depth_registration" default="true"/>
     <!-- depth rotation degree : 0, 90, 180, 270 -->
-    <arg name="depth_rotation" default="0"/>
+    <arg name="depth_rotation" default="-1"/>
+    <arg name="depth_flip" default="false"/>
+    <arg name="depth_mirror" default="false"/>
     <arg name="enable_depth_auto_exposure_priority" default="false"/>
     <arg name="depth_ae_roi_left" default="-1"/>
     <arg name="depth_ae_roi_right" default="-1"/>
@@ -92,7 +96,9 @@
     <arg name="enable_left_ir" default="false"/>
     <arg name="left_ir_format" default="ANY"/>
     <!-- left ir rotation degree : 0, 90, 180, 270 -->
-    <arg name="left_ir_rotation" default="0"/>
+    <arg name="left_ir_rotation" default="-1"/>
+    <arg name="left_ir_flip" default="false"/>
+    <arg name="left_ir_mirror" default="false"/>
     <arg name="enable_left_ir_sequence_id_filter" default="false"/>
     <arg name="left_ir_sequence_id_filter_id" default="-1"/>
 
@@ -103,7 +109,9 @@
     <arg name="right_ir_fps" default="0"/>
     <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="ANY"/>
-    <arg name="right_ir_rotation" default="0"/>
+    <arg name="right_ir_rotation" default="-1"/>
+    <arg name="right_ir_flip" default="false"/>
+    <arg name="right_ir_mirror" default="false"/>
     <arg name="enable_right_ir_sequence_id_filter" default="false"/>
     <arg name="right_ir_sequence_id_filter_id" default="-1"/>
 
@@ -275,6 +283,8 @@
             <param name="enable_color_decimation_filter" value="$(arg enable_color_decimation_filter)"/>
             <param name="color_decimation_filter_scale" value="$(arg color_decimation_filter_scale)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
+            <param name="color_flip" value="$(arg color_flip)"/>
+            <param name="color_mirror" value="$(arg color_mirror)"/>
             <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
@@ -284,6 +294,8 @@
             <param name="depth_format" value="$(arg depth_format)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="depth_rotation" value="$(arg depth_rotation)"/>
+            <param name="depth_flip" value="$(arg depth_flip)"/>
+            <param name="depth_mirror" value="$(arg depth_mirror)"/>
             <param name="enable_depth_auto_exposure_priority" value="$(arg enable_depth_auto_exposure_priority)"/>
             <param name="depth_ae_roi_left" value="$(arg depth_ae_roi_left)"/>
             <param name="depth_ae_roi_right" value="$(arg depth_ae_roi_right)"/>
@@ -297,6 +309,8 @@
             <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
             <param name="left_ir_format" value="$(arg left_ir_format)"/>
             <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
+            <param name="left_ir_flip" value="$(arg left_ir_flip)"/>
+            <param name="left_ir_mirror" value="$(arg left_ir_mirror)"/>
             <param name="enable_left_ir_sequence_id_filter" value="$(arg enable_left_ir_sequence_id_filter)"/>
             <param name="left_ir_sequence_id_filter_id" value="$(arg left_ir_sequence_id_filter_id)"/>
 
@@ -306,6 +320,8 @@
             <param name="enable_right_ir" value="$(arg enable_right_ir)"/>
             <param name="right_ir_format" value="$(arg right_ir_format)"/>
             <param name="right_ir_rotation" value="$(arg right_ir_rotation)"/>
+            <param name="right_ir_flip" value="$(arg right_ir_flip)"/>
+            <param name="right_ir_mirror" value="$(arg right_ir_mirror)"/>
             <param name="enable_right_ir_sequence_id_filter" value="$(arg enable_right_ir_sequence_id_filter)"/>
             <param name="right_ir_sequence_id_filter_id" value="$(arg right_ir_sequence_id_filter_id)"/>
 

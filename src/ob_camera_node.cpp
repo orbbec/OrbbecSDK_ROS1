@@ -137,14 +137,16 @@ void OBCameraNode::getParameters() {
     fps_[stream_index] = nh_private_.param<int>(param_name, IMAGE_FPS);
     param_name = "enable_" + stream_name_[stream_index];
     enable_stream_[stream_index] = nh_private_.param<bool>(param_name, false);
-    param_name = "flip_" + stream_name_[stream_index];
-    flip_images_[stream_index] = nh_private_.param<bool>(param_name, false);
+    param_name = stream_name_[stream_index] + "_flip";
+    image_flip_[stream_index] = nh_private_.param<bool>(param_name, false);
+    param_name = stream_name_[stream_index] + "_mirror";
+    image_mirror_[stream_index] = nh_private_.param<bool>(param_name, false);
     param_name = stream_name_[stream_index] + "_format";
     format_str_[stream_index] =
         nh_private_.param<std::string>(param_name, format_str_[stream_index]);
     format_[stream_index] = OBFormatFromString(format_str_[stream_index]);
     param_name = stream_name_[stream_index] + "_rotation";
-    image_rotation_[stream_index] = nh_private_.param<int>(param_name, 0);
+    image_rotation_[stream_index] = nh_private_.param<int>(param_name, -1);
   }
   depth_aligned_frame_id_[DEPTH] = optical_frame_id_[COLOR];
 
@@ -1592,7 +1594,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   image_msg->step = width * unit_step_size_[stream_index];
   image_msg->header.frame_id = frame_id;
   image_msg->header.seq = seq++;
-  if (!flip_images_[stream_index]) {
+  if (!image_flip_[stream_index]) {
     image_publisher.publish(image_msg);
   } else {
     cv::Mat flipped_image;

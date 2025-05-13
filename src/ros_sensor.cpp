@@ -67,32 +67,6 @@ int ROSOBSensor::getExposure() {
   return data;
 }
 
-void ROSOBSensor::setRotation(int rotation) {
-  // 0, 90, 180, 270
-  if (rotation % 90 != 0) {
-    ROS_INFO_STREAM(name_ << " does not support set rotation");
-    return;
-  }
-  switch (sensor_->type()) {
-    case OB_SENSOR_COLOR:
-      device_->setIntProperty(OB_PROP_COLOR_ROTATE_INT, rotation);
-      break;
-    case OB_SENSOR_DEPTH:
-      device_->setIntProperty(OB_PROP_DEPTH_ROTATE_INT, rotation);
-      break;
-    case OB_SENSOR_IR_LEFT:
-    case OB_SENSOR_IR:
-      device_->setIntProperty(OB_PROP_IR_ROTATE_INT, rotation);
-      break;
-    case OB_SENSOR_IR_RIGHT:
-      device_->setIntProperty(OB_PROP_IR_RIGHT_ROTATE_INT, rotation);
-      break;
-
-    default:
-      ROS_INFO_STREAM(name_ << " does not support set rotation");
-      break;
-  }
-}
 OBIntPropertyRange ROSOBSensor::getExposureRange() {
   OBIntPropertyRange range{0, 0};
   switch (sensor_->getType()) {
@@ -285,28 +259,6 @@ bool ROSOBSensor::getAutoExposure() {
 }
 
 OBSensorType ROSOBSensor::getSensorType() { return sensor_->getType(); }
-
-void ROSOBSensor::setMirror(bool data) {
-  is_mirrored_ = data;
-  switch (sensor_->getType()) {
-    case OB_SENSOR_DEPTH:
-      device_->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, data);
-      break;
-    case OB_SENSOR_IR_RIGHT:
-      device_->setBoolProperty(OB_PROP_IR_RIGHT_MIRROR_BOOL, data);
-      break;
-    case OB_SENSOR_IR_LEFT:
-    case OB_SENSOR_IR:
-      device_->setBoolProperty(OB_PROP_IR_MIRROR_BOOL, data);
-      break;
-    case OB_SENSOR_COLOR:
-      device_->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, data);
-      break;
-    default:
-      ROS_ERROR_STREAM(name_ << " does not support set mirror");
-      break;
-  }
-}
 
 bool ROSOBSensor::isMirrored() const { return is_mirrored_; }
 
