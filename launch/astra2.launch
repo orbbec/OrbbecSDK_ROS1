@@ -75,7 +75,7 @@
     <arg name="threshold_filter_max" default="-1"/>
     <arg name="threshold_filter_min" default="-1"/>
     <arg name="noise_removal_filter_min_diff" default="256"/>
-    <arg name="noise_removal_filter_max_size" default="80"/>
+    <arg name="noise_removal_filter_max_size" default="1000"/>
     <arg name="spatial_filter_alpha" default="-1.0"/>
     <arg name="spatial_filter_diff_threshold" default="-1"/>
     <arg name="spatial_filter_magnitude" default="-1"/>
