@@ -446,11 +446,20 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
     }
-    if (device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE)) {
-      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, enable_hardware_d2d_);
-      bool is_hardware_d2d = device_->getBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL);
-      std::string d2d_mode = is_hardware_d2d ? "HW D2D" : "SW D2D";
-      ROS_INFO_STREAM("Depth process is " << d2d_mode);
+    if (disaparity_to_depth_mode_ == "HW") {
+      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 1);
+      device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 0);
+      ROS_INFO_STREAM("Depth process is HW");
+    } else if (disaparity_to_depth_mode_ == "SW") {
+      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 0);
+      device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 1);
+      ROS_INFO_STREAM("Depth process is SW");
+    } else if (disaparity_to_depth_mode_ == "disable") {
+      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 0);
+      device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 0);
+      ROS_INFO_STREAM("Depth process is disable");
+    } else {
+      ROS_ERROR_STREAM("Depth process is keep default");
     }
     if (!device_preset_.empty()) {
       ROS_INFO_STREAM("Loading device preset: " << device_preset_);

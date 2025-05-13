@@ -18,7 +18,7 @@
     <arg name="enable_laser" default="true"/>
     <arg name="depth_precision" default=""/>
     <arg name="sync_mode" default="standalone"/>
-    <arg name="enable_hardware_d2d" default="true"/>
+    <arg name="disaparity_to_depth_mode" default="HW"/><!-- HW, SW, disable -->
     <arg name="depth_delay_us" default="0"/>
     <arg name="color_delay_us" default="0"/>
     <arg name="trigger2image_delay_us" default="0"/>
@@ -228,7 +228,7 @@
             <param name="enable_laser" value="$(arg enable_laser)"/>
             <param name="depth_precision" value="$(arg depth_precision)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
-            <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
+            <param name="disaparity_to_depth_mode" value="$(arg disaparity_to_depth_mode)"/>
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
             <param name="ip_address" value="$(arg ip_address)"/>
             <param name="port" value="$(arg port)"/>

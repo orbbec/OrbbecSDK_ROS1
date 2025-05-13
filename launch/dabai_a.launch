@@ -17,7 +17,7 @@
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
     <arg name="sync_mode" default="standalone"/>
-    <arg name="enable_hardware_d2d" default="true"/>
+    <arg name="disaparity_to_depth_mode" default="HW"/><!-- HW, SW, disable -->
 
 
     <!-- Color camera parameters -->
@@ -73,6 +73,18 @@
     <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
     <arg name="align_mode" default="SW"/>
 
+    <!-- IMU parameters -->
+    <arg name="enable_sync_output_accel_gyro" default="false"/>
+    <arg name="enable_accel" default="false"/>
+    <arg name="enable_accel_data_correction" default="true"/>
+    <arg name="accel_rate" default="200hz"/>
+    <arg name="accel_range" default="4g"/>
+    <arg name="enable_gyro" default="false"/>
+    <arg name="enable_gyro_data_correction" default="true"/>
+    <arg name="gyro_rate" default="200hz"/>
+    <arg name="gyro_range" default="1000dps"/>
+    <arg name="liner_accel_cov" default="0.01"/>
+
     <!-- filter switch -->
     <arg name="enable_decimation_filter" default="false"/>
     <arg name="enable_hdr_merge" default="false"/>
@@ -98,6 +110,17 @@
     <arg name="hdr_merge_gain_1" default="-1"/>
     <arg name="hdr_merge_exposure_2" default="-1"/>
     <arg name="hdr_merge_gain_2" default="-1"/>
+
+    <param name="enable_sync_output_accel_gyro" value="$(arg enable_sync_output_accel_gyro)"/>
+    <param name="enable_accel" value="$(arg enable_accel)"/>
+    <param name="enable_accel_data_correction" value="$(arg enable_accel_data_correction)"/>
+    <param name="accel_rate" value="$(arg accel_rate)"/>
+    <param name="accel_range" value="$(arg accel_range)"/>
+    <param name="enable_gyro" value="$(arg enable_gyro)"/>
+    <param name="enable_gyro_data_correction" value="$(arg enable_gyro_data_correction)"/>
+    <param name="gyro_rate" value="$(arg gyro_rate)"/>
+    <param name="gyro_range" value="$(arg gyro_range)"/>
+    <param name="liner_accel_cov" value="$(arg liner_accel_cov)"/>
 
     <!-- Misc parameters -->
     <arg name="usb_port" default=""/>
@@ -128,7 +151,7 @@
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="enable_laser" value="$(arg enable_laser)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
-            <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
+            <param name="disaparity_to_depth_mode" value="$(arg disaparity_to_depth_mode)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
 
@@ -205,7 +228,7 @@
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
-            
+
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>

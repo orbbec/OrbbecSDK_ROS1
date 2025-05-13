@@ -508,7 +508,7 @@ class OBCameraNode {
   bool enable_depth_filter_ = false;
 
   // Only for Gemini2 device
-  bool enable_hardware_d2d_ = true;
+  std::string disaparity_to_depth_mode_ = "HW";
   std::string depth_work_mode_;
   OBMultiDeviceSyncMode sync_mode_ = OB_MULTI_DEVICE_SYNC_MODE_STANDALONE;
   std::string sync_mode_str_;

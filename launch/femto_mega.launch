@@ -15,7 +15,7 @@
     <arg name="device_preset" default="Default"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="sync_mode" default="standalone"/>
-    <arg name="enable_hardware_d2d" default="true"/>
+    <arg name="disaparity_to_depth_mode" default="HW"/><!-- HW, SW, disable -->
     <!-- Network device settings: default enumerate_net_device is set to true, which will automatically enumerate network devices -->
     <!-- If you do not want to automatically enumerate network devices, -->
     <!-- you can set enumerate_net_device to false, ip_address to the device's IP address, and port to the default value of 8090 -->
@@ -109,7 +109,7 @@
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
-            <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
+            <param name="disaparity_to_depth_mode" value="$(arg disaparity_to_depth_mode)"/>
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
             <param name="ip_address" value="$(arg ip_address)"/>
             <param name="port" value="$(arg port)"/>

@@ -16,7 +16,7 @@
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
     <arg name="sync_mode" default="standalone"/>
-    <arg name="enable_hardware_d2d" default="true"/>
+    <arg name="disaparity_to_depth_mode" default="HW"/><!-- HW, SW, disable -->
 
 
     <!-- Color camera parameters -->
@@ -135,7 +135,7 @@
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="enable_laser" value="$(arg enable_laser)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
-            <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
+            <param name="disaparity_to_depth_mode" value="$(arg disaparity_to_depth_mode)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
 
