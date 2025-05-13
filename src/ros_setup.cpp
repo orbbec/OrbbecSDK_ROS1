@@ -94,8 +94,8 @@ void OBCameraNode::setupColorPostProcessFilter() {
     if (filter_name == "DecimationFilter" && enable_color_decimation_filter_) {
       auto decimation_filter = filter->as<ob::DecimationFilter>();
       auto range = decimation_filter->getScaleRange();
-      if (color_decimation_filter_scale_ != -1 && color_decimation_filter_scale_ < range.max &&
-          color_decimation_filter_scale_ > range.min) {
+      if (color_decimation_filter_scale_ != -1 && color_decimation_filter_scale_ <= range.max &&
+          color_decimation_filter_scale_ >= range.min) {
         ROS_INFO_STREAM("Set color decimation filter scale value to "
                         << color_decimation_filter_scale_);
         decimation_filter->setScaleValue(color_decimation_filter_scale_);
@@ -191,12 +191,11 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"DecimationFilter", enable_decimation_filter_},
         {"HDRMerge", enable_hdr_merge_},
         {"SequenceIdFilter", enable_sequenced_filter_},
-        {"ThresholdFilter", enable_threshold_filter_},
         {"SpatialAdvancedFilter", enable_spatial_filter_},
         {"TemporalFilter", enable_temporal_filter_},
-        {"DisparityTransform", enable_disaparity_to_depth_},
         {"HoleFillingFilter", enable_hole_filling_filter_},
-
+        {"DisparityTransform", enable_disaparity_to_depth_},
+        {"ThresholdFilter", enable_threshold_filter_},
     };
     std::string filter_name = filter->type();
     ROS_INFO_STREAM("Setting " << filter_name << "......");
@@ -673,7 +672,11 @@ void OBCameraNode::setupDevices() {
     if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_LASER_BOOL, enable_laser_);
     }
-
+    if (device_->isPropertySupported(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
+      ROS_INFO_STREAM("Set PTP Config: " << (enable_ptp_config_ ? "ON" : "OFF"));
+      device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, enable_ptp_config_);
+    }
     if (!depth_precision_str_.empty() &&
         device_->isPropertySupported(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PERMISSION_READ_WRITE)) {
       auto default_precision_level = device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT);
@@ -1396,7 +1399,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
       depth_filter_list_.push_back(decimation_filter);
       auto range = decimation_filter->getScaleRange();
       auto decimation_filter_scale = request.filter_param[0];
-      if (decimation_filter_scale < range.max && decimation_filter_scale > range.min) {
+      if (decimation_filter_scale <= range.max && decimation_filter_scale >= range.min) {
         ROS_INFO_STREAM("Set decimation filter scale value to " << decimation_filter_scale);
         decimation_filter->setScaleValue(decimation_filter_scale);
       }

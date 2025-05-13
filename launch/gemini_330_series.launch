@@ -24,6 +24,7 @@
     <arg name="trigger2image_delay_us" default="0"/>
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="true"/>
+    <arg name="enable_ptp_config" default="false"/><!-- Only for Gemini 335Le -->
     <arg name="upgrade_firmware" default=""/>
     <arg name="preset_firmware_path" default=""/>
     <arg name="config_file_path" default=""/>
@@ -248,6 +249,7 @@
             <param name="trigger2image_delay_us" value="$(arg trigger2image_delay_us)"/>
             <param name="trigger_out_delay_us" value="$(arg trigger_out_delay_us)"/>
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
+            <param name="enable_ptp_config" value="$(arg enable_ptp_config)"/>
             <param name="upgrade_firmware" value="$(arg upgrade_firmware)"/>
             <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
             <param name="config_file_path" value="$(arg config_file_path)"/>
