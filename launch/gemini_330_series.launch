@@ -131,6 +131,7 @@
     <arg name="enable_noise_removal_filter" default="true"/>
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>
+    <arg name="enable_disaparity_to_depth" default="true"/>
     <arg name="enable_hole_filling_filter" default="false"/>
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
@@ -322,6 +323,7 @@
             <param name="enable_noise_removal_filter" value="$(arg enable_noise_removal_filter)"/>
             <param name="enable_spatial_filter" value="$(arg enable_spatial_filter)"/>
             <param name="enable_temporal_filter" value="$(arg enable_temporal_filter)"/>
+            <param name="enable_disaparity_to_depth" value="$(arg enable_disaparity_to_depth)"/>
             <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
             <param name="sequence_id_filter_id" value="$(arg sequence_id_filter_id)"/>
             <param name="threshold_filter_max" value="$(arg threshold_filter_max)"/>

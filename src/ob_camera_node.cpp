@@ -250,6 +250,7 @@ void OBCameraNode::getParameters() {
   enable_decimation_filter_ = nh_private_.param<bool>("enable_decimation_filter", false);
   enable_hdr_merge_ = nh_private_.param<bool>("enable_hdr_merge", false);
   enable_sequenced_filter_ = nh_private_.param<bool>("enable_sequenced_filter", false);
+  enable_disaparity_to_depth_ = nh_private_.param<bool>("enable_disaparity_to_depth", true);
   enable_threshold_filter_ = nh_private_.param<bool>("enable_threshold_filter", false);
   enable_hardware_noise_removal_filter_ =
       nh_private_.param<bool>("enable_hardware_noise_removal_filter", true);

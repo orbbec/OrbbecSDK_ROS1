@@ -194,6 +194,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"ThresholdFilter", enable_threshold_filter_},
         {"SpatialAdvancedFilter", enable_spatial_filter_},
         {"TemporalFilter", enable_temporal_filter_},
+        {"DisparityTransform", enable_disaparity_to_depth_},
         {"HoleFillingFilter", enable_hole_filling_filter_},
 
     };
