@@ -227,7 +227,6 @@
             <param name="enable_laser" value="$(arg enable_laser)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
-            <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
             <param name="ip_address" value="$(arg ip_address)"/>
             <param name="port" value="$(arg port)"/>

@@ -281,6 +281,10 @@ void OBCameraNode::getParameters() {
   diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
+  std::string align_target_stream_str_;
+  align_target_stream_str_ = nh_private_.param<std::string>("align_target_stream", "COLOR");
+  align_target_stream_ = obStreamTypeFromString(align_target_stream_str_);
+  ROS_INFO_STREAM("align_target_stream_: " << align_target_stream_);
   enable_color_hdr_ = nh_private_.param<bool>("enable_color_hdr", false);
   enable_depth_scale_ = nh_private_.param<bool>("enable_depth_scale", true);
   retry_on_usb3_detection_failure_ =

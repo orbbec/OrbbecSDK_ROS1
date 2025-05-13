@@ -794,24 +794,50 @@ std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs) {
   os << OBSensorTypeToString(rhs);
   return os;
 }
-std::string getDistortionModels(OBCameraDistortion distortion){
-    switch (distortion.model)
-    {
+
+OBStreamType obStreamTypeFromString(const std::string &stream_type) {
+  std::string upper_stream_type = stream_type;
+  std::transform(upper_stream_type.begin(), upper_stream_type.end(), upper_stream_type.begin(),
+                 ::toupper);
+  if (upper_stream_type == "VIDEO") {
+    return OB_STREAM_VIDEO;
+  } else if (upper_stream_type == "IR") {
+    return OB_STREAM_IR;
+  } else if (upper_stream_type == "COLOR") {
+    return OB_STREAM_COLOR;
+  } else if (upper_stream_type == "DEPTH") {
+    return OB_STREAM_DEPTH;
+  } else if (upper_stream_type == "ACCEL") {
+    return OB_STREAM_ACCEL;
+  } else if (upper_stream_type == "GYRO") {
+    return OB_STREAM_GYRO;
+  } else if (upper_stream_type == "IR_LEFT") {
+    return OB_STREAM_IR_LEFT;
+  } else if (upper_stream_type == "IR_RIGHT") {
+    return OB_STREAM_IR_RIGHT;
+  } else if (upper_stream_type == "RAW_PHASE") {
+    return OB_STREAM_RAW_PHASE;
+  } else {
+    return OB_STREAM_UNKNOWN;
+  }
+}
+std::string getDistortionModels(OBCameraDistortion distortion) {
+  switch (distortion.model) {
     case OB_DISTORTION_NONE:
-        return sensor_msgs::distortion_models::PLUMB_BOB;
+      return sensor_msgs::distortion_models::PLUMB_BOB;
     case OB_DISTORTION_MODIFIED_BROWN_CONRADY:
-        return sensor_msgs::distortion_models::PLUMB_BOB;
+      return sensor_msgs::distortion_models::PLUMB_BOB;
     case OB_DISTORTION_INVERSE_BROWN_CONRADY:
-        return sensor_msgs::distortion_models::PLUMB_BOB;
+      return sensor_msgs::distortion_models::PLUMB_BOB;
     case OB_DISTORTION_BROWN_CONRADY:
-        return sensor_msgs::distortion_models::PLUMB_BOB;
+      return sensor_msgs::distortion_models::PLUMB_BOB;
     case OB_DISTORTION_BROWN_CONRADY_K6:
-        return sensor_msgs::distortion_models::PLUMB_BOB;
+      return sensor_msgs::distortion_models::PLUMB_BOB;
     case OB_DISTORTION_KANNALA_BRANDT4:
-        return sensor_msgs::distortion_models::EQUIDISTANT;
+      return sensor_msgs::distortion_models::EQUIDISTANT;
     default:
-        return sensor_msgs::distortion_models::PLUMB_BOB;
-    }
+      return sensor_msgs::distortion_models::PLUMB_BOB;
+  }
 }
 
 }  // namespace orbbec_camera

@@ -145,6 +145,8 @@ std::ostream &operator<<(std::ostream &os, const OBFormat &rhs);
 
 std::string OBSensorTypeToString(const OBSensorType &type);
 
+OBStreamType obStreamTypeFromString(const std::string &stream_type);
+
 std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs);
 
 std::string getDistortionModels(OBCameraDistortion distortion);

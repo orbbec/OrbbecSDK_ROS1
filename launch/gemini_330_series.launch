@@ -120,8 +120,8 @@
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="false"/>
     <arg name="ordered_pc" default="false"/>
-    <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
     <arg name="align_mode" default="SW"/>
+    <arg name="align_target_stream" default="COLOR"/><!-- COLOR or DEPTH -->
 
     <!-- filter switch -->
     <arg name="enable_decimation_filter" default="false"/>
@@ -226,10 +226,10 @@
             <param name="device_preset" value="$(arg device_preset)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
+            <param name="align_target_stream" value="$(arg align_target_stream)"/>
             <param name="enable_laser" value="$(arg enable_laser)"/>
             <param name="depth_precision" value="$(arg depth_precision)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
-            <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
             <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
             <param name="ip_address" value="$(arg ip_address)"/>
