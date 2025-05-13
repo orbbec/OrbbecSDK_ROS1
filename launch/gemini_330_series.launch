@@ -16,6 +16,7 @@
     <arg name="device_preset" default="Default"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
+    <arg name="depth_precision" default=""/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="enable_hardware_d2d" default="true"/>
     <arg name="depth_delay_us" default="0"/>
@@ -226,6 +227,7 @@
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="enable_laser" value="$(arg enable_laser)"/>
+            <param name="depth_precision" value="$(arg depth_precision)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>
             <param name="enable_hardware_d2d" value="$(arg enable_hardware_d2d)"/>

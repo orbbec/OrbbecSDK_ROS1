@@ -632,10 +632,9 @@ void OBCameraNode::setupDevices() {
         device_->setIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT, depth_precision_level_);
         ROS_INFO_STREAM("set depth precision to " << depth_precision_str_);
       }
-    }
-    if (!depth_precision_str_.empty() &&
-        device_->isPropertySupported(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT,
-                                     OB_PERMISSION_READ_WRITE)) {
+    } else if (!depth_precision_str_.empty() &&
+               device_->isPropertySupported(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT,
+                                            OB_PERMISSION_READ_WRITE)) {
       auto depth_unit_flexible_adjustment = depthPrecisionFromString(depth_precision_str_);
       auto range = device_->getFloatPropertyRange(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT);
       ROS_INFO_STREAM("Depth unit flexible adjustment range: " << range.min << " - " << range.max);

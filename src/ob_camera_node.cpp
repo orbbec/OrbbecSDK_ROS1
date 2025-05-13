@@ -212,9 +212,9 @@ void OBCameraNode::getParameters() {
   trigger_out_delay_us_ = nh_private_.param<int>("trigger_out_delay_us", 0);
   trigger_out_enabled_ = nh_private_.param<bool>("trigger_out_enabled", false);
   depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "");
-  if (!depth_precision_str_.empty()) {
-    depth_precision_level_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
-  }
+  //   if (!depth_precision_str_.empty()) {
+  //     depth_precision_level_ = DEPTH_PRECISION_STR2ENUM.at(depth_precision_str_);
+  //   }
   if (enable_colored_point_cloud_ || enable_d2c_viewer_) {
     depth_registration_ = true;
   }
