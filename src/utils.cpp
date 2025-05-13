@@ -207,6 +207,9 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
   info.D[6] = distortion.k5;
   info.D[7] = distortion.k6;
 
+  bool all_zero = std::all_of(info.D.begin(), info.D.end(), [](double val) { return val == 0.0; });
+  info.roi.do_rectify = all_zero;
+
   info.K.fill(0.0);
   info.K[0] = intrinsic.fx;
   info.K[2] = intrinsic.cx;
