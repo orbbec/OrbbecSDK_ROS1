@@ -1561,8 +1561,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
       ROS_INFO_STREAM(request.filter_name
                       << "Cannot be set\n"
                       << "The filter_name value that can be set is "
-                         "DecimationFilter、HDRMerge、SequenceIdFilter、ThresholdFilter、Nois"
-                         "eRemovalFilter、SpatialAdvancedFilter and TemporalFilter");
+                         "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, Nois"
+                         "eRemovalFilter, SpatialAdvancedFilter and TemporalFilter");
     }
     for (auto& filter : depth_filter_list_) {
       std::cout << " - " << filter->getName() << ": "

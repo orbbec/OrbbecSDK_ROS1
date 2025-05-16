@@ -245,19 +245,16 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByNetIP(
   ROS_INFO_STREAM("Before lock: Select device net ip: " << net_ip);
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   ROS_INFO_STREAM("After lock: Select device net ip: " << net_ip);
-  std::shared_ptr<ob::Device> device = nullptr;
   for (size_t i = 0; i < list->getCount(); i++) {
     try {
-      device = list->getDevice(i);
-      auto device_info = device->getDeviceInfo();
-      if (std::string(device_info->getConnectionType()) != "Ethernet") {
+      if (std::string(list->getConnectionType(i)) != "Ethernet") {
         continue;
       }
-      if (device_info->getIpAddress() == nullptr) {
+      if (list->getIpAddress(i) == nullptr) {
         continue;
       }
-      ROS_INFO_STREAM("FindDeviceByNetIP device net ip " << device_info->getIpAddress());
-      if (std::string(device_info->getIpAddress()) == net_ip) {
+      ROS_INFO_STREAM("FindDeviceByNetIP device net ip " << list->getIpAddress(i));
+      if (std::string(list->getIpAddress(i)) == net_ip) {
         ROS_INFO_STREAM("getDeviceByNetIP device net ip " << net_ip << " done");
         return list->getDevice(i);
       }
