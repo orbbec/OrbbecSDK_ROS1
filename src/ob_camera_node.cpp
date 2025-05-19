@@ -14,6 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 
+#include <fstream>
+
 #include "orbbec_camera/ob_camera_node.h"
 #include "libobsensor/hpp/Utils.hpp"
 #if defined(USE_RK_HW_DECODER)
