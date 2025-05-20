@@ -213,6 +213,8 @@ void OBCameraNode::getParameters() {
   trigger2image_delay_us_ = nh_private_.param<int>("trigger2image_delay_us", 0);
   trigger_out_delay_us_ = nh_private_.param<int>("trigger_out_delay_us", 0);
   trigger_out_enabled_ = nh_private_.param<bool>("trigger_out_enabled", false);
+  frames_per_trigger_ = nh_private_.param<int>("frames_per_trigger", 2);
+  software_trigger_period_ = nh_private_.param<int>("software_trigger_period", 33);
   enable_ptp_config_ = nh_private_.param<bool>("enable_ptp_config", false);
   depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "");
   //   if (!depth_precision_str_.empty()) {

@@ -481,9 +481,16 @@ void OBCameraNode::setupDevices() {
       sync_config.trigger2ImageDelayUs = trigger2image_delay_us_;
       sync_config.triggerOutDelayUs = trigger_out_delay_us_;
       sync_config.triggerOutEnable = trigger_out_enabled_;
+      sync_config.framesPerTrigger = frames_per_trigger_;
       device_->setMultiDeviceSyncConfig(sync_config);
       sync_config = device_->getMultiDeviceSyncConfig();
       ROS_INFO_STREAM("set sync mode to " << sync_config.syncMode);
+      if (sync_mode_ == OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING) {
+        ROS_INFO_STREAM("Frames per trigger: " << sync_config.framesPerTrigger);
+        sync_host_time_timer_ =
+            nh_private_.createTimer(ros::Duration(0, software_trigger_period_ * 1000000),
+                                    [this](const ros::TimerEvent&) { device_->triggerCapture(); });
+      }
     }
 
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT,

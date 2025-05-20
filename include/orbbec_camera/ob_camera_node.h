@@ -518,6 +518,8 @@ class OBCameraNode {
   int trigger_out_delay_us_ = 0;
   bool trigger_out_enabled_ = false;
   bool enable_ptp_config_ = false;
+  int frames_per_trigger_ = 2;
+  int software_trigger_period_ = 33;
   std::string depth_precision_str_;
   OB_DEPTH_PRECISION_LEVEL depth_precision_level_ = OB_PRECISION_1MM;
   // IMU
