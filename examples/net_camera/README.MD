@@ -16,6 +16,8 @@ If you do not want to automatically enumerate network devices,you can set `enume
 
 ## Single Net camera
 
+If you need to run Gemini 435Le, you only need to replace [femto_mega.launch](../../launch/femto_mega.launch) in the run command with [gemini435_le.launch](../../launch/gemini435_le.launch)
+
 For [femto_mega.launch](../../launch/femto_mega.launch) as an example:
 
 ### automatically enumerate network devices:

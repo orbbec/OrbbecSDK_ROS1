@@ -464,6 +464,12 @@ roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
 roslaunch orbbec_camera gemini_330_series.launch enumerate_net_device:=true
 ```
 
+**Gemini 435Le:**
+
+```bash
+roslaunch orbbec_camera gemini435_le.launch enumerate_net_device:=true
+```
+
 For more information about network device enumeration.Reference:[Network device documentation](./examples/net_camera/)
 
 ### Multi-Camera
