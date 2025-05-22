@@ -20,7 +20,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   </thead>
   <tbody>
     <tr>
-      <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td rowspan="9" style="text-align: center; font-weight: bold;">Gemini 330</td>
       <td>Gemini 335</td>
       <td>Full maintenance</td>
       <td>Recommended for new designs</td>
@@ -57,6 +57,11 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
     </tr>
     <tr>
       <td>Gemini 335Le</td>
+      <td>Not supported</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 435Le</td>
       <td>Not supported</td>
       <td>Recommended for new designs</td>
     </tr>
@@ -200,6 +205,7 @@ The following devices are supported by the OrbbecSDK ROS Wrapper.
 | Gemini 336   | 1.2.20                   | gemini_330_series.launch |
 | Gemini 336L  | 1.2.20                   | gemini_330_series.launch |
 | Gemini 335Le | 1.5.31                   | gemini_330_series.launch |
+| Gemini 435Le | 1.2.04                   | gemini435_le.launch      |
 | Femto Bolt   | 1.1.2                    | femto_bolt.launch        |
 | Femto Mega   | 1.3.0                    | femto_mega.launch        |
 | Astra 2      | 2.8.20                   | astra2.launch            |

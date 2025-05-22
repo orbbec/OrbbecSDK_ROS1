@@ -40,23 +40,36 @@ std::string parseUsbPort(const std::string &line) {
 }
 int main() {
   try {
+    ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
     auto context = std::make_shared<ob::Context>();
-    context->setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
     auto list = context->queryDeviceList();
     for (size_t i = 0; i < list->deviceCount(); i++) {
-      auto device = list->getDevice(i);
-      auto device_info = device->getDeviceInfo();
-      std::string serial = device_info->serialNumber();
-      std::string uid = device_info->uid();
-      auto port_id = parseUsbPort(uid);
-      std::stringstream pid_hex;
-      pid_hex<< std::hex << std::setw(4) << std::setfill('0') << device_info->getPid();
-      ROS_INFO_STREAM("- Name: " << device_info->getName() << ", PID: 0x" << pid_hex.str()
-                                 << ", SN/ID: " << serial
-                                 << ", Connection: " << device_info->getConnectionType());
-      ROS_INFO_STREAM("serial: " << serial);
-      ROS_INFO_STREAM("port id : " << port_id);
-      ROS_INFO_STREAM("usb connect type: " << device_info->getConnectionType());
+      if (std::string(list->getConnectionType(i)) != "Ethernet") {
+        std::string serial = list->serialNumber(i);
+        std::string uid = list->uid(i);
+        auto usb_port = parseUsbPort(uid);
+        auto connection_type = list->getConnectionType(i);
+        std::stringstream pid_hex;
+        pid_hex << std::hex << std::setw(4) << std::setfill('0') << list->getPid(i);
+        ROS_INFO_STREAM("- Name: " << list->getName(i) << ", PID: 0x" << pid_hex.str()
+                                   << ", SN/ID: " << serial << ", Connection: " << connection_type);
+        ROS_INFO_STREAM("serial: " << serial);
+        ROS_INFO_STREAM("port id : " << usb_port);
+        ROS_INFO_STREAM("usb connect type: " << connection_type);
+        std::cout << std::endl;
+      } else {
+        std::string serial = list->serialNumber(i);
+        auto connection_type = list->getConnectionType(i);
+        auto ip_address = list->getIpAddress(i);
+        std::stringstream pid_hex;
+        pid_hex << std::hex << std::setw(4) << std::setfill('0') << list->getPid(i);
+        ROS_INFO_STREAM("- Name: " << list->getName(i) << ", PID: 0x" << pid_hex.str()
+                                   << ", SN/ID: " << serial << ", Connection: " << connection_type);
+        ROS_INFO_STREAM("serial: " << serial);
+        ROS_INFO_STREAM("ip address: " << ip_address);
+        ROS_INFO_STREAM("usb connect type: " << connection_type);
+        std::cout << std::endl;
+      }
     }
   } catch (ob::Error &e) {
     ROS_ERROR_STREAM("list_device_node: " << e.getMessage());
