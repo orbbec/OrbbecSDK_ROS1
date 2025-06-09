@@ -71,6 +71,13 @@ class OBCameraNode {
 
   void clean();
 
+  // Safely expose the lock
+  template<typename Func>
+  auto withDeviceLock(Func&& func) -> decltype(func()) {
+    std::lock_guard<std::recursive_mutex> lock(device_lock_);
+    return func();
+  }
+
  private:
   struct IMUData {
     IMUData() = default;

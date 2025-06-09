@@ -296,13 +296,15 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     ob_camera_node_.reset();
   }
   ob_camera_node_ = std::make_shared<OBCameraNode>(nh_, nh_private_, device_);
-  if (!upgrade_firmware_.empty()) {
-    device_->updateFirmware(
-        upgrade_firmware_.c_str(),
-        std::bind(&OBCameraNodeDriver::firmwareUpdateCallback, this, std::placeholders::_1,
-                  std::placeholders::_2, std::placeholders::_3),
-        false);
-  }
+  ob_camera_node_->withDeviceLock([&]() {
+    if (!upgrade_firmware_.empty()) {
+      device_->updateFirmware(
+          upgrade_firmware_.c_str(),
+          std::bind(&OBCameraNodeDriver::firmwareUpdateCallback, this, std::placeholders::_1,
+                    std::placeholders::_2, std::placeholders::_3),
+          false);
+    }
+  });
   if (ob_camera_node_ && ob_camera_node_->isInitialized()) {
     device_connected_ = true;
   } else {
