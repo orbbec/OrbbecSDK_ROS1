@@ -303,6 +303,8 @@ class OBCameraNode {
 
   bool switchIRDataSourceChannelCallback(SetStringRequest &request, SetStringResponse &response);
 
+  bool getLaserStatusCallback(GetBoolRequest &request, GetBoolResponse &response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -384,6 +386,7 @@ class OBCameraNode {
   ros::ServiceServer switch_ir_mode_srv_;
   ros::ServiceServer switch_ir_data_source_channel_srv_;
   ros::ServiceServer get_ldp_measure_distance_srv_;
+  ros::ServiceServer get_laser_status_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
