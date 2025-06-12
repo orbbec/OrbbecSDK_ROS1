@@ -1,4 +1,4 @@
-# OrbbecSDK ROS v2
+# OrbbecSDK ROS
 
 > [!重要]
 >
@@ -503,7 +503,7 @@ bash .make_deb.sh
 
 OrbbecSDK ROS Wrapper 支持以下设备。
 
-| 产品列表                              | 最低固件版本 | **Launch File**       |
+| 产品列表                              | 最低固件版本 | **Launch File**             |
 | :------------------------------------ | :----------- | :-------------------------- |
 | Astra+                                | 1.0.19       | astra_adv.launch.py         |
 | Astra Mini /Astra Mini Pro /Astra Pro | 1007         | astra.launch.py             |
