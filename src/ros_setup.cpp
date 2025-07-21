@@ -1201,7 +1201,7 @@ void OBCameraNode::setupPipelineConfig() {
 
 void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWrapper& stat) {
   try {
-    OBDeviceTemperature temperature;
+    OBDeviceTemperature temperature{};
     uint32_t data_size = sizeof(OBDeviceTemperature);
     device_->getStructuredData(OB_STRUCT_DEVICE_TEMPERATURE,
                                reinterpret_cast<uint8_t*>(&temperature), &data_size);
@@ -1540,9 +1540,9 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         params.magnitude = request.filter_param[2];
         params.radius = request.filter_param[3];
         spatial_filter->setFilterParams(params);
-        ROS_INFO_STREAM("Set spatial filter params: " << "\nalpha:" << params.alpha
-                                                      << "\nradius:" << params.radius
-                                                      << "\ndisp_diff:" << params.disp_diff);
+        ROS_INFO_STREAM("Set spatial filter params: "
+                        << "\nalpha:" << params.alpha << "\nradius:" << params.radius
+                        << "\ndisp_diff:" << params.disp_diff);
       } else {
         response.message =
             "The filter switch setting is successful, but the filter parameter setting fails";
