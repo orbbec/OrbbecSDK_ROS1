@@ -162,6 +162,12 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getLdpStatusCallback(request, response);
         return response.success;
       });
+  get_ldp_protection_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+      "/" + camera_name_ + "/" + "get_ldp_protection_status",
+      [this](GetBoolRequest& request, GetBoolResponse& response) {
+        response.success = this->getLdpProtectionStatusCallback(request, response);
+        return response.success;
+      });
   get_device_info_srv_ = nh_.advertiseService<GetDeviceInfoRequest, GetDeviceInfoResponse>(
       "/" + camera_name_ + "/" + "get_device_info",
       [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
@@ -518,9 +524,22 @@ bool OBCameraNode::getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
-    response.data = device_->getBoolProperty(OB_PROP_LDP_STATUS_BOOL);
+    response.data = device_->getBoolProperty(OB_PROP_LDP_BOOL);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to get LDP status: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
+  return true;
+}
+bool OBCameraNode::getLdpProtectionStatusCallback(GetBoolRequest& request,
+                                                  GetBoolResponse& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    response.data = device_->getBoolProperty(OB_PROP_LDP_STATUS_BOOL);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get LDP Protection status: " << e.getMessage());
     response.success = false;
     return false;
   }
@@ -847,9 +866,9 @@ bool OBCameraNode::getLaserStatusCallback(GetBoolRequest& request, GetBoolRespon
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
-      response.data = device_->getBoolProperty(OB_PROP_LASER_CONTROL_INT) ? false : true;
+      response.data = device_->getBoolProperty(OB_PROP_LASER_CONTROL_INT) ? true : false;
     } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
-      response.data = device_->getBoolProperty(OB_PROP_LASER_BOOL) ? false : true;
+      response.data = device_->getBoolProperty(OB_PROP_LASER_BOOL) ? true : false;
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to get LDP status: " << e.getMessage());
