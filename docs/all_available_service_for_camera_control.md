@@ -8,7 +8,6 @@ to [Launch Parameters](./launch_parameters.md)) is a prerequisite for their corr
 configuration ensures that services are accessible only when their specific stream is enabled in the
 launch file's stream argument.
 
-
 * `/camera/get_color_camera_info`
 
 ```bash
@@ -358,4 +357,12 @@ rosservice call /camera/set_filter '{filter_name: NoiseRemovalFilter,filter_enab
 
 #set HardwareNoiseRemoval
 rosservice call /camera/set_filter '{filter_name: HardwareNoiseRemoval,filter_enable: true,filter_param: []}'
+
+# Set SpatialFastFilter
+# filter_param: [radius]
+rosservice call /camera/set_filter '{filter_name: SpatialFastFilter, filter_enable: true, filter_param: [4]}'
+
+# Set SpatialModerateFilter
+# filter_param: [disp_diff, magnitude, radius, ]
+rosservice call /camera/set_filter '{filter_name: SpatialModerateFilter, filter_enable: true, filter_param: [160,1,3]}'
 ```

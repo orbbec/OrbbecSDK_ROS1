@@ -403,9 +403,11 @@ roslaunch orbbec_camera gemini_330_series.launch enable_color:=true color_width:
 * **enable_depth_auto_exposure_priority**
   * Enable the Depth auto exposure priority
   * For example:`enable_depth_auto_exposure_priority:=true`
-* **depth_brightness**
-  * Set the Depth brightness
-  * For example:`depth_brightness:=100`
+
+* **mean_intensity_set_point**
+  * Set the target mean intensity of the Depth image  
+  * For example: `mean_intensity_set_point:=100`  
+  * **Note:** This parameter replaces the deprecated `depth_brightness`.  
 
 [......](./docs/launch_parameters.md)
 

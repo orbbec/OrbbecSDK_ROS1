@@ -195,7 +195,7 @@ void OBCameraNode::getParameters() {
   depth_ae_roi_top_ = nh_private_.param<int>("depth_ae_roi_top", -1);
   depth_ae_roi_right_ = nh_private_.param<int>("depth_ae_roi_right", -1);
   depth_ae_roi_bottom_ = nh_private_.param<int>("depth_ae_roi_bottom", -1);
-  depth_brightness_ = nh_private_.param<int>("depth_brightness", -1);
+  mean_intensity_set_point_ = nh_private_.param<int>("mean_intensity_set_point", -1);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
   ir_exposure_ = nh_private_.param<int>("ir_exposure_", -1);
   ir_brightness_ = nh_private_.param<int>("ir_brightness", -1);
@@ -263,6 +263,9 @@ void OBCameraNode::getParameters() {
   enable_spatial_filter_ = nh_private_.param<bool>("enable_spatial_filter", false);
   enable_temporal_filter_ = nh_private_.param<bool>("enable_temporal_filter", false);
   enable_hole_filling_filter_ = nh_private_.param<bool>("enable_hole_filling_filter", false);
+  enable_spatial_fast_filter_ = nh_private_.param<bool>("enable_spatial_fast_filter", false);
+  enable_spatial_moderate_filter_ =
+      nh_private_.param<bool>("enable_spatial_moderate_filter", false);
   decimation_filter_scale_range_ = nh_private_.param<int>("decimation_filter_scale_range", -1);
   sequence_id_filter_id_ = nh_private_.param<int>("sequence_id_filter_id", -1);
   threshold_filter_max_ = nh_private_.param<int>("threshold_filter_max", -1);
@@ -283,6 +286,13 @@ void OBCameraNode::getParameters() {
   hdr_merge_gain_1_ = nh_private_.param<int>("hdr_merge_gain_1", -1);
   hdr_merge_exposure_2_ = nh_private_.param<int>("hdr_merge_exposure_2", -1);
   hdr_merge_gain_2_ = nh_private_.param<int>("hdr_merge_gain_2", -1);
+  spatial_fast_filter_radius_ = nh_private_.param<int>("spatial_fast_filter_radius", -1);
+  spatial_moderate_filter_diff_threshold_ =
+      nh_private_.param<int>("spatial_moderate_filter_diff_threshold", -1);
+  spatial_moderate_filter_magnitude_ =
+      nh_private_.param<int>("spatial_moderate_filter_magnitude", -1);
+  spatial_moderate_filter_radius_ = nh_private_.param<int>("spatial_moderate_filter_radius", -1);
+
   diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");

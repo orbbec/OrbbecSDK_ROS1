@@ -86,7 +86,7 @@
     <arg name="depth_ae_roi_right" default="-1"/>
     <arg name="depth_ae_roi_top" default="-1"/>
     <arg name="depth_ae_roi_bottom" default="-1"/>
-    <arg name="depth_brightness" default="-1"/>
+    <arg name="mean_intensity_set_point" default="-1"/>
 
     <!-- Left IR camera parameters -->
     <arg name="left_ir_width" default="0"/>
@@ -290,7 +290,7 @@
             <param name="depth_ae_roi_right" value="$(arg depth_ae_roi_right)"/>
             <param name="depth_ae_roi_top" value="$(arg depth_ae_roi_top)"/>
             <param name="depth_ae_roi_bottom" value="$(arg depth_ae_roi_bottom)"/>
-            <param name="depth_brightness" value="$(arg depth_brightness)"/>
+            <param name="mean_intensity_set_point" value="$(arg mean_intensity_set_point)"/>
 
             <param name="left_ir_width" value="$(arg left_ir_width)"/>
             <param name="left_ir_height" value="$(arg left_ir_height)"/>

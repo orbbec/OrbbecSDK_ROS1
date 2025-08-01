@@ -1,17 +1,21 @@
 {
     "files.associations": {
-        "array": "cpp",
-        "deque": "cpp",
-        "forward_list": "cpp",
-        "list": "cpp",
-        "string": "cpp",
-        "unordered_map": "cpp",
-        "unordered_set": "cpp",
-        "vector": "cpp",
-        "string_view": "cpp",
-        "initializer_list": "cpp",
-        "ranges": "cpp",
-        "regex": "cpp",
-        "valarray": "cpp"
+      "array": "cpp",
+      "deque": "cpp",
+      "forward_list": "cpp",
+      "list": "cpp",
+      "string": "cpp",
+      "unordered_map": "cpp",
+      "unordered_set": "cpp",
+      "vector": "cpp",
+      "string_view": "cpp",
+      "initializer_list": "cpp",
+      "ranges": "cpp",
+      "regex": "cpp",
+      "valarray": "cpp",
+      "random": "cpp",
+      "bitset": "cpp",
+      "utility": "cpp",
+      "system_error": "cpp"
     }
 }

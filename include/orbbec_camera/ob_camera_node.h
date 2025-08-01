@@ -72,8 +72,8 @@ class OBCameraNode {
   void clean();
 
   // Safely expose the lock
-  template<typename Func>
-  auto withDeviceLock(Func&& func) -> decltype(func()) {
+  template <typename Func>
+  auto withDeviceLock(Func &&func) -> decltype(func()) {
     std::lock_guard<std::recursive_mutex> lock(device_lock_);
     return func();
   }
@@ -502,7 +502,7 @@ class OBCameraNode {
   int depth_ae_roi_top_ = -1;
   int depth_ae_roi_right_ = -1;
   int depth_ae_roi_bottom_ = -1;
-  int depth_brightness_ = -1;
+  int mean_intensity_set_point_ = -1;
   int ir_exposure_ = -1;
   int ir_brightness_ = -1;
   bool enable_right_ir_sequence_id_filter_ = false;
@@ -572,6 +572,8 @@ class OBCameraNode {
   bool enable_spatial_filter_ = true;
   bool enable_temporal_filter_ = false;
   bool enable_hole_filling_filter_ = false;
+  bool enable_spatial_fast_filter_ = false;
+  bool enable_spatial_moderate_filter_ = false;
   // filter params
   int decimation_filter_scale_range_ = -1;
   int sequence_id_filter_id_ = -1;
@@ -590,6 +592,10 @@ class OBCameraNode {
   int hdr_merge_gain_1_ = -1;
   int hdr_merge_exposure_2_ = -1;
   int hdr_merge_gain_2_ = -1;
+  int spatial_fast_filter_radius_ = -1;
+  int spatial_moderate_filter_diff_threshold_ = -1;
+  int spatial_moderate_filter_magnitude_ = -1;
+  int spatial_moderate_filter_radius_ = -1;
   std::string hole_filling_filter_mode_;
   ros::Publisher filter_status_pub_;
   nlohmann::json filter_status_;

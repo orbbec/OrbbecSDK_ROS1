@@ -62,8 +62,11 @@ The following are the launch parameters available:
   * Set the Color decimation filter scale
 * **enable_depth_auto_exposure_priority**
   * Enable the Depth auto exposure priority
-* **depth_brightness**
-  * Set the Depth brightness
+
+* **mean_intensity_set_point**
+  * Set the target mean intensity of the Depth image  
+  * **Note:** This parameter replaces the deprecated `depth_brightness`.  
+
 * **enable_ir_auto_exposure**
   * Enable the IR auto exposure
 * **ir_exposure**

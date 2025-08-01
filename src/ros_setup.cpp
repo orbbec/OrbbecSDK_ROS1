@@ -196,6 +196,8 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"HoleFillingFilter", enable_hole_filling_filter_},
         {"DisparityTransform", enable_disaparity_to_depth_},
         {"ThresholdFilter", enable_threshold_filter_},
+        {"SpatialFastFilter", enable_spatial_fast_filter_},
+        {"SpatialModerateFilter", enable_spatial_moderate_filter_},
     };
     std::string filter_name = filter->type();
     ROS_INFO_STREAM("Setting " << filter_name << "......");
@@ -261,6 +263,23 @@ void OBCameraNode::setupDepthPostProcessFilter() {
                                    sizeof(OBHdrConfig));
       }
       hdr_merge_filter->enable(true);
+    } else if (filter_name == "SpatialFastFilter" && enable_spatial_fast_filter_) {
+      auto spatial_fast_filter = filter->as<ob::SpatialFastFilter>();
+      OBSpatialFastFilterParams params{};
+      if (spatial_fast_filter_radius_ != -1) {
+        params.radius = spatial_fast_filter_radius_;
+        spatial_fast_filter->setFilterParams(params);
+      }
+    } else if (filter_name == "SpatialModerateFilter" && enable_spatial_moderate_filter_) {
+      auto spatial_moderate_filter = filter->as<ob::SpatialModerateFilter>();
+      OBSpatialModerateFilterParams params{};
+      if (spatial_moderate_filter_diff_threshold_ != -1 &&
+          spatial_moderate_filter_magnitude_ != -1 && spatial_moderate_filter_radius_ != -1) {
+        params.magnitude = spatial_moderate_filter_magnitude_;
+        params.radius = spatial_moderate_filter_radius_;
+        params.disp_diff = spatial_moderate_filter_diff_threshold_;
+        spatial_moderate_filter->setFilterParams(params);
+      }
     } else {
       ROS_INFO_STREAM("Skip setting " << filter_name);
     }
@@ -645,15 +664,15 @@ void OBCameraNode::setupDevices() {
       device_->setIntProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT,
                               set_enable_depth_auto_exposure_priority);
     }
-    if (depth_brightness_ != -1 &&
+    if (mean_intensity_set_point_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_IR_BRIGHTNESS_INT);
-      if (depth_brightness_ < range.min || depth_brightness_ > range.max) {
+      if (mean_intensity_set_point_ < range.min || mean_intensity_set_point_ > range.max) {
         ROS_ERROR_STREAM("depth brightness value is out of range[" << range.min << "," << range.max
                                                                    << "]please check the value");
       } else {
-        ROS_INFO_STREAM("Setting depth brightness to " << depth_brightness_);
-        device_->setIntProperty(OB_PROP_IR_BRIGHTNESS_INT, depth_brightness_);
+        ROS_INFO_STREAM("Setting depth brightness to " << mean_intensity_set_point_);
+        device_->setIntProperty(OB_PROP_IR_BRIGHTNESS_INT, mean_intensity_set_point_);
       }
     }
     if (ir_exposure_ != -1 &&
@@ -1563,13 +1582,42 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
             "fails";
         return true;
       }
-
+    } else if (request.filter_name == "SpatialFastFilter") {
+      auto spatial_fast_filter = std::make_shared<ob::SpatialFastFilter>();
+      spatial_fast_filter->enable(request.filter_enable);
+      depth_filter_list_.push_back(spatial_fast_filter);
+      if (request.filter_param.size() > 0) {
+        OBSpatialFastFilterParams params{};
+        params.radius = request.filter_param[0];
+        spatial_fast_filter->setFilterParams(params);
+        ROS_INFO_STREAM("Set SpatialFastFilter radius to " << params.radius);
+      } else {
+        response.message =
+            "The filter switch setting is successful, but the filter parameter setting fails";
+        return true;
+      }
+    } else if (request.filter_name == "SpatialModerateFilter") {
+      auto spatial_moderate_filter = std::make_shared<ob::SpatialModerateFilter>();
+      spatial_moderate_filter->enable(request.filter_enable);
+      depth_filter_list_.push_back(spatial_moderate_filter);
+      if (request.filter_param.size() > 2) {
+        OBSpatialModerateFilterParams params{};
+        params.disp_diff = request.filter_param[0];
+        params.magnitude = request.filter_param[1];
+        params.radius = request.filter_param[2];
+        spatial_moderate_filter->setFilterParams(params);
+        ROS_INFO_STREAM("Set SpatialModerateFilter params: "
+                        << "\nmagnitude:" << params.magnitude << "\nradius:" << params.radius
+                        << "\ndisp_diff:" << params.disp_diff);
+      }
     } else {
       ROS_INFO_STREAM(request.filter_name
-                      << "Cannot be set\n"
+                      << " Cannot be set\n"
                       << "The filter_name value that can be set is "
-                         "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, Nois"
-                         "eRemovalFilter, SpatialAdvancedFilter and TemporalFilter");
+                         "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, "
+                         "NoiseRemovalFilter, HardwareNoiseRemoval, "
+                         "SpatialAdvancedFilter, TemporalFilter, "
+                         "SpatialFastFilter, SpatialModerateFilter");
     }
     for (auto& filter : depth_filter_list_) {
       std::cout << " - " << filter->getName() << ": "
