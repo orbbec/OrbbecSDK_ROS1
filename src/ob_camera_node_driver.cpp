@@ -25,6 +25,7 @@
 #include <iomanip>  // For std::put_time
 
 #include <boost/filesystem.hpp>
+#include <malloc.h>
 
 namespace orbbec_camera {
 backward::SignalHandling sh;
@@ -77,6 +78,11 @@ OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle &nh, ros::NodeHandle &nh_
 
 OBCameraNodeDriver::~OBCameraNodeDriver() {
   is_alive_ = false;
+  // Stop the timer first to prevent any callbacks from executing during destruction
+  if (check_connection_timer_) {
+    check_connection_timer_.stop();
+  }
+
   if (reset_device_thread_ && reset_device_thread_->joinable()) {
     reset_device_cv_.notify_all();
     reset_device_thread_->join();
@@ -155,8 +161,8 @@ void OBCameraNodeDriver::init() {
                           [this](const ros::WallTimerEvent &) { this->checkConnectionTimer(); });
   ctx_->setDeviceChangedCallback([this](const std::shared_ptr<ob::DeviceList> &removed_list,
                                         const std::shared_ptr<ob::DeviceList> &added_list) {
-    deviceConnectCallback(added_list);
     deviceDisconnectCallback(removed_list);
+    deviceConnectCallback(added_list);
   });
   query_thread_ = std::make_shared<std::thread>([this]() { queryDevice(); });
   reset_device_thread_ = std::make_shared<std::thread>([this]() { resetDeviceThread(); });
@@ -280,9 +286,9 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     device_.reset();
   }
   if (enable_hardware_reset_ && !hardware_reset_done_) {
-    ROS_INFO("Reboot device");
+    ROS_INFO("initializeDevice call reboot device use hardware reset");
     device->reboot();
-    ROS_INFO("Reboot device done");
+    ROS_INFO("initializeDevice call reboot device hardware reset done");
     device_connected_ = false;
     hardware_reset_done_ = true;
     return;
@@ -335,7 +341,20 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList> &list) {
   ROS_INFO_STREAM("deviceConnectCallback : deviceConnectCallback start");
   CHECK_NOTNULL(list.get());
+  {
+    std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
+    if (reset_device_) {
+      ROS_INFO_STREAM("deviceConnectCallback : device reset in progress, waiting...");
+      reset_device_cv_.wait(reset_lock, [this]() { return !reset_device_ || !is_alive_; });
+      if (!is_alive_) {
+        return;
+      }
+      ROS_INFO_STREAM("deviceConnectCallback : device reset completed, continuing connection");
+    }
+  }
+
   if (device_connected_) {
+    ROS_INFO_STREAM("deviceConnectCallback : device already connected, return");
     return;
   }
   if (list->deviceCount() == 0) {
@@ -358,6 +377,8 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
         ROS_WARN_THROTTLE(1.0, "Device with serial number %s not found", serial_number_.c_str());
       } else if (!usb_port_.empty()) {
         ROS_WARN_THROTTLE(1.0, "Device with usb port %s not found", usb_port_.c_str());
+      } else {
+        ROS_WARN("No matching device found in device list");
       }
       device_connected_ = false;
       ROS_WARN_STREAM("deviceConnectCallback : start device failed, return");
@@ -397,6 +418,10 @@ void OBCameraNodeDriver::connectNetDevice(const std::string &ip_address, int por
 }
 
 void OBCameraNodeDriver::checkConnectionTimer() {
+  if (!is_alive_) {
+    return;  // Early exit if the object is being destroyed
+  }
+
   if (!device_connected_) {
     ROS_DEBUG_STREAM("wait for device " << serial_number_ << " to be connected");
   } else if (!ob_camera_node_) {
@@ -483,8 +508,9 @@ void OBCameraNodeDriver::resetDeviceThread() {
       device_info_.reset();
       device_connected_ = false;
       device_uid_.clear();
-      reset_device_ = false;
     }
+    reset_device_ = false;
+    reset_device_cv_.notify_all();
     ROS_INFO_STREAM("resetDeviceThread: device is disconnected, reset device end");
   }
 }
@@ -513,16 +539,51 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
                                                      std_srvs::EmptyResponse &res) {
   (void)req;
   (void)res;
-  if (!device_connected_) {
-    ROS_INFO("Device not connected");
+  malloc_trim(0);
+  ROS_INFO("Reboot device service called");
+
+  struct timespec timeout;
+  clock_gettime(CLOCK_REALTIME, &timeout);
+  timeout.tv_sec += 15;
+
+  int lock_result = pthread_mutex_timedlock(orb_device_lock_, &timeout);
+  if (lock_result != 0) {
+    ROS_ERROR_STREAM("Failed to acquire process lock for reboot: " << strerror(lock_result));
     return false;
   }
-  ROS_INFO("Reboot device");
-  ob_camera_node_->rebootDevice();
-  device_connected_ = false;
-  device_ = nullptr;
-  return true;
+
+  std::shared_ptr<int> process_lock_guard(nullptr,
+                                        [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
+
+  try {
+    std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
+    {
+      std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
+
+      if (!device_connected_ || !ob_camera_node_) {
+        ROS_INFO("Device not connected");
+        return false;
+      }
+
+      std::string current_device_uid = device_uid_;
+      ROS_INFO_STREAM("Rebooting device with UID: " << current_device_uid);
+
+      ob_camera_node_->rebootDevice();
+    }
+
+    ROS_INFO("Device reboot initiated, waiting for reconnection");
+    malloc_trim(0);
+    return true;
+
+  } catch (std::exception &e) {
+    ROS_ERROR_STREAM("Failed to reboot device: " << e.what());
+    return false;
+  } catch (...) {
+    ROS_ERROR_STREAM("Failed to reboot device: unknown error");
+    return false;
+  }
 }
+
 void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
   if (path.empty()) {
     return;

@@ -21,7 +21,8 @@
 #elif defined(USE_NV_HW_DECODER)
 #include "orbbec_camera/jetson_nv_decoder.h"
 #endif
-
+#include <malloc.h>
+#include <fstream>
 namespace orbbec_camera {
 OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
                            std::shared_ptr<ob::Device> device)
@@ -72,9 +73,7 @@ void OBCameraNode::init() {
   if (enable_colored_point_cloud_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
     CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
     rgb_point_cloud_buffer_size_ = width_[COLOR] * height_[COLOR] * sizeof(OBColorPoint);
-    rgb_point_cloud_buffer_ = new uint8_t[rgb_point_cloud_buffer_size_];
     xy_table_data_size_ = width_[COLOR] * height_[COLOR] * 2;
-    xy_table_data_ = new float[xy_table_data_size_];
   }
   rgb_is_decoded_ = false;
   if (diagnostics_frequency_ > 0.0) {
@@ -86,10 +85,16 @@ void OBCameraNode::init() {
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
 
 void OBCameraNode::rebootDevice() {
+  ROS_INFO("Stop streams before rebooting device");
+  malloc_trim(0);
+  stopStreams();
+  malloc_trim(0);
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   ROS_INFO("Reboot device");
   if (device_) {
     device_->reboot();
   }
+  malloc_trim(0);
   ROS_INFO("Reboot device DONE");
 }
 
@@ -114,8 +119,6 @@ void OBCameraNode::clean() {
   stopStreams();
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() delete rgb_buffer");
   delete[] rgb_buffer_;
-  delete[] rgb_point_cloud_buffer_;
-  delete[] xy_table_data_;
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() end");
 }
 

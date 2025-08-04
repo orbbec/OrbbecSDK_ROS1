@@ -15,8 +15,11 @@
  *******************************************************************************/
 #include "ros/ros.h"
 #include "orbbec_camera/ob_camera_node_driver.h"
+#include <malloc.h>
 
 int main(int argc, char** argv) {
+  mallopt(M_TRIM_THRESHOLD, 1024*1024*10);
+  mallopt(M_TOP_PAD, 128*1024);
   ros::init(argc, argv, "orbbec_camera");
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
