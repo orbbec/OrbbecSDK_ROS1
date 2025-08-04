@@ -198,7 +198,7 @@ void OBCameraNode::getParameters() {
   depth_ae_roi_top_ = nh_private_.param<int>("depth_ae_roi_top", -1);
   depth_ae_roi_right_ = nh_private_.param<int>("depth_ae_roi_right", -1);
   depth_ae_roi_bottom_ = nh_private_.param<int>("depth_ae_roi_bottom", -1);
-  mean_intensity_set_point_ = nh_private_.param<int>("mean_intensity_set_point", -1);
+  depth_brightness_ = nh_private_.param<int>("depth_brightness", -1);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
   ir_exposure_ = nh_private_.param<int>("ir_exposure_", -1);
   ir_brightness_ = nh_private_.param<int>("ir_brightness", -1);
@@ -337,6 +337,8 @@ void OBCameraNode::getParameters() {
   hdr_index0_depth_gain_ = nh_private_.param<int>("hdr_index0_depth_gain", 16);
   hdr_index0_ir_brightness_ = nh_private_.param<int>("hdr_index0_ir_brightness", 60);
   hdr_index0_ir_ae_max_exposure_ = nh_private_.param<int>("hdr_index0_ir_ae_max_exposure", 10000);
+
+  enable_ptp_clock_sync_ = nh_private_.param<bool>("enable_ptp_clock_sync", false);
 
   laser_index1_laser_control_ = nh_private_.param<int>("laser_index1_laser_control", 0);
   laser_index1_depth_exposure_ = nh_private_.param<int>("laser_index1_depth_exposure", 3000);

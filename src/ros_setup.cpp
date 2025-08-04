@@ -664,15 +664,15 @@ void OBCameraNode::setupDevices() {
       device_->setIntProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT,
                               set_enable_depth_auto_exposure_priority);
     }
-    if (mean_intensity_set_point_ != -1 &&
+    if (depth_brightness_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_IR_BRIGHTNESS_INT);
-      if (mean_intensity_set_point_ < range.min || mean_intensity_set_point_ > range.max) {
+      if (depth_brightness_ < range.min || depth_brightness_ > range.max) {
         ROS_ERROR_STREAM("depth brightness value is out of range[" << range.min << "," << range.max
                                                                    << "]please check the value");
       } else {
-        ROS_INFO_STREAM("Setting depth brightness to " << mean_intensity_set_point_);
-        device_->setIntProperty(OB_PROP_IR_BRIGHTNESS_INT, mean_intensity_set_point_);
+        ROS_INFO_STREAM("Setting depth brightness to " << depth_brightness_);
+        device_->setIntProperty(OB_PROP_IR_BRIGHTNESS_INT, depth_brightness_);
       }
     }
     if (ir_exposure_ != -1 &&
@@ -700,6 +700,10 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("Setting IR AE max exposure to " << ir_ae_max_exposure_);
         device_->setIntProperty(OB_PROP_IR_AE_MAX_EXPOSURE_INT, ir_ae_max_exposure_);
       }
+    }
+    if (device_->isPropertySupported(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, enable_ptp_clock_sync_);
     }
     if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, enable_laser_);

@@ -151,6 +151,19 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->resetCameraWhiteBalanceCallback(request, response);
       });
+  set_ptp_clock_sync_srv_ =
+      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+          "/" + camera_name_ + "/" + "set_ptp_clock_sync",
+          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+            response.success = this->setPtpClockSyncCallback(request, response);
+            return response.success;
+          });
+  get_ptp_clock_sync_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+      "/" + camera_name_ + "/" + "get_ptp_clock_sync",
+      [this](GetBoolRequest& request, GetBoolResponse& response) {
+        response.success = this->getPtpClockSyncCallback(request, response);
+        return response.success;
+      });
   set_fan_work_mode_srv_ =
       nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
           "/" + camera_name_ + "/" + "set_fan_work_mode",
@@ -458,9 +471,9 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
                                    reinterpret_cast<const uint8_t*>(&config), sizeof(config));
         device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                    &data_size);
-        ROS_INFO_STREAM("set depth AE ROI : " << "[Left: " << config.x0_left << ", Right: "
-                                              << config.x1_right << ", Top: " << config.y0_top
-                                              << ", Bottom: " << config.y1_bottom << " ]");
+        ROS_INFO_STREAM("set depth AE ROI : "
+                        << "[Left: " << config.x0_left << ", Right: " << config.x1_right
+                        << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
         break;
       case OB_STREAM_COLOR:
         config.x0_left = (static_cast<short int>(request.data_param[0]) < 0)
@@ -491,9 +504,9 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
                                    reinterpret_cast<const uint8_t*>(&config), sizeof(config));
         device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                    &data_size);
-        ROS_INFO_STREAM("set color AE ROI : " << "[Left: " << config.x0_left << ", Right: "
-                                              << config.x1_right << ", Top: " << config.y0_top
-                                              << ", Bottom: " << config.y1_bottom << " ]");
+        ROS_INFO_STREAM("set color AE ROI : "
+                        << "[Left: " << config.x0_left << ", Right: " << config.x1_right
+                        << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
         break;
       default:
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
@@ -703,6 +716,33 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set laser: " << e.getMessage());
     response.message = e.getMessage();
+    return false;
+  }
+  return true;
+}
+
+bool OBCameraNode::setPtpClockSyncCallback(std_srvs::SetBoolRequest& request,
+                                           std_srvs::SetBoolResponse& response) {
+  (void)response;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, request.data);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("set ptp clock sync failed: " << e.getMessage());
+    response.message = e.getMessage();
+    return false;
+  }
+  return true;
+}
+
+bool OBCameraNode::getPtpClockSyncCallback(GetBoolRequest& request, GetBoolResponse& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    response.data = device_->getBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get ptp clock sync status: " << e.getMessage());
+    response.success = false;
     return false;
   }
   return true;
