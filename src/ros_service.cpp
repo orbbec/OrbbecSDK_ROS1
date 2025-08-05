@@ -151,17 +151,16 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->resetCameraWhiteBalanceCallback(request, response);
       });
-  set_ptp_clock_sync_srv_ =
-      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-          "/" + camera_name_ + "/" + "set_ptp_clock_sync",
-          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-            response.success = this->setPtpClockSyncCallback(request, response);
-            return response.success;
-          });
-  get_ptp_clock_sync_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
-      "/" + camera_name_ + "/" + "get_ptp_clock_sync",
+  set_ptp_config_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+      "/" + camera_name_ + "/" + "set_ptp_config",
+      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+        response.success = this->setPtpConfigCallback(request, response);
+        return response.success;
+      });
+  get_ptp_config_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+      "/" + camera_name_ + "/" + "get_ptp_config",
       [this](GetBoolRequest& request, GetBoolResponse& response) {
-        response.success = this->getPtpClockSyncCallback(request, response);
+        response.success = this->getPtpConfigCallback(request, response);
         return response.success;
       });
   set_fan_work_mode_srv_ =
@@ -721,27 +720,27 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
   return true;
 }
 
-bool OBCameraNode::setPtpClockSyncCallback(std_srvs::SetBoolRequest& request,
-                                           std_srvs::SetBoolResponse& response) {
+bool OBCameraNode::setPtpConfigCallback(std_srvs::SetBoolRequest& request,
+                                        std_srvs::SetBoolResponse& response) {
   (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, request.data);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("set ptp clock sync failed: " << e.getMessage());
+    ROS_ERROR_STREAM("set ptp config failed: " << e.getMessage());
     response.message = e.getMessage();
     return false;
   }
   return true;
 }
 
-bool OBCameraNode::getPtpClockSyncCallback(GetBoolRequest& request, GetBoolResponse& response) {
+bool OBCameraNode::getPtpConfigCallback(GetBoolRequest& request, GetBoolResponse& response) {
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     response.data = device_->getBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get ptp clock sync status: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get config sync status: " << e.getMessage());
     response.success = false;
     return false;
   }

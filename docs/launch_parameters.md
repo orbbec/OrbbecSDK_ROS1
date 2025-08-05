@@ -107,8 +107,9 @@ The following are the launch parameters available:
 
   * Set the IR brightness
 * **enable_sync_output_accel_gyro**
-
-  * Enable the sync accel_gyro,and output IMU topic real-time data
+* Enable the sync accel_gyro,and output IMU topic real-time data
+*  **enable_ptp_config**
+    * Enable the PTP clock synchronization
 * **enable_accel**
 
   * Enable the Accelerometer,and output Accelerometer info topic data

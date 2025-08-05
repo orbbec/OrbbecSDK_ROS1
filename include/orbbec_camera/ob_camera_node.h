@@ -284,10 +284,9 @@ class OBCameraNode {
 
   bool getLdpStatusCallback(GetBoolRequest &request, GetBoolResponse &response);
 
-  bool setPtpClockSyncCallback(std_srvs::SetBoolRequest &request,
-                               std_srvs::SetBoolResponse &response);
+  bool setPtpConfigCallback(std_srvs::SetBoolRequest &request, std_srvs::SetBoolResponse &response);
 
-  bool getPtpClockSyncCallback(GetBoolRequest &request, GetBoolResponse &response);
+  bool getPtpConfigCallback(GetBoolRequest &request, GetBoolResponse &response);
 
   bool setFanWorkModeCallback(std_srvs::SetBoolRequest &request,
                               std_srvs::SetBoolResponse &response);
@@ -441,8 +440,8 @@ class OBCameraNode {
   ros::ServiceServer set_filter_srv_;
   ros::ServiceServer set_write_customerdata_srv_;
   ros::ServiceServer set_read_customerdata_srv_;
-  ros::ServiceServer set_ptp_clock_sync_srv_;
-  ros::ServiceServer get_ptp_clock_sync_srv_;
+  ros::ServiceServer set_ptp_config_srv_;
+  ros::ServiceServer get_ptp_config_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
@@ -671,8 +670,6 @@ class OBCameraNode {
   int laser_index0_depth_gain_ = 16;
   int laser_index0_ir_brightness_ = 60;
   int laser_index0_ir_ae_max_exposure_ = 17000;
-
-  bool enable_ptp_clock_sync_ = false;
 
   std::string frame_aggregate_mode_;
 };

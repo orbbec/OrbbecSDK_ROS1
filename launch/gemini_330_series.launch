@@ -8,7 +8,6 @@
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="10.0"/>
     <arg name="enable_frame_sync" default="true"/>
-    <arg name="enable_ptp_clock_sync" default="true"/>
     <arg name="time_domain" default="global"/><!-- "device", "global", "system" -->
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <arg name="enable_sync_host_time" default="true"/>

@@ -311,6 +311,18 @@ rosservice call /camera/get_camera_params
 rosservice call /camera/get_sdk_version
 ```
 
+* `/camera/get_ptp_config`
+
+```
+rosservice call /camera/get_ptp_config
+```
+
+* `/camera/set_ptp_config`
+
+```
+rosservice call /camera/set_ptp_config true
+```
+
 * `/camera/reboot_device`
 
 ```bash
