@@ -664,15 +664,15 @@ void OBCameraNode::setupDevices() {
       device_->setIntProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT,
                               set_enable_depth_auto_exposure_priority);
     }
-    if (depth_brightness_ != -1 &&
+    if (mean_intensity_set_point_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_IR_BRIGHTNESS_INT);
-      if (depth_brightness_ < range.min || depth_brightness_ > range.max) {
+      if (mean_intensity_set_point_ < range.min || mean_intensity_set_point_ > range.max) {
         ROS_ERROR_STREAM("depth brightness value is out of range[" << range.min << "," << range.max
                                                                    << "]please check the value");
       } else {
-        ROS_INFO_STREAM("Setting depth brightness to " << depth_brightness_);
-        device_->setIntProperty(OB_PROP_IR_BRIGHTNESS_INT, depth_brightness_);
+        ROS_INFO_STREAM("Setting depth brightness to " << mean_intensity_set_point_);
+        device_->setIntProperty(OB_PROP_IR_BRIGHTNESS_INT, mean_intensity_set_point_);
       }
     }
     if (ir_exposure_ != -1 &&
