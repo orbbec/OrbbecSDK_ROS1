@@ -302,15 +302,23 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     ob_camera_node_.reset();
   }
   ob_camera_node_ = std::make_shared<OBCameraNode>(nh_, nh_private_, device_);
-  ob_camera_node_->withDeviceLock([&]() {
-    if (!upgrade_firmware_.empty()) {
+
+  if (!upgrade_firmware_.empty()) {
+    firmware_update_success_ = false;
+
+    ob_camera_node_->withDeviceLock([&]() {
       device_->updateFirmware(
           upgrade_firmware_.c_str(),
           std::bind(&OBCameraNodeDriver::firmwareUpdateCallback, this, std::placeholders::_1,
                     std::placeholders::_2, std::placeholders::_3),
           false);
+    });
+    if(firmware_update_success_)
+    {
+      return;
     }
-  });
+  }
+
   if (ob_camera_node_ && ob_camera_node_->isInitialized()) {
     device_connected_ = true;
   } else {
@@ -719,10 +727,12 @@ void OBCameraNodeDriver::firmwareUpdateCallback(OBFwUpdateState state, const cha
   std::cout << "\033[K";
   std::cout << "Message : " << message << std::endl << std::flush;
   if (state == STAT_DONE) {
-    ROS_INFO_STREAM("Reboot device");
-    ob_camera_node_->rebootDevice();
+    ROS_INFO_STREAM("Reboot device after firmware update");
+    device_->reboot();
     device_connected_ = false;
     upgrade_firmware_ = "";
+
+    firmware_update_success_ = true;
   }
 }
 }  // namespace orbbec_camera

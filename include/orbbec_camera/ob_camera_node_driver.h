@@ -110,5 +110,9 @@ class OBCameraNodeDriver {
   std::string uvc_backend_;
   std::string preset_firmware_path_;
   std::string upgrade_firmware_;
+  std::mutex firmware_update_mutex_;
+  std::condition_variable firmware_update_cv_;
+  std::atomic<bool> firmware_update_success_{false};
+
 };
 }  // namespace orbbec_camera
