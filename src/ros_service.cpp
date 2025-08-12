@@ -871,7 +871,7 @@ bool OBCameraNode::getLaserStatusCallback(GetBoolRequest& request, GetBoolRespon
       response.data = device_->getBoolProperty(OB_PROP_LASER_BOOL) ? true : false;
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get LDP status: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get laser status: " << e.getMessage());
     response.success = false;
     return false;
   }
