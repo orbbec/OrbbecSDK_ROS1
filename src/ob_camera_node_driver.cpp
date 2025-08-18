@@ -34,40 +34,43 @@ std::string g_camera_name = "camera";
 
 void signalHandler(int signum) {
   std::cout << "Received signal: " << signum << std::endl;
+  if (signum == SIGINT || signum == SIGTERM) {
+    ros::shutdown(); 
+  } else {
+    std::string log_dir = "Log/";
 
-  std::string log_dir = "Log/";
+    // get current time
+    std::time_t now = std::time(nullptr);
+    std::tm *local_time = std::localtime(&now);
 
-  // get current time
-  std::time_t now = std::time(nullptr);
-  std::tm *local_time = std::localtime(&now);
+    // format date and time to string, format as "2024_05_20_12_34_56"
+    std::ostringstream time_stream;
+    time_stream << std::put_time(local_time, "%Y_%m_%d_%H_%M_%S");
 
-  // format date and time to string, format as "2024_05_20_12_34_56"
-  std::ostringstream time_stream;
-  time_stream << std::put_time(local_time, "%Y_%m_%d_%H_%M_%S");
+    // generate log file name
+    std::string log_file_name = g_camera_name + "_crash_stack_trace_" + time_stream.str() + ".log";
+    std::string log_file_path = log_dir + log_file_name;
 
-  // generate log file name
-  std::string log_file_name = g_camera_name + "_crash_stack_trace_" + time_stream.str() + ".log";
-  std::string log_file_path = log_dir + log_file_name;
+    if (!boost::filesystem::exists(log_dir)) {
+      boost::filesystem::create_directories(log_dir);
+    }
+    auto abs_path = boost::filesystem::absolute(log_dir);
+    std::cout << "Log crash stack trace to " << abs_path.string() << "/" << log_file_name
+              << std::endl;
+    std::ofstream log_file(log_file_path, std::ios::app);
 
-  if (!boost::filesystem::exists(log_dir)) {
-    boost::filesystem::create_directories(log_dir);
+    if (log_file.is_open()) {
+      log_file << "Received signal: " << signum << std::endl;
+
+      backward::StackTrace st;
+      st.load_here(32);  // Capture stack
+      backward::Printer p;
+      p.print(st, log_file);  // Print stack to log file
+    }
+
+    log_file.close();
+    exit(signum);
   }
-  auto abs_path = boost::filesystem::absolute(log_dir);
-  std::cout << "Log crash stack trace to " << abs_path.string() << "/" << log_file_name
-            << std::endl;
-  std::ofstream log_file(log_file_path, std::ios::app);
-
-  if (log_file.is_open()) {
-    log_file << "Received signal: " << signum << std::endl;
-
-    backward::StackTrace st;
-    st.load_here(32);  // Capture stack
-    backward::Printer p;
-    p.print(st, log_file);  // Print stack to log file
-  }
-
-  log_file.close();
-  exit(signum);  // Exit program
 }
 OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
     : nh_(nh),
@@ -83,6 +86,17 @@ OBCameraNodeDriver::~OBCameraNodeDriver() {
     check_connection_timer_.stop();
   }
 
+  // Ensure proper cleanup of camera node resources
+  if (ob_camera_node_) {
+    ob_camera_node_->clean();
+    ob_camera_node_.reset();
+    // Allow time for underlying resources to be released
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+
+  // Clear global publisher cache on process termination
+  OBCameraNode::forceCleanupGlobalResources();
+
   if (reset_device_thread_ && reset_device_thread_->joinable()) {
     reset_device_cv_.notify_all();
     reset_device_thread_->join();
@@ -90,6 +104,9 @@ OBCameraNodeDriver::~OBCameraNodeDriver() {
   if (query_thread_ && query_thread_->joinable()) {
     query_thread_->join();
   }
+
+  // Final memory cleanup
+  malloc_trim(0);
 }
 
 void OBCameraNodeDriver::init() {
@@ -98,6 +115,8 @@ void OBCameraNodeDriver::init() {
   signal(SIGABRT, signalHandler);  // abort
   signal(SIGFPE, signalHandler);   // float point exception
   signal(SIGILL, signalHandler);   // illegal instruction
+  signal(SIGINT, signalHandler);
+  signal(SIGTERM, signalHandler);
   prefix_paths = std::getenv("CMAKE_PREFIX_PATH");
   colon_pos = prefix_paths.find(':');
   first_prefix = prefix_paths.substr(0, colon_pos);
@@ -108,6 +127,12 @@ void OBCameraNodeDriver::init() {
   g_camera_name = nh_private_.param<std::string>("camera_name", "camera");
   auto ob_log_level = obLogSeverityFromString(log_level);
   ctx_->setLoggerToConsole(ob_log_level);
+
+  // Change to use .ros/Log directory with camera name
+  std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : "";
+  std::string log_path = home_dir + "/.ros/Log/" + g_camera_name;
+  ctx_->setLoggerToFile(ob_log_level, log_path.c_str());
+
   orb_device_lock_shm_fd_ = shm_open(ORB_DEFAULT_LOCK_NAME.c_str(), O_CREAT | O_RDWR, 0666);
   if (orb_device_lock_shm_fd_ < 0) {
     ROS_ERROR_STREAM("Failed to open shared memory " << ORB_DEFAULT_LOCK_NAME);
@@ -298,8 +323,15 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_.get());
+  // Safely cleanup existing camera node before creating new one
   if (ob_camera_node_) {
+    // Ensure proper cleanup before destruction
+    ob_camera_node_->clean();
     ob_camera_node_.reset();
+    // Small delay to allow underlying resources to be fully released
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // Force memory cleanup after camera node destruction
+    malloc_trim(0);
   }
   ob_camera_node_ = std::make_shared<OBCameraNode>(nh_, nh_private_, device_);
 
@@ -323,7 +355,11 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     device_connected_ = true;
   } else {
     device_connected_ = false;
-    ob_camera_node_.reset();
+    if (ob_camera_node_) {
+      ob_camera_node_->clean();
+      ob_camera_node_.reset();
+      malloc_trim(0);
+    }
     return;
   }
   // if (!isOpenNIDevice(device_info_->pid())) {
@@ -347,7 +383,6 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
 }
 
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList> &list) {
-  ROS_INFO_STREAM("deviceConnectCallback : deviceConnectCallback start");
   CHECK_NOTNULL(list.get());
   {
     std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
@@ -377,9 +412,26 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     ROS_INFO_STREAM("deviceConnectCallback : After process lock lock");
     std::shared_ptr<int> lock_guard(nullptr,
                                     [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
-    ROS_INFO_STREAM("deviceConnectCallback : selectDevice start");
+
+    {
+      std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
+      if (ob_camera_node_) {
+        ob_camera_node_->clean();
+        ob_camera_node_.reset();
+        // Small delay to allow underlying resources to be fully released
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      }
+      if (device_) {
+        device_.reset();
+      }
+      if (device_info_) {
+        device_info_.reset();
+      }
+    }
+
+    malloc_trim(0);
+
     auto device = selectDevice(list);
-    ROS_INFO_STREAM("deviceConnectCallback : selectDevice end");
     if (device == nullptr) {
       if (!serial_number_.empty()) {
         ROS_WARN_THROTTLE(1.0, "Device with serial number %s not found", serial_number_.c_str());
@@ -408,7 +460,6 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     reset_device_ = true;
     reset_device_cv_.notify_all();
   }
-  ROS_INFO_STREAM("deviceConnectCallback : deviceConnectCallback end");
 }
 
 void OBCameraNodeDriver::connectNetDevice(const std::string &ip_address, int port) {
@@ -460,7 +511,6 @@ void OBCameraNodeDriver::deviceDisconnectCallback(
       break;
     }
   }
-  ROS_INFO_STREAM("deviceDisconnectCallback : deviceDisconnectCallback end");
 }
 
 OBLogSeverity OBCameraNodeDriver::obLogSeverityFromString(const std::string &log_level) {
@@ -510,7 +560,12 @@ void OBCameraNodeDriver::resetDeviceThread() {
     ROS_INFO_STREAM("resetDeviceThread: device is disconnected, reset device start");
     {
       std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
-      ob_camera_node_.reset();
+      if (ob_camera_node_) {
+        ob_camera_node_->clean();
+        ob_camera_node_.reset();
+        // Small delay to allow underlying resources to be fully released
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      }
       ROS_INFO_STREAM("resetDeviceThread: device is disconnected, reset device");
       device_.reset();
       device_info_.reset();
@@ -518,6 +573,11 @@ void OBCameraNodeDriver::resetDeviceThread() {
       device_uid_.clear();
     }
     reset_device_ = false;
+    //sleep for a while before do malloc_trim
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ROS_INFO_STREAM("resetDeviceThread: device is disconnected, do malloc_trim");
+    malloc_trim(0);
+
     reset_device_cv_.notify_all();
     ROS_INFO_STREAM("resetDeviceThread: device is disconnected, reset device end");
   }
@@ -625,8 +685,6 @@ void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
             // firstCall = false;
           });
 
-      delete[] filePaths;
-      filePaths = nullptr;
       if (updateState == STAT_DONE || updateState == STAT_DONE_WITH_DUPLICATES) {
         ROS_INFO_STREAM("After updating the preset: ");
         auto presetList = device_->getAvailablePresetList();
@@ -649,6 +707,12 @@ void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
       ROS_ERROR_STREAM("Failed to update Preset Firmware " << e.what());
     } catch (...) {
       ROS_ERROR_STREAM("Failed to update Preset Firmware");
+    }
+
+    // Clean up allocated memory regardless of success or failure
+    if (filePaths) {
+      delete[] filePaths;
+      filePaths = nullptr;
     }
   }
 }

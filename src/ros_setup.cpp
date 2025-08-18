@@ -1035,24 +1035,34 @@ void OBCameraNode::setupTopics() {
 }
 
 void OBCameraNode::setupPublishers() {
-  image_transport::ImageTransport image_transport(nh_);
   for (const auto& stream_index : IMAGE_STREAMS) {
+    ROS_INFO_STREAM("Setting up publisher for stream: " << stream_name_[stream_index]);
     if (!enable_stream_[stream_index]) {
       continue;
     }
     std::string name = stream_name_[stream_index];
     std::string topic_name = "/" + camera_name_ + "/" + name + "/image_raw";
-    image_transport::SubscriberStatusCallback it_subscribed_cb =
-        boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
-    image_transport::SubscriberStatusCallback it_unsubscribed_cb =
-        boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
-    image_publishers_[stream_index] =
-        image_transport.advertise(topic_name, 1, it_subscribed_cb, it_unsubscribed_cb);
-    topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
+
+    // Create subscriber status callbacks for ros::Publisher
     ros::SubscriberStatusCallback image_subscribed_cb =
         boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
     ros::SubscriberStatusCallback image_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
+
+    // Create wrapper callbacks for image_transport::Publisher (they have different parameter types)
+    image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
+        [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
+          this->imageSubscribedCallback(stream_index);
+        };
+    image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
+        [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
+          this->imageUnsubscribedCallback(stream_index);
+        };
+
+    // Use global publisher cache with callbacks to prevent plugin reloading and enable proper subscriber detection
+    image_publishers_[stream_index] = getGlobalImagePublisher(topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+
+    topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     CHECK_NOTNULL(device_info_.get());
@@ -1154,6 +1164,79 @@ void OBCameraNode::setupPublishers() {
   data["ob_sdk_version"] = version;
   sdk_msg.data = data.dump(2);
   sdk_version_pub_.publish(sdk_msg);
+}
+
+// Global topic-based publisher cache to prevent plugin reloading
+std::map<std::string, image_transport::Publisher> OBCameraNode::global_image_publishers_;
+std::shared_ptr<image_transport::ImageTransport> OBCameraNode::global_image_transport_;
+std::shared_ptr<ros::NodeHandle> OBCameraNode::global_nh_;
+std::mutex OBCameraNode::global_publisher_mutex_;
+
+image_transport::Publisher OBCameraNode::getGlobalImagePublisher(const std::string& topic_name,
+                                                                const image_transport::SubscriberStatusCallback& connect_cb,
+                                                                const image_transport::SubscriberStatusCallback& disconnect_cb) {
+  std::lock_guard<std::mutex> lock(global_publisher_mutex_);
+
+  // Initialize global image transport if needed
+  if (!global_image_transport_) {
+    if (!global_nh_) {
+      global_nh_ = std::make_shared<ros::NodeHandle>();
+    }
+    global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
+    ROS_INFO_STREAM("Created persistent global image_transport instance to prevent plugin reloading");
+  }
+
+  // Always recreate publisher with callbacks to ensure rostopic hz detection works
+  auto it = global_image_publishers_.find(topic_name);
+  if (it != global_image_publishers_.end()) {
+    ROS_DEBUG_STREAM("Recreating image publisher for topic with callbacks: " << topic_name);
+    it->second.shutdown();
+    global_image_publishers_.erase(it);
+  }
+
+  // Create new publisher with callbacks for this topic and cache it
+  image_transport::Publisher pub = global_image_transport_->advertise(topic_name, 1, connect_cb, disconnect_cb);
+  global_image_publishers_[topic_name] = pub;
+
+  ROS_INFO_STREAM("Created new image publisher with callbacks for topic: " << topic_name);
+  return pub;
+}
+
+void OBCameraNode::releaseGlobalImagePublisher(const std::string& topic_name) {
+  std::lock_guard<std::mutex> lock(global_publisher_mutex_);
+
+  auto it = global_image_publishers_.find(topic_name);
+  if (it != global_image_publishers_.end()) {
+    it->second.shutdown();
+    global_image_publishers_.erase(it);
+    ROS_DEBUG_STREAM("Released image publisher for topic: " << topic_name);
+  }
+}
+
+void OBCameraNode::initializeGlobalImageTransport() {
+  // Note: This function should be called only when global_publisher_mutex_ is already locked
+
+  if (!global_image_transport_) {
+    if (!global_nh_) {
+      global_nh_ = std::make_shared<ros::NodeHandle>();
+    }
+    global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
+    ROS_INFO_STREAM("Created persistent global image_transport instance to prevent plugin reloading");
+  }
+}
+
+void OBCameraNode::forceCleanupGlobalResources() {
+  std::lock_guard<std::mutex> lock(global_publisher_mutex_);
+
+  // Force shutdown all publishers
+  for (auto& pair : global_image_publishers_) {
+    pair.second.shutdown();
+  }
+  global_image_publishers_.clear();
+
+  global_image_transport_.reset();
+  global_nh_.reset();
+  ROS_INFO_STREAM("Force cleanup of global image_transport resources completed");
 }
 
 void OBCameraNode::setupCameraInfo() {

@@ -35,6 +35,8 @@
 #include <condition_variable>
 #include <thread>
 #include <atomic>
+#include <mutex>
+#include <map>
 #include <camera_info_manager/camera_info_manager.h>
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Empty.h>
@@ -77,6 +79,9 @@ class OBCameraNode {
     std::lock_guard<std::recursive_mutex> lock(device_lock_);
     return func();
   }
+
+  // Static method for global resource cleanup (called at process termination)
+  static void forceCleanupGlobalResources();
 
  private:
   struct IMUData {
@@ -170,6 +175,13 @@ class OBCameraNode {
   void setupPipelineConfig();
 
   void setupPublishers();
+
+  // Global publisher management methods
+  static image_transport::Publisher getGlobalImagePublisher(const std::string& topic_name,
+                                                           const image_transport::SubscriberStatusCallback& connect_cb,
+                                                           const image_transport::SubscriberStatusCallback& disconnect_cb);
+  static void releaseGlobalImagePublisher(const std::string& topic_name);
+  static void initializeGlobalImageTransport();
 
   void setupDiagnosticUpdater();
 
@@ -382,6 +394,12 @@ class OBCameraNode {
   std::map<stream_index_pair, ob::Sensor::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
   std::map<stream_index_pair, ros::Publisher> metadata_publishers_;
+
+  // Global topic-based publisher cache to prevent plugin reloading
+  static std::map<std::string, image_transport::Publisher> global_image_publishers_;
+  static std::shared_ptr<image_transport::ImageTransport> global_image_transport_;
+  static std::shared_ptr<ros::NodeHandle> global_nh_;
+  static std::mutex global_publisher_mutex_;
   std::map<stream_index_pair, ros::Publisher> imu_info_publishers_;
   std::map<stream_index_pair, ros::Publisher> depth_to_other_extrinsics_publishers_;
   std::map<stream_index_pair, OBExtrinsic> depth_to_other_extrinsics_;
@@ -673,6 +691,7 @@ class OBCameraNode {
   int laser_index0_ir_ae_max_exposure_ = 17000;
 
   std::string frame_aggregate_mode_;
+  bool is_cleaned_ = false;
 };
 
 }  // namespace orbbec_camera

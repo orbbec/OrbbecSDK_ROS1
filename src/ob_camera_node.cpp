@@ -29,7 +29,11 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
     : nh_(nh),
       nh_private_(nh_private),
       device_(std::move(device)),
-      device_info_(device_->getDeviceInfo()) {
+      device_info_(device_->getDeviceInfo()),
+      rgb_buffer_(nullptr),
+      rgb_is_decoded_(false),
+      is_running_(false),
+      is_initialized_(false) {
   stream_name_[COLOR] = "color";
   stream_name_[DEPTH] = "depth";
   stream_name_[INFRA0] = "ir";
@@ -38,6 +42,10 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
   stream_name_[GYRO] = "gyro";
   nh_ir_ = ros::NodeHandle(stream_name_[INFRA0]);
   nh_rgb_ = ros::NodeHandle(stream_name_[COLOR]);
+
+  // Initialize global image_transport (persistent across node recreations)
+  initializeGlobalImageTransport();
+
   init();
 }
 
@@ -66,9 +74,17 @@ void OBCameraNode::init() {
 #elif defined(USE_NV_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
 #endif
+  // Clean up existing RGB buffer if it exists
+  if (rgb_buffer_) {
+    delete[] rgb_buffer_;
+    rgb_buffer_ = nullptr;
+  }
+
   if (enable_stream_[COLOR]) {
     CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
     rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 4];
+  } else {
+    rgb_buffer_ = nullptr;
   }
   if (enable_colored_point_cloud_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
     CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
@@ -77,6 +93,10 @@ void OBCameraNode::init() {
   }
   rgb_is_decoded_ = false;
   if (diagnostics_frequency_ > 0.0) {
+    // Ensure we don't create multiple diagnostic threads
+    if (diagnostics_thread_ && diagnostics_thread_->joinable()) {
+      diagnostics_thread_->join();
+    }
     diagnostics_thread_ = std::make_shared<std::thread>([this]() { setupDiagnosticUpdater(); });
   }
   is_initialized_ = true;
@@ -99,10 +119,17 @@ void OBCameraNode::rebootDevice() {
 }
 
 void OBCameraNode::clean() {
-  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() start");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+
+  if (is_cleaned_) {
+    ROS_DEBUG_STREAM("OBCameraNode::clean() already called, skipping...");
+    return;
+  }
+  is_cleaned_ = true;
+
+  ROS_INFO_STREAM("OBCameraNode::clean() start");
   is_running_ = false;
-  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() stop tf thread");
+  ROS_INFO_STREAM("OBCameraNode::clean() stop tf thread");
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
   }
@@ -111,15 +138,30 @@ void OBCameraNode::clean() {
     colorFrameCV_.notify_all();
     colorFrameThread_->join();
   }
+
+  // Clear any remaining frames in the queue to prevent memory leaks
+  {
+    std::unique_lock<std::mutex> lock(colorFrameMtx_);
+    while (!colorFrameQueue_.empty()) {
+      colorFrameQueue_.pop();
+    }
+  }
   if (diagnostics_thread_ && diagnostics_thread_->joinable()) {
     diagnostics_thread_->join();
   }
 
-  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() stop stream");
+  ROS_INFO_STREAM("OBCameraNode::clean() stop stream");
   stopStreams();
-  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() delete rgb_buffer");
-  delete[] rgb_buffer_;
-  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() end");
+  ROS_INFO_STREAM("OBCameraNode::clean() delete rgb_buffer");
+  if (rgb_buffer_) {
+    delete[] rgb_buffer_;
+    rgb_buffer_ = nullptr;
+  }
+
+  // Don't clear global publisher cache here - let it persist across node recreations
+  // Global resources will only be cleaned up when the driver process terminates
+
+  ROS_INFO_STREAM("OBCameraNode::clean() end (global image_transport persists)");
 }
 
 OBCameraNode::~OBCameraNode() noexcept { clean(); }
