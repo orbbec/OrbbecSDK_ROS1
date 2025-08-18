@@ -80,7 +80,7 @@
     <arg name="depth_fps" default="0"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="ANY"/>
-    <arg name="depth_registration" default="true"/>
+    <arg name="depth_registration" default="false"/>
     <!-- depth rotation degree : 0, 90, 180, 270 -->
     <arg name="depth_rotation" default="-1"/>
     <arg name="depth_flip" default="false"/>
