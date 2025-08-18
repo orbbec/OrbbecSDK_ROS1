@@ -243,7 +243,10 @@ void OBCameraNode::getParameters() {
   depth_brightness_ = nh_private_.param<int>("depth_brightness", -1);
   mean_intensity_set_point_ = nh_private_.param<int>("mean_intensity_set_point", depth_brightness_);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
-  ir_exposure_ = nh_private_.param<int>("ir_exposure_", -1);
+  depth_exposure_ = nh_private_.param<int>("depth_exposure", -1);
+  depth_gain_ = nh_private_.param<int>("depth_gain", -1);
+  ir_gain_ = nh_private_.param<int>("ir_gain", -1);
+  ir_exposure_ = nh_private_.param<int>("ir_exposure", -1);
   ir_brightness_ = nh_private_.param<int>("ir_brightness", -1);
   ir_ae_max_exposure_ = nh_private_.param<int>("ir_ae_max_exposure", -1);
   enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);

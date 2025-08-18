@@ -76,7 +76,7 @@ void OBCameraNode::setupColorPostProcessFilter() {
   auto color_sensor = device_->getSensor(OB_SENSOR_COLOR);
   color_filter_list_ = color_sensor->createRecommendedFilters();
   if (color_filter_list_.empty()) {
-    ROS_ERROR_STREAM("Failed to get color sensor filter list");
+    ROS_WARN("Failed to get color sensor filter list");
     return;
   }
   for (size_t i = 0; i < color_filter_list_.size(); i++) {
@@ -465,20 +465,23 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
     }
-    if (disaparity_to_depth_mode_ == "HW") {
-      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 1);
-      device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 0);
-      ROS_INFO_STREAM("Depth process is HW");
-    } else if (disaparity_to_depth_mode_ == "SW") {
-      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 0);
-      device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 1);
-      ROS_INFO_STREAM("Depth process is SW");
-    } else if (disaparity_to_depth_mode_ == "disable") {
-      device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 0);
-      device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 0);
-      ROS_INFO_STREAM("Depth process is disable");
-    } else {
-      ROS_ERROR_STREAM("Depth process is keep default");
+    if (device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE) &&
+        device_->isPropertySupported(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE)){
+      if (disaparity_to_depth_mode_ == "HW") {
+        device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 1);
+        device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 0);
+        ROS_INFO_STREAM("Depth process is HW");
+      } else if (disaparity_to_depth_mode_ == "SW") {
+        device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 0);
+        device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 1);
+        ROS_INFO_STREAM("Depth process is SW");
+      } else if (disaparity_to_depth_mode_ == "disable") {
+        device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 0);
+        device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 0);
+        ROS_INFO_STREAM("Depth process is disable");
+      } else {
+        ROS_ERROR_STREAM("Depth process is keep default");
+      }
     }
     if (!device_preset_.empty()) {
       ROS_INFO_STREAM("Loading device preset: " << device_preset_);
@@ -676,8 +679,12 @@ void OBCameraNode::setupDevices() {
       }
     }
     if (ir_exposure_ != -1 &&
-        device_->isPropertySupported(OB_PROP_DEPTH_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
-      device_->setIntProperty(OB_PROP_DEPTH_EXPOSURE_INT, ir_exposure_);
+        device_->isPropertySupported(OB_PROP_IR_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_IR_EXPOSURE_INT, ir_exposure_);
+    }
+    if (ir_gain_ != -1 &&
+        device_->isPropertySupported(OB_PROP_IR_GAIN_INT, OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_IR_GAIN_INT, ir_gain_);
     }
     if (ir_brightness_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {

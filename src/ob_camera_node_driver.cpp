@@ -35,7 +35,7 @@ std::string g_camera_name = "camera";
 void signalHandler(int signum) {
   std::cout << "Received signal: " << signum << std::endl;
   if (signum == SIGINT || signum == SIGTERM) {
-    ros::shutdown(); 
+    ros::shutdown();
   } else {
     std::string log_dir = "Log/";
 

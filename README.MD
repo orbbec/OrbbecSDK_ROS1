@@ -119,7 +119,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
       <td style="text-align: center; font-weight: bold;">Astra Mini</td>
       <td>Astra Mini Pro</td>
       <td>Full maintenance</td>
-      <td>Not supported</td>
+      <td>Full maintenance</td>
     </tr>
   </tbody>
 </table>
@@ -197,22 +197,23 @@ For optimal performance, we strongly recommend updating to the latest firmware v
 
 The following devices are supported by the OrbbecSDK ROS Wrapper.
 
-| Product List | Minimal Firmware Version | **Launch File**    |
-| :----------- | :----------------------- | :----------------------- |
-| Gemini 435Le | 1.2.04                   | gemini435_le.launch      |
-| Gemini 335   | 1.2.20                   | gemini_330_series.launch |
-| Gemini 336   | 1.2.20                   | gemini_330_series.launch |
-| Gemini 335L  | 1.2.20                   | gemini_330_series.launch |
-| Gemini 336L  | 1.2.20                   | gemini_330_series.launch |
-| Gemini 335Lg | 1.3.46                   | gemini_330_series.launch |
-| Gemini 335Le | 1.5.31                   | gemini_330_series.launch |
-| Gemini 330   | 1.2.20                   | gemini_330_series.launch |
-| Gemini 330L  | 1.2.20                   | gemini_330_series.launch |
-| Gemini 2     | 1.4.92                   | gemini2.launch           |
-| Gemini 2 L   | 1.4.53                   | gemini2L.launch          |
-| Femto Bolt   | 1.1.2                    | femto_bolt.launch        |
-| Femto Mega   | 1.3.0                    | femto_mega.launch        |
-| Astra 2      | 2.8.20                   | astra2.launch            |
+| Product List   | Minimal Firmware Version | **Launch File**    |
+| :------------- | :----------------------- | :----------------------- |
+| Gemini 435Le   | 1.2.04                   | gemini435_le.launch      |
+| Gemini 335     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 336     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 335L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 336L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 335Lg   | 1.3.46                   | gemini_330_series.launch |
+| Gemini 335Le   | 1.5.31                   | gemini_330_series.launch |
+| Gemini 330     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 330L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 2       | 1.4.92                   | gemini2.launch           |
+| Gemini 2 L     | 1.4.53                   | gemini2L.launch          |
+| Femto Bolt     | 1.1.2                    | femto_bolt.launch        |
+| Femto Mega     | 1.3.0                    | femto_mega.launch        |
+| Astra 2        | 2.8.20                   | astra2.launch            |
+| Astra Mini Pro | 2.0.01                   | astra.launch             |
 
 All launch files are essentially similar, with the primary difference being the default values of the parameters set
 for different models within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch file, as well as other parameters, to ensure compatibility and optimal performance.
@@ -412,9 +413,9 @@ roslaunch orbbec_camera gemini_330_series.launch enable_color:=true color_width:
 * **mean_intensity_set_point**
 
   - Set the target mean intensity of the Depth image
-  
+
   - For example: `mean_intensity_set_point:=100`
-  
+
   > **Note:** This replaces the deprecated `depth_brightness`, which is still supported for backward compatibility.
 
 [......](./docs/launch_parameters.md)

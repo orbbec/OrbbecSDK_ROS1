@@ -528,7 +528,11 @@ class OBCameraNode {
   int depth_ae_roi_bottom_ = -1;
   int mean_intensity_set_point_ = -1;
   int depth_brightness_ = -1;
+  int depth_exposure_ = -1;
+  int depth_gain_ = -1;
+  int mean_intensity_set_point_ = -1;
   int ir_exposure_ = -1;
+  int ir_gain_ = -1;
   int ir_brightness_ = -1;
   bool enable_right_ir_sequence_id_filter_ = false;
   int right_ir_sequence_id_filter_id_ = -1;
