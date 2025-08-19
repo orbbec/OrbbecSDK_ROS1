@@ -34,15 +34,6 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
       rgb_is_decoded_(false),
       is_running_(false),
       is_initialized_(false) {
-  stream_name_[COLOR] = "color";
-  stream_name_[DEPTH] = "depth";
-  stream_name_[INFRA0] = "ir";
-  stream_name_[INFRA1] = "ir2";
-  stream_name_[ACCEL] = "accel";
-  stream_name_[GYRO] = "gyro";
-  nh_ir_ = ros::NodeHandle(stream_name_[INFRA0]);
-  nh_rgb_ = ros::NodeHandle(stream_name_[COLOR]);
-
   // Initialize global image_transport (persistent across node recreations)
   initializeGlobalImageTransport();
 
@@ -160,6 +151,13 @@ void OBCameraNode::clean() {
 
   // Don't clear global publisher cache here - let it persist across node recreations
   // Global resources will only be cleaned up when the driver process terminates
+
+  if (color_camera_info_manager_) {
+    color_camera_info_manager_.reset();
+  }
+  if (ir_camera_info_manager_) {
+    ir_camera_info_manager_.reset();
+  }
 
   ROS_INFO_STREAM("OBCameraNode::clean() end (global image_transport persists)");
 }
@@ -1749,8 +1747,15 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
 }
 
 void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index) {
-  ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " subscribed");
+  // Add thread safety and bounds checking
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+
+  if (!device_ || !device_info_ || !is_initialized_ || !is_running_.load()) {
+      ROS_WARN_STREAM("Device not ready yet, ignoring subscription callback");
+      return;
+  }
+
+  ROS_INFO_STREAM("Image stream " << stream_name_[stream_index]  << " subscribed");
   if (enable_pipeline_) {
     if (pipeline_started_) {
       ROS_INFO_STREAM("pipe line already started");

@@ -55,6 +55,12 @@ void OBCameraNode::setupConfig() {
   image_format_[INFRA2] = CV_16UC1;
   encoding_[INFRA2] = sensor_msgs::image_encodings::MONO16;
   format_str_[INFRA2] = "Y16";
+
+  stream_name_[ACCEL] = "accel";   // ← Add this if missing
+  stream_name_[GYRO] = "gyro";     // ← Add this if missing
+
+  nh_ir_ = ros::NodeHandle(stream_name_[INFRA0]);
+  nh_rgb_ = ros::NodeHandle(stream_name_[COLOR]);
 }
 
 void OBCameraNode::selectBaseStream() {
@@ -951,7 +957,7 @@ void OBCameraNode::setupProfiles() {
         images_[stream_index] =
             cv::Mat(height, width, image_format_[stream_index], cv::Scalar(0, 0, 0));
       }
-      ROS_INFO_STREAM(" stream " << stream_name_[stream_index] << " is enabled - width: " << width
+      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " is enabled - width: " << width
                                  << ", height: " << height << ", fps: " << fps << ", "
                                  << "Format: " << selected_profile->format());
     } catch (const ob::Error& e) {

@@ -383,6 +383,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
 }
 
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList> &list) {
+  ROS_INFO_STREAM("Device connect callback triggered");
   CHECK_NOTNULL(list.get());
   {
     std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
@@ -395,7 +396,6 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
       ROS_INFO_STREAM("deviceConnectCallback : device reset completed, continuing connection");
     }
   }
-
   if (device_connected_) {
     ROS_INFO_STREAM("deviceConnectCallback : device already connected, return");
     return;
@@ -460,6 +460,7 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     reset_device_ = true;
     reset_device_cv_.notify_all();
   }
+  ROS_INFO_STREAM("Device connect callback completed");
 }
 
 void OBCameraNodeDriver::connectNetDevice(const std::string &ip_address, int port) {
