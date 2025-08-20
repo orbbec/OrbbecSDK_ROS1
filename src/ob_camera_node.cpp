@@ -96,9 +96,9 @@ void OBCameraNode::init() {
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
 
 void OBCameraNode::rebootDevice() {
-  ROS_INFO("Stop streams before rebooting device");
+  ROS_INFO("Do cleanup before rebooting device");
   malloc_trim(0);
-  stopStreams();
+  clean();
   malloc_trim(0);
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   ROS_INFO("Reboot device");
@@ -142,6 +142,7 @@ void OBCameraNode::clean() {
   }
 
   ROS_INFO_STREAM("OBCameraNode::clean() stop stream");
+  stopIMU();
   stopStreams();
   ROS_INFO_STREAM("OBCameraNode::clean() delete rgb_buffer");
   if (rgb_buffer_) {
@@ -741,6 +742,7 @@ void OBCameraNode::stopIMU(const orbbec_camera::stream_index_pair& stream_index)
 }
 
 void OBCameraNode::stopIMU() {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_sync_output_accel_gyro_) {
     if (!imu_sync_output_start_ || !imuPipeline_) {
       return;
