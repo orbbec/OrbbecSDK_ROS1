@@ -104,9 +104,6 @@ class OBCameraNodeDriver {
   bool enable_hardware_reset_ = false;
   bool hardware_reset_done_ = false;
   std::string extension_path_;
-  std::string prefix_paths;
-  std::string first_prefix;
-  std::size_t colon_pos;
   std::string uvc_backend_;
   std::string preset_firmware_path_;
   std::string upgrade_firmware_;

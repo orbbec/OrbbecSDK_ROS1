@@ -26,6 +26,7 @@
 
 #include <boost/filesystem.hpp>
 #include <malloc.h>
+#include <sys/utsname.h>
 
 namespace orbbec_camera {
 backward::SignalHandling sh;
@@ -117,11 +118,28 @@ void OBCameraNodeDriver::init() {
   signal(SIGILL, signalHandler);   // illegal instruction
   signal(SIGINT, signalHandler);
   signal(SIGTERM, signalHandler);
-  prefix_paths = std::getenv("CMAKE_PREFIX_PATH");
-  colon_pos = prefix_paths.find(':');
-  first_prefix = prefix_paths.substr(0, colon_pos);
-  extension_path_ = first_prefix + "/lib/extensions";
+
+  // Use ros::package::getPath to find the correct extension path
+  std::string package_path = ros::package::getPath("orbbec_camera");
+  std::string arch = "x64";  // Default to x64
+
+  // More comprehensive ARM64 detection
+#if defined(__aarch64__) || defined(__arm64__) || defined(_M_ARM64)
+  arch = "arm64";
+#else
+  // Runtime fallback check using uname
+  struct utsname system_info;
+  if (uname(&system_info) == 0) {
+    std::string machine_type = system_info.machine;
+    if (machine_type == "aarch64" || machine_type == "arm64") {
+      arch = "arm64";
+    }
+  }
+#endif
+  extension_path_ = package_path + "/SDK/lib/" + arch + "/extensions";
+  ROS_INFO_STREAM("Setting extensions directory to: " << extension_path_);
   ob::Context::setExtensionsDirectory(extension_path_.c_str());
+
   ctx_ = std::make_shared<ob::Context>(config_path_.c_str());
   auto log_level = nh_private_.param<std::string>("log_level", "info");
   g_camera_name = nh_private_.param<std::string>("camera_name", "camera");
