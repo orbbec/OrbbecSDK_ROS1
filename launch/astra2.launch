@@ -60,7 +60,7 @@
     <arg name="enable_colored_point_cloud" default="false"/>
     <arg name="ordered_pc" default="false"/>
     <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
-    <arg name="align_mode" default="SW"/>
+    <arg name="align_mode" default="HW"/>
 
     <!-- filter switch -->
     <arg name="enable_decimation_filter" default="false"/>
