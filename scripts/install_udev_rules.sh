@@ -10,8 +10,8 @@ CURR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 if [ "$(uname -s)" != "Darwin" ]; then
   # Install UDEV rules for USB device
-  cp ${CURR_DIR}/99-obsensor-ros1-libusb.rules /etc/udev/rules.d/99-obsensor-ros1-libusb.rules
-  echo "usb rules file install at /etc/udev/rules.d/99-obsensor-ros1-libusb.rules"
+  cp "${CURR_DIR}"/99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
+  echo "usb rules file install at /etc/udev/rules.d/99-obsensor-libusb.rules"
 fi
 echo "reload udev rules"
 udevadm control --reload-rules && udevadm trigger
