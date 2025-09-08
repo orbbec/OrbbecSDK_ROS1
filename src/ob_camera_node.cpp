@@ -1753,11 +1753,11 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
 
   if (!device_ || !device_info_ || !is_initialized_ || !is_running_.load()) {
-      ROS_WARN_STREAM("Device not ready yet, ignoring subscription callback");
-      return;
+    ROS_WARN_STREAM("Device not ready yet, ignoring subscription callback");
+    return;
   }
 
-  ROS_INFO_STREAM("Image stream " << stream_name_[stream_index]  << " subscribed");
+  ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " subscribed");
   if (enable_pipeline_) {
     if (pipeline_started_) {
       ROS_INFO_STREAM("pipe line already started");
@@ -2190,11 +2190,12 @@ bool OBCameraNode::isGemini335PID(uint32_t pid) {
   const uint16_t GEMINI_336LE_PID = 0x0810;                 // Gemini 335Le
   const int32_t CUSTOM_ADVANTECH_GEMINI_336_PID = 0x0816;   // Custom Advantech Gemini 336
   const int32_t CUSTOM_ADVANTECH_GEMINI_336L_PID = 0x0817;  // Custom Advantech Gemini 336L
+  const uint16_t GEMINI_338_PID = 0x0818;                   // Gemini 338
   return pid == GEMINI_335_PID || pid == GEMINI_330_PID || pid == GEMINI_336_PID ||
          pid == GEMINI_335L_PID || pid == GEMINI_330L_PID || pid == GEMINI_336L_PID ||
          pid == GEMINI_335LG_PID || pid == GEMINI_336LG_PID || pid == GEMINI_335LE_PID ||
          pid == GEMINI_336LE_PID || pid == CUSTOM_ADVANTECH_GEMINI_336_PID ||
-         pid == CUSTOM_ADVANTECH_GEMINI_336L_PID;
+         pid == CUSTOM_ADVANTECH_GEMINI_336L_PID || pid == GEMINI_338_PID;
 }
 
 }  // namespace orbbec_camera
