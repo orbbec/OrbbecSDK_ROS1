@@ -61,6 +61,8 @@ class OBCameraNodeDriver {
 
   void resetDeviceThread();
 
+  void deviceStatusTimer();
+
   static std::string parseUsbPort(const std::string& line);
 
   void presetUpdateCallback(bool firstCall, OBFwUpdateState state, const char* message,
@@ -117,5 +119,7 @@ class OBCameraNodeDriver {
   std::string force_ip_subnet_mask_;  // e.g. "255.255.255.0"
   std::string force_ip_gateway_;      // e.g. "192.168.1.1"
   std::atomic<bool> force_ip_success_{false};
+  ros::Timer device_status_timer_;
+  ros::Publisher device_status_pub_;
 };
 }  // namespace orbbec_camera

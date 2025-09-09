@@ -1656,6 +1656,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   image_msg->step = width * unit_step_size_[stream_index];
   image_msg->header.frame_id = frame_id;
   image_msg->header.seq = seq++;
+  if (stream_index == COLOR) {
+    fps_delay_status_color_->tick(frame_timestamp);
+  } else if (stream_index == DEPTH) {
+    fps_delay_status_depth_->tick(frame_timestamp);
+  }
   if (!image_flip_[stream_index]) {
     image_publisher.publish(image_msg);
   } else {

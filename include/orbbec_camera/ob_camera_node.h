@@ -46,6 +46,7 @@
 #include <image_transport/image_transport.h>
 #include <orbbec_camera/Metadata.h>
 #include <orbbec_camera/IMUInfo.h>
+#include "orbbec_camera/fps_delay_status.hpp"
 
 #include "jpeg_decoder.h"
 
@@ -82,6 +83,13 @@ class OBCameraNode {
 
   // Static method for global resource cleanup (called at process termination)
   static void forceCleanupGlobalResources();
+  void getColorStatus(orbbec_camera::DeviceStatus &status_msg) {
+    fps_delay_status_color_->fillColorStatus(status_msg);
+  }
+
+  void getDepthStatus(orbbec_camera::DeviceStatus &status_msg) {
+    fps_delay_status_depth_->fillDepthStatus(status_msg);
+  }
 
  private:
   struct IMUData {
@@ -695,6 +703,9 @@ class OBCameraNode {
 
   std::string frame_aggregate_mode_;
   bool is_cleaned_ = false;
+
+  std::unique_ptr<FpsDelayStatus> fps_delay_status_color_{nullptr};
+  std::unique_ptr<FpsDelayStatus> fps_delay_status_depth_{nullptr};
 };
 
 }  // namespace orbbec_camera

@@ -217,6 +217,11 @@ void OBCameraNodeDriver::init() {
   });
   query_thread_ = std::make_shared<std::thread>([this]() { queryDevice(); });
   reset_device_thread_ = std::make_shared<std::thread>([this]() { resetDeviceThread(); });
+
+  device_status_pub_ =
+      nh_.advertise<orbbec_camera::DeviceStatus>("/" + g_camera_name + "/device_status", 1);
+  device_status_timer_ =
+      nh_.createTimer(ros::Duration(0.5), [this](const ros::TimerEvent &) { deviceStatusTimer(); });
 }
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDevice(
@@ -438,7 +443,7 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     std::shared_ptr<int> lock_guard(nullptr,
                                     [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
 
-    //check device connected flag again after get lock
+    // check device connected flag again after get lock
     if (device_connected_) {
       return;
     }
@@ -934,4 +939,113 @@ bool OBCameraNodeDriver::applyForceIpConfig() {
   return force_ip_success_;
 }
 
+void OBCameraNodeDriver::deviceStatusTimer() {
+  // Always publish device status regardless of device connection state
+  orbbec_camera::DeviceStatus status_msg;
+  status_msg.header.stamp = ros::Time::now();
+  status_msg.device_online = device_connected_.load();
+
+  // Initialize default values for when device is not connected
+  status_msg.connection_type = "";
+  status_msg.calibration_from_factory = false;
+  status_msg.calibration_from_launch_param = false;
+  status_msg.customer_calibration_ready = false;
+
+  // Flag to track if device communication error occurs
+  bool device_communication_error = false;
+
+  // Only try to get device information if device is connected and stable
+  if (device_connected_.load()) {
+    // Check if reset is in progress
+    std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_, std::try_to_lock);
+    if (reset_lock.owns_lock() && !reset_device_) {
+      // Only get device-specific info if we have a valid camera node and device
+      if (ob_camera_node_) {
+        // Safely get color and depth status - these may access device
+        try {
+          ob_camera_node_->getColorStatus(status_msg);
+          ob_camera_node_->getDepthStatus(status_msg);
+        } catch (const ob::Error &e) {
+          std::string error_msg = e.getMessage() ? e.getMessage() : "Unknown OB error";
+          if (error_msg.find("Device is deactivated") != std::string::npos ||
+              error_msg.find("disconnected") != std::string::npos ||
+              error_msg.find("Send control transfer failed") != std::string::npos) {
+            ROS_WARN("Device communication error in %s at line %d: %s - Device may be disconnected",
+                     __FUNCTION__, __LINE__, error_msg.c_str());
+            device_communication_error = true;
+          } else {
+            ROS_ERROR("Error in %s at line %d: %s", __FUNCTION__, __LINE__, error_msg.c_str());
+          }
+        } catch (const std::exception &e) {
+          ROS_ERROR("Exception in %s at line %d: %s", __FUNCTION__, __LINE__, e.what());
+        } catch (...) {
+          ROS_ERROR("Unknown exception in %s at line %d", __FUNCTION__, __LINE__);
+        }
+      }
+
+      // Safely get connection type
+      try {
+        if (device_info_) {
+          status_msg.connection_type = device_info_->getConnectionType();
+        }
+      } catch (const ob::Error &e) {
+        std::string error_msg = e.getMessage() ? e.getMessage() : "Unknown OB error";
+        if (error_msg.find("Device is deactivated") != std::string::npos ||
+            error_msg.find("disconnected") != std::string::npos ||
+            error_msg.find("Send control transfer failed") != std::string::npos) {
+          ROS_WARN("Device communication error in %s at line %d: %s - Device may be disconnected",
+                   __FUNCTION__, __LINE__, error_msg.c_str());
+          device_communication_error = true;
+        } else {
+          ROS_ERROR("Error in %s at line %d: %s", __FUNCTION__, __LINE__, error_msg.c_str());
+        }
+      } catch (const std::exception &e) {
+        ROS_ERROR("Exception in %s at line %d: %s", __FUNCTION__, __LINE__, e.what());
+      } catch (...) {
+        ROS_ERROR("Unknown exception in %s at line %d", __FUNCTION__, __LINE__);
+      }
+
+      // Safely get calibration info
+      try {
+        if (device_) {
+          auto camera_params = device_->getCalibrationCameraParamList();
+          bool calibration_from_factory = (camera_params != nullptr && camera_params->count() > 0);
+          status_msg.calibration_from_factory = calibration_from_factory;
+        }
+      } catch (const ob::Error &e) {
+        std::string error_msg = e.getMessage() ? e.getMessage() : "Unknown OB error";
+        if (error_msg.find("Device is deactivated") != std::string::npos ||
+            error_msg.find("disconnected") != std::string::npos ||
+            error_msg.find("Send control transfer failed") != std::string::npos) {
+          ROS_WARN("Device communication error in %s at line %d: %s - Device may be disconnected",
+                   __FUNCTION__, __LINE__, error_msg.c_str());
+          device_communication_error = true;
+        } else {
+          ROS_ERROR("Error in %s at line %d: %s", __FUNCTION__, __LINE__, error_msg.c_str());
+        }
+      } catch (const std::exception &e) {
+        ROS_ERROR("Exception in %s at line %d: %s", __FUNCTION__, __LINE__, e.what());
+      } catch (...) {
+        ROS_ERROR("Unknown exception in %s at line %d", __FUNCTION__, __LINE__);
+      }
+    }
+  }
+
+  // If device communication error occurred, set device_online to false
+  if (device_communication_error) {
+    status_msg.device_online = false;
+  }
+
+  // if status_msg.connection_type is empty, set it to "unknown"
+  if (status_msg.connection_type.empty()) {
+    status_msg.connection_type = "unknown";
+    status_msg.device_online = false;
+  }
+
+  // Always publish the status message, regardless of device state
+  if (device_status_pub_) {
+    device_status_pub_.publish(status_msg);
+  }
+  // RCLCPP_INFO_STREAM(logger_, "deviceStatusTimer() ");
+}
 }  // namespace orbbec_camera
