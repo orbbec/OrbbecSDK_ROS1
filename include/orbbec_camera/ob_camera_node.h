@@ -177,10 +177,10 @@ class OBCameraNode {
   void setupPublishers();
 
   // Global publisher management methods
-  static image_transport::Publisher getGlobalImagePublisher(const std::string& topic_name,
-                                                           const image_transport::SubscriberStatusCallback& connect_cb,
-                                                           const image_transport::SubscriberStatusCallback& disconnect_cb);
-  static void releaseGlobalImagePublisher(const std::string& topic_name);
+  static image_transport::Publisher getGlobalImagePublisher(
+      const std::string &topic_name, const image_transport::SubscriberStatusCallback &connect_cb,
+      const image_transport::SubscriberStatusCallback &disconnect_cb);
+  static void releaseGlobalImagePublisher(const std::string &topic_name);
   static void initializeGlobalImageTransport();
 
   void setupDiagnosticUpdater();
@@ -543,7 +543,7 @@ class OBCameraNode {
   bool enable_depth_filter_ = false;
 
   // Only for Gemini2 device
-  std::string disaparity_to_depth_mode_ = "HW";
+  std::string disparity_to_depth_mode_ = "HW";
   std::string depth_work_mode_;
   OBMultiDeviceSyncMode sync_mode_ = OB_MULTI_DEVICE_SYNC_MODE_STANDALONE;
   std::string sync_mode_str_;

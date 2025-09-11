@@ -15,7 +15,7 @@
     <arg name="device_preset" default="Default"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="sync_mode" default="standalone"/>
-    <arg name="disaparity_to_depth_mode" default="SW"/><!-- HW, SW, disable -->
+    <arg name="disparity_to_depth_mode" default="SW"/><!-- HW, SW, disable -->
 
 
     <!-- Color camera parameters -->
@@ -139,7 +139,7 @@
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
-            <param name="disaparity_to_depth_mode" value="$(arg disaparity_to_depth_mode)"/>
+            <param name="disparity_to_depth_mode" value="$(arg disparity_to_depth_mode)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
 

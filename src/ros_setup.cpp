@@ -56,8 +56,8 @@ void OBCameraNode::setupConfig() {
   encoding_[INFRA2] = sensor_msgs::image_encodings::MONO16;
   format_str_[INFRA2] = "Y16";
 
-  stream_name_[ACCEL] = "accel";   // ← Add this if missing
-  stream_name_[GYRO] = "gyro";     // ← Add this if missing
+  stream_name_[ACCEL] = "accel";  // ← Add this if missing
+  stream_name_[GYRO] = "gyro";    // ← Add this if missing
 
   nh_ir_ = ros::NodeHandle(stream_name_[INFRA0]);
   nh_rgb_ = ros::NodeHandle(stream_name_[COLOR]);
@@ -472,16 +472,17 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
     }
     if (device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE) &&
-        device_->isPropertySupported(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE)){
-      if (disaparity_to_depth_mode_ == "HW") {
+        device_->isPropertySupported(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
+      if (disparity_to_depth_mode_ == "HW") {
         device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 1);
         device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 0);
         ROS_INFO_STREAM("Depth process is HW");
-      } else if (disaparity_to_depth_mode_ == "SW") {
+      } else if (disparity_to_depth_mode_ == "SW") {
         device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 0);
         device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 1);
         ROS_INFO_STREAM("Depth process is SW");
-      } else if (disaparity_to_depth_mode_ == "disable") {
+      } else if (disparity_to_depth_mode_ == "disable") {
         device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, 0);
         device_->setBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, 0);
         ROS_INFO_STREAM("Depth process is disable");
@@ -958,8 +959,8 @@ void OBCameraNode::setupProfiles() {
             cv::Mat(height, width, image_format_[stream_index], cv::Scalar(0, 0, 0));
       }
       ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " is enabled - width: " << width
-                                 << ", height: " << height << ", fps: " << fps << ", "
-                                 << "Format: " << selected_profile->format());
+                                << ", height: " << height << ", fps: " << fps << ", "
+                                << "Format: " << selected_profile->format());
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("Failed to setup  "
                        << stream_name_[stream_index] << " profile: " << width_[stream_index] << "x"
@@ -1072,8 +1073,10 @@ void OBCameraNode::setupPublishers() {
           this->imageUnsubscribedCallback(stream_index);
         };
 
-    // Use global publisher cache with callbacks to prevent plugin reloading and enable proper subscriber detection
-    image_publishers_[stream_index] = getGlobalImagePublisher(topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
+    // subscriber detection
+    image_publishers_[stream_index] = getGlobalImagePublisher(
+        topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
 
     topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
@@ -1185,9 +1188,9 @@ std::shared_ptr<image_transport::ImageTransport> OBCameraNode::global_image_tran
 std::shared_ptr<ros::NodeHandle> OBCameraNode::global_nh_;
 std::mutex OBCameraNode::global_publisher_mutex_;
 
-image_transport::Publisher OBCameraNode::getGlobalImagePublisher(const std::string& topic_name,
-                                                                const image_transport::SubscriberStatusCallback& connect_cb,
-                                                                const image_transport::SubscriberStatusCallback& disconnect_cb) {
+image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
+    const std::string& topic_name, const image_transport::SubscriberStatusCallback& connect_cb,
+    const image_transport::SubscriberStatusCallback& disconnect_cb) {
   std::lock_guard<std::mutex> lock(global_publisher_mutex_);
 
   // Initialize global image transport if needed
@@ -1196,7 +1199,8 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(const std::stri
       global_nh_ = std::make_shared<ros::NodeHandle>();
     }
     global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
-    ROS_INFO_STREAM("Created persistent global image_transport instance to prevent plugin reloading");
+    ROS_INFO_STREAM(
+        "Created persistent global image_transport instance to prevent plugin reloading");
   }
 
   // Always recreate publisher with callbacks to ensure rostopic hz detection works
@@ -1208,7 +1212,8 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(const std::stri
   }
 
   // Create new publisher with callbacks for this topic and cache it
-  image_transport::Publisher pub = global_image_transport_->advertise(topic_name, 1, connect_cb, disconnect_cb);
+  image_transport::Publisher pub =
+      global_image_transport_->advertise(topic_name, 1, connect_cb, disconnect_cb);
   global_image_publishers_[topic_name] = pub;
 
   ROS_INFO_STREAM("Created new image publisher with callbacks for topic: " << topic_name);
@@ -1234,7 +1239,8 @@ void OBCameraNode::initializeGlobalImageTransport() {
       global_nh_ = std::make_shared<ros::NodeHandle>();
     }
     global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
-    ROS_INFO_STREAM("Created persistent global image_transport instance to prevent plugin reloading");
+    ROS_INFO_STREAM(
+        "Created persistent global image_transport instance to prevent plugin reloading");
   }
 }
 
