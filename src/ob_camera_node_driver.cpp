@@ -981,6 +981,7 @@ void OBCameraNodeDriver::deviceStatusTimer() {
         } catch (...) {
           ROS_ERROR("Unknown exception in %s at line %d", __FUNCTION__, __LINE__);
         }
+        status_msg.calibration_from_launch_param = ob_camera_node_->isParamCalibrated();
       }
 
       // Safely get connection type

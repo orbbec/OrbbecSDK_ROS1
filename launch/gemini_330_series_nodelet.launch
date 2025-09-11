@@ -22,6 +22,8 @@
     <arg name="enable_laser" default="true"/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="disparity_to_depth_mode" default="HW"/><!-- HW, SW, disable -->
+    <arg name="ir_info_uri" default=""/>
+    <arg name="color_info_uri" default=""/>
 
 
     <!-- Color camera parameters -->
@@ -158,6 +160,8 @@
         <param name="disparity_to_depth_mode" value="$(arg disparity_to_depth_mode)"/>
         <param name="ir_exposure" value="$(arg ir_exposure)"/>
         <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
+        <param name="ir_info_uri" value="$(arg ir_info_uri)"/>
+        <param name="color_info_uri" value="$(arg color_info_uri)"/>
 
         <param name="color_width" value="$(arg color_width)"/>
         <param name="color_height" value="$(arg color_height)"/>

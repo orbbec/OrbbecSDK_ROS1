@@ -83,6 +83,11 @@ class OBCameraNode {
 
   // Static method for global resource cleanup (called at process termination)
   static void forceCleanupGlobalResources();
+  bool isParamCalibrated() const {
+    return (color_camera_info_manager_ && color_camera_info_manager_->isCalibrated() &&
+            ir_camera_info_manager_ && ir_camera_info_manager_->isCalibrated());
+  }
+
   void getColorStatus(orbbec_camera::DeviceStatus &status_msg) {
     fps_delay_status_color_->fillColorStatus(status_msg);
   }
