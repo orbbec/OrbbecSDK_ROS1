@@ -60,7 +60,7 @@ The following are the launch parameters available:
     *   Enable the Depth auto exposure priority.
 *   **`mean_intensity_set_point`**
     *   Set the target mean intensity of the Depth image.
-    
+
     > **Note:** This replaces the deprecated `depth_brightness`, which is still supported for backward compatibility.
 *   **`depth_ae_roi_[left|right|top|bottom]`**
     *   Set Depth auto exposure ROI.
@@ -195,7 +195,7 @@ The following are the launch parameters available:
     *   The frequency of the accelerometer/gyroscope. Values range from `1.5625hz` to `32khz`.
 *   **`accel_range`** / **`gyro_range`**
     *   The range of the accelerometer (`2g`, `4g`, `8g`, `16g`) and gyroscope (`16dps` to `2000dps`).
-*   **`liner_accel_cov`**
+*   **`linear_accel_cov`**
     *   Covariance of the linear acceleration.
 
 ### Depth Filters
@@ -270,7 +270,7 @@ Several parameters were renamed in ROS2 for improved clarity and consistency.
 | `ip_address`              | `net_device_ip`             | More specific name for the device IP.    |
 | `port`                    | `net_device_port`           | More specific name for the device port.  |
 | `diagnostics_frequency`   | `diagnostic_period`         | Name better reflects the unit (seconds). |
-| `liner_accel_cov`         | `linear_accel_cov`          | Corrected a spelling error ("linear").   |
+| `linear_accel_cov`         | `linear_accel_cov`          | Corrected a spelling error ("linear").   |
 | `enable_sequenced_filter` | `enable_sequence_id_filter` | Corrected a spelling error ("sequence"). |
 
 ### 3. Structural and Detail Differences
