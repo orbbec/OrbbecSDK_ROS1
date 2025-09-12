@@ -200,7 +200,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"SpatialAdvancedFilter", enable_spatial_filter_},
         {"TemporalFilter", enable_temporal_filter_},
         {"HoleFillingFilter", enable_hole_filling_filter_},
-        {"DisparityTransform", enable_disaparity_to_depth_},
+        {"DisparityTransform", enable_disparity_to_depth_},
         {"ThresholdFilter", enable_threshold_filter_},
         {"SpatialFastFilter", enable_spatial_fast_filter_},
         {"SpatialModerateFilter", enable_spatial_moderate_filter_},
@@ -538,11 +538,11 @@ void OBCameraNode::setupDevices() {
     }
     if (device_->isPropertySupported(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
                                      OB_PERMISSION_WRITE)) {
-      int set_enable_color_backlight_compenstation = enable_color_backlight_compenstation_ ? 1 : 0;
-      ROS_INFO_STREAM("Setting color backlight compenstation to "
-                      << (set_enable_color_backlight_compenstation ? "ON" : "OFF"));
+      int set_enable_color_backlight_compensation = enable_color_backlight_compensation_ ? 1 : 0;
+      ROS_INFO_STREAM("Setting color backlight compensation to "
+                      << (set_enable_color_backlight_compensation ? "ON" : "OFF"));
       device_->setIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
-                              set_enable_color_backlight_compenstation);
+                              set_enable_color_backlight_compensation);
     }
     if (!color_powerline_freq_.empty() &&
         device_->isPropertySupported(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, OB_PERMISSION_WRITE)) {
@@ -630,15 +630,15 @@ void OBCameraNode::setupDevices() {
         device_->setIntProperty(OB_PROP_COLOR_SATURATION_INT, color_saturation_);
       }
     }
-    if (color_constrast_ != -1 &&
+    if (color_contrast_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_CONTRAST_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_CONTRAST_INT);
-      if (color_constrast_ < range.min || color_constrast_ > range.max) {
-        ROS_ERROR_STREAM("color constrast value is out of range[" << range.min << "," << range.max
-                                                                  << "]please check the value");
+      if (color_contrast_ < range.min || color_contrast_ > range.max) {
+        ROS_ERROR_STREAM("color contrast value is out of range[" << range.min << "," << range.max
+                                                                 << "]please check the value");
       } else {
-        ROS_INFO_STREAM("Setting color constrast to " << color_constrast_);
-        device_->setIntProperty(OB_PROP_COLOR_CONTRAST_INT, color_constrast_);
+        ROS_INFO_STREAM("Setting color contrast to " << color_contrast_);
+        device_->setIntProperty(OB_PROP_COLOR_CONTRAST_INT, color_contrast_);
       }
     }
     if (color_hue_ != -1 &&

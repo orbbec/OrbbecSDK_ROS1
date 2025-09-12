@@ -213,8 +213,8 @@ void OBCameraNode::getParameters() {
       nh_private_.param<bool>("enable_color_auto_exposure_priority", false);
   enable_color_auto_white_balance_ =
       nh_private_.param<bool>("enable_color_auto_white_balance", true);
-  enable_color_backlight_compenstation_ =
-      nh_private_.param<bool>("enable_color_backlight_compenstation", false);
+  enable_color_backlight_compensation_ =
+      nh_private_.param<bool>("enable_color_backlight_compensation", false);
   color_powerline_freq_ = nh_private_.param<std::string>("color_powerline_freq", "");
   enable_color_decimation_filter_ =
       nh_private_.param<bool>("enable_color_decimation_filter", false);
@@ -229,7 +229,7 @@ void OBCameraNode::getParameters() {
   color_gamma_ = nh_private_.param<int>("color_gamma", -1);
   color_white_balance_ = nh_private_.param<int>("color_white_balance", -1);
   color_saturation_ = nh_private_.param<int>("color_saturation", -1);
-  color_constrast_ = nh_private_.param<int>("color_constrast", -1);
+  color_contrast_ = nh_private_.param<int>("color_contrast", -1);
   color_hue_ = nh_private_.param<int>("color_hue", -1);
   color_ae_max_exposure_ = nh_private_.param<int>("color_ae_max_exposure", -1);
   color_decimation_filter_scale_ = nh_private_.param<int>("color_decimation_filter_scale", -1);
@@ -303,7 +303,7 @@ void OBCameraNode::getParameters() {
   enable_decimation_filter_ = nh_private_.param<bool>("enable_decimation_filter", false);
   enable_hdr_merge_ = nh_private_.param<bool>("enable_hdr_merge", false);
   enable_sequenced_filter_ = nh_private_.param<bool>("enable_sequenced_filter", false);
-  enable_disaparity_to_depth_ = nh_private_.param<bool>("enable_disaparity_to_depth", true);
+  enable_disparity_to_depth_ = nh_private_.param<bool>("enable_disparity_to_depth", true);
   enable_threshold_filter_ = nh_private_.param<bool>("enable_threshold_filter", false);
   enable_hardware_noise_removal_filter_ =
       nh_private_.param<bool>("enable_hardware_noise_removal_filter", true);
@@ -1091,7 +1091,7 @@ void OBCameraNode::setDefaultIMUMessage(sensor_msgs::Imu& imu_msg) {
 
   imu_msg.orientation_covariance = {-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   imu_msg.linear_acceleration_covariance = {
-      liner_accel_cov_, 0.0, 0.0, 0.0, liner_accel_cov_, 0.0, 0.0, 0.0, liner_accel_cov_};
+      linear_accel_cov_, 0.0, 0.0, 0.0, linear_accel_cov_, 0.0, 0.0, 0.0, linear_accel_cov_};
   imu_msg.angular_velocity_covariance = {
       angular_vel_cov_, 0.0, 0.0, 0.0, angular_vel_cov_, 0.0, 0.0, 0.0, angular_vel_cov_};
 }

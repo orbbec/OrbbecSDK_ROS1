@@ -102,7 +102,7 @@
     <arg name="enable_gyro" default="true"/>
     <arg name="gyro_rate" default="200hz"/>
     <arg name="gyro_range" default="1000dps"/>
-    <arg name="liner_accel_cov" default="0.01"/>
+    <arg name="linear_accel_cov" default="0.01"/>
 
     <!-- Misc parameters -->
     <arg name="usb_port" default=""/>
@@ -199,7 +199,7 @@
             <param name="enable_gyro" value="$(arg enable_gyro)"/>
             <param name="gyro_rate" value="$(arg gyro_rate)"/>
             <param name="gyro_range" value="$(arg gyro_range)"/>
-            <param name="liner_accel_cov" value="$(arg liner_accel_cov)"/>
+            <param name="linear_accel_cov" value="$(arg linear_accel_cov)"/>
 
             <param name="usb_port" value="$(arg usb_port)"/>
             <param name="serial_number" value="$(arg serial_number)"/>

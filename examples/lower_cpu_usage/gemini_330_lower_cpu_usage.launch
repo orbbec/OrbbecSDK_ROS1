@@ -62,9 +62,9 @@
     <arg name="color_sharpness" default="-1"/>
     <arg name="color_gamma" default="-1"/>
     <arg name="color_saturation" default="-1"/>
-    <arg name="color_constrast" default="-1"/>
+    <arg name="color_contrast" default="-1"/>
     <arg name="color_hue" default="-1"/>
-    <arg name="enable_color_backlight_compenstation" default="false"/>
+    <arg name="enable_color_backlight_compensation" default="false"/>
     <arg name="enable_color_decimation_filter" default="false"/>
     <arg name="color_decimation_filter_scale" default="-1"/>
 
@@ -158,7 +158,7 @@
     <arg name="enable_gyro" default="false"/>
     <arg name="gyro_rate" default="200hz"/>
     <arg name="gyro_range" default="1000dps"/>
-    <arg name="liner_accel_cov" default="0.01"/>
+    <arg name="linear_accel_cov" default="0.01"/>
 
     <!-- Misc parameters -->
     <arg name="usb_port" default=""/>
@@ -260,9 +260,9 @@
             <param name="color_sharpness" value="$(arg color_sharpness)"/>
             <param name="color_gamma" value="$(arg color_gamma)"/>
             <param name="color_saturation" value="$(arg color_saturation)"/>
-            <param name="color_constrast" value="$(arg color_constrast)"/>
+            <param name="color_contrast" value="$(arg color_contrast)"/>
             <param name="color_hue" value="$(arg color_hue)"/>
-            <param name="enable_color_backlight_compenstation" value="$(arg enable_color_backlight_compenstation)"/>
+            <param name="enable_color_backlight_compensation" value="$(arg enable_color_backlight_compensation)"/>
             <param name="enable_color_decimation_filter" value="$(arg enable_color_decimation_filter)"/>
             <param name="color_decimation_filter_scale" value="$(arg color_decimation_filter_scale)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
@@ -343,7 +343,7 @@
             <param name="enable_gyro" value="$(arg enable_gyro)"/>
             <param name="gyro_rate" value="$(arg gyro_rate)"/>
             <param name="gyro_range" value="$(arg gyro_range)"/>
-            <param name="liner_accel_cov" value="$(arg liner_accel_cov)"/>
+            <param name="linear_accel_cov" value="$(arg linear_accel_cov)"/>
 
             <param name="usb_port" value="$(arg usb_port)"/>
             <param name="serial_number" value="$(arg serial_number)"/>

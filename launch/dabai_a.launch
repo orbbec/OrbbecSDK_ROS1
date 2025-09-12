@@ -83,7 +83,7 @@
     <arg name="enable_gyro_data_correction" default="true"/>
     <arg name="gyro_rate" default="200hz"/>
     <arg name="gyro_range" default="1000dps"/>
-    <arg name="liner_accel_cov" default="0.01"/>
+    <arg name="linear_accel_cov" default="0.01"/>
 
     <!-- filter switch -->
     <arg name="enable_decimation_filter" default="false"/>
@@ -120,7 +120,7 @@
     <param name="enable_gyro_data_correction" value="$(arg enable_gyro_data_correction)"/>
     <param name="gyro_rate" value="$(arg gyro_rate)"/>
     <param name="gyro_range" value="$(arg gyro_range)"/>
-    <param name="liner_accel_cov" value="$(arg liner_accel_cov)"/>
+    <param name="linear_accel_cov" value="$(arg linear_accel_cov)"/>
 
     <!-- Misc parameters -->
     <arg name="usb_port" default=""/>

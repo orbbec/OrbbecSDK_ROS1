@@ -63,9 +63,9 @@
     <arg name="color_sharpness" default="-1"/>
     <arg name="color_gamma" default="-1"/>
     <arg name="color_saturation" default="-1"/>
-    <arg name="color_constrast" default="-1"/>
+    <arg name="color_contrast" default="-1"/>
     <arg name="color_hue" default="-1"/>
-    <arg name="enable_color_backlight_compenstation" default="false"/>
+    <arg name="enable_color_backlight_compensation" default="false"/>
     <arg name="color_powerline_freq" default=""/><!-- disable ,50hz ,60hz ,auto -->
     <arg name="enable_color_decimation_filter" default="false"/>
     <arg name="color_decimation_filter_scale" default="-1"/>
@@ -138,7 +138,7 @@
     <arg name="enable_noise_removal_filter" default="true"/>
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>
-    <arg name="enable_disaparity_to_depth" default="true"/>
+    <arg name="enable_disparity_to_depth" default="true"/>
     <arg name="enable_hole_filling_filter" default="false"/>
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
@@ -167,7 +167,7 @@
     <arg name="enable_gyro_data_correction" default="true"/>
     <arg name="gyro_rate" default="200hz"/>
     <arg name="gyro_range" default="1000dps"/>
-    <arg name="liner_accel_cov" default="0.01"/>
+    <arg name="linear_accel_cov" default="0.01"/>
 
     <!-- Misc parameters -->
     <arg name="usb_port" default=""/>
@@ -265,9 +265,9 @@
             <param name="color_sharpness" value="$(arg color_sharpness)"/>
             <param name="color_gamma" value="$(arg color_gamma)"/>
             <param name="color_saturation" value="$(arg color_saturation)"/>
-            <param name="color_constrast" value="$(arg color_constrast)"/>
+            <param name="color_contrast" value="$(arg color_contrast)"/>
             <param name="color_hue" value="$(arg color_hue)"/>
-            <param name="enable_color_backlight_compenstation" value="$(arg enable_color_backlight_compenstation)"/>
+            <param name="enable_color_backlight_compensation" value="$(arg enable_color_backlight_compensation)"/>
             <param name="color_powerline_freq" value="$(arg color_powerline_freq)"/>
             <param name="enable_color_decimation_filter" value="$(arg enable_color_decimation_filter)"/>
             <param name="color_decimation_filter_scale" value="$(arg color_decimation_filter_scale)"/>
@@ -329,7 +329,7 @@
             <param name="enable_noise_removal_filter" value="$(arg enable_noise_removal_filter)"/>
             <param name="enable_spatial_filter" value="$(arg enable_spatial_filter)"/>
             <param name="enable_temporal_filter" value="$(arg enable_temporal_filter)"/>
-            <param name="enable_disaparity_to_depth" value="$(arg enable_disaparity_to_depth)"/>
+            <param name="enable_disparity_to_depth" value="$(arg enable_disparity_to_depth)"/>
             <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
             <param name="sequence_id_filter_id" value="$(arg sequence_id_filter_id)"/>
             <param name="threshold_filter_max" value="$(arg threshold_filter_max)"/>
@@ -358,7 +358,7 @@
             <param name="enable_gyro_data_correction" value="$(arg enable_gyro_data_correction)"/>
             <param name="gyro_rate" value="$(arg gyro_rate)"/>
             <param name="gyro_range" value="$(arg gyro_range)"/>
-            <param name="liner_accel_cov" value="$(arg liner_accel_cov)"/>
+            <param name="linear_accel_cov" value="$(arg linear_accel_cov)"/>
 
             <param name="usb_port" value="$(arg usb_port)"/>
             <param name="serial_number" value="$(arg serial_number)"/>

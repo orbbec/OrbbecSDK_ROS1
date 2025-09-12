@@ -96,17 +96,17 @@ The following are the launch parameters available:
 
   * Set the Color saturation
 
-* **color_constrast**
+* **color_contrast**
 
-  * Set the Color constrast
+  * Set the Color contrast
 
 * **color_hue**
 
   * Set the Color hue
 
-* **enable_color_backlight_compenstation**
+* **enable_color_backlight_compensation**
 
-  * Enable the Color backlight compenstation
+  * Enable the Color backlight compensation
 
 * **enable_color_decimation_filter**
 
@@ -174,7 +174,7 @@ The following are the launch parameters available:
   * The range of the gyroscope, the optional values are `16dps`, `31dps`, `62dps`, `125dps`, `250dps`, `500dps`, `1000dps`, `2000dps`. The specific value depends on the
     current camera
 
-* **liner_accel_cov**
+* **linear_accel_cov**
 
   * Covariance of the linear acceleration
 
