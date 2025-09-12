@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-OrbbecSDK V2 ROS2 Wrapper documentation
+OrbbecSDK V2 ROS1 Wrapper documentation
 =======================================
 
 Add your content using ``reStructuredText`` syntax. See the
