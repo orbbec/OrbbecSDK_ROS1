@@ -10,7 +10,7 @@ The definition of disparity search range: For any pixel *(u_l, v)* in the left i
 
 ## Parameter Introduction
 
-The disparity_search_offset related parameters are set in gemini_330_series.launch.
+The disparity_search_offset related parameters are set in [gemini_330_series.launch.py](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/launch/gemini_330_series.launch)
 
 * `disparity_range_mode` : Disparity search length,can only be set to 64, 128 and 256.
 * `disparity_search_offset` : Disparity search offset value,Disparity search offset value, can be set from 0 to 127.

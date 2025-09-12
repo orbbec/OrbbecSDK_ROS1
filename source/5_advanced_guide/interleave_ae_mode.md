@@ -4,7 +4,7 @@
 
 ## Parameter Introduction
 
-The interleave_ae related parameters are set in gemini_330_series.launch.
+The interleave_ae related parameters are set in [gemini_330_series.launch](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/launch/gemini_330_series.launch).
 
 * `interleave_ae_mode` : Set laser or hdr interleave.
 * `interleave_frame_enable` : enable interleave frame mode.
