@@ -91,6 +91,7 @@ find_package(Boost REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Boost COMPONENTS filesystem system REQUIRED)
+find_package(yaml-cpp REQUIRED)
 # check if boost was found
 if(Boost_FOUND)
     message(STATUS "Boost found!")
@@ -211,6 +212,7 @@ set(COMMON_LINK_LIBRARIES
   Threads::Threads
   -lrt
   -ldw # for stack trace
+  yaml-cpp
 )
 
 if (USE_RK_HW_DECODER)
@@ -251,6 +253,12 @@ add_orbbec_executable(list_devices_node src/list_devices_node.cpp)
 add_orbbec_executable(list_depth_work_mode_node src/list_depth_work_mode.cpp)
 add_orbbec_executable(list_camera_profile_mode_node src/list_camera_profile_mode.cpp)
 add_orbbec_executable(orbbec_camera_node src/main.cpp)
+add_orbbec_executable(service_benchmark_node scripts/service_benchmark_node.cpp)
+
+catkin_install_python(PROGRAMS
+  scripts/common_benchmark_node.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 # Install
 install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${EXECUTABLES}
