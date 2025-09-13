@@ -257,6 +257,7 @@ add_orbbec_executable(service_benchmark_node scripts/service_benchmark_node.cpp)
 
 catkin_install_python(PROGRAMS
   scripts/common_benchmark_node.py
+  scripts/service_benchmark_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

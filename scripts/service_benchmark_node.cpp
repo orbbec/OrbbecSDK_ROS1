@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
+#include <iomanip>
 
 class SingleServiceBenchmark {
  public:
@@ -71,6 +72,10 @@ class SingleServiceBenchmark {
     };
     service_map_["orbbec_camera/SetFilter"] = [this](std::vector<double> &durations, int &success) {
       runTyped<orbbec_camera::SetFilter>(durations, success);
+    };
+
+    service_map_["orbbec_camera/SetString"] = [this](std::vector<double> &durations, int &success) {
+      runTyped<orbbec_camera::SetString>(durations, success);
     };
   }
 
@@ -124,7 +129,18 @@ class SingleServiceBenchmark {
       fillRequest<ServiceT>(srv);
 
       auto start = std::chrono::steady_clock::now();
-      if (client.call(srv)) {
+      bool call_ok = false;
+      try {
+        call_ok = client.call(srv);
+      } catch (const std::exception &e) {
+        ROS_ERROR("Exception calling service %s: %s", service_name_.c_str(), e.what());
+        call_ok = false;
+      } catch (...) {
+        ROS_ERROR("Unknown exception calling service %s", service_name_.c_str());
+        call_ok = false;
+      }
+
+      if (call_ok) {
         auto end = std::chrono::steady_clock::now();
         double dt =
             std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
@@ -157,6 +173,14 @@ class SingleServiceBenchmark {
                  service_name_.c_str(), service_type_.c_str(), request_str.c_str());
       }
     }
+    if (success == 0 || durations.empty()) {
+      ROS_WARN("No successful calls for service %s (%s)", service_name_.c_str(),
+               service_type_.c_str());
+      durations_out.clear();
+      success_out = 0;
+      return;
+    }
+
     durations_out = durations;
     success_out = success;
 
@@ -201,7 +225,7 @@ class MultiServiceBenchmark {
     if (!csv_file_.empty()) {
       csv_stream_.open(csv_file_, std::ios::out);
       if (csv_stream_.is_open()) {
-        csv_stream_ << "Service,Type,Calls,Success,Rate(%),Avg(ms),Min(ms),Max(ms)\n";
+        csv_stream_ << "Service,Type,Calls,Success,Rate,Avg(ms),Min(ms),Max(ms)\n";
       } else {
         ROS_WARN("Failed to open CSV file: %s", csv_file_.c_str());
       }
@@ -210,6 +234,7 @@ class MultiServiceBenchmark {
 
   ~MultiServiceBenchmark() {
     if (csv_stream_.is_open()) csv_stream_.close();
+    ROS_INFO("Benchmark results saved to CSV file: %s", csv_file_.c_str());
   }
 
   void run() {
@@ -232,12 +257,29 @@ class MultiServiceBenchmark {
       int success = bench.run(durations);
 
       if (csv_stream_.is_open()) {
-        double avg = std::accumulate(durations.begin(), durations.end(), 0.0) / durations.size();
-        double minv = *std::min_element(durations.begin(), durations.end());
-        double maxv = *std::max_element(durations.begin(), durations.end());
-        double success_rate = 100.0 * success / count;
-        csv_stream_ << service_name << "," << service_type << "," << count << "," << success << ","
-                    << success_rate << "," << avg << "," << minv << "," << maxv << "\n";
+        if (durations.empty() || success == 0) {
+          csv_stream_ << service_name << "," << service_type << "," << count << "," << success
+                      << ","
+                      << "0.00%"
+                      << ","
+                      << "0.00"
+                      << ","
+                      << "0.00"
+                      << ","
+                      << "0.00"
+                      << "\n";
+        } else {
+          double avg = std::accumulate(durations.begin(), durations.end(), 0.0) / durations.size();
+          double minv = *std::min_element(durations.begin(), durations.end());
+          double maxv = *std::max_element(durations.begin(), durations.end());
+          double success_rate = 100.0 * success / count;
+
+          csv_stream_ << service_name << "," << service_type << "," << count << "," << success
+                      << "," << std::fixed << std::setprecision(2) << success_rate << "%"
+                      << "," << std::fixed << std::setprecision(2) << avg << "," << std::fixed
+                      << std::setprecision(2) << minv << "," << std::fixed << std::setprecision(2)
+                      << maxv << "\n";
+        }
       }
     }
   }
@@ -308,7 +350,7 @@ int main(int argc, char **argv) {
 
   std::string yaml_file, csv_file;
   nh.param<std::string>("yaml_file", yaml_file, "");
-  nh.param<std::string>("csv_file", csv_file, "multi_service_results.csv");
+  nh.param<std::string>("csv_file", csv_file, "multi_service_results_log_cpp.csv");
   nh.param<std::string>("service_name", service_name, "/camera/get_sdk_version");
   nh.param<std::string>("service_type", service_type, "orbbec_camera/GetString");
   nh.param<std::string>("request_data", request_str, "");

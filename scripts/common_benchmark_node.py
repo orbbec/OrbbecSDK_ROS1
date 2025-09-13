@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-version: 5.0
-Support: ROS1
-name: common_benchmark_node.py
-function: monitor and log the performance of an Orbbec camera node, including frame rates, delays, CPU, and RAM usage.
+function:
+  Monitor the performance of an Orbbec camera node,
+  including frame rates, delays, CPU, and RAM usage.
+
 usage examples:
-  python3 common_benchmark_node.py --run_time 20 --csv_file /path/to/log.csv
-  -- or --
-  rosrun orbbec_camera common_benchmark_node.py --run_time 60 --csv_file /path/to/log.csv
+  # Run for 2 minutes, save results to a CSV file
+  1. rosrun orbbec_camera common_benchmark_node.py _run_time:=2m _csv_file:=/path/to/log.csv
+
+  # Run for 30 seconds
+  2. rosrun orbbec_camera common_benchmark_node.py --run_time 30s
+
+Parameters:
+  --run_time / _run_time: Set run time duration. Supports formats:
+      "10s" (10 seconds), "5m" (5 minutes), "1h" (1 hour), "2d" (2 days).
+
+  --csv_file / _csv_file: Path to save the benchmark log in CSV format.
+      Default: ./multi_service_results.csv
 """
 
 import argparse
