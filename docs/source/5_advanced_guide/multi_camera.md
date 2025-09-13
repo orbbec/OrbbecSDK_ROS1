@@ -6,7 +6,7 @@ This guide describes how to configure and use multiple Orbbec cameras simultaneo
 
 First asume that you have already installed the Orbbec ROS package. If not, please refer to the [Orbbec ROS Package Installation Guide](../2_installation/build_the_package.md).
 
-## 1. Increase usbfs_memory_mb Value (CRITICAL STEP)
+## Increase usbfs_memory_mb Value (CRITICAL STEP)
 
 **IMPORTANT: This step is crucial for multi-camera setups. Without increasing the usbfs_memory_mb value, you may not receive any data from your cameras.**
 
@@ -20,7 +20,7 @@ To make this change permanent, refer to [this link](https://github.com/OpenKinec
 
 If you skip this step or set the value too low, your cameras may not function properly or may not provide any data at all.
 
-## 2. Identifying Camera USB Ports
+## Identifying Camera USB Ports
 
 ### Script to List Connected Cameras
 
@@ -50,7 +50,7 @@ Save and execute this script, or use the ROS command:
 rosrun orbbec_camera list_ob_devices.sh
 ```
 
-## 3. Launching Multiple Cameras
+## Launching Multiple Cameras
 
 ### Setup for Multiple Camera Launch
 
@@ -82,7 +82,7 @@ Execute the launch configuration with:
 roslaunch orbbec_camera multi_camera.launch
 ```
 
-## 4. Configuring the TF Tree for Multiple Cameras
+## Configuring the TF Tree for Multiple Cameras
 
 Create a TF configuration file (e.g., `multi_camera_tf.launch`) for your calibrated camera setup:
 

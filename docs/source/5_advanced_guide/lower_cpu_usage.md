@@ -47,7 +47,7 @@ Note: The following CPU usage data focuses on `uvc_backend`, `color_format` and 
 
 ### Test Results
 
-### 1.  `uvc_backend` Comparison (RGB format)
+### uvc_backend Comparison (RGB format)
 
 | libuvc CPU Usage | v4l2 CPU Usage | Absolute Change |
 | :--------------: | :------------: | :-------------: |
@@ -55,7 +55,7 @@ Note: The following CPU usage data focuses on `uvc_backend`, `color_format` and 
 
 The CPU usage can be significantly reduced with v4l2 backend. In our implementation, v4l2 works without requiring any patches to the Linux kernel, allowing users to easily switch between v4l2 and libuvc and maintaining full compatibility with standard Linux distributions.
 
-### 2. `color_format` Comparison (MJPG vs RGB)
+### color_format Comparison (MJPG vs RGB)
 
 | Backend | MJPG CPU Usage | RGB CPU Usage | Absolute Change |
 | :-----: | :------------: | :-----------: | :-------------: |
@@ -64,7 +64,7 @@ The CPU usage can be significantly reduced with v4l2 backend. In our implementat
 
 The CPU usage can be reduced if the RGB format is selected instead of MJPG, since the decoding of MJPG image will consume the host CPU resource.
 
-### 3. Filter Configuration Impact
+### Filter Configuration Impact
 
 | Filters Applied                                       | libuvc CPU Usage | CPU Usage Increase | v4l2 CPU Usage | CPU Usage Increase |
 | ----------------------------------------------------- | ---------------- | ------------------ | -------------- | ------------------ |
