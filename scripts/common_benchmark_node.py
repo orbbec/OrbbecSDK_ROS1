@@ -87,6 +87,7 @@ class TopicTracker:
 
         if self.last_seq is None:
             self.last_seq = seq
+            self.last_time = stamp
             self.received = 1
             return
 
@@ -95,18 +96,11 @@ class TopicTracker:
             if missed > 0:
                 self.lost += missed
             self.received += 1
-            self.last_seq = seq
-            return
-
-        if seq == self.last_seq:
+        elif seq == self.last_seq:
             # duplicate seq, ignore
             rospy.logwarn(f"Duplicate seq: {seq}")
-            return
-
-        if seq < self.last_seq:
-            self.last_seq = seq
-            self.last_time = stamp
-            return
+        elif seq < self.last_seq:
+            rospy.logwarn(f"Out-of-order seq: last_seq={self.last_seq}, current_seq={seq}")
 
         if self.last_time is not None:
             dt = stamp - self.last_time
@@ -114,6 +108,8 @@ class TopicTracker:
                 expected_interval = 1.0 / avg_fps
                 if dt > 1.5 * expected_interval:
                     self.drop_frames += 1
+
+        self.last_seq = seq
         self.last_time = stamp
 
     def packet_loss_rate(self):
