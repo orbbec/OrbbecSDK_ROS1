@@ -10,13 +10,13 @@
  * Usage:
  *   1. Benchmark a single service:
  *      rosrun orbbec_camera service_benchmark_node \
- *        _service_name:=/camera/set_color_ae_roi \
- *        _service_type:=orbbec_camera/SetArrays \
- *        _request_data:='{data_param: [0, 1279, 0, 719]}'
+          _service_name:=/camera/set_color_ae_roi \
+          _service_type:=orbbec_camera/SetArrays \
+          _request_data:='{data_param: [0, 1279, 0, 719]}'
  *
  *   2. Benchmark multiple services from a YAML config file:
  *      rosrun orbbec_camera service_benchmark_node \
- *        _yaml_file:=/path/to/default_service_cpp.yaml
+          _yaml_file:=/path/to/default_service_cpp.yaml
  */
 #include "orbbec_camera/ob_camera_node_driver.h"
 #include <algorithm>
@@ -150,8 +150,8 @@ class SingleServiceBenchmark {
           if (srv.response.success) {
             success++;
           } else {
-            ROS_WARN("Call %s %d/%d responded with success=false", service_name_.c_str(), i + 1,
-                     count_);
+            ROS_WARN("Call %s %d/%d (cost: %.2f ms) responded with success=false, message='%s'",
+                     service_name_.c_str(), i + 1, count_, dt, srv.response.message.c_str());
           }
         } else {
           success++;
@@ -164,7 +164,7 @@ class SingleServiceBenchmark {
           if (request_data_ && !request_data_.IsNull()) {
             request_str = YAML::Dump(request_data_);
           } else {
-            request_str = "{error 6}";
+            request_str = "{empty request_data}";
           }
         } catch (...) {
           request_str = "{error null}";
