@@ -19,7 +19,7 @@ To achieve the lowest possible CPU usage in OrbbecSDK_ROS1, it is recommended to
 
 ### Test environment
 
-#### Hardware Configuration
+**Hardware Configuration**
 
 * **CPU**: Intel i7-8700 @ 3.20GHz
 * **Memory**: 24 GB
@@ -27,12 +27,12 @@ To achieve the lowest possible CPU usage in OrbbecSDK_ROS1, it is recommended to
 * **GPU**: NVIDIA GeForce GTX 1660Ti
 * **OS**: Ubuntu20.04(Virtual Machines)
 
-#### ROS Configuration
+**ROS Configuration**
 
 * **ROS Version**: ROS1 Noetic
 * **SDK Version**: OrbbecSDK_ROS1 v2.2.1
 
-#### Camera Setup
+**Camera Setup**
 
 * Devices: 2x Gemini 335, 1x Gemini 336, 1x Gemini 336L
 * Firmware Version: 1.4.10

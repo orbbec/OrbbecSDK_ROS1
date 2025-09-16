@@ -4,7 +4,7 @@
 
 ## Femto Mega
 
-### Parameter Introduction
+**Parameter Introduction**
 
 Network device settings: default `enumerate_net_device` is set to true, which will automatically enumerate network devices.
 
@@ -20,13 +20,13 @@ If you need to run Gemini 435Le, you only need to replace femto_mega.launch in t
 
 For femto_mega.launchas an example:
 
-### automatically enumerate network devices:
+**automatically enumerate network devices:**
 
 ```bash
 roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
 ```
 
-### Specify IP address to start the device:
+**Specify IP address to start the device:**
 
 Note:`ip_address` needs to be changed to the IP address of the device, here it is 192.168.1.10
 
@@ -46,13 +46,13 @@ Network device settings: `enumerate_net_device` must be set to true, set `ip_add
 
 For gemini_330_series.launch as an example:
 
-### automatically enumerate network devices:
+**automatically enumerate network devices:**
 
 ```bash
 roslaunch orbbec_camera gemini_330_series.launch enumerate_net_device:=true
 ```
 
-### Specify IP address to start the device:
+**Specify IP address to start the device:**
 
 Note:`ip_address` needs to be changed to the IP address of the device, here it is 192.168.1.10
 

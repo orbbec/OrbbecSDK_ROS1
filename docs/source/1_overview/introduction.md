@@ -1,9 +1,136 @@
 # Introduction
 
 OrbbecSDK ROS Wrapper provides seamless integration of Orbbec cameras with ROS environment. It supports ROS Kinetic, Melodic, and Noetic distributions.
-With a major update in October 2024, we release the [OrbbecSDK ROS1 Wrapper v2](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main) connected to the open source [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases) with enhanced flexibility and extensibility. This update ensures compatibility with all Orbbec USB products adhering to UVC standard. However, it no longer supports Orbbec's traditional OpenNI protocol devices. We strongly encourage you to use the v2-main branch if your device is supported.
+By default, we recommend using the **v2-main** branch. For older OpenNI devices not supported by v2-main, please use the **main** branch. Device models that are only supported by the main branch are listed in the table below.
 
 If you are a user in China, it is recommended to use [gitee Repo](https://gitee.com/orbbecdeveloper/OrbbecSDK_ROS1).
+
+Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
+
+<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+  <thead>
+    <tr style="background-color: #1f4e78; color: white; text-align: center;">
+      <th>Product Series</th>
+      <th>Product</th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/main" style="color: black; text-decoration: none;">Branch main</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main" style="color: black; text-decoration: none;">Branch v2-main</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Gemini 435Le</td>
+      <td>Gemini 435Le</td>
+      <td>Not supported</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td>Gemini 335</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 336</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335L</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 336L</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335Lg</td>
+      <td>Not supported</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 335Le</td>
+      <td>Not supported</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 330</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 330L</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 2</td>
+      <td>Gemini 2</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 L</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 XL</td>
+      <td>Recommended for new designs</td>
+      <td>To be supported</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td>
+      <td>Femto Bolt</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Femto Mega</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Femto Mega I</td>
+      <td>Full maintenance</td>
+      <td>To be supported</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Astra</td>
+      <td>Astra 2</td>
+      <td>Full maintenance</td>
+      <td>Recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Astra+</td>
+      <td>Limited maintenance</td>
+      <td>Not supported</td>
+    </tr>
+    <tr>
+      <td>Astra Pro Plus</td>
+      <td>Limited maintenance</td>
+      <td>Not supported</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Astra Mini</td>
+      <td>Astra Mini Pro</td>
+      <td>Full maintenance</td>
+      <td>Full maintenance</td>
+    </tr>
+  </tbody>
+</table>
+
+
+**Note**: If you do not find your device, please contact our FAE or sales representative for help.
+
+**Definition**:
+
+1. Recommended for new designs: we will provide full supports with new features,  bug fix and performance optimization;
+2. Full maintenance: we will provide bug fix support;
+3. Limited maintenance: we will provide critical bug fix support;
+4. Not supported: we will not support specific device in this version;
+5. To be supported: we will add support in the near future.
 
 ## Support Hardware Products
 
@@ -13,23 +140,23 @@ For optimal performance, we strongly recommend updating to the latest firmware v
 
 The following devices are supported by the OrbbecSDK ROS Wrapper.
 
-| Product List   | Minimal Firmware Version | **Launch File**             |
-| :------------- | :----------------------- | :-------------------------- |
-| Gemini 435Le   | 1.2.04                   | gemini435_le.launch.py      |
-| Gemini 335     | 1.2.20                   | gemini_330_series.launch.py |
-| Gemini 336     | 1.2.20                   | gemini_330_series.launch.py |
-| Gemini 335L    | 1.2.20                   | gemini_330_series.launch.py |
-| Gemini 336L    | 1.2.20                   | gemini_330_series.launch.py |
-| Gemini 335Lg   | 1.3.46                   | gemini_330_series.launch.py |
-| Gemini 335Le   | 1.5.31                   | gemini_330_series.launch.py |
-| Gemini 330     | 1.2.20                   | gemini_330_series.launch.py |
-| Gemini 330L    | 1.2.20                   | gemini_330_series.launch.py |
-| Gemini 2       | 1.4.92                   | gemini2.launch.py           |
-| Gemini 2 L     | 1.4.53                   | gemini2L.launch.py          |
-| Femto Bolt     | 1.1.2                    | femto_bolt.launch.py        |
-| Femto Mega     | 1.3.0                    | femto_mega.launch.py        |
-| Astra 2        | 2.8.20                   | astra2.launch.py            |
-| Astra Mini Pro | 2.0.01                   | astra.launch.py             |
+| Product List   | Minimal Firmware Version | **Launch File**          |
+| :------------- | :----------------------- | :----------------------- |
+| Gemini 435Le   | 1.2.04                   | gemini435_le.launch      |
+| Gemini 335     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 336     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 335L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 336L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 335Lg   | 1.3.46                   | gemini_330_series.launch |
+| Gemini 335Le   | 1.5.31                   | gemini_330_series.launch |
+| Gemini 330     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 330L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 2       | 1.4.92                   | gemini2.launch           |
+| Gemini 2 L     | 1.4.53                   | gemini2L.launch          |
+| Femto Bolt     | 1.1.2                    | femto_bolt.launch        |
+| Femto Mega     | 1.3.0                    | femto_mega.launch        |
+| Astra 2        | 2.8.20                   | astra2.launch            |
+| Astra Mini Pro | 2.0.01                   | astra.launch             |
 
 All launch files are essentially similar, with the primary difference being the default values of the parameters set for different models within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch file, as well as other parameters, to ensure compatibility and optimal performance.
 

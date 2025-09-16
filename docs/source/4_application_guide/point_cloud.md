@@ -21,7 +21,7 @@ After running the above command, perform the following steps to visualize the de
 3. Select the `/camera/depth/points` topic for visualization.
 4. Set the fixed frame to `camera_link` to properly align the data.
 
-##### Example Visualization
+**Example Visualization**
 
 Here is what the depth point cloud might look like in RViz:
 
@@ -34,7 +34,7 @@ Here is what the depth point cloud might look like in RViz:
 To enable the colored point cloud feature, enter the following command:
 
 ```bash
-ros2 launch orbbec_camera gemini_330_series.launch.py enable_colored_point_cloud:=true
+roslaunch orbbec_camera gemini_330_series.launch.py enable_colored_point_cloud:=true
 ```
 
 #### Visualizing Colored Point Cloud in RViz
@@ -46,7 +46,7 @@ To visualize the colored point cloud data:
 3. Choose the `/camera/depth_registered/points` topic from the list.
 4. Ensure the fixed frame is set to `camera_link`.
 
-##### Example Visualization
+**Example Visualization**
 
 The result of the colored point cloud in RViz should look similar to this:
 

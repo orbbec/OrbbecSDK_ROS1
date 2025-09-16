@@ -56,7 +56,7 @@ In this example, we launch a **Nodelet Manager** called `orbbec_camera_manager`,
 
 ```
 
-#### Running the Launch File
+**Running the Launch File**
 
 ```bash
 roslaunch orbbec_camera multi_camera_nodelet.launch
@@ -64,11 +64,11 @@ roslaunch orbbec_camera multi_camera_nodelet.launch
 
 ### Configuring Camera Parameters
 
-#### Identical Parameters for All Cameras
+**Identical Parameters for All Cameras**
 
 When you need to apply the same configuration to all cameras, since the camera nodes launched in `multi_camera_nodelet.launch` are based on the `gemini_330_series_nodelet.launch` file, you only need to modify the relevant parameters in `gemini_330_series_nodelet.launch`.
 
-#### Different Parameters for Each Camera
+**Different Parameters for Each Camera**
 
 When you need to configure different parameters for each camera (for example, modifying the `enable_hardware_noise_removal_filter` parameter), you can set different values for each camera in the `multi_camera_nodelet.launch` file. This allows you to customize each camera's configuration.
 

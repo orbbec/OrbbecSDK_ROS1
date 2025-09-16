@@ -2,12 +2,12 @@
 
 > The purpose of this document is to explain how to use multi-camera synced with OrbbecSDK_ROS1
 
-## Setup instructions
+### Setup instructions
 
 * Please read the Multi-Camera Synchronization Setup Guide:[Multi-Camera Synchronization Setup](https://www.orbbec.com/docs/set-up-cameras-for-external-synchronization_v1-2/)
 * Make sure the camera is correctly connected to the multi-camera synchronizer.
 
-![Depth Point Cloud Visualization](../image/multi_camera_synced/multi_camera_synced1.png)
+![Depth Point Cloud Visualization](../../image/multi_camera_synced/multi_camera_synced1.png)
 
 ### Checking camera port with OrbbecSDK_ROS1
 

@@ -4,7 +4,7 @@ This guide describes how to configure and use multiple Orbbec cameras simultaneo
 
 ## Prerequisites
 
-First asume that you have already installed the Orbbec ROS package. If not, please refer to the [Orbbec ROS Package Installation Guide](../2_installation/build_the_package.md).
+First asume that you have already installed the Orbbec ROS package. If not, please refer to the [Orbbec ROS Package Installation Guide](../../2_installation/build_the_package.md).
 
 ## Increase usbfs_memory_mb Value (CRITICAL STEP)
 
@@ -22,7 +22,7 @@ If you skip this step or set the value too low, your cameras may not function pr
 
 ## Identifying Camera USB Ports
 
-### Script to List Connected Cameras
+**Script to List Connected Cameras**
 
 Use this bash script to list all connected Orbbec devices with their USB ports and serial numbers:
 
@@ -52,7 +52,7 @@ rosrun orbbec_camera list_ob_devices.sh
 
 ## Launching Multiple Cameras
 
-### Setup for Multiple Camera Launch
+**Setup for Multiple Camera Launch**
 
 Create a launch file (e.g., `multi_camera.launch`) with individual configurations for each camera:
 
@@ -74,7 +74,7 @@ Create a launch file (e.g., `multi_camera.launch`) with individual configuration
 </launch>
 ```
 
-### Running the Launch File
+**Running the Launch File**
 
 Execute the launch configuration with:
 
