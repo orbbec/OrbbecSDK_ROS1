@@ -69,6 +69,8 @@ class OBCameraNodeDriver {
 
   void firmwareUpdateCallback(OBFwUpdateState state, const char* message, uint8_t percent);
 
+  bool applyForceIpConfig();
+
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
   std::string config_path_;
@@ -108,6 +110,12 @@ class OBCameraNodeDriver {
   std::string preset_firmware_path_;
   std::string upgrade_firmware_;
   std::atomic<bool> firmware_update_success_{false};
-
+  bool force_ip_enable_{false};
+  bool force_ip_dhcp_{false};
+  std::string force_ip_mac_;          // e.g. "00:1A:7D:DA:71:13"
+  std::string force_ip_address_;      // e.g. "192.168.1.10"
+  std::string force_ip_subnet_mask_;  // e.g. "255.255.255.0"
+  std::string force_ip_gateway_;      // e.g. "192.168.1.1"
+  std::atomic<bool> force_ip_success_{false};
 };
 }  // namespace orbbec_camera

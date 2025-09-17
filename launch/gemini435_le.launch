@@ -209,6 +209,15 @@
     <arg name="laser_index0_ir_brightness" default="60"/>
     <arg name="laser_index0_ir_ae_max_exposure" default="30000"/>
 
+    <!-- Force IP parameters -->
+    <!--If only one camera (network device) is currently connected, you do not need to specify the MAC address.Otherwise, you need to specify it yourself. For example, "54:14:FD:06:07:DA"-->
+    <arg name="force_ip_enable" default="false"/>
+    <arg name="force_ip_mac" default=""/>
+    <arg name="force_ip_dhcp" default="false"/>
+    <arg name="force_ip_address" default="192.168.1.10"/>
+    <arg name="force_ip_subnet_mask" default="255.255.255.0"/>
+    <arg name="force_ip_gateway" default="192.168.1.1"/>
+
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <!-- Use the parameters defined above -->
@@ -397,6 +406,13 @@
             <param name="laser_index0_depth_gain" value="$(arg laser_index0_depth_gain)"/>
             <param name="laser_index0_ir_brightness" value="$(arg laser_index0_ir_brightness)"/>
             <param name="laser_index0_ir_ae_max_exposure" value="$(arg laser_index0_ir_ae_max_exposure)"/>
+
+            <param name="force_ip_enable" value="$(arg force_ip_enable)"/>
+            <param name="force_ip_mac" value="$(arg force_ip_mac)"/>
+            <param name="force_ip_dhcp" value="$(arg force_ip_dhcp)"/>
+            <param name="force_ip_address" value="$(arg force_ip_address)"/>
+            <param name="force_ip_subnet_mask" value="$(arg force_ip_subnet_mask)"/>
+            <param name="force_ip_gateway" value="$(arg force_ip_gateway)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>

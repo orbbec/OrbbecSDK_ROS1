@@ -151,6 +151,14 @@ void OBCameraNodeDriver::init() {
   std::string log_path = home_dir + "/.ros/Log/" + g_camera_name;
   ctx_->setLoggerToFile(ob_log_level, log_path.c_str());
 
+  force_ip_enable_ = nh_private_.param<bool>("force_ip_enable", "false");
+  force_ip_mac_ = nh_private_.param<std::string>("force_ip_ma", "");
+  force_ip_dhcp_ = nh_private_.param<bool>("force_ip_dhcp", "false");
+  force_ip_address_ = nh_private_.param<std::string>("force_ip_address", "");
+  force_ip_subnet_mask_ = nh_private_.param<std::string>("force_ip_subnet_mask", "");
+  force_ip_gateway_ = nh_private_.param<std::string>("force_ip_gateway", "");
+  applyForceIpConfig();
+
   orb_device_lock_shm_fd_ = shm_open(ORB_DEFAULT_LOCK_NAME.c_str(), O_CREAT | O_RDWR, 0666);
   if (orb_device_lock_shm_fd_ < 0) {
     ROS_ERROR_STREAM("Failed to open shared memory " << ORB_DEFAULT_LOCK_NAME);
@@ -363,8 +371,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
                     std::placeholders::_2, std::placeholders::_3),
           false);
     });
-    if(firmware_update_success_)
-    {
+    if (firmware_update_success_) {
       return;
     }
   }
@@ -592,7 +599,7 @@ void OBCameraNodeDriver::resetDeviceThread() {
       device_uid_.clear();
     }
     reset_device_ = false;
-    //sleep for a while before do malloc_trim
+    // sleep for a while before do malloc_trim
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     ROS_INFO_STREAM("resetDeviceThread: device is disconnected, do malloc_trim");
     malloc_trim(0);
@@ -639,8 +646,8 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
     return false;
   }
 
-  std::shared_ptr<int> process_lock_guard(nullptr,
-                                        [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
+  std::shared_ptr<int> process_lock_guard(
+      nullptr, [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
 
   try {
     std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
@@ -686,7 +693,7 @@ void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
     }
     uint8_t index = 0;
     uint8_t count = static_cast<uint8_t>(paths.size());
-    char (*filePaths)[OB_PATH_MAX] = new char[count][OB_PATH_MAX];
+    char(*filePaths)[OB_PATH_MAX] = new char[count][OB_PATH_MAX];
     ROS_INFO_STREAM("paths.cout : " << (uint32_t)count);
     for (const auto &p : paths) {
       strcpy(filePaths[index], p.c_str());
@@ -818,4 +825,63 @@ void OBCameraNodeDriver::firmwareUpdateCallback(OBFwUpdateState state, const cha
     firmware_update_success_ = true;
   }
 }
+
+bool OBCameraNodeDriver::applyForceIpConfig() {
+  if (!force_ip_enable_) {
+    return false;
+  }
+  if (force_ip_success_) {
+    return false;
+  }
+
+  OBNetIpConfig config{};
+  config.dhcp = force_ip_dhcp_ ? 1 : 0;
+
+  if (config.dhcp == 0) {
+    if (force_ip_address_.empty() || force_ip_subnet_mask_.empty() || force_ip_gateway_.empty()) {
+      ROS_WARN("Force IP enabled but parameters are incomplete");
+      return false;
+    }
+    auto parseIp = [](const std::string &ip, uint8_t out[4]) {
+      std::stringstream ss(ip);
+      std::string item;
+      int i = 0;
+      while (std::getline(ss, item, '.') && i < 4) {
+        out[i++] = static_cast<uint8_t>(std::stoi(item));
+      }
+    };
+    parseIp(force_ip_address_, config.address);
+    parseIp(force_ip_subnet_mask_, config.mask);
+    parseIp(force_ip_gateway_, config.gateway);
+  }
+  force_ip_success_ = false;
+  try {
+    auto device_list = ctx_->queryDeviceList();
+    uint32_t index = 0;
+    std::string mac;
+    if (!force_ip_mac_.empty()) {
+      mac = force_ip_mac_;
+    } else if (device_list->getCount() == 1) {
+      mac = device_list->getUid(index);
+    } else {
+      ROS_ERROR("MAC address is empty");
+      return false;
+    }
+    if (ctx_->changeNetDeviceIpConfig(mac.c_str(), config)) {
+      ROS_INFO("Force IP config applied. force_ip_dhcp=%d ip=%s mask=%s gateway=%s", config.dhcp,
+               force_ip_address_.c_str(), force_ip_subnet_mask_.c_str(), force_ip_gateway_.c_str());
+      force_ip_success_ = true;
+    } else {
+      ROS_ERROR("Failed to apply Force IP config (SDK returned false)");
+    }
+  } catch (const ob::Error &e) {
+    ROS_ERROR("Force IP config failed with ob::Error: %s", e.getMessage());
+  } catch (const std::exception &e) {
+    ROS_ERROR("Force IP config failed with std::exception: %s", e.what());
+  } catch (...) {
+    ROS_ERROR("Force IP config failed with unknown error");
+  }
+  return force_ip_success_;
+}
+
 }  // namespace orbbec_camera

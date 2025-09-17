@@ -109,6 +109,15 @@
     <arg name="enable_heartbeat" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
 
+    <!-- Force IP parameters -->
+    <!--If only one camera (network device) is currently connected, you do not need to specify the MAC address.Otherwise, you need to specify it yourself. For example, "54:14:FD:06:07:DA"-->
+    <arg name="force_ip_enable" default="false"/>
+    <arg name="force_ip_mac" default=""/>
+    <arg name="force_ip_dhcp" default="false"/>
+    <arg name="force_ip_address" default="192.168.1.10"/>
+    <arg name="force_ip_subnet_mask" default="255.255.255.0"/>
+    <arg name="force_ip_gateway" default="192.168.1.1"/>
+
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <!-- Use the parameters defined above -->
@@ -196,6 +205,13 @@
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
+
+            <param name="force_ip_enable" value="$(arg force_ip_enable)"/>
+            <param name="force_ip_mac" value="$(arg force_ip_mac)"/>
+            <param name="force_ip_dhcp" value="$(arg force_ip_dhcp)"/>
+            <param name="force_ip_address" value="$(arg force_ip_address)"/>
+            <param name="force_ip_subnet_mask" value="$(arg force_ip_subnet_mask)"/>
+            <param name="force_ip_gateway" value="$(arg force_ip_gateway)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
