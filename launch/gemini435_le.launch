@@ -210,7 +210,7 @@
     <arg name="laser_index0_ir_ae_max_exposure" default="30000"/>
 
     <!-- Force IP parameters -->
-    <!--If only one camera (network device) is currently connected, you do not need to specify the MAC address.Otherwise, you need to specify it yourself. For example, "54:14:FD:06:07:DA"-->
+    <!--you need to specify it yourself. For example, "54:14:FD:06:07:DA"-->
     <arg name="force_ip_enable" default="false"/>
     <arg name="force_ip_mac" default=""/>
     <arg name="force_ip_dhcp" default="false"/>

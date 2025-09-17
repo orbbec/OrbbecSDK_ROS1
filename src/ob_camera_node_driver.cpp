@@ -838,21 +838,66 @@ bool OBCameraNodeDriver::applyForceIpConfig() {
   config.dhcp = force_ip_dhcp_ ? 1 : 0;
 
   if (config.dhcp == 0) {
-    if (force_ip_address_.empty() || force_ip_subnet_mask_.empty() || force_ip_gateway_.empty()) {
-      ROS_WARN("Force IP enabled but parameters are incomplete");
-      return false;
-    }
-    auto parseIp = [](const std::string &ip, uint8_t out[4]) {
-      std::stringstream ss(ip);
+    ROS_INFO("[ForceIP] Static config mode");
+    auto strToIp = [&](const std::string &s, uint8_t out[4]) -> bool {
+      std::stringstream ss(s);
       std::string item;
       int i = 0;
       while (std::getline(ss, item, '.') && i < 4) {
-        out[i++] = static_cast<uint8_t>(std::stoi(item));
+        int val = std::stoi(item);
+        if (val < 0 || val > 255) return false;
+        out[i++] = static_cast<uint8_t>(val);
       }
+      return i == 4;
     };
-    parseIp(force_ip_address_, config.address);
-    parseIp(force_ip_subnet_mask_, config.mask);
-    parseIp(force_ip_gateway_, config.gateway);
+
+    auto ipArrayToUint = [&](const uint8_t ip[4]) -> uint32_t {
+      return (static_cast<uint32_t>(ip[0]) << 24) | (static_cast<uint32_t>(ip[1]) << 16) |
+             (static_cast<uint32_t>(ip[2]) << 8) | (static_cast<uint32_t>(ip[3]));
+    };
+
+    uint8_t ip[4], mask[4], gw[4];
+    if (!strToIp(force_ip_address_, ip)) {
+      ROS_ERROR("[ForceIP] Invalid IP: %s", force_ip_address_.c_str());
+      return false;
+    }
+    if (!strToIp(force_ip_subnet_mask_, mask)) {
+      ROS_ERROR("[ForceIP] Invalid Mask: %s", force_ip_subnet_mask_.c_str());
+      return false;
+    }
+    if (!strToIp(force_ip_gateway_, gw)) {
+      ROS_ERROR("[ForceIP] Invalid Gateway: %s", force_ip_gateway_.c_str());
+      return false;
+    }
+    uint32_t ipVal = ipArrayToUint(ip);
+    uint32_t maskVal = ipArrayToUint(mask);
+    uint32_t gwVal = ipArrayToUint(gw);
+    if (ipVal == 0 || ipVal == 0xFFFFFFFF) {
+      ROS_ERROR("[ForceIP] Illegal IP: %s", force_ip_address_.c_str());
+      return false;
+    }
+    if (maskVal == 0 || maskVal == 0xFFFFFFFF) {
+      ROS_ERROR("[ForceIP] Illegal Mask (all 0 or all 1): %s", force_ip_subnet_mask_.c_str());
+      return false;
+    }
+    uint32_t inverted = ~maskVal + 1;
+    if ((inverted & (inverted - 1)) != 0) {
+      ROS_ERROR("[ForceIP] Illegal Mask (non-contiguous bits): %s", force_ip_subnet_mask_.c_str());
+      return false;
+    }
+    if ((ipVal & ~maskVal) == 0 || (ipVal & ~maskVal) == ~maskVal) {
+      ROS_ERROR("[ForceIP] Illegal host IP (network/broadcast addr): %s",
+                force_ip_address_.c_str());
+      return false;
+    }
+    if ((ipVal & maskVal) != (gwVal & maskVal)) {
+      ROS_ERROR("[ForceIP] Gateway %s not in same subnet as IP %s", force_ip_gateway_.c_str(),
+                force_ip_address_.c_str());
+      return false;
+    }
+    std::memcpy(config.address, ip, 4);
+    std::memcpy(config.mask, mask, 4);
+    std::memcpy(config.gateway, gw, 4);
   }
   force_ip_success_ = false;
   try {
