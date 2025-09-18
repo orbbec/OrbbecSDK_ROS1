@@ -275,12 +275,12 @@ class CameraMonitorNode:
         color_tracker = self.trackers["color"]
         depth_tracker = self.trackers["depth"]
         color_packet_loss = color_tracker.lost
-        color_packet_loss_rate = round(color_tracker.packet_loss_rate() * 100.0, 2)
+        color_packet_loss_rate = round(color_tracker.packet_loss_rate() * 100.0, 3)
         color_frames_loss = color_tracker.drop_frames
-        color_frames_loss_rate = round(color_tracker.frames_loss_rate() * 100.0, 2)
+        color_frames_loss_rate = round(color_tracker.frames_loss_rate() * 100.0, 3)
         depth_packet_loss = depth_tracker.lost
-        depth_packet_loss_rate = round(depth_tracker.packet_loss_rate() * 100.0, 2)
-        depth_frames_loss_rate = round(depth_tracker.frames_loss_rate() * 100.0, 2)
+        depth_packet_loss_rate = round(depth_tracker.packet_loss_rate() * 100.0, 3)
+        depth_frames_loss_rate = round(depth_tracker.frames_loss_rate() * 100.0, 3)
         depth_frames_loss = depth_tracker.drop_frames
 
         self.csv_writer.writerow([
@@ -321,9 +321,9 @@ class CameraMonitorNode:
 
                 tracker = self.trackers[stream]
                 packet_loss = tracker.lost
-                packet_loss_rate = round(tracker.packet_loss_rate() * 100.0, 2)
+                packet_loss_rate = round(tracker.packet_loss_rate() * 100.0, 3)
                 frames_loss = tracker.drop_frames
-                frames_loss_rate = round(tracker.frames_loss_rate() * 100.0, 2)
+                frames_loss_rate = round(tracker.frames_loss_rate() * 100.0, 3)
                 rows.append([t, *fps_vals, *delay_vals, packet_loss, packet_loss_rate, frames_loss, frames_loss_rate])
 
         header_bottom = ["Option", "fps_cur", "fps_avg", "fps_min", "fps_max", "delay_cur(ms)", "delay_avg(ms)", "delay_min(ms)", "delay_max(ms)","Sub_lost_count", "Sub_lost_rate(%)", "Pub_lost_count", "Pub_lost_rate(%)"]

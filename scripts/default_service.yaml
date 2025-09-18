@@ -1,4 +1,4 @@
-default_count: 50
+default_count: 10
 
 services:
 - name: /camera/set_filter
@@ -9,16 +9,13 @@ services:
   request: {data: 3000}
 - name: /camera/get_depth_exposure
   type: orbbec_camera/GetInt32
-- name: /camera/set_depth_ae_roi
-  type: orbbec_camera/SetArrays
-  request: {data_param: [0,1279,0,719]}
 - name: /camera/reset_depth_exposure
   type: std_srvs/Empty
 - name: /camera/get_depth_gain
   type: orbbec_camera/GetInt32
 - name: /camera/set_depth_gain
   type: orbbec_camera/SetInt32
-  request: {data: 200}
+  request: {data: 2000}  # for Gemini 2L range is 1000-15000
 - name: /camera/reset_depth_gain
   type: std_srvs/Empty
 - name: /camera/set_depth_mirror
@@ -42,9 +39,6 @@ services:
 - name: /camera/set_color_exposure
   type: orbbec_camera/SetInt32
   request: {data: 30}
-- name: /camera/set_color_ae_roi
-  type: orbbec_camera/SetArrays
-  request: {data_param: [0,1279,0,719]}
 - name: /camera/reset_color_exposure
   type: std_srvs/Empty
 - name: /camera/get_color_gain
@@ -94,8 +88,6 @@ services:
   type: orbbec_camera/GetDeviceInfo
 - name: /camera/get_serial
   type: orbbec_camera/GetString
-- name: /camera/get_camera_params
-  type: orbbec_camera/GetCameraParams
 - name: /camera/get_sdk_version
   type: orbbec_camera/GetString
 - name: /camera/get_device_type
@@ -119,12 +111,7 @@ services:
 
 # open according to your camera type
 
-# 335 not support
-# - name: /camera/get_ptp_config
-#   type: orbbec_camera/GetBool
-# - name: /camera/set_ptp_config
-#   type: std_srvs/SetBool
-#   request: {data: false}
+# 335/335Le not support
 # - name: /camera/set_fan_work_mode
 #   type: std_srvs/SetBool
 #   request: {data: 0}
@@ -138,81 +125,137 @@ services:
 #   type: orbbec_camera/SetInt32
 #   request: {data: 0}
 
+
 # 435Le support
 # - name: /camera/set_write_customer_data
 #   type: orbbec_camera/SetString
 # - name: /camera/set_read_customer_data
 #   type: orbbec_camera/GetString
 
-# 335 support
-- name: /camera/get_left_ir_exposure
+
+# 335/336/336L/335Le support
+# - name: /camera/set_sync_interleaverlaser
+#   type: orbbec_camera/SetInt32
+#   request: {data: 1}
+
+# - name: /camera/set_color_ae_roi
+#   type: orbbec_camera/SetArrays
+#   request: {data_param: [0,1279,0,719]}
+# - name: /camera/set_depth_ae_roi
+#   type: orbbec_camera/SetArrays
+#   request: {data_param: [0,1279,0,719]}
+# - name: /camera/get_camera_params
+#   type: orbbec_camera/GetCameraParams
+
+
+# 335Le support
+# - name: /camera/get_ptp_config
+#   type: orbbec_camera/GetBool
+# - name: /camera/set_ptp_config
+#   type: std_srvs/SetBool
+#   request: {data: false}
+
+
+# 335/336/335Le support
+# - name: /camera/get_left_ir_exposure
+#   type: orbbec_camera/GetInt32
+# - name: /camera/set_left_ir_exposure
+#   type: orbbec_camera/SetInt32
+#   request: {data: 20}
+# - name: /camera/set_left_ir_ae_roi
+#   type: orbbec_camera/SetArrays
+#   request: {data_param: [0,1279,0,719]}
+# - name: /camera/reset_left_ir_exposure
+#   type: std_srvs/Empty
+# - name: /camera/get_left_ir_gain
+#   type: orbbec_camera/GetInt32
+# - name: /camera/set_left_ir_gain
+#   type: orbbec_camera/SetInt32
+#   request: {data: 30}
+# - name: /camera/reset_left_ir_gain
+#   type: std_srvs/Empty
+# - name: /camera/set_left_ir_mirror
+#   type: std_srvs/SetBool
+#   request: {data: false}
+# - name: /camera/set_left_ir_flip
+#   type: std_srvs/SetBool
+#   request: {data: false}
+# - name: /camera/set_left_ir_rotation
+#   type: orbbec_camera/SetInt32
+#   request: {data: 90}
+# - name: /camera/set_left_ir_auto_exposure
+#   type: std_srvs/SetBool
+#   request: {data: false}
+# - name: /camera/get_left_ir_auto_exposure
+#   type: orbbec_camera/GetBool
+# - name: /camera/toggle_left_ir
+#   type: std_srvs/SetBool
+#   request: {data: false}
+# - name: /camera/get_left_ir_camera_info
+#   type: orbbec_camera/GetCameraInfo
+# - name: /camera/get_right_ir_exposure
+#   type: orbbec_camera/GetInt32
+# - name: /camera/set_right_ir_exposure
+#   type: orbbec_camera/SetInt32
+#   request: {data: 30}
+# - name: /camera/set_right_ir_ae_roi
+#   type: orbbec_camera/SetArrays
+#   request: {data_param: [0,1279,0,719]}
+# - name: /camera/reset_right_ir_exposure
+#   type: std_srvs/Empty
+# - name: /camera/get_right_ir_gain
+#   type: orbbec_camera/GetInt32
+# - name: /camera/set_right_ir_gain
+#   type: orbbec_camera/SetInt32
+#   request: {data: 30}
+# - name: /camera/reset_right_ir_gain
+#   type: std_srvs/Empty
+# - name: /camera/set_right_ir_mirror
+#   type: std_srvs/SetBool
+#   request: {data: false}
+# - name: /camera/set_right_ir_flip
+#   type: std_srvs/SetBool
+#   request: {data: false}
+# - name: /camera/set_right_ir_rotation
+#   type: orbbec_camera/SetInt32
+# - name: /camera/set_right_ir_auto_exposure
+#   type: std_srvs/SetBool
+#   request: {data: false}
+# - name: /camera/get_right_ir_auto_exposure
+#   type: orbbec_camera/GetBool
+# - name: /camera/toggle_right_ir
+#   type: std_srvs/SetBool
+#   request: {data: false}
+# - name: /camera/get_right_ir_camera_info
+#   type: orbbec_camera/GetCameraInfo
+
+
+# Gemini 215/Gemini 2L  support
+- name: /camera/get_ir_exposure
   type: orbbec_camera/GetInt32
-- name: /camera/set_left_ir_exposure
-  type: orbbec_camera/SetInt32
-  request: {data: 20}
-- name: /camera/set_left_ir_ae_roi
-  type: orbbec_camera/SetArrays
-  request: {data_param: [0,1279,0,719]}
-- name: /camera/reset_left_ir_exposure
-  type: std_srvs/Empty
-- name: /camera/get_left_ir_gain
+- name: /camera/get_ir_gain
   type: orbbec_camera/GetInt32
-- name: /camera/set_left_ir_gain
+# - name: /camera/set_ir_ae_roi
+#   type: orbbec_camera/SetArrays
+#   request: {data_param: [0,1279,0,719]}
+- name: /camera/set_ir_auto_exposure
+  type: std_srvs/srv/SetBool
+  request: {data: false}
+- name: /camera/set_ir_exposure
   type: orbbec_camera/SetInt32
-  request: {data: 30}
-- name: /camera/reset_left_ir_gain
-  type: std_srvs/Empty
-- name: /camera/set_left_ir_mirror
-  type: std_srvs/SetBool
+  request: {data: 200}
+- name: /camera/set_ir_flip
+  type: std_srvs/srv/SetBool
   request: {data: false}
-- name: /camera/set_left_ir_flip
-  type: std_srvs/SetBool
+- name: /camera/set_ir_gain
+  type: orbbec_camera/SetInt32
+  request: {data: 2000}
+# - name: /camera/set_ir_long_exposure
+#   type: std_srvs/srv/SetBool
+#   request: {data: false}
+- name: /camera/set_ir_mirror
+  type: std_srvs/srv/SetBool
   request: {data: false}
-- name: /camera/set_left_ir_rotation
+- name: /camera/set_ir_rotation
   type: orbbec_camera/SetInt32
   request: {data: 90}
-- name: /camera/set_left_ir_auto_exposure
-  type: std_srvs/SetBool
-  request: {data: false}
-- name: /camera/get_left_ir_auto_exposure
-  type: orbbec_camera/GetBool
-- name: /camera/toggle_left_ir
-  type: std_srvs/SetBool
-  request: {data: false}
-- name: /camera/get_left_ir_camera_info
-  type: orbbec_camera/GetCameraInfo
-- name: /camera/get_right_ir_exposure
-  type: orbbec_camera/GetInt32
-- name: /camera/set_right_ir_exposure
-  type: orbbec_camera/SetInt32
-  request: {data: 30}
-- name: /camera/set_right_ir_ae_roi
-  type: orbbec_camera/SetArrays
-  request: {data_param: [0,1279,0,719]}
-- name: /camera/reset_right_ir_exposure
-  type: std_srvs/Empty
-- name: /camera/get_right_ir_gain
-  type: orbbec_camera/GetInt32
-- name: /camera/set_right_ir_gain
-  type: orbbec_camera/SetInt32
-  request: {data: 30}
-- name: /camera/reset_right_ir_gain
-  type: std_srvs/Empty
-- name: /camera/set_right_ir_mirror
-  type: std_srvs/SetBool
-  request: {data: false}
-- name: /camera/set_right_ir_flip
-  type: std_srvs/SetBool
-  request: {data: false}
-- name: /camera/set_right_ir_rotation
-  type: orbbec_camera/SetInt32
-- name: /camera/set_right_ir_auto_exposure
-  type: std_srvs/SetBool
-  request: {data: false}
-- name: /camera/get_right_ir_auto_exposure
-  type: orbbec_camera/GetBool
-- name: /camera/toggle_right_ir
-  type: std_srvs/SetBool
-  request: {data: false}
-- name: /camera/get_right_ir_camera_info
-  type: orbbec_camera/GetCameraInfo
