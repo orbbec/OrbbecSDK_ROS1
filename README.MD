@@ -198,7 +198,7 @@ Get the source code:
 ```bash
 cd ~/ros_ws/src
 git clone https://github.com/orbbec/OrbbecSDK_ROS1.git
-roscd orbbec_camera
+cd OrbbecSDK_ROS1
 git checkout v2-main
 git branch  #Check whether the branch switch is successful
 ```
