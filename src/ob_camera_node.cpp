@@ -36,7 +36,8 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
       is_initialized_(false) {
   // Initialize global image_transport (persistent across node recreations)
   initializeGlobalImageTransport();
-
+  fps_delay_status_color_ = std::make_unique<FpsDelayStatus>();
+  fps_delay_status_depth_ = std::make_unique<FpsDelayStatus>();
   init();
 }
 
