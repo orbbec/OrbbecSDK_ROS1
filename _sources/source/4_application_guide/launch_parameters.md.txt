@@ -100,7 +100,7 @@ The following are the launch parameters available:
 *   **`trigger_out_enabled`**
     *   Enable the trigger out signal.
 
-> Used for [multi camera synced](../5_advanced_guide/multi_camera_synced.md).
+> Used for [multi camera synced](../5_advanced_guide/multi_camera/multi_camera_synced.md).
 
 #### Network Cameras
 
@@ -109,12 +109,12 @@ The following are the launch parameters available:
 *   **`ip_address`** / **`port`**
     *   Set net device's IP address and port (Usually `8090`).
 
-> Used for [net camera](../5_advanced_guide/net_camera.md).
+> Used for [net camera](../5_advanced_guide/configuration/net_camera.md).
 
 #### Device-Specific
 
 *   **`device_preset`**
-    *   The default value is `Default`. Only the G330 series is supported. For more information, refer to the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/). The value should be one of the preset names listed [in the table](../5_advanced_guide/predefined_presets.md).
+    *   The default value is `Default`. Only the G330 series is supported. For more information, refer to the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/). The value should be one of the preset names listed [in the table](../5_advanced_guide/configuration/predefined_presets.md).
 
 #### Disparity
 
@@ -123,7 +123,7 @@ The following are the launch parameters available:
 *   **`disparity_range_mode`**, **`disparity_search_offset`**, **`disparity_offset_config`**
     *   Parameters for disparity search offset.
 
-> Used for [disparity search offset](../5_advanced_guide/disparity_search_offset.md).
+> Used for [disparity search offset](../5_advanced_guide/configuration/disparity_search_offset.md).
 
 #### Interleave AE Mode
 
@@ -134,7 +134,7 @@ The following are the launch parameters available:
 *   **`[hdr|laser]_index[0|1]_[...]`**
     *   In interleave frame mode, set the 0th and 1st frame parameters of hdr or laser interleaving frames.
 
-*All interleave parameters are used for [interleave ae mode](../5_advanced_guide/interleave_ae_mode.md)*.
+*All interleave parameters are used for [interleave ae mode](../5_advanced_guide/configuration/interleave_ae_mode.md)*.
 
 ### Basic & General Parameters
 
