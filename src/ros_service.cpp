@@ -850,34 +850,37 @@ bool OBCameraNode::toggleSensorCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response,
                                         const stream_index_pair& stream_index) {
   std::string msg;
-  if (request.data) {
-    if (enable_stream_[stream_index]) {
-      msg = stream_name_[stream_index] + " Already ON";
-    }
-    ROS_INFO_STREAM("toggling sensor " << stream_name_[stream_index] << " ON");
-  } else {
-    if (!enable_stream_[stream_index]) {
-      msg = stream_name_[stream_index] + " Already OFF";
-    }
-    ROS_INFO_STREAM("toggling sensor " << stream_name_[stream_index] << " OFF");
-  }
-  if (!msg.empty()) {
+  bool current_state = enable_stream_[stream_index];
+  bool target_state = request.data;
+
+  if (target_state == current_state) {
+    msg = stream_name_[stream_index] + (target_state ? " Already ON" : " Already OFF");
     ROS_INFO_STREAM(msg);
-    response.success = false;
+    response.success = true;
     response.message = msg;
-    return false;
+    return true;
   }
-  response.success = toggleSensor(stream_index, request.data, response.message);
-  return response.success;
+  ROS_INFO_STREAM("Toggling sensor " << stream_name_[stream_index]
+                                     << (target_state ? " ON" : " OFF"));
+
+  response.success = toggleSensor(stream_index, target_state, response.message);
+  return true;
 }
 
 bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enabled,
                                 std::string& msg) {
-  (void)msg;
-  stopStreams();
-  enable_stream_[stream_index] = enabled;
-  startStreams();
-  return true;
+  try {
+    stopStreams();
+    enable_stream_[stream_index] = enabled;
+    startStreams();
+
+    msg = "Toggling sensor " + stream_name_[stream_index] + (enabled ? " on" : " off");
+    return true;
+  } catch (const std::exception& e) {
+    msg = "Failed to toggle " + stream_name_[stream_index] + ": " + e.what();
+    ROS_ERROR_STREAM(msg);
+    return false;
+  }
 }
 
 bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,
@@ -1009,7 +1012,8 @@ bool OBCameraNode::resetCameraGainCallback(std_srvs::EmptyRequest& request,
     try {
       auto range = sensor->getGainRange();
       if (data < range.min || data > range.max) {
-        ROS_ERROR_STREAM("Failed to set gain: invalid value");
+        ROS_ERROR_STREAM("Failed to set gain: invalid value "
+                         << data << ", valid range: " << range.min << " - " << range.max);
         return false;
       }
       sensor->setGain(data);
