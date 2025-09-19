@@ -2,6 +2,8 @@
 
 This document outlines strategies for minimizing CPU usage in the **OrbbecSDK_ROS1 v2** environment when using **Gemini 330 series cameras**. The firmware version must be **no lower than 1.4.10**, and `device` should be set to **Default**.
 
+You can find example usage code in the [example](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples).
+
 ### Recommended Settings for Lower CPU Usage
 
 To achieve the lowest possible CPU usage in OrbbecSDK_ROS1, it is recommended to configure the following parameters.
@@ -76,7 +78,7 @@ The CPU usage can be reduced if the RGB format is selected instead of MJPG, sinc
 
 Based on the test results, using only the `hardware_noise_removal_filter` results in a negligible change in CPU usage for both `libuvc` (-0.3%) and `v4l2` (-0.1%) compared to the no-filter benchmark, as this filter runs internally on the camera hardware. In contrast, other filters execute on the host system. Adding the `spatial_filter` to the hardware filter leads to a moderate increase in CPU usage, while applying the software-based `noise_removal_filter` —either alone or combined with `spatial_filter` —significantly increases CPU load. To maintain low CPU usage, it is recommended to avoid software-based filters and rely solely on the `hardware_noise_removal_filter`.
 
-## Further Optimization
+### Further Optimization
 
 |           Parameter           |                  Recommendation                  |                      Note                      |
 | :----------------------------: | :----------------------------------------------: | :---------------------------------------------: |

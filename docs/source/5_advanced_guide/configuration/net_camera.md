@@ -2,6 +2,8 @@
 
 > This section describes how to use Net camera in OrbbecSDK_ROS.Currently, only Femto_Mega and Gemini 335Le devices are supported, and other Net devices will be supported in the near future.
 
+You can find example usage code in the [example](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples).
+
 ## Femto Mega
 
 **Parameter Introduction**
