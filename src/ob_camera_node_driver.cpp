@@ -438,6 +438,11 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     std::shared_ptr<int> lock_guard(nullptr,
                                     [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
 
+    //check device connected flag again after get lock
+    if (device_connected_) {
+      return;
+    }
+
     {
       std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
       if (ob_camera_node_) {
