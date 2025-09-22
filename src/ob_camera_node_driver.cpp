@@ -152,7 +152,7 @@ void OBCameraNodeDriver::init() {
   ctx_->setLoggerToFile(ob_log_level, log_path.c_str());
 
   force_ip_enable_ = nh_private_.param<bool>("force_ip_enable", "false");
-  force_ip_mac_ = nh_private_.param<std::string>("force_ip_ma", "");
+  force_ip_mac_ = nh_private_.param<std::string>("force_ip_mac", "");
   force_ip_dhcp_ = nh_private_.param<bool>("force_ip_dhcp", "false");
   force_ip_address_ = nh_private_.param<std::string>("force_ip_address", "");
   force_ip_subnet_mask_ = nh_private_.param<std::string>("force_ip_subnet_mask", "");
@@ -917,7 +917,7 @@ bool OBCameraNodeDriver::applyForceIpConfig() {
       ROS_ERROR("MAC address is empty");
       return false;
     }
-    if (ctx_->changeNetDeviceIpConfig(mac.c_str(), config)) {
+    if (ctx_->forceIp(mac.c_str(), config)) {
       ROS_INFO("Force IP config applied. force_ip_dhcp=%d ip=%s mask=%s gateway=%s", config.dhcp,
                force_ip_address_.c_str(), force_ip_subnet_mask_.c_str(), force_ip_gateway_.c_str());
       force_ip_success_ = true;

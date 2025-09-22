@@ -229,13 +229,12 @@
     <arg name="laser_index0_ir_ae_max_exposure" default="30000"/>
 
     <!-- Force IP parameters -->
-    <!--you need to specify it yourself. For example, "54:14:FD:06:07:DA"-->
-    <arg name="force_ip_enable" default="false"/>
-    <arg name="force_ip_mac" default=""/>
-    <arg name="force_ip_dhcp" default="false"/>
-    <arg name="force_ip_address" default="192.168.1.10"/>
-    <arg name="force_ip_subnet_mask" default="255.255.255.0"/>
-    <arg name="force_ip_gateway" default="192.168.1.1"/>
+    <arg name="force_ip_enable" default="false"/> <!-- Whether to enable the Force IP function -->
+    <arg name="force_ip_mac" default=""/> <!-- you need to specify it yourself. For example, "54:14:FD:06:07:DA" -->
+    <arg name="force_ip_dhcp" default="false"/> <!-- Use DHCP to obtain IP automatically if set to true -->
+    <arg name="force_ip_address" default="192.168.1.10"/> <!-- Static IP address to assign when DHCP is disabled -->
+    <arg name="force_ip_subnet_mask" default="255.255.255.0"/> <!-- Subnet mask for the static IP -->
+    <arg name="force_ip_gateway" default="192.168.1.1"/> <!-- Gateway address for the static IP -->
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
