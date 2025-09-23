@@ -307,6 +307,27 @@ void SingleServiceBenchmark::fillRequest<orbbec_camera::SetInt32>(orbbec_camera:
   }
 }
 
+// SetBool
+template <>
+void SingleServiceBenchmark::fillRequest<std_srvs::SetBool>(std_srvs::SetBool &srv) {
+  if (request_data_ && request_data_["data"] && request_data_["data"].IsScalar()) {
+    srv.request.data = request_data_["data"].as<bool>();
+  }
+}
+
+// SetString
+template <>
+void SingleServiceBenchmark::fillRequest<orbbec_camera::SetString>(orbbec_camera::SetString &srv) {
+  if (!request_data_) {
+    return;
+  }
+  if (request_data_.IsScalar()) {
+    srv.request.data = request_data_.as<std::string>();
+  } else if (request_data_["data"]) {
+    srv.request.data = request_data_["data"].as<std::string>();
+  }
+}
+
 // SetArrays
 template <>
 void SingleServiceBenchmark::fillRequest<orbbec_camera::SetArrays>(orbbec_camera::SetArrays &srv) {

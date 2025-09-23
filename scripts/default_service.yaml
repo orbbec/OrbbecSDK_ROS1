@@ -10,7 +10,7 @@ services:
     type: orbbec_camera/GetInt32
   - name: /camera/set_depth_gain
     type: orbbec_camera/SetInt32
-    request: {data: 2000}  # for Gemini 2L/215 range is 1000-15000
+    request: {data: 200}  # for Gemini 2L/215 range is 1000-15000  Gemini336: 16 - 248 AstraProMin: 1-15   Astra2: 1000-8000
   - name: /camera/reset_depth_gain
     type: std_srvs/Empty
 
@@ -31,7 +31,7 @@ services:
     type: orbbec_camera/GetBool
   - name: /camera/set_depth_exposure
     type: orbbec_camera/SetInt32
-    request: {data: 3000}
+    request: {data: 30} # Femto_bolt 20 - 125
   - name: /camera/get_depth_exposure
     type: orbbec_camera/GetInt32
   - name: /camera/reset_depth_exposure
@@ -41,7 +41,7 @@ services:
     type: orbbec_camera/GetCameraInfo
   - name: /camera/toggle_depth
     type: std_srvs/SetBool
-    request: {data: false}
+    request: {data: true}
   - name: /camera/set_depth_ae_roi
     type: orbbec_camera/SetArrays
     request: {data_param: [0,1279,0,719]}
@@ -59,7 +59,7 @@ services:
     type: orbbec_camera/GetInt32
   - name: /camera/set_color_gain
     type: orbbec_camera/SetInt32
-    request: {data: 20}
+    request: {data: 10}  # 435Le: 1 - 16
   - name: /camera/reset_color_gain
     type: std_srvs/Empty
 
@@ -99,7 +99,7 @@ services:
     type: std_srvs/Empty
   - name: /camera/toggle_color
     type: std_srvs/SetBool
-    request: {data: false}
+    request: {data: true}
 
 # IR (Infrared / Laser)
   - name: /camera/set_laser
@@ -144,7 +144,7 @@ services:
     type: orbbec_camera/GetCameraInfo
   - name: /camera/toggle_left_ir
     type: std_srvs/SetBool
-    request: {data: false}
+    request: {data: true}
 
 # Right IR
   - name: /camera/set_right_ir_auto_exposure
@@ -178,7 +178,7 @@ services:
     type: orbbec_camera/GetCameraInfo
   - name: /camera/toggle_right_ir
     type: std_srvs/SetBool
-    request: {data: false}
+    request: {data: true}
 
 # Gemini IR
   - name: /camera/get_ir_exposure
@@ -189,22 +189,22 @@ services:
     type: orbbec_camera/SetArrays
     request: {data_param: [0,1279,0,719]}
   - name: /camera/set_ir_auto_exposure
-    type: std_srvs/srv/SetBool
+    type: std_srvs/SetBool
     request: {data: false}
   - name: /camera/set_ir_exposure
     type: orbbec_camera/SetInt32
-    request: {data: 200}
+    request: {data: 2000}  # AstraMiniPro: 1000-142000
   - name: /camera/set_ir_flip
-    type: std_srvs/srv/SetBool
+    type: std_srvs/SetBool
     request: {data: false}
   - name: /camera/set_ir_gain
     type: orbbec_camera/SetInt32
-    request: {data: 2000}
+    request: {data: 15} # AstraMiniPro: 1-15
   - name: /camera/set_ir_long_exposure
-    type: std_srvs/srv/SetBool
+    type: std_srvs/SetBool
     request: {data: false}
   - name: /camera/set_ir_mirror
-    type: std_srvs/srv/SetBool
+    type: std_srvs/SetBool
     request: {data: false}
   - name: /camera/set_ir_rotation
     type: orbbec_camera/SetInt32
@@ -235,7 +235,7 @@ services:
 # Others
   - name: /camera/set_fan_work_mode
     type: std_srvs/SetBool
-    request: {data: 0}
+    request: {data: false}
   - name: /camera/set_flood
     type: std_srvs/SetBool
     request: {data: false}
