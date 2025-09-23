@@ -139,6 +139,8 @@ For optimal performance, we strongly recommend updating to the latest firmware v
 
 The following devices are supported by the OrbbecSDK ROS Wrapper.
 
+To learn how to obtain and upgrade the latest firmware, [please click here](../3_quickstarts/orbbecviewer.md).
+
 | Product List   | Minimal Firmware Version | **Launch File**          |
 |:-------------- |:------------------------ |:------------------------ |
 | Gemini 435Le   | 1.2.04                   | gemini435_le.launch      |
