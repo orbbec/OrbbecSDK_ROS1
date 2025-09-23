@@ -1,18 +1,19 @@
 # OrbbecSDK ROS v2
 
-> [!IMPORTANT]
->
-> 欢迎使用 OrbbecSDK ROS Wrapper v2。在开始使用此版本的 ROS Wrapper 之前，请务必查看以下 [设备支持列表](#supported-devices)，以确认兼容性。
-
 [English](./README.MD) | [中文](./README_CN.MD)
 
-OrbbecSDK ROS Wrapper 提供了 Orbbec 相机与 ROS 环境的无缝集成。支持 ROS Kinetic、Melodic 和 Noetic 发行版。
+## 简介
 
-默认推荐使用 **v2-main** 分支。对于 **v2-main** 不支持的旧 OpenNI 设备，请使用 **main** 分支。仅由 main 分支支持的设备型号在下表中列出。
+**OrbbecSDK ROS1 Wrapper v2** 为 Orbbec 相机与 ROS 1 生态系统提供无缝集成。
+ 它支持 ROS1 的 **Kinetic**、**Melodic** 和 **Noetic** 发行版。
 
-如果您是中国区用户，推荐使用 [gitee 仓库](https://gitee.com/orbbecdeveloper/OrbbecSDK_ROS1)。
+- 默认分支：**v2-main**
+- 对于传统 **OpenNI** 设备：请使用 **main** 分支
+- 中国用户：请使用 [Gitee 仓库](https://gitee.com/orbbecdeveloper/OrbbecSDK_ROS)
 
-以下是 main 分支 (v1.x) 和 v2-main 分支 (v2.x) 的设备支持列表：
+## 分支选择
+
+下面是 **main 分支 (v1.x)** 和 **v2-main 分支 (v2.x)** 的设备支持列表：
 
 <table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
   <thead>
@@ -150,34 +151,6 @@ OrbbecSDK ROS Wrapper 提供了 Orbbec 相机与 ROS 环境的无缝集成。支
   libdw-dev
   ```
 
-## 支持的设备
-
-目前，以下设备受 OrbbecSDK ROS Wrapper v2-main 分支支持。后续会添加更多设备支持。如果您在下表中找不到设备，请尝试 [main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main) 分支。
-
-为了获得最佳性能，强烈建议升级到最新固件版本。这将确保您能够获得最新的改进和 bug 修复。
-
-以下设备受 OrbbecSDK ROS Wrapper 支持：
-
-| 产品列表       | 最低固件版本 | **启动文件**             |
-| -------------- | ------------ | ------------------------ |
-| Gemini 435Le   | 1.2.04       | gemini435_le.launch      |
-| Gemini 335     | 1.2.20       | gemini_330_series.launch |
-| Gemini 336     | 1.2.20       | gemini_330_series.launch |
-| Gemini 335L    | 1.2.20       | gemini_330_series.launch |
-| Gemini 336L    | 1.2.20       | gemini_330_series.launch |
-| Gemini 335Lg   | 1.3.46       | gemini_330_series.launch |
-| Gemini 335Le   | 1.5.31       | gemini_330_series.launch |
-| Gemini 330     | 1.2.20       | gemini_330_series.launch |
-| Gemini 330L    | 1.2.20       | gemini_330_series.launch |
-| Gemini 2       | 1.4.92       | gemini2.launch           |
-| Gemini 2 L     | 1.4.53       | gemini2L.launch          |
-| Femto Bolt     | 1.1.2        | femto_bolt.launch        |
-| Femto Mega     | 1.3.0        | femto_mega.launch        |
-| Astra 2        | 2.8.20       | astra2.launch            |
-| Astra Mini Pro | 2.0.01       | astra.launch             |
-
-所有的 launch 文件基本相同，主要区别在于针对同系列不同型号设定的参数默认值不同。USB 2.0 和 USB 3.0 等标准差异，可能需要对参数进行调整。如果遇到启动失败，请仔细检查规格手册，尤其是 launch 文件中的分辨率设置及其他参数，确保兼容性和最佳性能。
-
 ## 创建 ROS 工作空间并编译
 
 创建 ROS 工作空间（如果尚未创建）：
@@ -228,9 +201,7 @@ source ./devel/setup.bash
 rviz
 ```
 
-## 选择话题并控制相机
-
-查看话题、服务和参数（新开终端）：
+查看话题、服务和参数（终端3）：
 
 ```
 rostopic list
@@ -238,78 +209,51 @@ rosservice list
 rosparam list
 ```
 
-获取相机参数（必须先启动数据流）：
-
-```
-rosservice call /camera/get_camera_params "{}"
-```
-
-查看相机参数（具体字段含义请参考 [camera info](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html)）：
+输出话题：
 
 ```
 rostopic echo /camera/depth/camera_info
-rostopic echo /camera/color/camera_info
 ```
 
-查看设备信息：
-
-```
-rosservice call /camera/get_device_info "{}"
-```
-
-获取 SDK 版本（包括固件和 Orbbec SDK 版本）：
+调用服务：
 
 ```
 rosservice call /camera/get_sdk_version "{}"
 ```
 
-保存图像：
-
-```
-rosservice call /camera/save_images "{}"
-```
-
-保存点云：
-
-```
-rosservice call /camera/save_point_cloud "{}"
-```
-
-**注意**: 图像会保存到 `~/.ros/image` 下，仅在传感器开启时可用。
-
 > 更多使用细节，请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html)
 
-## 使用方法
+## 支持的设备
 
-### 检查相机支持的 profile
+目前，以下设备受 OrbbecSDK ROS Wrapper v2-main 分支支持。后续会添加更多设备支持。如果您在下表中找不到设备，请尝试 [main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main) 分支。
 
-```
-rosrun orbbec_camera list_camera_profile_mode_node
-```
+为了获得最佳性能，强烈建议升级到最新固件版本。这将确保您能够获得最新的改进和 bug 修复。
 
-### 可选深度预设
+以下设备受 OrbbecSDK ROS Wrapper 支持：
 
-> 您可以通过 `preset_firmware_path` 启动参数传入可选预设固件路径。用户可以根据应用场景，从 Orbbec 提供的 [Depth Preset Release](https://www.orbbec.com/docs/depth-preset-release/) 页面下载合适的预设，并更新到相机中，以在对应场景下获得更好的深度性能。
+| 产品列表       | 最低固件版本 | **启动文件**             |
+| -------------- | ------------ | ------------------------ |
+| Gemini 435Le   | 1.2.04       | gemini435_le.launch      |
+| Gemini 335     | 1.2.20       | gemini_330_series.launch |
+| Gemini 336     | 1.2.20       | gemini_330_series.launch |
+| Gemini 335L    | 1.2.20       | gemini_330_series.launch |
+| Gemini 336L    | 1.2.20       | gemini_330_series.launch |
+| Gemini 335Lg   | 1.3.46       | gemini_330_series.launch |
+| Gemini 335Le   | 1.5.31       | gemini_330_series.launch |
+| Gemini 330     | 1.2.20       | gemini_330_series.launch |
+| Gemini 330L    | 1.2.20       | gemini_330_series.launch |
+| Gemini 2       | 1.4.92       | gemini2.launch           |
+| Gemini 2 L     | 1.4.53       | gemini2L.launch          |
+| Femto Bolt     | 1.1.2        | femto_bolt.launch        |
+| Femto Mega     | 1.3.0        | femto_mega.launch        |
+| Astra 2        | 2.8.20       | astra2.launch            |
+| Astra Mini Pro | 2.0.01       | astra.launch             |
 
-```
-roslaunch orbbec_camera gemini_330_series.launch preset_firmware_path:=/home/orbbec/G336X_AMR_Default_v0.0.5.bin
-```
+所有的 launch 文件基本相同，主要区别在于针对同系列不同型号设定的参数默认值不同。USB 2.0 和 USB 3.0 等标准差异，可能需要对参数进行调整。如果遇到启动失败，请仔细检查规格手册，尤其是 launch 文件中的分辨率设置及其他参数，确保兼容性和最佳性能。
 
-### 使用 V4L2 后端
+## 教程
 
-注意：V4L2 后端默认未启用。
-
-- 示例：
-
-```
-roslaunch orbbec_camera gemini_330_series.launch uvc_backend:=v4l2
-```
-
-### 使用 Nodelet
-
-需要使用 nodelet 的用户请参考 `gemini_330_series_nodelet.launch`
-
-> 更多使用细节，请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html)
+请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html)
 
 ## 示例
 

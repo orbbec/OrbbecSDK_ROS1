@@ -1,16 +1,17 @@
-# OrbbecSDK ROS v2
-
-> [!IMPORTANT]
->
-> Welcome to the OrbbecSDK ROS Wrapper v2. Before you begin using this version of ROS Wrapper, it's crucial to check the following [device support list](#supported-devices) to verify the compatibility.
+# OrbbecSDK ROS1 Wrapper v2
 
 [English](./README.MD) | [中文](./README_CN.MD)
 
-OrbbecSDK ROS Wrapper provides seamless integration of Orbbec cameras with ROS environment. It supports ROS Kinetic, Melodic, and Noetic distributions.
+## Introduction
 
-By default, we recommend using the **v2-main** branch. For older OpenNI devices not supported by v2-main, please use the **main** branch. Device models that are only supported by the main branch are listed in the table below.
+The **OrbbecSDK ROS1 Wrapper v2** provides seamless integration of Orbbec cameras with the ROS 1 ecosystem.
+ It supports ROS1 **Kinetic**, **Melodic**, and **Noetic** distributions.
 
-If you are a user in China, it is recommended to use [gitee Repo](https://gitee.com/orbbecdeveloper/OrbbecSDK_ROS1).
+- Default branch: **v2-main**
+- For legacy **OpenNI** devices: use the **main** branch
+- For users in China: use the [Gitee repository](https://gitee.com/orbbecdeveloper/OrbbecSDK_ROS)
+
+## branch selection
 
 Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
 
@@ -156,35 +157,6 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   libdw-dev
   ```
 
-## Supported Devices
-
-Currently, the following devices are supported by the OrbbecSDK ROS Wrapper v2-main branch.  More devices support will be added in the near future. If you can not find your device in the table below, try the [main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main)  branch.
-
-For optimal performance, we strongly recommend updating to the latest firmware version. This ensures that you benefit from the most recent enhancements and bug fixes.
-
-The following devices are supported by the OrbbecSDK ROS Wrapper.
-
-| Product List   | Minimal Firmware Version | **Launch File**    |
-| :------------- | :----------------------- | :----------------------- |
-| Gemini 435Le   | 1.2.04                   | gemini435_le.launch      |
-| Gemini 335     | 1.2.20                   | gemini_330_series.launch |
-| Gemini 336     | 1.2.20                   | gemini_330_series.launch |
-| Gemini 335L    | 1.2.20                   | gemini_330_series.launch |
-| Gemini 336L    | 1.2.20                   | gemini_330_series.launch |
-| Gemini 335Lg   | 1.3.46                   | gemini_330_series.launch |
-| Gemini 335Le   | 1.5.31                   | gemini_330_series.launch |
-| Gemini 330     | 1.2.20                   | gemini_330_series.launch |
-| Gemini 330L    | 1.2.20                   | gemini_330_series.launch |
-| Gemini 2       | 1.4.92                   | gemini2.launch           |
-| Gemini 2 L     | 1.4.53                   | gemini2L.launch          |
-| Femto Bolt     | 1.1.2                    | femto_bolt.launch        |
-| Femto Mega     | 1.3.0                    | femto_mega.launch        |
-| Astra 2        | 2.8.20                   | astra2.launch            |
-| Astra Mini Pro | 2.0.01                   | astra.launch             |
-
-All launch files are essentially similar, with the primary difference being the default values of the parameters set
-for different models within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch file, as well as other parameters, to ensure compatibility and optimal performance.
-
 ## Create ROS Workspace and Build
 
 Create a ROS workspace (if you don't have one):
@@ -235,9 +207,9 @@ source ./devel/setup.bash
 rviz
 ```
 
-## Select Topics and Control the Camera
+Select the topic you want to display
 
-Check topics, services, and parameters (Open a new terminal):
+- List topics / services/ parameters ( On terminal 3)
 
 ```bash
 rostopic list
@@ -245,79 +217,52 @@ rosservice list
 rosparam list
 ```
 
-Get camera parameters(Must start stream first):
-
-```bash
-rosservice call /camera/get_camera_params "{}"
-```
-
-Check camera parameters (Please refer to the ROS documentation for the meaning of specific fields in
-the [camera info](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html)):
+Echo a topic
 
 ```bash
 rostopic echo /camera/depth/camera_info
-rostopic echo /camera/color/camera_info
 ```
 
-Check device information:
-
-```bash
-rosservice call /camera/get_device_info "{}"
-```
-
-Get the SDK version (Includes firmware and Orbbec SDK versions):
+Call a service
 
 ```bash
 rosservice call /camera/get_sdk_version "{}"
 ```
 
-Save images:
-
-```bash
-rosservice call /camera/save_images "{}"
-```
-
-Save point cloud:
-
-```bash
-rosservice call /camera/save_point_cloud "{}"
-```
-
-NOTE: The images are saved under `~/.ros/image` and are only available when the sensor is on.
-
 > For more usage details, please refer to the official [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html)
 
-## Usage
+## Supported Devices
 
-### Check which profiles the camera supports
+Currently, the following devices are supported by the OrbbecSDK ROS Wrapper v2-main branch.  More devices support will be added in the near future. If you can not find your device in the table below, try the [main](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main)  branch.
 
-```bash
-rosrun orbbec_camera list_camera_profile_mode_node
-```
+For optimal performance, we strongly recommend updating to the latest firmware version. This ensures that you benefit from the most recent enhancements and bug fixes.
 
-### Optional depth presets
+The following devices are supported by the OrbbecSDK ROS Wrapper.
 
-> You can pass the firmware path of the Optional preset into the `preset_firmware_path` launch param.Users can download the appropriate Preset from the [Depth Preset Release](https://www.orbbec.com/docs/depth-preset-release/) page provided by Orbbec based on their specific application scenarios and update it to the camera for better depth performance in corresponding scenarios.
+| Product List   | Minimal Firmware Version | **Launch File**          |
+| :------------- | :----------------------- | :----------------------- |
+| Gemini 435Le   | 1.2.04                   | gemini435_le.launch      |
+| Gemini 335     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 336     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 335L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 336L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 335Lg   | 1.3.46                   | gemini_330_series.launch |
+| Gemini 335Le   | 1.5.31                   | gemini_330_series.launch |
+| Gemini 330     | 1.2.20                   | gemini_330_series.launch |
+| Gemini 330L    | 1.2.20                   | gemini_330_series.launch |
+| Gemini 2       | 1.4.92                   | gemini2.launch           |
+| Gemini 2 L     | 1.4.53                   | gemini2L.launch          |
+| Femto Bolt     | 1.1.2                    | femto_bolt.launch        |
+| Femto Mega     | 1.3.0                    | femto_mega.launch        |
+| Astra 2        | 2.8.20                   | astra2.launch            |
+| Astra Mini Pro | 2.0.01                   | astra.launch             |
 
-```bash
-roslaunch orbbec_camera gemini_330_series.launch preset_firmware_path:=/home/orbbec/G336X_AMR_Default_v0.0.5.bin
-```
+All launch files are essentially similar, with the primary difference being the default values of the parameters set
+for different models within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch file, as well as other parameters, to ensure compatibility and optimal performance.
 
-### Use V4L2 backend
+## Tutorial
 
-Note: The V4L2 backend is not enabled by default.
-
-* Example:
-
-```bash
-roslaunch orbbec_camera gemini_330_series.launch uvc_backend:=v4l2
-```
-
-### Use Nodelet
-
-For users who need to use nodelet, please refer to `gemini_330_series_nodelet.launch`
-
-> For more usage details, please refer to the official [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html)
+Please refer to the official [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html).
 
 ## Examples
 
