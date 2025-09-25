@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>5.2.1. Using Multiple Cameras with the Orbbec ROS Package &mdash; OrbbecSDK V2 ROS1 Wrapper  documentation</title>
+  <title>5.1.1. Using Multiple Cameras with the Orbbec ROS Package &mdash; OrbbecSDK V2 ROS1 Wrapper  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=a2eacb60" />
@@ -21,8 +21,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="5.2.2. Multi_camera synced Instructions" href="multi_camera_synced.html" />
-    <link rel="prev" title="5.1.1. Reducing CPU Usage with Orbbec ROS Package" href="../performance/lower_cpu_usage.html" /> 
+    <link rel="next" title="5.1.2. Multi_camera synced Instructions" href="multi_camera_synced.html" />
+    <link rel="prev" title="5. Advanced Guide" href="../advanced_guide.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,7 +48,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../1_overview/overview.html">1. Overview</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../1_overview/introduction.html">1.1. Introduction</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../1_overview/introduction.html#support-hardware-products">1.1.1. Support Hardware Products</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../1_overview/introduction.html#support-platforms">1.1.2. Support Platforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../1_overview/introduction.html#orbbec-camera-datasheet">1.1.2. Orbbec camera datasheet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../1_overview/introduction.html#support-platforms">1.1.3. Support Platforms</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../1_overview/orbbecsdk_overview.html">1.2. Orbbec SDK Overview</a><ul>
@@ -85,6 +86,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../3_quickstarts/quickstart.html#record-with-rosbag">3.1.3.4. Record with rosbag</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../3_quickstarts/orbbecviewer.html">3.2. OrbbecViewer tutorial</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../3_quickstarts/orbbecviewer.html#download">3.2.1. Download</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../3_quickstarts/orbbecviewer.html#connect-the-device">3.2.2. Connect the device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../3_quickstarts/orbbecviewer.html#camera-control">3.2.3. Camera Control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../3_quickstarts/orbbecviewer.html#device-information-and-firmware-upgrade">3.2.4. Device information and firmware upgrade</a></li>
 </ul>
 </li>
 </ul>
@@ -164,89 +172,108 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="../advanced_guide.html">5. Advanced Guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../advanced_guide.html#performance-optimization">5.1. Performance &amp; Optimization</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../performance/lower_cpu_usage.html">5.1.1. Reducing CPU Usage with Orbbec ROS Package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#recommended-settings-for-lower-cpu-usage">5.1.1.1. Recommended Settings for Lower CPU Usage</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#launch-files-used-for-testing">5.1.1.2. Launch Files Used for Testing</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#test-environment">5.1.1.3. Test environment</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#test-setup">5.1.1.4. Test Setup</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#test-results">5.1.1.5. Test Results</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#uvc-backend-comparison-rgb-format">5.1.1.6. uvc_backend Comparison (RGB format)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#color-format-comparison-mjpg-vs-rgb">5.1.1.7. color_format Comparison (MJPG vs RGB)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#filter-configuration-impact">5.1.1.8. Filter Configuration Impact</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../performance/lower_cpu_usage.html#further-optimization">5.1.1.9. Further Optimization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../advanced_guide.html#multi-camera">5.1. Multi-Camera</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">5.1.1. Using Multiple Cameras with the Orbbec ROS Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#prerequisites">5.1.1.1. Prerequisites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#increase-usbfs-memory-mb-value-critical-step">5.1.1.2. Increase usbfs_memory_mb Value (CRITICAL STEP)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#identifying-camera-usb-ports">5.1.1.3. Identifying Camera USB Ports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#launching-multiple-cameras">5.1.1.4. Launching Multiple Cameras</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-the-tf-tree-for-multiple-cameras">5.1.1.5. Configuring the TF Tree for Multiple Cameras</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="multi_camera_synced.html">5.1.2. Multi_camera synced Instructions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#setup-instructions">5.1.2.1. Setup instructions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#checking-camera-port-with-orbbecsdk-ros1">5.1.2.2. Checking camera port with OrbbecSDK_ROS1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#orbbecsdk-ros1-multi-camera-synced-configuration">5.1.2.3. OrbbecSDK_ROS1 multi-camera synced configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#run-the-following-command-to-start-the-multi-camera-synced">5.1.2.4. Run the following command to start the multi-camera synced</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="multi_camera_nodelet.html">5.1.3. Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_nodelet.html#configuring-the-nodelet-manager">5.1.3.1. Configuring the Nodelet Manager</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_nodelet.html#configuring-camera-nodelets">5.1.3.2. Configuring Camera Nodelets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_nodelet.html#configuring-camera-parameters">5.1.3.3. Configuring Camera Parameters</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="reference internal" href="../advanced_guide.html#multi-camera">5.2. Multi-Camera</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">5.2.1. Using Multiple Cameras with the Orbbec ROS Package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#prerequisites">5.2.1.1. Prerequisites</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#increase-usbfs-memory-mb-value-critical-step">5.2.1.2. Increase usbfs_memory_mb Value (CRITICAL STEP)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#identifying-camera-usb-ports">5.2.1.3. Identifying Camera USB Ports</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#launching-multiple-cameras">5.2.1.4. Launching Multiple Cameras</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#configuring-the-tf-tree-for-multiple-cameras">5.2.1.5. Configuring the TF Tree for Multiple Cameras</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced_guide.html#configuration-modes">5.2. Configuration &amp; Modes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../configuration/align_depth_color.html">5.2.1. Aligning Depth to Color in ROS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/align_depth_color.html#commands-to-align-and-view-depth-and-color-images">5.2.1.1. Commands to Align and View Depth and Color Images</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/align_depth_color.html#selecting-topics-in-rviz">5.2.1.2. Selecting Topics in RViz</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/align_depth_color.html#example-of-depth-to-color-overlay">5.2.1.3. Example of Depth to Color Overlay</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="multi_camera_synced.html">5.2.2. Multi_camera synced Instructions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#setup-instructions">5.2.2.1. Setup instructions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#checking-camera-port-with-orbbecsdk-ros1">5.2.2.2. Checking camera port with OrbbecSDK_ROS1</a></li>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#orbbecsdk-ros1-multi-camera-synced-configuration">5.2.2.3. OrbbecSDK_ROS1 multi-camera synced configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#run-the-following-command-to-start-the-multi-camera-synced">5.2.2.4. Run the following command to start the multi-camera synced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../configuration/configuration_of_depth_NFOV_and_WFOV_modes.html">5.2.2. Configuration of depth NFOV and WFOV modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../configuration/depth_work_mode_switch.html">5.2.3. Depth work mode switch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../configuration/disparity_search_offset.html">5.2.4. Disparity_search_offset</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/disparity_search_offset.html#function-introduction">5.2.4.1. Function Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/disparity_search_offset.html#parameter-introduction">5.2.4.2. Parameter Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/disparity_search_offset.html#run-the-launch">5.2.4.3. Run the launch</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="multi_camera_nodelet.html">5.2.3. Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_nodelet.html#configuring-the-nodelet-manager">5.2.3.1. Configuring the Nodelet Manager</a></li>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_nodelet.html#configuring-camera-nodelets">5.2.3.2. Configuring Camera Nodelets</a></li>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_nodelet.html#configuring-camera-parameters">5.2.3.3. Configuring Camera Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../configuration/interleave_ae_mode.html">5.2.5. Using interleave_ae with Gemini330 series cameras</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/interleave_ae_mode.html#parameter-introduction">5.2.5.1. Parameter Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/interleave_ae_mode.html#run-the-launch">5.2.5.2. Run the launch</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/interleave_ae_mode.html#multi-camera-synced-interleave-ae">5.2.5.3. Multi_camera_synced + Interleave_ae</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../advanced_guide.html#configuration-modes">5.3. Configuration &amp; Modes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../configuration/align_depth_color.html">5.3.1. Aligning Depth to Color in ROS</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/align_depth_color.html#commands-to-align-and-view-depth-and-color-images">5.3.1.1. Commands to Align and View Depth and Color Images</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/align_depth_color.html#selecting-topics-in-rviz">5.3.1.2. Selecting Topics in RViz</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/align_depth_color.html#example-of-depth-to-color-overlay">5.3.1.3. Example of Depth to Color Overlay</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../configuration/configuration_of_depth_NFOV_and_WFOV_modes.html">5.3.2. Configuration of depth NFOV and WFOV modes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../configuration/depth_work_mode_switch.html">5.3.3. Depth work mode switch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../configuration/disparity_search_offset.html">5.3.4. Disparity_search_offset</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/disparity_search_offset.html#function-introduction">5.3.4.1. Function Introduction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/disparity_search_offset.html#parameter-introduction">5.3.4.2. Parameter Introduction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/disparity_search_offset.html#run-the-launch">5.3.4.3. Run the launch</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../configuration/interleave_ae_mode.html">5.3.5. Using interleave_ae with Gemini330 series cameras</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/interleave_ae_mode.html#parameter-introduction">5.3.5.1. Parameter Introduction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/interleave_ae_mode.html#run-the-launch">5.3.5.2. Run the launch</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/interleave_ae_mode.html#multi-camera-synced-interleave-ae">5.3.5.3. Multi_camera_synced + Interleave_ae</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../configuration/predefined_presets.html">5.3.6. Predefined presets</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../configuration/net_camera.html">5.3.7. Net_camera</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#femto-mega">5.3.7.1. Femto Mega</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#single-net-camera">5.3.7.2. Single Net camera</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#gemini-335le">5.3.7.3. Gemini 335Le</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#id1">5.3.7.4. Single Net camera</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#multi-net-camera">5.3.7.5. Multi Net camera</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../configuration/predefined_presets.html">5.2.6. Predefined presets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../configuration/net_camera.html">5.2.7. Net_camera</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#femto-mega">5.2.7.1. Femto Mega</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#single-net-camera">5.2.7.2. Single Net camera</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#gemini-335le">5.2.7.3. Gemini 335Le</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#id1">5.2.7.4. Single Net camera</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../configuration/net_camera.html#multi-net-camera">5.2.7.5. Multi Net camera</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../6_developer_guide/developer_guide.html">6. Developer Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../6_developer_guide/building_a_Debian_Package.html">6.1. Building a Debian Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../6_benchmark/benchmark.html">6. Benchmark</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../6_benchmark/introduction.html">6.1. Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../6_benchmark/introduction.html#common-benchmark-node">6.1.1. common benchmark node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../6_benchmark/introduction.html#service-benchmark-node">6.1.2. service benchmark node</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../7_FAQ/FAQ.html">7. Frequently Asked Questions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../7_FAQ/FAQ.html#unexpected-crash">7.1. Unexpected Crash</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../7_FAQ/FAQ.html#no-data-stream-from-multiple-cameras">7.2. No Data Stream from Multiple Cameras</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../7_FAQ/FAQ.html#compilation-failure-due-to-opencv-version-issues">7.3. Compilation Failure Due to OpenCV Version Issues</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../7_FAQ/FAQ.html#additional-troubleshooting">7.4. Additional Troubleshooting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../7_FAQ/FAQ.html#why-are-there-so-many-launch-files">7.5. Why Are There So Many Launch Files?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../6_benchmark/benchmark_usage.html">6.2. Benchmark Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../6_benchmark/benchmark_usage.html#using-common-benchmark-node">6.2.1. Using common benchmark node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../6_benchmark/benchmark_usage.html#using-service-benchmark-node">6.2.2. Using service benchmark node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/benchmark_usage.html#ros1-c">6.2.2.1. ROS1 C++</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/benchmark_usage.html#ros1-python">6.2.2.2. ROS1 Python</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/benchmark_usage.html#example-yaml-configuration">6.2.2.3. <strong>Example YAML configuration</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../6_benchmark/benchmark_data.html">6.3. Benchmark Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html">6.4. Performance &amp; Optimization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#reducing-cpu-usage-with-orbbec-ros-package">6.4.1. Reducing CPU Usage with Orbbec ROS Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#recommended-settings-for-lower-cpu-usage">6.4.1.1. Recommended Settings for Lower CPU Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#launch-files-used-for-testing">6.4.1.2. Launch Files Used for Testing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#test-environment">6.4.1.3. Test environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#test-setup">6.4.1.4. Test Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#test-results">6.4.1.5. Test Results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#uvc-backend-comparison-rgb-format">6.4.1.6. uvc_backend Comparison (RGB format)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#color-format-comparison-mjpg-vs-rgb">6.4.1.7. color_format Comparison (MJPG vs RGB)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#filter-configuration-impact">6.4.1.8. Filter Configuration Impact</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../6_benchmark/performance/lower_cpu_usage.html#further-optimization">6.4.1.9. Further Optimization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../7_developer_guide/developer_guide.html">7. Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../7_developer_guide/building_a_Debian_Package.html">7.1. Building a Debian Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../8_FAQ/FAQ.html">8. Frequently Asked Questions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../8_FAQ/FAQ.html#unexpected-crash">8.1. Unexpected Crash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../8_FAQ/FAQ.html#no-data-stream-from-multiple-cameras">8.2. No Data Stream from Multiple Cameras</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../8_FAQ/FAQ.html#compilation-failure-due-to-opencv-version-issues">8.3. Compilation Failure Due to OpenCV Version Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../8_FAQ/FAQ.html#additional-troubleshooting">8.4. Additional Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../8_FAQ/FAQ.html#why-are-there-so-many-launch-files">8.5. Why Are There So Many Launch Files?</a></li>
 </ul>
 </li>
 </ul>
@@ -266,7 +293,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../advanced_guide.html"><span class="section-number">5. </span>Advanced Guide</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">5.2.1. </span>Using Multiple Cameras with the Orbbec ROS Package</li>
+      <li class="breadcrumb-item active"><span class="section-number">5.1.1. </span>Using Multiple Cameras with the Orbbec ROS Package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../_sources/source/5_advanced_guide/multi_camera/multi_camera.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -277,14 +304,14 @@
            <div itemprop="articleBody">
              
   <section id="using-multiple-cameras-with-the-orbbec-ros-package">
-<h1><span class="section-number">5.2.1. </span>Using Multiple Cameras with the Orbbec ROS Package<a class="headerlink" href="#using-multiple-cameras-with-the-orbbec-ros-package" title="Link to this heading"></a></h1>
+<h1><span class="section-number">5.1.1. </span>Using Multiple Cameras with the Orbbec ROS Package<a class="headerlink" href="#using-multiple-cameras-with-the-orbbec-ros-package" title="Link to this heading"></a></h1>
 <p>This guide describes how to configure and use multiple Orbbec cameras simultaneously in a ROS 1 environment.</p>
 <section id="prerequisites">
-<h2><span class="section-number">5.2.1.1. </span>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.1. </span>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
 <p>First asume that you have already installed the Orbbec ROS package. If not, please refer to the <a class="reference internal" href="../../2_installation/build_the_package.html"><span class="doc">Orbbec ROS Package Installation Guide</span></a>.</p>
 </section>
 <section id="increase-usbfs-memory-mb-value-critical-step">
-<h2><span class="section-number">5.2.1.2. </span>Increase usbfs_memory_mb Value (CRITICAL STEP)<a class="headerlink" href="#increase-usbfs-memory-mb-value-critical-step" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.2. </span>Increase usbfs_memory_mb Value (CRITICAL STEP)<a class="headerlink" href="#increase-usbfs-memory-mb-value-critical-step" title="Link to this heading"></a></h2>
 <p><strong>IMPORTANT: This step is crucial for multi-camera setups. Without increasing the usbfs_memory_mb value, you may not receive any data from your cameras.</strong></p>
 <p>For multi-camera setups, it’s essential to increase the <code class="docutils literal notranslate"><span class="pre">usbfs_memory_mb</span></code> value. Set it to 128MB (adjustable based on your system’s needs) by running:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/sys/module/usbcore/parameters/usbfs_memory_mb
@@ -294,7 +321,7 @@
 <p>If you skip this step or set the value too low, your cameras may not function properly or may not provide any data at all.</p>
 </section>
 <section id="identifying-camera-usb-ports">
-<h2><span class="section-number">5.2.1.3. </span>Identifying Camera USB Ports<a class="headerlink" href="#identifying-camera-usb-ports" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.3. </span>Identifying Camera USB Ports<a class="headerlink" href="#identifying-camera-usb-ports" title="Link to this heading"></a></h2>
 <p><strong>Script to List Connected Cameras</strong></p>
 <p>Use this bash script to list all connected Orbbec devices with their USB ports and serial numbers:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -320,7 +347,7 @@
 </div>
 </section>
 <section id="launching-multiple-cameras">
-<h2><span class="section-number">5.2.1.4. </span>Launching Multiple Cameras<a class="headerlink" href="#launching-multiple-cameras" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.4. </span>Launching Multiple Cameras<a class="headerlink" href="#launching-multiple-cameras" title="Link to this heading"></a></h2>
 <p><strong>Setup for Multiple Camera Launch</strong></p>
 <p>Create a launch file (e.g., <code class="docutils literal notranslate"><span class="pre">multi_camera.launch</span></code>) with individual configurations for each camera:</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;launch&gt;</span>
@@ -347,7 +374,7 @@
 </div>
 </section>
 <section id="configuring-the-tf-tree-for-multiple-cameras">
-<h2><span class="section-number">5.2.1.5. </span>Configuring the TF Tree for Multiple Cameras<a class="headerlink" href="#configuring-the-tf-tree-for-multiple-cameras" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.5. </span>Configuring the TF Tree for Multiple Cameras<a class="headerlink" href="#configuring-the-tf-tree-for-multiple-cameras" title="Link to this heading"></a></h2>
 <p>Create a TF configuration file (e.g., <code class="docutils literal notranslate"><span class="pre">multi_camera_tf.launch</span></code>) for your calibrated camera setup:</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;launch&gt;</span>
 <span class="w">    </span><span class="nt">&lt;node</span><span class="w"> </span><span class="na">pkg=</span><span class="s">&quot;tf&quot;</span><span class="w"> </span><span class="na">type=</span><span class="s">&quot;static_transform_publisher&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;camera_01_tf&quot;</span><span class="w"> </span><span class="na">args=</span><span class="s">&quot;0 0 0 0 0 0 base_link camera_01_link&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
@@ -368,15 +395,15 @@ the first step of increasing the usbfs_memory_mb value is critical for ensuring 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../performance/lower_cpu_usage.html" class="btn btn-neutral float-left" title="5.1.1. Reducing CPU Usage with Orbbec ROS Package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="multi_camera_synced.html" class="btn btn-neutral float-right" title="5.2.2. Multi_camera synced Instructions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../advanced_guide.html" class="btn btn-neutral float-left" title="5. Advanced Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="multi_camera_synced.html" class="btn btn-neutral float-right" title="5.1.2. Multi_camera synced Instructions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2025, ORBBEC INC. www.orbbec.com..
-      <span class="lastupdated">Last updated on 2025-09-19 08:48:01.
+      <span class="lastupdated">Last updated on 2025-09-25 12:58:22.
       </span></p>
   </div>
 
