@@ -150,10 +150,9 @@ void OBCameraNodeDriver::init() {
   std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : "";
   std::string log_path = home_dir + "/.ros/Log/" + g_camera_name;
   ctx_->setLoggerToFile(ob_log_level, log_path.c_str());
-
-  force_ip_enable_ = nh_private_.param<bool>("force_ip_enable", "false");
+  force_ip_enable_ = nh_private_.param<bool>("force_ip_enable", false);
   force_ip_mac_ = nh_private_.param<std::string>("force_ip_mac", "");
-  force_ip_dhcp_ = nh_private_.param<bool>("force_ip_dhcp", "false");
+  force_ip_dhcp_ = nh_private_.param<bool>("force_ip_dhcp", false);
   force_ip_address_ = nh_private_.param<std::string>("force_ip_address", "");
   force_ip_subnet_mask_ = nh_private_.param<std::string>("force_ip_subnet_mask", "");
   force_ip_gateway_ = nh_private_.param<std::string>("force_ip_gateway", "");
