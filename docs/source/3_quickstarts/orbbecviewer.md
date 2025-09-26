@@ -1,4 +1,4 @@
-# OrbbecViewer tutorial
+# OrbbecViewer QuickStarts
 
 ## Download
 

@@ -4,6 +4,16 @@ Advanced Guide
 This chapter covers advanced features of the SDK, including multi-camera usage, performance tuning, and special configuration modes.
 
 
+Performance & Optimization
+------------------------------------------------------
+
+.. toctree::
+    :maxdepth: 2
+
+    performance/lower_cpu_usage.md
+
+
+
 Multi-Camera
 ------------------------------------------------------
 
