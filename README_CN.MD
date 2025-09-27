@@ -96,7 +96,7 @@
     <tr>
       <td>Femto Mega I</td>
       <td>全面维护</td>
-      <td>即将支持</td>
+      <td>推荐用于新设计</td>
     </tr>
     <tr>
       <td rowspan="3" style="text-align: center; font-weight: bold;">Astra</td>
