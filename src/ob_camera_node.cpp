@@ -375,13 +375,13 @@ void OBCameraNode::getParameters() {
   hdr_index1_laser_control_ = nh_private_.param<int>("hdr_index1_laser_control", 1);
   hdr_index1_depth_exposure_ = nh_private_.param<int>("hdr_index1_depth_exposure", 1);
   hdr_index1_depth_gain_ = nh_private_.param<int>("hdr_index1_depth_gain", 16);
-  hdr_index1_ir_brightness_ = nh_private_.param<int>("hdr_index1_ir_brightness", 20);
-  hdr_index1_ir_ae_max_exposure_ = nh_private_.param<int>("hdr_index1_ir_ae_max_exposure", 2000);
+  hdr_index1_ir_brightness_ = nh_private_.param<int>("hdr_index1_ir_brightness", 30);
+  hdr_index1_ir_ae_max_exposure_ = nh_private_.param<int>("hdr_index1_ir_ae_max_exposure", 30458);
   hdr_index0_laser_control_ = nh_private_.param<int>("hdr_index0_laser_control", 1);
   hdr_index0_depth_exposure_ = nh_private_.param<int>("hdr_index0_depth_exposure_", 7500);
   hdr_index0_depth_gain_ = nh_private_.param<int>("hdr_index0_depth_gain", 16);
-  hdr_index0_ir_brightness_ = nh_private_.param<int>("hdr_index0_ir_brightness", 60);
-  hdr_index0_ir_ae_max_exposure_ = nh_private_.param<int>("hdr_index0_ir_ae_max_exposure", 10000);
+  hdr_index0_ir_brightness_ = nh_private_.param<int>("hdr_index0_ir_brightness", 90);
+  hdr_index0_ir_ae_max_exposure_ = nh_private_.param<int>("hdr_index0_ir_ae_max_exposure", 30458);
 
   laser_index1_laser_control_ = nh_private_.param<int>("laser_index1_laser_control", 0);
   laser_index1_depth_exposure_ = nh_private_.param<int>("laser_index1_depth_exposure", 3000);
