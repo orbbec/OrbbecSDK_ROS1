@@ -536,13 +536,12 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,
                                enable_color_auto_white_balance_);
     }
-    if (device_->isPropertySupported(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
+    if (color_backlight_compensation_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
                                      OB_PERMISSION_WRITE)) {
-      int set_enable_color_backlight_compensation = enable_color_backlight_compensation_ ? 1 : 0;
-      ROS_INFO_STREAM("Setting color backlight compensation to "
-                      << (set_enable_color_backlight_compensation ? "ON" : "OFF"));
+      ROS_INFO_STREAM("Setting color backlight compensation to " << color_backlight_compensation_);
       device_->setIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
-                              set_enable_color_backlight_compensation);
+                              color_backlight_compensation_);
     }
     if (!color_powerline_freq_.empty() &&
         device_->isPropertySupported(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, OB_PERMISSION_WRITE)) {

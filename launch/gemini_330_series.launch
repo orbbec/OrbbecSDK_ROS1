@@ -71,7 +71,7 @@
     <arg name="color_saturation" default="-1"/>
     <arg name="color_contrast" default="-1"/>
     <arg name="color_hue" default="-1"/>
-    <arg name="enable_color_backlight_compensation" default="false"/>
+    <arg name="color_backlight_compensation" default="-1"/> <!--range: 0 - 6, default: 3-->
     <arg name="color_powerline_freq" default=""/><!-- disable ,50hz ,60hz ,auto -->
     <arg name="enable_color_decimation_filter" default="false"/>
     <arg name="color_decimation_filter_scale" default="-1"/>
@@ -302,7 +302,7 @@
             <param name="color_saturation" value="$(arg color_saturation)"/>
             <param name="color_contrast" value="$(arg color_contrast)"/>
             <param name="color_hue" value="$(arg color_hue)"/>
-            <param name="enable_color_backlight_compensation" value="$(arg enable_color_backlight_compensation)"/>
+            <param name="color_backlight_compensation" value="$(arg color_backlight_compensation)"/>
             <param name="color_powerline_freq" value="$(arg color_powerline_freq)"/>
             <param name="enable_color_decimation_filter" value="$(arg enable_color_decimation_filter)"/>
             <param name="color_decimation_filter_scale" value="$(arg color_decimation_filter_scale)"/>
