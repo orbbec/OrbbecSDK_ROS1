@@ -379,6 +379,9 @@ void OBCameraNode::setupDevices() {
       }
     }
   }
+  auto device_info = device_->getDeviceInfo();
+  CHECK_NOTNULL(device_info);
+  auto pid = device_info->getPid();
   if (enable_d2c_viewer_) {
     d2c_viewer_ = std::make_shared<D2CViewer>(nh_, nh_private_);
   }
@@ -542,6 +545,11 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Setting color backlight compensation to " << color_backlight_compensation_);
       device_->setIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
                               color_backlight_compensation_);
+    }
+    if (isGemini335PID(pid) && color_denoising_level_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_DENOISING_LEVEL_INT, OB_PERMISSION_WRITE)) {
+      ROS_INFO_STREAM("Setting color denoising level to " << color_denoising_level_);
+      device_->setIntProperty(OB_PROP_COLOR_DENOISING_LEVEL_INT, color_denoising_level_);
     }
     if (!color_powerline_freq_.empty() &&
         device_->isPropertySupported(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, OB_PERMISSION_WRITE)) {

@@ -531,6 +531,7 @@ class OBCameraNode {
   int color_hue_ = -1;
   int color_ae_max_exposure_ = -1;
   int color_decimation_filter_scale_ = -1;
+  int color_denoising_level_ = -1;
   bool enable_ir_auto_exposure_ = true;
   bool enable_depth_scale_ = true;
   bool enable_depth_auto_exposure_priority_ = false;

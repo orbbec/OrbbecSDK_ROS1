@@ -75,6 +75,7 @@
     <arg name="color_powerline_freq" default=""/><!-- disable ,50hz ,60hz ,auto -->
     <arg name="enable_color_decimation_filter" default="false"/>
     <arg name="color_decimation_filter_scale" default="-1"/>
+    <arg name="color_denoising_level" default="-1"/><!--0: Auto; 1-8: higher values indicate stronger denoising.Note: The color_denoising_level configuration is supported only when AE is enabled, and requires new firmware support.-->
 
     <!-- Depth camera parameters -->
     <arg name="depth_width" default="0"/>
@@ -310,6 +311,7 @@
             <param name="color_flip" value="$(arg color_flip)"/>
             <param name="color_mirror" value="$(arg color_mirror)"/>
             <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)"/>
+            <param name="color_denoising_level" value="$(arg color_denoising_level)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>

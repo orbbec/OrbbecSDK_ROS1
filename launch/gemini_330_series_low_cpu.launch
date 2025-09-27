@@ -39,6 +39,8 @@
     <arg name="ip_address" default=""/>
     <arg name="port" default="0"/>
     <arg name="exposure_range_mode" default="default"/><!-- default, ultimate or regular -->
+    <arg name="ir_info_uri" default=""/>
+    <arg name="color_info_uri" default=""/>
 
 
     <!-- Color camera parameters -->
@@ -73,6 +75,7 @@
     <arg name="color_powerline_freq" default=""/><!-- disable ,50hz ,60hz ,auto -->
     <arg name="enable_color_decimation_filter" default="false"/>
     <arg name="color_decimation_filter_scale" default="-1"/>
+    <arg name="color_denoising_level" default="-1"/><!--0: Auto; 1-8: higher values indicate stronger denoising.Note: The color_denoising_level configuration is supported only when AE is enabled, and requires new firmware support.-->
 
     <!-- Depth camera parameters -->
     <arg name="depth_width" default="0"/>
@@ -228,6 +231,14 @@
     <arg name="laser_index0_ir_brightness" default="60"/>
     <arg name="laser_index0_ir_ae_max_exposure" default="30000"/>
 
+    <!-- Force IP parameters -->
+    <arg name="force_ip_enable" default="false"/> <!-- Whether to enable the Force IP function -->
+    <arg name="force_ip_mac" default=""/> <!-- you need to specify it yourself. For example, "54:14:FD:06:07:DA" -->
+    <arg name="force_ip_dhcp" default="false"/> <!-- Use DHCP to obtain IP automatically if set to true -->
+    <arg name="force_ip_address" default="192.168.1.10"/> <!-- Static IP address to assign when DHCP is disabled -->
+    <arg name="force_ip_subnet_mask" default="255.255.255.0"/> <!-- Subnet mask for the static IP -->
+    <arg name="force_ip_gateway" default="192.168.1.1"/> <!-- Gateway address for the static IP -->
+
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <!-- Use the parameters defined above -->
@@ -268,6 +279,8 @@
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="ir_brightness" value="$(arg ir_brightness)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
+            <param name="ir_info_uri" value="$(arg ir_info_uri)"/>
+            <param name="color_info_uri" value="$(arg color_info_uri)"/>
 
             <param name="color_width" value="$(arg color_width)"/>
             <param name="color_height" value="$(arg color_height)"/>
@@ -298,6 +311,7 @@
             <param name="color_flip" value="$(arg color_flip)"/>
             <param name="color_mirror" value="$(arg color_mirror)"/>
             <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)"/>
+            <param name="color_denoising_level" value="$(arg color_denoising_level)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
@@ -434,6 +448,14 @@
             <param name="laser_index0_depth_gain" value="$(arg laser_index0_depth_gain)"/>
             <param name="laser_index0_ir_brightness" value="$(arg laser_index0_ir_brightness)"/>
             <param name="laser_index0_ir_ae_max_exposure" value="$(arg laser_index0_ir_ae_max_exposure)"/>
+
+            <param name="force_ip_enable" value="$(arg force_ip_enable)"/>
+            <param name="force_ip_mac" value="$(arg force_ip_mac)"/>
+            <param name="force_ip_dhcp" value="$(arg force_ip_dhcp)"/>
+            <param name="force_ip_address" value="$(arg force_ip_address)"/>
+            <param name="force_ip_subnet_mask" value="$(arg force_ip_subnet_mask)"/>
+            <param name="force_ip_gateway" value="$(arg force_ip_gateway)"/>
+
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
