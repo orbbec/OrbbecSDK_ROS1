@@ -128,7 +128,7 @@ void signalHandler(int signum) {
   std::cout << "Received signal: " << signum << std::endl;
   if (signum == SIGINT || signum == SIGTERM) {
     ros::shutdown();
-  }else{
+  } else {
     std::string log_dir = "Log/";
 
     // Get current time and format it.format as "2024_05_20_12_34_56"
@@ -173,7 +173,6 @@ void signalHandler(int signum) {
     std::cout << "save crash stack trace log to file finish and exit program." << std::endl;
     exit(signum);  // Exit program
   }
-
 }
 
 OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
@@ -356,7 +355,7 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
 void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &device) {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
 
-  //check device connected flag again after get lock
+  // check device connected flag again after get lock
   if (device_connected_) {
     return;
   }
@@ -648,13 +647,22 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
   (void)req;
   (void)res;
   if (!device_connected_) {
-    ROS_INFO("Device not connected");
+    ROS_WARN("Device not connected");
     return false;
   }
   ROS_INFO("Reboot device");
-  ob_camera_node_->rebootDevice();
-  device_connected_ = false;
-  device_ = nullptr;
-  return true;
+  try {
+    ob_camera_node_->rebootDevice();
+    device_connected_ = false;
+    device_ = nullptr;
+    return true;
+  } catch (const ob::Error &e) {
+    ROS_WARN("Failed to reboot device (expected in some cases): %s", e.getMessage());
+  } catch (const std::exception &e) {
+    ROS_ERROR("Exception during reboot: %s", e.what());
+  } catch (...) {
+    ROS_ERROR("Unknown error occurred during reboot");
+  }
+  return false;
 }
 }  // namespace orbbec_camera
