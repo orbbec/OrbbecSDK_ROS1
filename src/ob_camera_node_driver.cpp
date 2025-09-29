@@ -655,7 +655,6 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
     ob_camera_node_->rebootDevice();
     device_connected_ = false;
     device_ = nullptr;
-    return true;
   } catch (const ob::Error &e) {
     ROS_WARN("Failed to reboot device (expected in some cases): %s", e.getMessage());
   } catch (const std::exception &e) {
@@ -663,6 +662,6 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
   } catch (...) {
     ROS_ERROR("Unknown error occurred during reboot");
   }
-  return false;
+  return true;
 }
 }  // namespace orbbec_camera
