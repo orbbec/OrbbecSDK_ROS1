@@ -68,6 +68,7 @@ int main() {
         ROS_INFO_STREAM("serial: " << serial);
         ROS_INFO_STREAM("ip address: " << ip_address);
         ROS_INFO_STREAM("usb connect type: " << connection_type);
+        ROS_INFO_STREAM("mac : " << list->getUid(i));
         std::cout << std::endl;
       }
     }
@@ -76,7 +77,8 @@ int main() {
   } catch (const std::exception &e) {
     ROS_ERROR_STREAM("list_device_node: " << e.what());
   } catch (...) {
-    ROS_ERROR_STREAM("list_device_node: " << "unknown error");
+    ROS_ERROR_STREAM("list_device_node: "
+                     << "unknown error");
   }
   return 0;
 }
