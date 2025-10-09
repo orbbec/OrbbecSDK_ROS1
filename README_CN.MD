@@ -93,7 +93,7 @@ OrbbecSDK ROS 封装包为 Orbbec 相机与 ROS 环境之间提供了无缝集�
     <tr>
       <td>Femto Mega I</td>
       <td>全面维护</td>
-      <td>即将支持</td>
+      <td>推荐用于新设计</td>
     </tr>
     <tr>
       <td rowspan="3" style="text-align: center; font-weight: bold;">Astra</td>
@@ -132,12 +132,13 @@ OrbbecSDK ROS 封装包为 Orbbec 相机与 ROS 环境之间提供了无缝集�
 
 ## 目录
 
-- [OrbbecSDK ROS v2](#orbbecsdk-ros-v2)
+- [OrbbecSDK ROS](#orbbecsdk-ros)
   - [目录](#目录)
   - [安装说明](#安装说明)
   - [创建 ROS 工作区并构建](#创建-ros-工作区并构建)
   - [启动相机](#启动相机)
   - [选择您想要显示的topic](#选择您想要显示的topic)
+  - [Network camera](#network-camera)
   - [Launch参数](#launch参数)
   - [深度工作模式开关](#深度工作模式开关)
   - [深度 NFOV 和 WFOV 模式的配置](#深度-nfov-和-wfov-模式的配置)

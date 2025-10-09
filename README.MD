@@ -91,7 +91,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
     <tr>
       <td>Femto Mega I</td>
       <td>full maintenance</td>
-      <td>to be supported</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td rowspan="3" style="text-align: center; font-weight: bold;">Astra</td>
@@ -130,33 +130,33 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
 
 ## Table of Contents
 
-* [OrbbecSDK ROS](#orbbecsdk-ros)
-  * [Table of Contents](#table-of-contents)
-  * [Install Dependencies](#install-dependencies)
-    * [ROS](#ros)
-    * [Other Dependencies](#other-dependencies)
-  * [Create ROS Workspace and Build](#create-ros-workspace-and-build)
-  * [Start the Camera](#start-the-camera)
-  * [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
-  * [Launch Parameters](#launch-parameters)
-  * [Depth work mode switch:](#depth-work-mode-switch)
-  * [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
-  * [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
-  * [Multiple Camera Support](#multiple-camera-support)
-  * [Available Services for Camera Control](#available-services-for-camera-control)
-  * [Available Topics](#available-topics)
-  * [Building a Debian Package](#building-a-debian-package)
-  * [Launch files](#launch-files)
-  * [Use Nodelet](#use-nodelet)
-  * [Supported hardware products](#supported-hardware-products)
-  * [Frequently Asked Questions](#frequently-asked-questions)
-    * [Unexpected Crash](#unexpected-crash)
-    * [No Data Stream from Multiple Cameras](#no-data-stream-from-multiple-cameras)
-    * [Compilation Failure Due to OpenCV Version Issues](#compilation-failure-due-to-opencv-version-issues)
-    * [Additional Troubleshooting](#additional-troubleshooting)
-    * [Why Are There So Many Launch Files?](#why-are-there-so-many-launch-files)
-  * [Other useful links](#other-useful-links)
-  * [License](#license)
+- [OrbbecSDK ROS](#orbbecsdk-ros)
+  - [Table of Contents](#table-of-contents)
+  - [Install Dependencies](#install-dependencies)
+    - [ROS](#ros)
+    - [Other Dependencies](#other-dependencies)
+  - [Create ROS Workspace and Build](#create-ros-workspace-and-build)
+  - [Start the Camera](#start-the-camera)
+  - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
+  - [Network camera](#network-camera)
+  - [Launch Parameters](#launch-parameters)
+  - [Depth work mode switch:](#depth-work-mode-switch)
+  - [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
+  - [Check which profiles the camera supports](#check-which-profiles-the-camera-supports)
+  - [Multiple Camera Support](#multiple-camera-support)
+  - [Available Services for Camera Control](#available-services-for-camera-control)
+  - [Available Topics](#available-topics)
+  - [Building a Debian Package](#building-a-debian-package)
+  - [Use Nodelet](#use-nodelet)
+  - [Supported Devices](#supported-devices)
+  - [Frequently Asked Questions](#frequently-asked-questions)
+    - [Unexpected Crash](#unexpected-crash)
+    - [No Data Stream from Multiple Cameras](#no-data-stream-from-multiple-cameras)
+    - [Compilation Failure Due to OpenCV Version Issues](#compilation-failure-due-to-opencv-version-issues)
+    - [Additional Troubleshooting](#additional-troubleshooting)
+    - [Why Are There So Many Launch Files?](#why-are-there-so-many-launch-files)
+  - [Other useful links](#other-useful-links)
+  - [License](#license)
 
 ## Install Dependencies
 
