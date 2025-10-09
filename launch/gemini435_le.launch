@@ -214,7 +214,6 @@
     <!-- Force IP parameters -->
     <arg name="force_ip_enable" default="false"/> <!-- Whether to enable the Force IP function -->
     <arg name="force_ip_mac" default=""/> <!-- you need to specify it yourself. For example, "54:14:FD:06:07:DA" -->
-    <arg name="force_ip_dhcp" default="false"/> <!-- Use DHCP to obtain IP automatically if set to true -->
     <arg name="force_ip_address" default="192.168.1.10"/> <!-- Static IP address to assign when DHCP is disabled -->
     <arg name="force_ip_subnet_mask" default="255.255.255.0"/> <!-- Subnet mask for the static IP -->
     <arg name="force_ip_gateway" default="192.168.1.1"/> <!-- Gateway address for the static IP -->
@@ -413,7 +412,6 @@
 
             <param name="force_ip_enable" value="$(arg force_ip_enable)"/>
             <param name="force_ip_mac" value="$(arg force_ip_mac)"/>
-            <param name="force_ip_dhcp" value="$(arg force_ip_dhcp)"/>
             <param name="force_ip_address" value="$(arg force_ip_address)"/>
             <param name="force_ip_subnet_mask" value="$(arg force_ip_subnet_mask)"/>
             <param name="force_ip_gateway" value="$(arg force_ip_gateway)"/>
