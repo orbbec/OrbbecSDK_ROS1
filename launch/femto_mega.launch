@@ -10,9 +10,8 @@
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
-    <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
-    <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
-    <arg name="device_preset" default="Default"/>
+    <!-- For more information, refer to https://www.orbbec.com/docs/g330-use-depth-presets/-->
+    <arg name="device_preset" default="Custom"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="sync_mode" default="standalone"/>
     <!-- Network device settings: default enumerate_net_device is set to true, which will automatically enumerate network devices -->
