@@ -23,6 +23,7 @@ Multi-Camera
     multi_camera/multi_camera.md
     multi_camera/multi_camera_synced.md
     multi_camera/multi_camera_nodelet.md
+    multi_camera/gmsl_cameras.md
 
 
 Configuration & Modes
