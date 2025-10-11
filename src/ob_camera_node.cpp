@@ -553,11 +553,11 @@ void OBCameraNode::startStreams() {
       ROS_ERROR_STREAM("failed to start pipeline");
       throw;
     }
-    init_interleave_mode();
     if (!colorFrameThread_ && enable_stream_[COLOR]) {
       ROS_INFO_STREAM("Create color frame read thread.");
       colorFrameThread_ = std::make_shared<std::thread>([this]() { onNewColorFrameCallback(); });
     }
+    init_interleave_mode();
     pipeline_started_ = true;
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
