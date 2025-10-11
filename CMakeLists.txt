@@ -252,6 +252,7 @@ endmacro()
 add_orbbec_executable(list_devices_node src/list_devices_node.cpp)
 add_orbbec_executable(list_depth_work_mode_node src/list_depth_work_mode.cpp)
 add_orbbec_executable(list_camera_profile_mode_node src/list_camera_profile_mode.cpp)
+add_orbbec_executable(set_device_ip src/set_device_ip.cpp)
 add_orbbec_executable(orbbec_camera_node src/main.cpp)
 add_orbbec_executable(service_benchmark_node scripts/service_benchmark_node.cpp)
 
