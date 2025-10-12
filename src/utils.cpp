@@ -94,6 +94,8 @@ OBFormat OBFormatFromString(const std::string &format) {
     return OB_FORMAT_BYR2;
   } else if (fixed_format == "RW16") {
     return OB_FORMAT_RW16;
+  } else if (fixed_format == "Y12C4") {
+    return OB_FORMAT_Y12C4;
   }
   //   else if (fixed_format == "DISP16") {
   //     return OB_FORMAT_DISP16;
@@ -171,6 +173,8 @@ std::string OBFormatToString(const OBFormat &format) {
       return "BYR2";
     case OB_FORMAT_RW16:
       return "RW16";
+    case OB_FORMAT_Y12C4:
+      return "Y12C4";
     // case OB_FORMAT_DISP16:
     //   return "DISP16";
     default:
