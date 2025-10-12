@@ -1490,7 +1490,7 @@ void OBCameraNode::onNewColorFrameCallback() {
     colorFrameQueue_.pop();
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
     publishPointCloud(frameSet);
-    onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(2));
+    onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(0));
   }
 
   ROS_INFO_STREAM("Color frame thread exit!");
