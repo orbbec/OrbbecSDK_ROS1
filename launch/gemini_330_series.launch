@@ -238,6 +238,8 @@
     <arg name="force_ip_subnet_mask" default="255.255.255.0"/> <!-- Subnet mask for the static IP -->
     <arg name="force_ip_gateway" default="192.168.1.1"/> <!-- Gateway address for the static IP -->
 
+    <arg name="intra_camera_sync_reference" default="Middle"/> <!-- #Start, Middle or End -->
+
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <!-- Use the parameters defined above -->
@@ -453,6 +455,8 @@
             <param name="force_ip_address" value="$(arg force_ip_address)"/>
             <param name="force_ip_subnet_mask" value="$(arg force_ip_subnet_mask)"/>
             <param name="force_ip_gateway" value="$(arg force_ip_gateway)"/>
+
+            <param name="intra_camera_sync_reference" value="$(arg intra_camera_sync_reference)"/>
 
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>

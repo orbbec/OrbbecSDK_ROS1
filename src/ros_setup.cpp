@@ -830,6 +830,22 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL,
                                enable_gyro_data_correction_);
     }
+    if (isGemini335PID(pid) &&
+        (sync_mode_ == OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING ||
+         sync_mode_ == OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING) &&
+        device_->isPropertySupported(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT,
+                                     OB_PERMISSION_WRITE)) {
+      ROS_INFO_STREAM("Setting intra camera sync reference to " << intra_camera_sync_reference_);
+      if (intra_camera_sync_reference_ == "Start") {
+        device_->setIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT, 0);
+      } else if (intra_camera_sync_reference_ == "Middle") {
+        device_->setIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT, 1);
+      } else if (intra_camera_sync_reference_ == "End") {
+        device_->setIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT, 2);
+      } else {
+        ROS_ERROR_STREAM("Intra camera sync reference does not support this setting");
+      }
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
   } catch (const std::exception& e) {

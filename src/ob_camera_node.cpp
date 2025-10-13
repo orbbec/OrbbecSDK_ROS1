@@ -395,6 +395,8 @@ void OBCameraNode::getParameters() {
   laser_index0_ir_brightness_ = nh_private_.param<int>("laser_index0_ir_brightness", 60);
   laser_index0_ir_ae_max_exposure_ =
       nh_private_.param<int>("laser_index0_ir_ae_max_exposure", 17000);
+  intra_camera_sync_reference_ =
+      nh_private_.param<std::string>("intra_camera_sync_reference", "Middle");
   ROS_INFO_STREAM("hdr_index1_laser_control_ "
                   << hdr_index1_laser_control_ << " hdr_index1_depth_exposure_ "
                   << hdr_index1_depth_exposure_ << " hdr_index1_depth_gain_ "
