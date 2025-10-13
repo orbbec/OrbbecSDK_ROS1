@@ -2203,4 +2203,8 @@ bool OBCameraNode::isGemini335PID(uint32_t pid) {
          pid == CUSTOM_ADVANTECH_GEMINI_336L_PID || pid == GEMINI_338_PID;
 }
 
+bool OBCameraNode::isGemini435LePID(uint32_t pid) {
+  const uint16_t GEMINI_435Le_PID = 0x815;  // Gemini 435Le
+  return pid == GEMINI_435Le_PID;
+}
 }  // namespace orbbec_camera

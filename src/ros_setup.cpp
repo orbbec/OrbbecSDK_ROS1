@@ -1089,7 +1089,9 @@ void OBCameraNode::setupPublishers() {
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     CHECK_NOTNULL(device_info_.get());
-    if (isGemini335PID(device_info_->pid())) {
+    if (isGemini335PID(device_info_->pid()) ||
+        (isGemini435LePID(device_info_->pid()) && stream_index == COLOR &&
+         (format_[stream_index] == OB_FORMAT_MJPG || format_[stream_index] == OB_FORMAT_UNKNOWN))) {
       metadata_publishers_[stream_index] =
           nh_.advertise<orbbec_camera::Metadata>("/" + camera_name_ + "/" + name + "/metadata", 1,
                                                  image_subscribed_cb, image_unsubscribed_cb);
