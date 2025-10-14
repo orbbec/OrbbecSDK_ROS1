@@ -255,6 +255,7 @@ add_orbbec_executable(list_camera_profile_mode_node src/list_camera_profile_mode
 add_orbbec_executable(set_device_ip src/set_device_ip.cpp)
 add_orbbec_executable(orbbec_camera_node src/main.cpp)
 add_orbbec_executable(service_benchmark_node scripts/service_benchmark_node.cpp)
+add_orbbec_executable(image_sync_example_node examples/multi_camera_time_sync/image_sync_example_node.cpp)
 
 catkin_install_python(PROGRAMS
   scripts/common_benchmark_node.py
