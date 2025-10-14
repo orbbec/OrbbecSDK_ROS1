@@ -61,6 +61,7 @@
     <arg name="ordered_pc" default="false"/>
     <!-- Gemini 335/335L only support SW align mode, Please DO NOT change it -->
     <arg name="align_mode" default="HW"/>
+    <arg name="align_target_stream" default="COLOR"/><!-- COLOR or DEPTH -->
 
     <!-- filter switch -->
     <arg name="enable_threshold_filter" default="false"/>
