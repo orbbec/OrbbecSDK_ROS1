@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
   int port;
   bool dhcp;
 
-  nh.param<std::string>("device_ip", device_ip_str, "192.168.1.10");
+  nh.param<std::string>("old_ip", device_ip_str, "192.168.1.10");
   nh.param<int>("port", port, 8090);
   nh.param<bool>("dhcp", dhcp, false);
   nh.param<std::string>("new_ip", new_ip_str, "192.168.1.200");
