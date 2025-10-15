@@ -69,6 +69,8 @@ int main() {
         ROS_INFO_STREAM("ip address: " << ip_address);
         ROS_INFO_STREAM("usb connect type: " << connection_type);
         ROS_INFO_STREAM("mac : " << list->getUid(i));
+        ROS_INFO_STREAM("subnet mask : " << list->getSubnetMask(i));
+        ROS_INFO_STREAM("gateway : " << list->getGateway(i));
         std::cout << std::endl;
       }
     }
