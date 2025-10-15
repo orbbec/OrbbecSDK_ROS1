@@ -47,8 +47,8 @@ The following are the launch parameters available:
     *   Set the maximum exposure value for Color auto exposure.
 *   **`color_brightness`**, **`color_sharpness`**, **`color_gamma`**, **`color_saturation`**, **`color_contrast`**, **`color_hue`**
     *   Set the Color brightness, sharpness, gamma, saturation, contrast, and hue.
-*   **`enable_color_backlight_compensation`**
-    *   Enable the Color backlight compensation.
+*   **`color_backlight_compensation`**
+    *    Enables the color camera’s backlight compensation feature. Range: `0–6`, Default: `3`.
 *   **`enable_color_decimation_filter`** / **`color_decimation_filter_scale`**
     *   Enable the Color decimation filter and set its scale.
 *   **`color_ae_roi_[left|right|top|bottom]`**
