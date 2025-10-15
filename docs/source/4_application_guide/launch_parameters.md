@@ -8,8 +8,6 @@ The following are the launch parameters available:
 
 *   **`camera_name`**
     *   Start the node namespace.
-*   **`depth_registration`**
-    *   Enable alignment of the depth frame to the color frame. This field is required when the `enable_colored_point_cloud` is set to `true`.
 *   **`serial_number`**
     *   The serial number of the camera. This is required when multiple cameras are used.
 *   **`usb_port`**
@@ -24,8 +22,6 @@ The following are the launch parameters available:
     *   Enable the RGB point cloud.
 *   **`ordered_pc`**
     *   Enable filtering of invalid point clouds.
-*   **`align_mode`**
-    *   The alignment mode to be used. Options are `HW` for hardware alignment and `SW` for software alignment.
 
 ### Sensor Controls
 
@@ -149,6 +145,20 @@ The following are the launch parameters available:
 
 *All interleave parameters are used for [interleave ae mode](../5_advanced_guide/configuration/interleave_ae_mode.md)*.
 
+#### Intra-Camera Synchronization
+
+- **`depth_registration`**
+  *   Enable alignment of the depth frame to the color frame. This field is required when the `enable_colored_point_cloud` is set to `true`.
+- **`align_mode`**
+  *   The alignment mode to be used. Options are `HW` for hardware alignment and `SW` for software alignment.
+- **`align_target_stream`**
+  *   Set align target stream mode.
+  *   The possible values are `COLOR`, `DEPTH`.
+  *   `COLOR`: Align depth to color.
+  *   `DEPTH`: Align color to depth.
+- **`intra_camera_sync_reference`**
+  - Sets the reference point for intra-camera synchronization. Applicable for Gemini 330 series devices when `sync_mode` is set to **software** or **hardware trigger** mode. **Options:** `Start`, `Middle`, `End`. **Default:** `Middle`
+
 ### Basic & General Parameters
 
 #### Firmware & Backend
@@ -235,58 +245,3 @@ The following are the launch parameters available:
 ---
 
 > **_IMPORTANT_**: Please carefully read the instructions regarding software filtering settings at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify these settings.
-
-***
-
-## Summary of Differences between ROS1 and ROS2 Parameters
-
-Overall, the ROS2 parameter set is a superset of the ROS1 version. It retains most of the core parameters while adding more features, finer control options, and standardizing some parameter names for better clarity.
-
-### 1. Major New Parameters in ROS2
-
-The ROS2 version introduces many new features, reflected by the following new parameters:
-
-*   **QoS (Quality of Service) Settings**:
-    *   `point_cloud_qos`, `[stream]_qos`, `[stream]_camera_info_qos`: A core feature of ROS2 that allows setting the quality of service level for communication on different topics. This concept does not exist in ROS1.
-
-*   **Stream Control & Image Processing**:
-    *   `[color|depth|...]_rotation`, `[color|depth|...]_flip`, `[color|depth|...]_mirror`: Adds hardware-level support for image rotation, flipping, and mirroring.
-    *   `enable_color_undistortion`: Adds a toggle to enable/disable undistortion for the color image.
-    *   `cloud_frame_id`: Allows the user to customize the `frame_id` within the point cloud message.
-
-*   **Features & Hardware Support**:
-    *   `upgrade_firmware`: Allows for direct firmware upgrades via a launch parameter.
-    *   `enable_gmsl_trigger` / `gmsl_trigger_fps`: Adds support for GMSL camera trigger mode.
-    *   `ldp_power_level`: Adds control over the LDP power level.
-    *   `enable_publish_extrinsic`: Adds a toggle for publishing camera extrinsics.
-    *   `ir_info_url` / `color_info_url`: Allows specifying the URL for camera calibration files.
-
-*   **IMU Enhancements**:
-    *   `enable_accel_data_correction` / `enable_gyro_data_correction`: Adds toggles for applying correction to IMU data.
-    *   `angular_vel_cov`: Adds a setting for the angular velocity covariance.
-
-*   **Synchronization & Alignment**:
-    *   `align_target_stream`: Explicitly sets the target stream for alignment to either `COLOR` or `DEPTH`.
-    *   `software_trigger_enabled` / `software_trigger_period`: Adds a software trigger mode.
-    *   `frames_per_trigger`: In trigger mode, allows setting the number of frames to capture per trigger.
-    *   `time_sync_period`: When host time sync is enabled, this sets the synchronization interval.
-
-*   **Depth Filters**:
-    *   `enable_spatial_fast_filter` / `enable_spatial_moderate_filter`: Adds two new spatial filter modes.
-
-### 2. Parameter Renaming and Standardization
-
-Several parameters were renamed in ROS2 for improved clarity and consistency.
-
-| ROS1 Parameter Name       | ROS2 Parameter Name         | Description                              |
-| :------------------------ | :-------------------------- | :--------------------------------------- |
-| `ip_address`              | `net_device_ip`             | More specific name for the device IP.    |
-| `port`                    | `net_device_port`           | More specific name for the device port.  |
-| `diagnostics_frequency`   | `diagnostic_period`         | Name better reflects the unit (seconds). |
-| `linear_accel_cov`         | `linear_accel_cov`          | Corrected a spelling error ("linear").   |
-| `enable_sequenced_filter` | `enable_sequence_id_filter` | Corrected a spelling error ("sequence"). |
-
-### 3. Structural and Detail Differences
-
-*   **Documentation Structure**: The ROS2 documentation is more clearly structured, categorizing parameters into logical groups like Core Configuration, Sensor Controls, Advanced Features, IMU, etc., which makes them easier to find.
-*   **Parameter Grouping**: In the ROS2 documentation, related parameters (e.g., an enable toggle and its corresponding value setting, like `enable_color_decimation_filter` / `color_decimation_filter_scale`) are often described together, making their relationship clearer.
