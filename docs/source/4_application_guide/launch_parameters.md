@@ -108,6 +108,19 @@ The following are the launch parameters available:
     *   Enable automatically enumerate network devices.
 *   **`ip_address`** / **`port`**
     *   Set net device's IP address and port (Usually `8090`).
+*   **`force_ip_enable`**
+    *   Enable the Force IP function. **Default:** `false`
+*   **`force_ip_mac`**
+    *   Target device MAC address when multiple cameras are connected (e.g., `"54:14:FD:06:07:DA"`). You can use the `list_devices_node` to find the MAC of each device. **Default:** `""`
+
+*   **`force_ip_address`**
+    *   Static IP address to assign. **Default:** `192.168.1.10`
+
+*   **`force_ip_subnet_mask`**
+    *   Subnet mask for the static IP. **Default:** `255.255.255.0`
+
+*   **`force_ip_gateway`**
+    *   Gateway address for the static IP. **Default:** `192.168.1.1`
 
 > Used for [net camera](../5_advanced_guide/configuration/net_camera.md).
 
