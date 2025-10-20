@@ -11,6 +11,13 @@
 #include <limits>
 #include <algorithm>
 #include <iomanip>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <deque>
+
+using namespace message_filters;
+using namespace sensor_msgs;
 
 class ImageSyncNode {
  public:
@@ -31,54 +38,85 @@ class ImageSyncNode {
     sync_->registerCallback(
         boost::bind(&ImageSyncNode::sync_callback, this, _1, _2, _3, _4, _5, _6, _7, _8));
 
-    ROS_INFO("Image sync node started.");
+    ROS_INFO("ImageSyncNode started, waiting for messages...");
+
+    // Start display thread
+    display_thread_ = std::thread(&ImageSyncNode::display_thread_func, this);
+  }
+
+  ~ImageSyncNode() {
+    {
+      std::lock_guard<std::mutex> lk(queue_mutex_);
+      stop_display_thread_ = true;
+    }
+    queue_cv_.notify_all();
+    if (display_thread_.joinable()) {
+      display_thread_.join();
+    }
   }
 
  private:
   ros::NodeHandle nh_;
+
   double diff_sum_;
   size_t count_;
   double max_diff_;
   double min_diff_;
+  double last_time_;
+  uint64_t frame_count_ = 0;
+  uint64_t drop_count_ = 0;
+  double frame_interval_;
+  double fps_cur_ = 0.0;
+  double fps_sum_ = 0.0;
+  double fps_max_ = 0.0;
+  double fps_min_ = std::numeric_limits<double>::max();
 
-  using SyncPolicy = message_filters::sync_policies::ApproximateTime<
-      sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image,
-      sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image>;
-  using Sync = message_filters::Synchronizer<SyncPolicy>;
+  std::thread display_thread_;
+  struct FrameBundle {
+    std::vector<cv::Mat> images;
+    std::vector<double> timestamps;
+    std::vector<std::string> camera_names;
+    std::vector<std::string> image_types;
+  };
+  std::deque<FrameBundle> frame_queue_;
+  std::mutex queue_mutex_;
+  std::condition_variable queue_cv_;
+  bool stop_display_thread_ = false;
 
-  message_filters::Subscriber<sensor_msgs::Image> camera_01_color_sub_;
-  message_filters::Subscriber<sensor_msgs::Image> camera_01_depth_sub_;
-  message_filters::Subscriber<sensor_msgs::Image> camera_02_color_sub_;
-  message_filters::Subscriber<sensor_msgs::Image> camera_02_depth_sub_;
-  message_filters::Subscriber<sensor_msgs::Image> camera_03_color_sub_;
-  message_filters::Subscriber<sensor_msgs::Image> camera_03_depth_sub_;
-  message_filters::Subscriber<sensor_msgs::Image> camera_04_color_sub_;
-  message_filters::Subscriber<sensor_msgs::Image> camera_04_depth_sub_;
-
+  using SyncPolicy =
+      sync_policies::ApproximateTime<Image, Image, Image, Image, Image, Image, Image, Image>;
+  using Sync = Synchronizer<SyncPolicy>;
   std::shared_ptr<Sync> sync_;
 
-  void sync_callback(
-      const sensor_msgs::ImageConstPtr &img01_c, const sensor_msgs::ImageConstPtr &img01_d,
-      const sensor_msgs::ImageConstPtr &img02_c, const sensor_msgs::ImageConstPtr &img02_d,
-      const sensor_msgs::ImageConstPtr &img03_c, const sensor_msgs::ImageConstPtr &img03_d,
-      const sensor_msgs::ImageConstPtr &img04_c, const sensor_msgs::ImageConstPtr &img04_d) {
+  message_filters::Subscriber<Image> camera_01_color_sub_;
+  message_filters::Subscriber<Image> camera_01_depth_sub_;
+  message_filters::Subscriber<Image> camera_02_color_sub_;
+  message_filters::Subscriber<Image> camera_02_depth_sub_;
+  message_filters::Subscriber<Image> camera_03_color_sub_;
+  message_filters::Subscriber<Image> camera_03_depth_sub_;
+  message_filters::Subscriber<Image> camera_04_color_sub_;
+  message_filters::Subscriber<Image> camera_04_depth_sub_;
+
+  void sync_callback(const ImageConstPtr &img01_c, const ImageConstPtr &img01_d,
+                     const ImageConstPtr &img02_c, const ImageConstPtr &img02_d,
+                     const ImageConstPtr &img03_c, const ImageConstPtr &img03_d,
+                     const ImageConstPtr &img04_c, const ImageConstPtr &img04_d) {
     std::vector<cv::Mat> images;
     std::vector<double> timestamps;
     std::vector<std::string> camera_names = {"camera_01", "camera_01", "camera_02", "camera_02",
                                              "camera_03", "camera_03", "camera_04", "camera_04"};
-
     std::vector<std::string> image_types = {"color", "depth", "color", "depth",
                                             "color", "depth", "color", "depth"};
 
     try {
-      images.push_back(cv_bridge::toCvCopy(img01_c, "bgr8")->image.clone());
-      images.push_back(cv_bridge::toCvCopy(img01_d, "16UC1")->image.clone());
-      images.push_back(cv_bridge::toCvCopy(img02_c, "bgr8")->image.clone());
-      images.push_back(cv_bridge::toCvCopy(img02_d, "16UC1")->image.clone());
-      images.push_back(cv_bridge::toCvCopy(img03_c, "bgr8")->image.clone());
-      images.push_back(cv_bridge::toCvCopy(img03_d, "16UC1")->image.clone());
-      images.push_back(cv_bridge::toCvCopy(img04_c, "bgr8")->image.clone());
-      images.push_back(cv_bridge::toCvCopy(img04_d, "16UC1")->image.clone());
+      images.push_back(cv_bridge::toCvShare(img01_c, "bgr8")->image.clone());
+      images.push_back(cv_bridge::toCvShare(img01_d, "16UC1")->image.clone());
+      images.push_back(cv_bridge::toCvShare(img02_c, "bgr8")->image.clone());
+      images.push_back(cv_bridge::toCvShare(img02_d, "16UC1")->image.clone());
+      images.push_back(cv_bridge::toCvShare(img03_c, "bgr8")->image.clone());
+      images.push_back(cv_bridge::toCvShare(img03_d, "16UC1")->image.clone());
+      images.push_back(cv_bridge::toCvShare(img04_c, "bgr8")->image.clone());
+      images.push_back(cv_bridge::toCvShare(img04_d, "16UC1")->image.clone());
 
       timestamps = {img01_c->header.stamp.toSec(), img01_d->header.stamp.toSec(),
                     img02_c->header.stamp.toSec(), img02_d->header.stamp.toSec(),
@@ -89,6 +127,44 @@ class ImageSyncNode {
       return;
     }
 
+    {
+      std::lock_guard<std::mutex> lk(queue_mutex_);
+      const size_t max_queue = 3;
+      if (frame_queue_.size() >= max_queue) {
+        frame_queue_.pop_front();
+      }
+      frame_queue_.push_back(
+          FrameBundle{std::move(images), std::move(timestamps), camera_names, image_types});
+    }
+    queue_cv_.notify_one();
+
+    {
+      std::lock_guard<std::mutex> lk(queue_mutex_);
+      if (!frame_queue_.empty()) {
+        std::vector<double> ts_copy = frame_queue_.back().timestamps;
+        print_stats(ts_copy);
+      }
+    }
+  }
+
+  void display_thread_func() {
+    while (true) {
+      FrameBundle bundle;
+      {
+        std::unique_lock<std::mutex> lk(queue_mutex_);
+        queue_cv_.wait(lk, [this] { return stop_display_thread_ || !frame_queue_.empty(); });
+        if (stop_display_thread_ && frame_queue_.empty()) {
+          return;
+        }
+        bundle = std::move(frame_queue_.back());
+        frame_queue_.clear();
+      }
+      image_show(bundle.images, bundle.timestamps, bundle.camera_names, bundle.image_types);
+    }
+  }
+
+  void image_show(std::vector<cv::Mat> &images, std::vector<double> &timestamps,
+                  std::vector<std::string> &camera_names, std::vector<std::string> &image_types) {
     for (size_t i = 0; i < images.size(); i++) {
       if (images[i].channels() == 1) {
         cv::Mat tmp;
@@ -104,19 +180,15 @@ class ImageSyncNode {
     int margin = 10;
     int row1_height = std::max({images[0].rows, images[1].rows, images[2].rows, images[3].rows});
     int row2_height = std::max({images[4].rows, images[5].rows, images[6].rows, images[7].rows});
-
     int row1_width = images[0].cols + margin + images[1].cols + margin + images[2].cols + margin +
                      images[3].cols;
     int row2_width = images[4].cols + margin + images[5].cols + margin + images[6].cols + margin +
                      images[7].cols;
-
     int canvas_width = std::max(row1_width, row2_width);
     int canvas_height = row1_height + margin + row2_height;
 
     cv::Mat canvas(canvas_height, canvas_width, CV_8UC3, cv::Scalar(30, 30, 30));
-
-    int x_offset = 0;
-    int y_offset = 0;
+    int x_offset = 0, y_offset = 0;
     for (int i = 0; i < 4; ++i) {
       images[i].copyTo(canvas(cv::Rect(x_offset, y_offset, images[i].cols, images[i].rows)));
       x_offset += images[i].cols + margin;
@@ -131,24 +203,22 @@ class ImageSyncNode {
 
     int screen_width = 1800;
     int screen_height = 800;
-
     double scale_w = static_cast<double>(screen_width) / canvas.cols;
     double scale_h = static_cast<double>(screen_height) / canvas.rows;
     double scale = std::min(1.0, std::min(scale_w, scale_h));
-
     cv::Mat display;
     if (scale < 1.0) {
       cv::resize(canvas, display, cv::Size(), scale, scale);
     } else {
       display = canvas;
     }
-
     cv::imshow("Time Synced Cameras", display);
     cv::waitKey(1);
+  }
 
+  void print_stats(std::vector<double> &timestamps) {
     std::cout << std::fixed;
     std::cout << "===========================================================" << std::endl;
-
     for (int i = 0; i < 4; i++) {
       std::cout << "Camera0" << i + 1 << " stamp: color= " << std::setprecision(6)
                 << timestamps[i * 2] << "  depth= " << std::setprecision(6) << timestamps[i * 2 + 1]
@@ -169,12 +239,37 @@ class ImageSyncNode {
     max_diff_ = std::max(max_diff_, cur);
     min_diff_ = std::min(min_diff_, cur);
     double avg_diff = diff_sum_ / count_;
-
     std::cout << "\nImage Timestamp Difference Statistics" << std::endl;
     std::cout << "cur: " << cur << " ms"
               << " avg: " << avg_diff << " ms"
               << " max: " << max_diff_ << " ms"
               << " min: " << min_diff_ << " ms" << std::endl;
+
+    // Calculate and display FPS
+    if (last_time_ == 0.0) {
+      last_time_ = base_t;
+    } else {
+      double dt = base_t - last_time_;
+      // if (dt > frame_interval_ * 1.5) {
+      //   std::cout << "base_t: " << base_t << " last_time_: " << last_time_ << std::endl;
+      //   std::cout << "Frame drop detected! dt: " << dt << " s" << std::endl;
+      //   drop_count_ +=
+      //       static_cast<uint64_t>(dt / 0.0333) - 1;  // Assuming 30 FPS, so frame interval
+      //       ~33.3ms
+      //   std::cout << "Total dropped frames: " << drop_count_ << std::endl;
+      // }
+      fps_cur_ = dt > 0.0 ? 1.0 / dt : fps_cur_;
+      last_time_ = base_t;
+      frame_count_++;
+      fps_sum_ += fps_cur_;
+      fps_max_ = std::max(fps_max_, fps_cur_);
+      if (fps_cur_ > 1e-3) fps_min_ = std::min(fps_min_, fps_cur_);
+      double fps_avg = fps_sum_ / frame_count_;
+      std::cout << "\nFPS Statistics" << std::endl;
+      std::cout << "cur: " << std::setprecision(2) << fps_cur_ << " avg: " << std::setprecision(2)
+                << fps_avg << " max: " << std::setprecision(2) << fps_max_
+                << " min: " << std::setprecision(2) << fps_min_ << std::endl;
+    }
   }
 };
 
