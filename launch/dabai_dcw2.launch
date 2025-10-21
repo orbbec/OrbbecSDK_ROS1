@@ -18,6 +18,7 @@
   <arg name="color_format" default="MJPG" />
   <arg name="flip_color" default="false" />
   <arg name="enable_color_auto_exposure" default="true" />
+  <arg name="enable_color_auto_exposure_priority" default="false"/>
   <arg name="color_exposure" default="-1" />
   <arg name="color_gain" default="-1" />
   <arg name="color_white_balance" default="-1" />
@@ -75,6 +76,7 @@
       <param name="color_format" value="$(arg color_format)" />
       <param name="flip_color" value="$(arg flip_color)" />
       <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)" />
+      <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)" />
       <param name="color_exposure" value="$(arg color_exposure)" />
       <param name="color_gain" value="$(arg color_gain)" />
       <param name="color_white_balance" value="$(arg color_white_balance)" />

@@ -165,6 +165,8 @@ void OBCameraNode::getParameters() {
   left_ir_rotation_ = nh_private_.param<int>("left_ir_rotation", -1);
   right_ir_rotation_ = nh_private_.param<int>("right_ir_rotation", -1);
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
+  enable_color_auto_exposure_priority_ =
+      nh_private_.param<bool>("enable_color_auto_exposure_priority", false);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
   ir_exposure_ = nh_private_.param<int>("ir_exposure_", -1);
   enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);

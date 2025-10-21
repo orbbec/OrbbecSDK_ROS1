@@ -426,6 +426,7 @@ class OBCameraNode {
   int depth_rotation_ = -1;
   int left_ir_rotation_ = -1;
   int right_ir_rotation_ = -1;
+  bool enable_color_auto_exposure_priority_ = false;
   bool enable_color_auto_exposure_ = true;
   bool enable_color_auto_white_balance_ = true;
   int color_exposure_ = -1;

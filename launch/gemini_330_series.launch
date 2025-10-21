@@ -27,6 +27,7 @@
     <arg name="color_format" default="MJPG"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="0"/>
+    <arg name="enable_color_auto_exposure_priority" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
@@ -173,6 +174,7 @@
             <param name="enable_color" value="$(arg enable_color)"/>
             <param name="color_format" value="$(arg color_format)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
             <param name="color_gain" value="$(arg color_gain)"/>
             <param name="color_white_balance" value="$(arg color_white_balance)"/>

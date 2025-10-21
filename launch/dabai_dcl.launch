@@ -18,6 +18,7 @@
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
+    <arg name="enable_color_auto_exposure_priority" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="400"/>
@@ -33,7 +34,7 @@
     <arg name="ir_format" default="Y8"/>
     <arg name="flip_ir" default="false"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
-    <arg name="enable_sync_output_accel_gyro" default="true"/>   
+    <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="100hz"/>
     <arg name="accel_range" default="4g"/>
@@ -83,6 +84,7 @@
             <param name="color_format" value="$(arg color_format)"/>
             <param name="flip_color" value="$(arg flip_color)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)"/>
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
             <param name="depth_fps" value="$(arg depth_fps)"/>

@@ -453,6 +453,15 @@ void OBCameraNode::setupDevices() {
     if (device_->isPropertySupported(OB_PROP_COLOR_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     }
+    if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT,
+                                     OB_PERMISSION_READ_WRITE)) {
+      ROS_INFO_STREAM("Seting color auto exposure priority to "
+                      << (enable_color_auto_exposure_priority_ ? "true" : "false"));
+      device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT,
+                               enable_color_auto_exposure_priority_);
+      ROS_INFO_STREAM("color auto exposure priority is set to "
+                      << device_->getBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT));
+    }
     if (color_exposure_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_EXPOSURE_INT, color_exposure_);
