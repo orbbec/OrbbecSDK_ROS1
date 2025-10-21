@@ -10,13 +10,17 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-sys.path.insert(0, os.path.abspath('..'))  # Add parent directory for _ext
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('.'))
 
 import os
 import shutil
 import sphinx
+
+# Add extension path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '_ext'))
 
 import recommonmark
 from recommonmark.transform import AutoStructify
@@ -51,8 +55,7 @@ master_doc = 'index'
 extensions = ['recommonmark',
   'sphinx_markdown_tables',
   'sphinx.ext.autosectionlabel',
-  '_ext.language_switch',  # Custom language switch extension
-
+  'language_switch',
 #   'myst_parser',
 ]
 
@@ -91,33 +94,51 @@ html_favicon = "source/_static/orbbec_footerlogo_3d_world.svg"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['source/_static','source/images']
+html_static_path = ['source/_static','source/image']
 
-html_extra_path = ['source/images']
+html_extra_path = ['source/image']
 
 html_theme_options = {
-    # Navigation options
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'navigation_depth': 5,
-    'includehidden': True,
-    'titles_only': False,
-
-    # Display options
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': False,
-    'style_nav_header_background': 'white',
-
-    # Advanced options (commented for future use)
     # 'analytics_id': 'G-EVD5Z6G6NH',
+    'collapse_navigation': False,
+    # 启用导航栏的“粘性”头部，这样导航栏会固定在页面顶部
+    'sticky_navigation': True,
+    # 配置导航栏的深度，-1 表示显示所有层级的标题
+    'navigation_depth': 5,
+    # 'show_navbar_depth': 4,
+    # 导航栏显示+号
+    'collapse_navigation': False,
+
     # 'analytics_anonymize_ip': False,
+    # 'logo_only': False,
+    # 'display_version': True,
+    # 'prev_next_buttons_location': 'bottom',
+    # 'style_external_links': False,
     # 'vcs_pageview_mode': '',
+    # 'style_nav_header_background': 'white',
+    # # Toc options
+    # 'collapse_navigation': True,
+    # 'sticky_navigation': True,
+    # 'navigation_depth': 5,
+    # 'includehidden': True,
+    # 'titles_only': False
 }
 
-# 添加自定义的 CSS 文件
+
+
+
+
+
+# # 添加自定义的 JavaScript 文件
+# html_js_files = ["theme.js"]
+
+
+# #不需要添加_static目录，加了会不起作用
 html_css_files = ["custom.css"]
+
+# 与文档无关的其他资源的路径，由于无需构建此文件夹的文件，会自动忽略
+# 默认情况下，此路径下的文件会输出到生成的html的根目录
+# html_extra_path = ["_extra"]
 
 # 在页面底部显示上一次更新于某某时间
 html_last_updated_fmt = "%Y-%m-%d %H:%M:%S"
@@ -174,12 +195,10 @@ def copy_videos(app, exception):
             shutil.copytree(src_dir, dest_dir)
 
 # 20201030
-# Define github_doc_root for recommonmark
-github_doc_root = 'https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/docs/'
-
-def setup(app):
-    app.add_config_value('recommonmark_config', {
-            'url_resolver': lambda url: github_doc_root + url,
-            'auto_toc_tree_section': 'Contents',
-            }, True)
-    app.add_transform(AutoStructify)
+# github_doc_root = 'https://github.com/yourusername/yourrepo/blob/main/'
+# def setup(app):
+#     app.add_config_value('recommonmark_config', {
+#             'url_resolver': lambda url: github_doc_root + url,
+#             'auto_toc_tree_section': 'Contents',
+#             }, True)
+#     app.add_transform(AutoStructify)
