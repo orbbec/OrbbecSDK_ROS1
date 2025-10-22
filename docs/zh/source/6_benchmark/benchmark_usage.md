@@ -1,70 +1,70 @@
 # 基准测试使用指南
 
-本节介绍如何在C++和Python中使用基准测试工具，并提供示例YAML配置文件。
+本节介绍如何在 C++ 与 Python 中使用基准测试工具，并给出示例 YAML 配置文件。
 
-## Using common benchmark node
+## 使用通用基准测试节点（common_benchmark_node）
 
-* **Run with default settings**
+* **默认参数运行**
 
-```
+```bash
 rosrun orbbec_camera common_benchmark_node.py --run_time 30s
 ```
 
-By default, the CSV file is saved in the current workspace.
+默认情况下生成的 CSV 文件保存在当前工作空间目录下（文件名 camera_monitor_log.csv）。
 
-* **Run with custom CSV output path**
+* **指定自定义 CSV 输出路径**
 
-```
+```bash
 rosrun orbbec_camera common_benchmark_node.py \
-    --run_time 2h  \
-    --csv_file /path/to/log.csv
+  --run_time 2h \
+  --csv_file /path/to/log.csv
 ```
 
-* **Parameters**
-  * **--run_time**: Duration for monitoring, specified as time strings like `"10s"`, `"5m"`, `"1h"`, `"2d"`. Default is 10 seconds.
-  *  **--csv_file**: Path to the output CSV file. By default, it is saved in the workspace directory with the name "camera_monitor_log.csv".
+* **参数说明**
+  * `--run_time`：监控持续时间。支持时间字符串格式：`10s`（秒）、`5m`（分钟）、`1h`（小时）、`2d`（天）。默认值：`10s`。
+  * `--csv_file`：CSV 输出文件路径。未指定时使用工作空间目录并命名为 `camera_monitor_log.csv`。
 
-## Using service benchmark node
+## 使用服务基准测试节点（service_benchmark_node）
 
 ### ROS1 C++
 
-* **Single service benchmark**
+* **单个服务压测示例**
 
-```
+```bash
 rosrun orbbec_camera service_benchmark_node \
-    _service_name:=/camera/set_color_ae_roi \
-    _service_type:=orbbec_camera/SetArrays \
-    _request_data:='{data_param: [0, 1279, 0, 719]}'
+  _service_name:=/camera/set_color_ae_roi \
+  _service_type:=orbbec_camera/SetArrays \
+  _request_data:='{data_param: [0, 1279, 0, 719]}'
 ```
 
-* **Multiple services benchmark (YAML config)**
+* **多个服务压测（使用 YAML 配置）**
 
-```
+```bash
 rosrun orbbec_camera service_benchmark_node \
-    _yaml_file:=/path/to/default_service_cpp.yaml
+  _yaml_file:=/path/to/default_service_cpp.yaml
 ```
 
 ### ROS1 Python
 
-* **Single service benchmark**
+* **单个服务压测示例**
 
-```
+```bash
 rosrun orbbec_camera service_benchmark_node.py \
-    --service_name /camera/get_depth_exposure \
-    --count 10
+  --service_name /camera/get_depth_exposure \
+  --count 10
 ```
 
-* **Multiple services benchmark (YAML config + CSV output)**
+* **多个服务压测（YAML 配置 + CSV 输出）**
 
-```
+```bash
 rosrun orbbec_camera service_benchmark_node.py \
-    --yaml_file /path/to/default_service.yaml \
-    --csv_file /path/to/results.csv
+  --yaml_file /path/to/default_service.yaml \
+  --csv_file /path/to/results.csv
 ```
 
-### **Example YAML configuration**
+### 示例 YAML 配置文件
 
-We provide an example YAML configuration, located in the `scripts` directory as `service_default.yaml`.
+我们提供一个示例 YAML 配置文件位于 `scripts` 目录下，文件名为 `service_default.yaml`，用于批量对多个服务进行调用与统计。`default_count` 为未在单个条目指定调用次数时的默认调用次数。
 
 ```yaml
 default_count: 50
@@ -158,3 +158,10 @@ services:
   type: std_srvs/SetBool
   request: {data: false}
 ```
+
+## 使用建议
+
+1. 先在少量服务上测试以验证网络与设备稳定，再扩展到全部服务列表。
+2. 长时间运行时建议指定 `--csv_file` 到持久化目录，避免临时环境清理。
+3. 可将不同设备的结果按日期归档，便于性能趋势分析。
+4. 出现异常延迟可结合 `/camera/device_status` 话题排查设备状态。
