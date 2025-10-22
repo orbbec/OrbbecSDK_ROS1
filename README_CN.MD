@@ -132,6 +132,10 @@
 4. 不支持：此版本不支持该设备；
 5. 即将支持：我们将在不久的将来添加支持。
 
+**迁移指南**
+
+如果您需要将现有项目从 main (v1.x) 分支迁移到 v2-main (v2.x) 分支，请参考官方[迁移指南](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/7_developer_guide/migration_guide.html)
+
 ## 安装依赖
 
 ### ROS
@@ -231,7 +235,7 @@ rosservice call /camera/get_sdk_version "{}"
 
 以下设备受 OrbbecSDK ROS Wrapper 支持：
 
-| 产品列表       | 最低固件版本 | **启动文件**             |
+| 产品列表       | 最低固件版本 | **启动文件**       |
 | -------------- | ------------ | ------------------------ |
 | Gemini 435Le   | 1.2.04       | gemini435_le.launch      |
 | Gemini 335     | 1.2.20       | gemini_330_series.launch |
