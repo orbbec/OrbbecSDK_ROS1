@@ -1,6 +1,6 @@
 # 从 main 迁移到开源 v2-main 分支
 
-## **简介**
+## 简介
 
 最初，奥比中光提供了一个**闭源 SDK —— Orbbec SDK v1**，它是 [OrbbecSDK ROS1 Wrapper main 分支](https://github.com/orbbec/OrbbecSDK_ROS1/tree/main) 的基础。虽然 ROS 封装层本身是开源的，但底层 SDK 是闭源的，这种架构限制了灵活性，也阻碍了社区驱动的改进。
 
@@ -10,7 +10,7 @@
 
 **注意：**下文中，**main** 指闭源分支，**v2-main** 指开源分支。
 
-## **迁移到 v2-main 的优势**
+## 迁移到 v2-main 的优势
 
 2024年10月，奥比中光发布了重大更新：**OrbbecSDK ROS1 Wrapper v2**，完全基于开源 Orbbec SDK_v2。与旧版 main 分支（SDK v1.x）相比，v2-main 分支（Orbbec SDK_v2.x）具备更高的灵活性和可扩展性，并全面支持所有符合 UVC 标准的奥比中光 USB 产品。main --> v2-main 的迁移带来以下关键优势：
 
