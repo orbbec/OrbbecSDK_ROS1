@@ -225,7 +225,7 @@ rostopic echo /camera/depth/camera_info
 rosservice call /camera/get_sdk_version "{}"
 ```
 
-> 更多使用细节，请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html)
+> 更多使用细节，请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/4_application_guide/application_guide.html)
 
 ## 支持的设备
 
@@ -257,7 +257,7 @@ rosservice call /camera/get_sdk_version "{}"
 
 ## 教程
 
-请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html)
+请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/4_application_guide/application_guide.html)
 
 ## 示例
 
@@ -265,7 +265,7 @@ rosservice call /camera/get_sdk_version "{}"
 
 ## 其他有用的链接
 
-- [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/index.html)
+- [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/zh/index.html)
 - [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases)
 - [Gemini 330 深度预设](https://www.orbbec.com/docs/g330-use-depth-presets/)
 

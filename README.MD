@@ -233,7 +233,7 @@ Call a service
 rosservice call /camera/get_sdk_version "{}"
 ```
 
-> For more usage details, please refer to the official [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html)
+> For more usage details, please refer to the official [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/en/source/4_application_guide/application_guide.html)
 
 ## Supported Devices
 
@@ -266,7 +266,7 @@ for different models within the same series. Differences in USB standards, such 
 
 ## Tutorial
 
-Please refer to the official [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/source/4_application_guide/application_guide.html).
+Please refer to the official [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/en/source/4_application_guide/application_guide.html).
 
 ## Examples
 
@@ -274,7 +274,7 @@ To explore practical examples and gain insight into how to use the camera in ROS
 
 ## Other useful links
 
-- [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/index.html)
+- [OrbbecSDK ROS documentation](https://orbbec.github.io/OrbbecSDK_ROS1/en/index.html)
 - [OrbbecSDK v2](https://github.com/orbbec/OrbbecSDK_v2/releases)
 - [Gemini 330 depth presets](https://www.orbbec.com/docs/g330-use-depth-presets/)
 
