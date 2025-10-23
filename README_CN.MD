@@ -25,100 +25,116 @@
     </tr>
   </thead>
   <tbody>
+      <tr>
+      <td style="text-align: center; font-weight: bold;">Gemini 435Le</td>
+      <td>Gemini 435Le</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
     <tr>
       <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td>Gemini 335Le</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
       <td>Gemini 335</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 336</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 330</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 335L</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 336L</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 330L</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 335Lg</td>
-      <td>不支持</td>
-      <td>推荐用于新设计</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
-      <td>Gemini 335Le</td>
-      <td>不支持</td>
-      <td>推荐用于新设计</td>
-    </tr>
-    <tr>
-      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 2</td>
+      <td rowspan="5" style="text-align: center; font-weight: bold;">Gemini 2</td>
       <td>Gemini 2</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 2 L</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 2 XL</td>
-      <td>推荐用于新设计</td>
-      <td>即将支持</td>
+      <td>recommended for new designs</td>
+      <td>to be supported</td>
+    </tr>
+    <tr>
+      <td>Gemini 215</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 210</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td>
       <td>Femto Bolt</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Femto Mega</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Femto Mega I</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td rowspan="3" style="text-align: center; font-weight: bold;">Astra</td>
       <td>Astra 2</td>
-      <td>全面维护</td>
-      <td>推荐用于新设计</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Astra+</td>
-      <td>有限的维护</td>
-      <td>不支持</td>
+      <td>limited maintenance</td>
+      <td>not supported</td>
     </tr>
     <tr>
       <td>Astra Pro Plus</td>
-      <td>有限的维护</td>
-      <td>不支持</td>
+      <td>limited maintenance</td>
+      <td>not supported</td>
     </tr>
     <tr>
       <td style="text-align: center; font-weight: bold;">Astra Mini</td>
-      <td>Astra Mini Pro</td>
-      <td>全面维护</td>
-      <td>不支持</td>
+      <td>Astra Mini (S) Pro</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
     </tr>
   </tbody>
 </table>
@@ -235,23 +251,20 @@ rosservice call /camera/get_sdk_version "{}"
 
 以下设备受 OrbbecSDK ROS Wrapper 支持：
 
-| 产品列表       | 最低固件版本 | **启动文件**       |
-| -------------- | ------------ | ------------------------ |
-| Gemini 435Le   | 1.2.04       | gemini435_le.launch      |
-| Gemini 335     | 1.2.20       | gemini_330_series.launch |
-| Gemini 336     | 1.2.20       | gemini_330_series.launch |
-| Gemini 335L    | 1.2.20       | gemini_330_series.launch |
-| Gemini 336L    | 1.2.20       | gemini_330_series.launch |
-| Gemini 335Lg   | 1.3.46       | gemini_330_series.launch |
-| Gemini 335Le   | 1.5.31       | gemini_330_series.launch |
-| Gemini 330     | 1.2.20       | gemini_330_series.launch |
-| Gemini 330L    | 1.2.20       | gemini_330_series.launch |
-| Gemini 2       | 1.4.92       | gemini2.launch           |
-| Gemini 2 L     | 1.4.53       | gemini2L.launch          |
-| Femto Bolt     | 1.1.2        | femto_bolt.launch        |
-| Femto Mega     | 1.3.0        | femto_mega.launch        |
-| Astra 2        | 2.8.20       | astra2.launch            |
-| Astra Mini Pro | 2.0.01       | astra.launch             |
+| **Products List** | **Recommended FW Version**                                                             |  Launch File                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Astra Mini Pro           | [2.0.03](https://github.com/orbbec/OrbbecFirmware/releases/tag/Astra-Mini-Pro)             |                                               astra.launch   |
+| Astra Mini S Pro            | [2.0.03](https://github.com/orbbec/OrbbecFirmware/releases/tag/Astra-Mini-S-Pro)             |                                               astra.launch   |
+| Gemini 435Le            | [1.3.2](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware)             |                                               gemini435_le.launch   |
+| Gemini 330 series       | [1.6.00](https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip) | gemini_330_series.launch |
+| Gemini 215              | [1.0.9](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini215-Firmware)               |                                               gemini210.launch   |
+| Gemini 210              | [1.0.9](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini210-Firmware)               |                                               gemini210.launch    |
+| Gemini 2                | [1.4.98](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini2-Firmware)                |                                               gemini2.launch     |
+| Gemini 2 L              | [1.5.2](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini2L-Firmware)                |                                               gemini2L.launch  |
+| Femto Bolt              | [1.1.2](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Bolt-Firmware)              |                               femto_bolt.launch |
+| Femto Mega              | [1.3.1](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-Firmware)              |                                               femto_mega.launch  |
+| Femto Mega I             | [2.0.4](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-I-Firmware)              |                                               femto_mega.launch  |
+| Astra 2                 | [2.8.20](https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Astra2_Release_2.8.20.zip)    |                                               astra2.launch    |
 
 所有的 launch 文件基本相同，主要区别在于针对同系列不同型号设定的参数默认值不同。USB 2.0 和 USB 3.0 等标准差异，可能需要对参数进行调整。如果遇到启动失败，请仔细检查规格手册，尤其是 launch 文件中的分辨率设置及其他参数，确保兼容性和最佳性能。
 
