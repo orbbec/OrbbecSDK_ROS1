@@ -1,4 +1,28 @@
-## ROS机器人坐标系 vs 相机光学坐标系
+## 坐标系和 TF 变换
+
+### 相机传感器结构
+
+![相机模块结构图](../image/application_guide/image3.png)
+
+![相机传感器布局](../image/application_guide/image1.png)
+
+### 从坐标A到坐标B的TF变换：
+
+在奥比中光相机中，原点(0,0,0)取自camera_link位置
+
+我们的包装器提供从每个传感器坐标到相机基座(camera_link)的静态TF变换
+
+同时，它还提供从每个传感器ROS坐标到其对应光学坐标的TF变换。
+
+以下是Gemini335模块的RGB传感器和右红外传感器在rviz中显示的静态TF变换示例：
+
+```bash
+roslaunch orbbec_description view_model.launch model:=gemini_335_336.urdf.xacro
+```
+
+![rviz中的模块](../image/application_guide/image2.png)
+
+### ROS机器人坐标系 vs 相机光学坐标系
 
 * 观察视角：
   * 想象我们站在相机后面，向前看。
@@ -254,24 +278,4 @@ if ((pid == FEMTO_BOLT_PID || pid == FEMTO_MEGA_PID) && enable_stream_[DEPTH] &&
 - 根据设备PID识别FEMTO系列相机（FEMTO_BOLT、FEMTO_MEGA）
 - 对于FEMTO系列相机，需要额外计算深度到颜色传感器的变换关系，确保了不同相机型号的坐标系正确映射
 
-### 相机传感器结构
 
-![相机模块结构图](../image/application_guide/image3.png)
-
-![相机传感器布局](../image/application_guide/image1.png)
-
-### 从坐标A到坐标B的TF变换：
-
-在奥比中光相机中，原点(0,0,0)取自camera_link位置
-
-我们的包装器提供从每个传感器坐标到相机基座(camera_link)的静态TF变换
-
-同时，它还提供从每个传感器ROS坐标到其对应光学坐标的TF变换。
-
-以下是Gemini335模块的RGB传感器和右红外传感器在rviz中显示的静态TF变换示例：
-
-```bash
-roslaunch orbbec_description view_model.launch model:=gemini_335_336.urdf.xacro
-```
-
-![rviz中的模块](../image/application_guide/image2.png)
