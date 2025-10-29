@@ -1,58 +1,58 @@
-## ROS机器人坐标系 vs 相机光学坐标系
+## ROS Robot Coordinate System vs Camera Optical Coordinate System
 
-* 观察视角：
-  * 想象我们站在相机后面，向前看。
-  * 在谈论坐标、左右红外、传感器位置等时，始终使用这个观察视角。
+* Observation perspective:
+  * Imagine we stand behind the camera looking forward.
+  * Always use this perspective when discussing coordinates, left/right IR, sensor positions, etc.
 
-![ROS和相机坐标系](../image/application_guide/image0.png)
+![ROS and Camera Coordinate Systems](../image/application_guide/image0.png)
 
-* ROS坐标系：(X: 前进方向, Y: 左侧, Z: 向上)
-* 相机光学坐标系：(X: 右侧, Y: 向下, Z: 前进方向)
-* 我们包装器话题中发布的所有数据都是直接从相机传感器获取的光学数据。
-* 静态和动态TF话题发布光学坐标系和ROS坐标系，为用户提供从一个坐标系转换到另一个坐标系的能力。
+* ROS coordinate system: (X: forward, Y: left, Z: up)
+* Camera optical coordinate system: (X: right, Y: down, Z: forward)
+* All data published by the wrapper topics are directly from the camera sensors in the optical coordinate system.
+* Static and dynamic TF topics publish both the optical and ROS coordinate systems, giving users the ability to transform between them.
 
-### ROS1 TF工具的使用
+### Using ROS1 TF Tools
 
-#### 查看TF树结构
+#### View TF Tree Structure
 
-可以使用以下ROS1命令来打印和可视化相机包发布的TF树：
+You can use the following ROS1 commands to print and visualize the TF tree published by the camera package:
 
-**打印所有TF关系：**
+**Print all TF relationships:**
 
 ```bash
 rosrun tf view_frames
 ```
 
-这个命令会生成一个 `frames.pdf`文件，展示所有frame之间的层级关系。
+This command generates a `frames.pdf` file that shows the hierarchical relationships between all frames.
 
 ![frame.pdf](../image/application_guide/image4.png)
 
-**查看所有正在发布的TF信息：**
+**View all currently published TF information:**
 
 ```bash
 rostopic echo /tf
 ```
 
-**查看指定两个frame之间的TF变换关系：**
+**View the TF transform between two specified frames:**
 
-使用以下命令可以查看两个特定frame之间的变换关系：
+Use the following command to view the transform between two specific frames:
 
 ```bash
 rosrun tf tf_echo [source_frame] [target_frame]
 ```
 
-例如，查看从 `camera_link` 到 `camera_depth_optical_frame` 的变换：
+For example, to view the transform from `camera_link` to `camera_depth_optical_frame`:
 
 ```bash
 rosrun tf tf_echo camera_link camera_depth_optical_frame
 ```
 
-此命令会持续输出两个frame之间的实时变换信息，包括：
+This command continuously outputs the real-time transform information between the two frames, including:
 
-- 平移信息（Translation）：x, y, z坐标
-- 旋转信息（Rotation）：四元数(x, y, z, w)和欧拉角(roll, pitch, yaw)
+- Translation: x, y, z
+- Rotation: Quaternion (x, y, z, w) and Euler angles (roll, pitch, yaw)
 
-示例输出：
+Sample output:
 
 ```
 At time 1761645099.762
@@ -60,30 +60,29 @@ At time 1761645099.762
 - Rotation: in Quaternion [-0.500, 0.500, -0.500, 0.500]
             in RPY (radian) [-1.571, -0.000, -1.571]
             in RPY (degree) [-90.000, -0.000, -90.000]
-
 ```
 
-#### 使用rviz可视化TF树
+#### Visualize the TF Tree in rviz
 
-在rviz中可以实时可视化TF树结构和坐标系的相对位置：
+You can visualize the TF tree structure and relative frame positions in real time in rviz:
 
 ```bash
 rviz
 ```
 
-在rviz中：
+In rviz:
 
-- 添加 `TF`显示插件
-- 配置固定框架（Fixed Frame）为 `camera_link`或 `camera_depth_optical_frame`等等
-- 选择显示的TF框架树
+- Add the `TF` display plugin
+- Set the Fixed Frame to `camera_link` or `camera_depth_optical_frame`, etc.
+- Select the TF frames to display
 
-![可视化TF树](../image/application_guide/image5.png)
+![Visualize TF Tree](../image/application_guide/image5.png)
 
-### ROS1相机TF计算和发布机制
+### ROS1 Camera TF Calculation and Publication Mechanism
 
-#### 核心函数：`OBCameraNode::calcAndPublishStaticTransform()`
+#### Core Function: `OBCameraNode::calcAndPublishStaticTransform()`
 
-相机节点通过此函数计算和发布所有传感器之间的静态转换关系。
+The camera node uses this function to compute and publish all static transforms between sensors.
 
 ```cpp
 void OBCameraNode::calcAndPublishStaticTransform() {
@@ -152,11 +151,11 @@ void OBCameraNode::calcAndPublishStaticTransform() {
 }
 ```
 
-#### 函数解析
+#### Function Explanation
 
-下面是ROS1代码的详细解释：
+Below is a detailed explanation of the ROS1 code:
 
-**四元数初始化与坐标系变换**
+**Quaternion Initialization and Coordinate System Transformation**
 
 ```cpp
 tf2::Quaternion quaternion_optical, zero_rot;
@@ -165,19 +164,19 @@ quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
 tf2::Vector3 zero_trans(0, 0, 0);
 ```
 
-- `quaternion_optical`：定义光学坐标系到ROS标准坐标系的旋转变换（90度旋转），这个旋转将相机光学坐标系（X右、Y下、Z前）转换为ROS标准坐标系（X前、Y左、Z上）
-- `zero_trans`：用于发布仅包含旋转而无平移的变换
+- `quaternion_optical`: Defines the rotation transforming the camera optical coordinate system to the ROS standard coordinate system (90-degree rotations). This rotates from camera optical (X right, Y down, Z forward) to ROS standard (X forward, Y left, Z up).
+- `zero_trans`: Used for publishing transforms that only include rotation.
 
-**基准流**
+**Base Stream**
 
 ```cpp
 auto base_stream_profile = stream_profile_[base_stream_];
 CHECK_NOTNULL(base_stream_profile.get());
 ```
 
-- 选择一个基准流（通常是深度流），所有其他传感器的变换都相对于这个基准流进行计算
+- Select a base stream (usually depth). All other sensor transforms are computed relative to this base stream.
 
-**遍历所有流并计算相对变换**
+**Iterate Over All Streams and Compute Relative Transforms**
 
 ```cpp
 for (const auto& item : stream_profile_) {
@@ -203,9 +202,9 @@ for (const auto& item : stream_profile_) {
     auto timestamp = ros::Time::now();
 ```
 
-- 这个变换将相机原生的光学坐标系转换为ROS标准坐标系
+- This transform converts the camera's native optical coordinate system into the ROS standard coordinate system.
 
-**发布TF变换**
+**Publish TF Transforms**
 
 ```cpp
 if (stream_index.first != base_stream_.first) {
@@ -223,13 +222,13 @@ ROS_INFO_STREAM("Rotation " << Q.getX() << ", " << Q.getY() << ", " << Q.getZ() 
                             << Q.getW());
 ```
 
-- 第一个 `publishStaticTF`：仅在当前流不是基准流时发布，包含从基准流到当前传感器的变换（平移+旋转）
-- 第二个 `publishStaticTF`：发布从物理frame到光学frame的变换（纯旋转，无平移）
-- `frame_id_[stream_index]`：物理坐标系frame名称（如 `camera_depth_frame`）
-- `optical_frame_id_[stream_index]`：光学坐标系frame名称（如 `camera_depth_optical_frame`）
-- 特殊处理左右红外摄像头的X轴偏移，通过 `abs()`确保其为正值
+- First `publishStaticTF`: Published only when the current stream is not the base stream. Contains translation + rotation from base stream to current sensor.
+- Second `publishStaticTF`: Publishes the transform from the physical frame to the optical frame (pure rotation, no translation).
+- `frame_id_[stream_index]`: Physical frame name (e.g., `camera_depth_frame`).
+- `optical_frame_id_[stream_index]`: Optical frame name (e.g., `camera_depth_optical_frame`).
+- Special handling for left/right IR camera X-axis offset using `abs()` to ensure positive value.
 
-**特殊设备处理（FEMTO系列）**
+**Special Device Handling (FEMTO Series)**
 
 ```cpp
 auto device_info = device_->getDeviceInfo();
@@ -251,5 +250,28 @@ if ((pid == FEMTO_BOLT_PID || pid == FEMTO_MEGA_PID) && enable_stream_[DEPTH] &&
 }
 ```
 
-- 根据设备PID识别FEMTO系列相机（FEMTO_BOLT、FEMTO_MEGA）
-- 对于FEMTO系列相机，需要额外计算深度到颜色传感器的变换关系，确保了不同相机型号的坐标系正确映射
+- Identify FEMTO series cameras by PID (FEMTO_BOLT, FEMTO_MEGA).
+- For FEMTO series, additionally compute the transform from depth to color sensor to ensure proper mapping across models.
+
+### Camera sensor structure
+
+![module in rviz2](../image/application_guide/image3.png)
+
+![module in rviz2](../image/application_guide/image1.png)
+
+### TF from coordinate A to coordinate B:
+
+In Orbbec cameras, the origin point (0,0,0) is taken from the camera_link position
+
+Our wrapper provide static TFs between each sensor coordinate to the camera base (camera_link)
+
+Also, it provides TFs from each sensor ROS coordinates to its corrosponding optical coordinates.
+
+Example of static TFs of RGB sensor and right infra sensor of Gemini335 module as it shown in rviz:
+
+```bash
+roslaunch orbbec_description view_model.launch.py model:=gemini_335_336.urdf.xacro
+```
+
+![module in rviz2](../image/application_guide/image2.png)
+
