@@ -17,7 +17,7 @@
     <!-- Network device settings: default enumerate_net_device is set to true, which will automatically enumerate network devices -->
     <!-- If you do not want to automatically enumerate network devices, -->
     <!-- you can set enumerate_net_device to false, ip_address to the device's IP address, and port to the default value of 8090 -->
-    <arg name="enumerate_net_device" default="false"/>
+    <arg name="enumerate_net_device" default="true"/>
     <arg name="ip_address" default=""/>
     <arg name="port" default="0"/>
     <arg name="ir_info_uri" default=""/>
