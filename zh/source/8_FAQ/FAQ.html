@@ -302,6 +302,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#opencv">8.2. 由于OpenCV版本问题导致编译失败</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id3">8.3. 其他故障排除</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id4">8.4. 为什么有这么多启动文件？</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 </ul>
 </li>
 </ul>
@@ -401,6 +402,18 @@ by running the following command:</p></li>
 <li><p>为了简化使用，每个相机都有自己的启动文件。</p></li>
 </ul>
 </section>
+<section id="id5">
+<h2><span class="section-number">8.5. </span>多相机连接时如何指定启动某一个相机<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<p>如果启动文件未显式指定要使用的设备，在同时连接多台相机时，驱动会默认连接到其中一个（默认设备）。</p>
+<p>可以先通过以下命令查看设备序列号：</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosrun<span class="w"> </span>orbbec_camera<span class="w"> </span>list_devices_node
+</pre></div>
+</div>
+<p>然后在启动时显式指定序列号，例如：</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>femto_bolt.launch<span class="w"> </span>serial_number:<span class="o">=</span>CL8H741005J
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -414,7 +427,7 @@ by running the following command:</p></li>
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2025-10-30 05:55:57.
+      <span class="lastupdated">最后更新于 2025-10-30 07:01:17.
       </span></p>
   </div>
 

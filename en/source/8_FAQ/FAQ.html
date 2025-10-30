@@ -301,6 +301,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#compilation-failure-due-to-opencv-version-issues">8.3. Compilation Failure Due to OpenCV Version Issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#additional-troubleshooting">8.4. Additional Troubleshooting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#why-are-there-so-many-launch-files">8.5. Why Are There So Many Launch Files?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-launch-a-specific-camera-when-multiple-cameras-are-connected">8.6. How to Launch a Specific Camera When Multiple Cameras Are Connected</a></li>
 </ul>
 </li>
 </ul>
@@ -390,6 +391,18 @@ Please provide this file to the support team for further assistance.</p></li>
 <li><p>To simplify usage, each camera has its own launch file.</p></li>
 </ul>
 </section>
+<section id="how-to-launch-a-specific-camera-when-multiple-cameras-are-connected">
+<h2><span class="section-number">8.6. </span>How to Launch a Specific Camera When Multiple Cameras Are Connected<a class="headerlink" href="#how-to-launch-a-specific-camera-when-multiple-cameras-are-connected" title="Link to this heading"></a></h2>
+<p>While the launch file did not explicitly specify which device to use. In that case, the driver will connect to the default device.</p>
+<p>You can check the serial number of your device by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosrun<span class="w"> </span>orbbec_camera<span class="w"> </span>list_devices_node
+</pre></div>
+</div>
+<p>Then launch with the serial number explicitly set, for example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>femto_bolt.launch<span class="w"> </span>serial_number:<span class="o">=</span>CL8H741005J
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -403,7 +416,7 @@ Please provide this file to the support team for further assistance.</p></li>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2025, ORBBEC INC. www.orbbec.com..
-      <span class="lastupdated">Last updated on 2025-10-30 05:55:55.
+      <span class="lastupdated">Last updated on 2025-10-30 07:01:14.
       </span></p>
   </div>
 
