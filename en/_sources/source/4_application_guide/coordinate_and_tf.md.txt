@@ -38,7 +38,7 @@ This command generates a `frames.pdf` file that shows the hierarchical relations
 **View all currently published TF information:**
 
 ```bash
-rostopic echo /tf
+rostopic echo /tf_static
 ```
 
 **View the TF transform between two specified frames:**
@@ -63,7 +63,7 @@ This command continuously outputs the real-time transform information between th
 Sample output:
 
 ```
-At time 1761645099.762
+At time 0.000
 - Translation: [0.000, 0.000, 0.000]
 - Rotation: in Quaternion [-0.500, 0.500, -0.500, 0.500]
             in RPY (radian) [-1.571, -0.000, -1.571]
