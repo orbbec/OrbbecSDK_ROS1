@@ -88,7 +88,7 @@ In rviz:
 
 ### ROS1 Camera TF Calculation and Publication Mechanism
 
-#### Core Function: `OBCameraNode::calcAndPublishStaticTransform()`
+#### Core Function: [OBCameraNode::calcAndPublishStaticTransform()](https://github.com/orbbec/OrbbecSDK_ROS1/blob/3a59c7a6d3037fc41454b573e0b6701103fde67a/src/ob_camera_node.cpp#L2013)
 
 The camera node uses this function to compute and publish all static transforms between sensors.
 

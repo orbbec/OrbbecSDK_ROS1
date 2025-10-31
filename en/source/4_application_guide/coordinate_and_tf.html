@@ -157,7 +157,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#ros1-camera-tf-calculation-and-publication-mechanism">4.4.4. ROS1 Camera TF Calculation and Publication Mechanism</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#core-function-obcameranode-calcandpublishstatictransform">4.4.4.1. Core Function: <code class="docutils literal notranslate"><span class="pre">OBCameraNode::calcAndPublishStaticTransform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#core-function-obcameranode-calcandpublishstatictransform">4.4.4.1. Core Function: OBCameraNode::calcAndPublishStaticTransform()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#function-explanation">4.4.4.2. Function Explanation</a></li>
 </ul>
 </li>
@@ -413,7 +413,7 @@
 <section id="ros1-camera-tf-calculation-and-publication-mechanism">
 <h2><span class="section-number">4.4.4. </span>ROS1 Camera TF Calculation and Publication Mechanism<a class="headerlink" href="#ros1-camera-tf-calculation-and-publication-mechanism" title="Link to this heading"></a></h2>
 <section id="core-function-obcameranode-calcandpublishstatictransform">
-<h3><span class="section-number">4.4.4.1. </span>Core Function: <code class="docutils literal notranslate"><span class="pre">OBCameraNode::calcAndPublishStaticTransform()</span></code><a class="headerlink" href="#core-function-obcameranode-calcandpublishstatictransform" title="Link to this heading"></a></h3>
+<h3><span class="section-number">4.4.4.1. </span>Core Function: <a class="reference external" href="https://github.com/orbbec/OrbbecSDK_ROS1/blob/3a59c7a6d3037fc41454b573e0b6701103fde67a/src/ob_camera_node.cpp#L2013">OBCameraNode::calcAndPublishStaticTransform()</a><a class="headerlink" href="#core-function-obcameranode-calcandpublishstatictransform" title="Link to this heading"></a></h3>
 <p>The camera node uses this function to compute and publish all static transforms between sensors.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">OBCameraNode::calcAndPublishStaticTransform</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">tf2</span><span class="o">::</span><span class="n">Quaternion</span><span class="w"> </span><span class="n">quaternion_optical</span><span class="p">,</span><span class="w"> </span><span class="n">zero_rot</span><span class="p">;</span>
@@ -594,7 +594,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2025, ORBBEC INC. www.orbbec.com..
-      <span class="lastupdated">Last updated on 2025-10-30 07:01:14.
+      <span class="lastupdated">Last updated on 2025-10-31 03:05:43.
       </span></p>
   </div>
 

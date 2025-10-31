@@ -158,7 +158,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#ros1tf">4.4.4. ROS1相机TF计算和发布机制</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#obcameranode-calcandpublishstatictransform">4.4.4.1. 核心函数：<code class="docutils literal notranslate"><span class="pre">OBCameraNode::calcAndPublishStaticTransform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#obcameranode-calcandpublishstatictransform">4.4.4.1. 核心函数：OBCameraNode::calcAndPublishStaticTransform()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id3">4.4.4.2. 函数解析</a></li>
 </ul>
 </li>
@@ -414,7 +414,7 @@
 <section id="ros1tf">
 <h2><span class="section-number">4.4.4. </span>ROS1相机TF计算和发布机制<a class="headerlink" href="#ros1tf" title="Link to this heading"></a></h2>
 <section id="obcameranode-calcandpublishstatictransform">
-<h3><span class="section-number">4.4.4.1. </span>核心函数：<code class="docutils literal notranslate"><span class="pre">OBCameraNode::calcAndPublishStaticTransform()</span></code><a class="headerlink" href="#obcameranode-calcandpublishstatictransform" title="Link to this heading"></a></h3>
+<h3><span class="section-number">4.4.4.1. </span>核心函数：<a class="reference external" href="https://github.com/orbbec/OrbbecSDK_ROS1/blob/3a59c7a6d3037fc41454b573e0b6701103fde67a/src/ob_camera_node.cpp#L2013">OBCameraNode::calcAndPublishStaticTransform()</a><a class="headerlink" href="#obcameranode-calcandpublishstatictransform" title="Link to this heading"></a></h3>
 <p>相机节点通过此函数计算和发布所有传感器之间的静态转换关系。</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">OBCameraNode::calcAndPublishStaticTransform</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">tf2</span><span class="o">::</span><span class="n">Quaternion</span><span class="w"> </span><span class="n">quaternion_optical</span><span class="p">,</span><span class="w"> </span><span class="n">zero_rot</span><span class="p">;</span>
@@ -595,7 +595,7 @@
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2025-10-30 07:01:17.
+      <span class="lastupdated">最后更新于 2025-10-31 03:05:46.
       </span></p>
   </div>
 
