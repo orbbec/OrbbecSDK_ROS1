@@ -89,7 +89,7 @@ rviz
 
 ### ROS1相机TF计算和发布机制
 
-#### 核心函数：`OBCameraNode::calcAndPublishStaticTransform()`
+#### 核心函数：[OBCameraNode::calcAndPublishStaticTransform()](https://github.com/orbbec/OrbbecSDK_ROS1/blob/3a59c7a6d3037fc41454b573e0b6701103fde67a/src/ob_camera_node.cpp#L2013)
 
 相机节点通过此函数计算和发布所有传感器之间的静态转换关系。
 
