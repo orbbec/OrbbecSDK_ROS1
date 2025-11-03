@@ -26,7 +26,7 @@
     <arg name="enable_ir" default="false"/>
     <arg name="ir_format" default="Y16"/>
     <arg name="publish_tf" default="true"/>
-    <arg name="tf_publish_rate" default="10.0"/>
+    <arg name="tf_publish_rate" default="0.0"/>
     <arg name="ir_info_uri" default=""/>
     <arg name="color_info_uri" default=""/>
     <arg name="log_level" default="none"/>

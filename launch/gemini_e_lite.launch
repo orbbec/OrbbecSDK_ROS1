@@ -25,7 +25,7 @@
     <arg name="flip_ir" default="false"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
     <arg name="publish_tf" default="true"/>
-    <arg name="tf_publish_rate" default="10.0"/>
+    <arg name="tf_publish_rate" default="0.0"/>
     <arg name="ir_info_uri" default=""/>
     <arg name="log_level" default="none"/>
     <arg name="enable_soft_filter" default="true"/>

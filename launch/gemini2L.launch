@@ -33,7 +33,7 @@
     <arg name="ir_format" default="Y8"/>
     <arg name="flip_ir" default="false"/>
     <arg name="enable_ir_auto_exposure" default="true"/>
-    <arg name="enable_sync_output_accel_gyro" default="true"/> 
+    <arg name="enable_sync_output_accel_gyro" default="true"/>
     <arg name="enable_accel" default="false"/>
     <arg name="accel_rate" default="100hz"/>
     <arg name="accel_range" default="4g"/>
@@ -43,7 +43,7 @@
     <arg name="liner_accel_cov" default="0.01"/>
     <arg name="angular_vel_cov" default="0.01"/>
     <arg name="publish_tf" default="true"/>
-    <arg name="tf_publish_rate" default="10.0"/>
+    <arg name="tf_publish_rate" default="0.0"/>
     <arg name="ir_info_uri" default=""/>
     <arg name="color_info_uri" default=""/>
     <arg name="log_level" default="none"/>
