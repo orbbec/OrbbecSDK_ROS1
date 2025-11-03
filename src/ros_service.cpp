@@ -266,6 +266,12 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->setReadCustomerData(request, response);
         return response.success;
       });
+  get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+      "/" + camera_name_ + "/" + "get_laser_status",
+      [this](GetBoolRequest& request, GetBoolResponse& response) {
+        response.success = this->getLaserStatusCallback(request, response);
+        return response.success;
+      });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -1147,5 +1153,21 @@ bool OBCameraNode::setReadCustomerData(GetStringRequest& request, GetStringRespo
     return false;
   }
   return false;
+}
+bool OBCameraNode::getLaserStatusCallback(GetBoolRequest& request, GetBoolResponse& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+      response.data = device_->getBoolProperty(OB_PROP_LASER_CONTROL_INT) ? true : false;
+    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      response.data = device_->getBoolProperty(OB_PROP_LASER_BOOL) ? true : false;
+    }
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM("Failed to get laser status: " << e.getMessage());
+    response.success = false;
+    return false;
+  }
+  return true;
 }
 }  // namespace orbbec_camera

@@ -379,6 +379,8 @@ class OBCameraNode {
   int init_interleave_hdr_param();
   int init_interleave_laser_param();
 
+  bool getLaserStatusCallback(GetBoolRequest &request, GetBoolResponse &response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -475,6 +477,7 @@ class OBCameraNode {
   ros::ServiceServer set_read_customerdata_srv_;
   ros::ServiceServer set_ptp_config_srv_;
   ros::ServiceServer get_ptp_config_srv_;
+  ros::ServiceServer get_laser_status_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
