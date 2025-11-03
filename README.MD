@@ -541,31 +541,32 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 
 The following devices are supported by the OrbbecSDK ROS1 Wrapper.
 
-| Product          | **Minimal Firmware Version** | launch file              |
-| ---------------- | ---------------------------------- | --------------------------- |
-| Gemini 330       | 1.2.20                             | gemini_330_series.launch |
-| Gemini 330L      | 1.2.20                             | gemini_330_series.launch |
-| Gemini 335       | 1.2.20                             | gemini_330_series.launch |
-| Gemini 335L      | 1.2.20                             | gemini_330_series.launch |
-| Gemini 336       | 1.2.20                             | gemini_330_series.launch |
-| Gemini 336L      | 1.2.20                             | gemini_330_series.launch |
-| Femto Bolt       | 1.0.6                              | femto_bolt.launch        |
-| Femto Mega       | 1.1.7                              | femto_mega.launch        |
-| Femto Mega I     | 2.0.2                              | femto_mega.launch        |
-| Gemini 2 XL      | Obox: V1.2.5 VL:1.4.54             | gemini2XL.launch         |
-| Astra 2          | 2.8.20                             | astra2.launch            |
-| Gemini 2 L       | 1.4.32                             | gemini2L.launch          |
-| Gemini 2         | 1.4.60                             | gemini2.launch           |
-| Astra+           | 1.0.19                             | astra_adv.launch         |
-| Femto            | 1.6.7                              | femto.launch             |
-| DaBai            | 2436                               | dabai.launch             |
-| DaBai DCW        | 2460                               | dabai_dcw.launch         |
-| DaBai DW         | 2606                               | dabai_dw.launch          |
-| Astra Mini Pro   | 1007                               | astra.launch             |
-| Gemini E         | 3460                               | gemini_e.launch          |
-| Gemini E Lite    | 3606                               | gemini_e_lite.launch     |
-| Gemini           | 3018                               | gemini.launch            |
-| Astra Mini S Pro | 1005                               | astra.launch             |
+| Product          | launch file              |
+| ---------------- | --------------------------- |
+| Gemini 330       | gemini_330_series.launch |
+| Gemini 330L      | gemini_330_series.launch |
+| Gemini 335       | gemini_330_series.launch |
+| Gemini 335L      | gemini_330_series.launch |
+| Gemini 336       | gemini_330_series.launch |
+| Gemini 336L      | gemini_330_series.launch |
+| Femto Bolt       | femto_bolt.launch        |
+| Femto Mega       | femto_mega.launch        |
+| Femto Mega I     | femto_mega.launch        |
+| Gemini 2 XL      | gemini2XL.launch         |
+| Astra 2          | astra2.launch            |
+| Gemini 2 L       | gemini2L.launch          |
+| Gemini 2         | gemini2.launch           |
+| Astra+           | astra_adv.launch         |
+| Femto            | femto.launch             |
+| DaBai            | dabai.launch             |
+| DaBai DCW        | dabai_dcw.launch         |
+| DaBai DW         | dabai_dw.launch          |
+| Astra Mini Pro   | astra.launch             |
+| Gemini E         | gemini_e.launch          |
+| Gemini E Lite    | gemini_e_lite.launch     |
+| Gemini           | gemini.launch            |
+| Astra Mini S Pro | astra.launch             |
+| Astra Pro Plus   | astra_pro_plus.launch    |
 
 > [!IMPORTANT]
 >
