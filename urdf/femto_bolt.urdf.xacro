@@ -14,7 +14,7 @@
   <xacro:property name="cam_width" value="0.1153"/>
   <xacro:property name="cam_height" value="0.06495"/>
   <xacro:property name="cam_depth" value="0.04026"/>
-  <xacro:property name="mesh_path" value="package://orbbec_description/meshes/femto_bolt/" />
+  <xacro:property name="mesh_path" value="package://orbbec_camera/meshes/femto_bolt/" />
 
   <!-- The following values are approximate but the camera node
      publishes TF values with actual calibrated camera extrinsic values -->
