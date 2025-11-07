@@ -11,9 +11,7 @@
     <arg name="time_domain" default="global"/><!-- "device", "global", "system" -->
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <arg name="enable_sync_host_time" default="true"/>
-    <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
-    <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
-    <arg name="device_preset" default="Default"/>
+    <arg name="depth_work_mode" default="AMR Perception"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
     <arg name="depth_precision" default=""/>
@@ -193,7 +191,7 @@
             <param name="time_domain" value="$(arg time_domain)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="enable_sync_host_time" value="$(arg enable_sync_host_time)"/>
-            <param name="device_preset" value="$(arg device_preset)"/>
+            <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="align_target_stream" value="$(arg align_target_stream)"/>

@@ -432,9 +432,14 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_noise_removal_filter_);
       ROS_INFO_STREAM("enable_noise_removal_filter:" << enable_noise_removal_filter_);
     }
-    if (!depth_work_mode_.empty()) {
-      ROS_INFO_STREAM("Set depth work mode: " << depth_work_mode_);
+    if (!depth_work_mode_.empty() &&
+        device_->isPropertySupported(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, OB_PERMISSION_READ_WRITE)) {
+      auto depthModeList = device_->getDepthWorkModeList();
+      for (uint32_t i = 0; i < depthModeList->getCount(); i++) {
+        ROS_INFO_STREAM("depthModeList[" << i << "]: " << (*depthModeList)[i].name);
+      }
       device_->switchDepthWorkMode(depth_work_mode_.c_str());
+      ROS_INFO_STREAM("Set depth work mode: " << depth_work_mode_);
     }
     if (laser_energy_level_ != -1 &&
         device_->isPropertySupported(OB_PROP_LASER_ENERGY_LEVEL_INT, OB_PERMISSION_READ_WRITE)) {
