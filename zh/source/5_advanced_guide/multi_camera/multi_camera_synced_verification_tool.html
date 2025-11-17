@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>5.2.1. 在Orbbec ROS包中使用多个相机 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
+  <title>5.2.3. 多相机同步验证节点 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=63de077d" />
@@ -22,8 +22,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
-    <link rel="next" title="5.2.2. 多相机同步说明" href="multi_camera_synced.html" />
-    <link rel="prev" title="5.1.1. 使用Orbbec ROS包降低CPU使用率" href="../performance/lower_cpu_usage.html" /> 
+    <link rel="next" title="5.2.4. 使用Orbbec ROS包配置多相机（Nodelet）" href="multi_camera_nodelet.html" />
+    <link rel="prev" title="5.2.2. 多相机同步说明" href="multi_camera_synced.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -196,12 +196,12 @@
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="reference internal" href="../advanced_guide.html#multi-camera">5.2. Multi-Camera</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">5.2.1. 在Orbbec ROS包中使用多个相机</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id1">5.2.1.1. 前提条件</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usbfs-memory-mb">5.2.1.2. 增加usbfs_memory_mb值（关键步骤）</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usb">5.2.1.3. 识别相机USB端口</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id2">5.2.1.4. 启动多相机</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#tf">5.2.1.5. 为多相机配置TF树</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multi_camera.html">5.2.1. 在Orbbec ROS包中使用多个相机</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera.html#id1">5.2.1.1. 前提条件</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera.html#usbfs-memory-mb">5.2.1.2. 增加usbfs_memory_mb值（关键步骤）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera.html#usb">5.2.1.3. 识别相机USB端口</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera.html#id2">5.2.1.4. 启动多相机</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera.html#tf">5.2.1.5. 为多相机配置TF树</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="multi_camera_synced.html">5.2.2. 多相机同步说明</a><ul>
@@ -211,9 +211,9 @@
 <li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#id4">5.2.2.4. 运行以下命令启动多相机同步</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="multi_camera_synced_verification_tool.html">5.2.3. 多相机同步验证节点</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced_verification_tool.html#id2">5.2.3.1. 使用教程</a></li>
-<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced_verification_tool.html#id3">5.2.3.2. 必要系统配置</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">5.2.3. 多相机同步验证节点</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">5.2.3.1. 使用教程</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">5.2.3.2. 必要系统配置</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="multi_camera_nodelet.html">5.2.4. 使用Orbbec ROS包配置多相机（Nodelet）</a><ul>
@@ -328,9 +328,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../advanced_guide.html"><span class="section-number">5. </span>高级指南</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">5.2.1. </span>在Orbbec ROS包中使用多个相机</li>
+      <li class="breadcrumb-item active"><span class="section-number">5.2.3. </span>多相机同步验证节点</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/source/5_advanced_guide/multi_camera/multi_camera.md.txt" rel="nofollow"> 查看页面源码</a>
+            <a href="../../../_sources/source/5_advanced_guide/multi_camera/multi_camera_synced_verification_tool.md.txt" rel="nofollow"> 查看页面源码</a>
       </li>
   </ul>
   <hr/>
@@ -338,91 +338,162 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="orbbec-ros">
-<h1><span class="section-number">5.2.1. </span>在Orbbec ROS包中使用多个相机<a class="headerlink" href="#orbbec-ros" title="Link to this heading"></a></h1>
-<p>本指南描述了如何在ROS 1环境中同时配置和使用多个Orbbec相机。</p>
-<section id="id1">
-<h2><span class="section-number">5.2.1.1. </span>前提条件<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
-<p>首先假设您已经安装了Orbbec ROS包。如果没有，请参考<a class="reference internal" href="../../2_installation/build_the_package.html"><span class="doc">Orbbec ROS包安装指南</span></a>。</p>
-</section>
-<section id="usbfs-memory-mb">
-<h2><span class="section-number">5.2.1.2. </span>增加usbfs_memory_mb值（关键步骤）<a class="headerlink" href="#usbfs-memory-mb" title="Link to this heading"></a></h2>
-<p><strong>重要提示：这个步骤对于多相机设置至关重要。如果不增加usbfs_memory_mb值，您可能无法从相机接收任何数据。</strong></p>
-<p>对于多相机设置，增加<code class="docutils literal notranslate"><span class="pre">usbfs_memory_mb</span></code>值是必要的。将其设置为128MB（可根据系统需要调整）：</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/sys/module/usbcore/parameters/usbfs_memory_mb
-</pre></div>
-</div>
-<p>要使此更改永久生效，请参考<a class="reference external" href="https://github.com/OpenKinect/libfreenect2/issues/807">此链接</a>。</p>
-<p>如果您跳过此步骤或将值设置得太低，您的相机可能无法正常工作或根本无法提供任何数据。</p>
-</section>
-<section id="usb">
-<h2><span class="section-number">5.2.1.3. </span>识别相机USB端口<a class="headerlink" href="#usb" title="Link to this heading"></a></h2>
-<p><strong>列出已连接相机的脚本</strong></p>
-<p>使用此bash脚本列出所有已连接的Orbbec设备及其USB端口和序列号：</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
-
-<span class="nv">VID</span><span class="o">=</span><span class="s2">&quot;2bc5&quot;</span>
-
-<span class="k">for</span><span class="w"> </span>dev<span class="w"> </span><span class="k">in</span><span class="w"> </span>/sys/bus/usb/devices/*<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dev</span><span class="s2">/idVendor&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w">    </span><span class="nv">vid</span><span class="o">=</span><span class="k">$(</span>cat<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dev</span><span class="s2">/idVendor&quot;</span><span class="k">)</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$vid</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">VID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w">      </span><span class="nv">port</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="nv">$dev</span><span class="k">)</span>
-<span class="w">      </span><span class="nv">product</span><span class="o">=</span><span class="k">$(</span>cat<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dev</span><span class="s2">/product&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
-<span class="w">      </span><span class="nv">serial</span><span class="o">=</span><span class="k">$(</span>cat<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$dev</span><span class="s2">/serial&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
-<span class="w">      </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Found Orbbec device </span><span class="nv">$product</span><span class="s2">, usb port </span><span class="nv">$port</span><span class="s2">, serial number </span><span class="nv">$serial</span><span class="s2">&quot;</span>
-<span class="w">    </span><span class="k">fi</span>
-<span class="w">  </span><span class="k">fi</span>
-<span class="k">done</span>
-</pre></div>
-</div>
-<p>保存并执行此脚本，或使用ROS命令：</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosrun<span class="w"> </span>orbbec_camera<span class="w"> </span>list_ob_devices.sh
-</pre></div>
-</div>
-</section>
+  <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="id1">
+<h1><span class="section-number">5.2.3. </span>多相机同步验证节点<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<p>文件路径：<a class="reference external" href="https://github.com/orbbec/OrbbecSDK_ROS2/blob/v2-main/orbbec_camera/examples/multi_camera_time_sync/image_sync_example_node.cpp">image_sync_example_node.cpp</a></p>
+<p>此示例节点用于 <strong>4 台 Orbbec 相机</strong> 的同步采集与时间戳验证。
+它可用于验证多相机主从同步（Primary / Secondary Synced）模式下的帧对齐精度。</p>
+<hr class="docutils" />
 <section id="id2">
-<h2><span class="section-number">5.2.1.4. </span>启动多相机<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
-<p><strong>多相机启动设置</strong></p>
-<p>创建一个启动文件（例如，<code class="docutils literal notranslate"><span class="pre">multi_camera.launch</span></code>），为每个相机配置单独的设置：</p>
-<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;launch&gt;</span>
-<span class="w">    </span><span class="nt">&lt;include</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;$(find orbbec_camera)/launch/gemini_330_series.launch&quot;</span><span class="nt">&gt;</span>
-<span class="w">        </span><span class="nt">&lt;arg</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;camera_name&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;camera_01&quot;</span><span class="nt">/&gt;</span>
-<span class="w">        </span><span class="nt">&lt;arg</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;usb_port&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;2-3.4.4.4.1&quot;</span><span class="nt">/&gt;</span>
-<span class="w">        </span><span class="nt">&lt;arg</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;device_num&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
-<span class="w">        </span><span class="nt">&lt;arg</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;sync_mode&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;free_run&quot;</span><span class="nt">/&gt;</span>
-<span class="w">    </span><span class="nt">&lt;/include&gt;</span>
+<h2><span class="section-number">5.2.3.1. </span>使用教程<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<ol class="simple">
+<li><p><strong>在 <code class="docutils literal notranslate"><span class="pre">multi_camera_synced.launch.py</span></code> 的基础上做以下修改</strong></p>
+<ul class="simple">
+<li><p>增加 <code class="docutils literal notranslate"><span class="pre">launch_include</span></code> 以适配 4 台相机</p></li>
+<li><p>根据设备型号选择对应的 launch 文件，如 330 系列选择 gemini_330_series.launch.py</p></li>
+<li><p>命名规范：camera_name 命名方式 camera_01、camera_02、camera_03 ...</p></li>
+<li><p>设置 device_num 数量为 4</p></li>
+<li><p>USB 端口配置 usb_port，使用以下命令查看并绑定正确的端口
+<code class="docutils literal notranslate"><span class="pre">ros2</span> <span class="pre">run</span> <span class="pre">orbbec_camera</span> <span class="pre">list_devices_node</span></code></p></li>
+<li><p>同步模式设置为主从模式，一个 primary 相机，其他设置为 secondary_synced</p></li>
+<li><p>启动顺序：主相机（Primary）应最后启动，以确保同步信号建立正确。</p></li>
+</ul>
+</li>
+</ol>
+<hr class="docutils" />
+<ol>
+<li><p><strong>参数文件修改</strong></p>
+<p>修改 <code class="docutils literal notranslate"><span class="pre">config</span></code> 目录下的以下两个配置文件：</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">camera_params.yaml</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">camera_secondary_params.yaml</span></code></p></li>
+</ul>
+<p>确保以下内容统一：</p>
+<ul class="simple">
+<li><p>启用 <strong>depth</strong> 与 <strong>color</strong> 流；</p></li>
+<li><p>统一各相机的 <strong>帧率（fps）</strong>。</p></li>
+</ul>
+</li>
+</ol>
+<hr class="docutils" />
+<ol class="simple">
+<li><p><strong>启动与验证</strong></p>
+<ul class="simple">
+<li><p>启动多机同步 launch： <code class="docutils literal notranslate"><span class="pre">multi_camera_synced.launch.py</span></code></p></li>
+<li><p>打开新终端运行同步验证节点： <code class="docutils literal notranslate"><span class="pre">ros2</span> <span class="pre">run</span> <span class="pre">orbbec_camera</span> <span class="pre">image_sync_example_node</span></code>
+该节点会输出多相机图像的时间戳差异信息，用于验证同步效果。</p></li>
+</ul>
+</li>
+</ol>
+<hr class="docutils" />
+<ol class="simple">
+<li><p><strong>参考 launch 文件</strong></p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ament_index_python.packages</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_package_share_directory</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">launch</span><span class="w"> </span><span class="kn">import</span> <span class="n">LaunchDescription</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">launch_ros.actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">launch.actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">IncludeLaunchDescription</span><span class="p">,</span> <span class="n">GroupAction</span><span class="p">,</span> <span class="n">TimerAction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">launch.launch_description_sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">PythonLaunchDescriptionSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">launch_ros.actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">LoadComposableNodes</span>
 
-<span class="w">    </span><span class="nt">&lt;include</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;$(find orbbec_camera)/launch/gemini_330_series.launch&quot;</span><span class="nt">&gt;</span>
-<span class="w">        </span><span class="nt">&lt;arg</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;camera_name&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;camera_02&quot;</span><span class="nt">/&gt;</span>
-<span class="w">        </span><span class="nt">&lt;arg</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;usb_port&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;2-3.4.4.4.3&quot;</span><span class="nt">/&gt;</span>
-<span class="w">        </span><span class="nt">&lt;arg</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;device_num&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
-<span class="w">        </span><span class="nt">&lt;arg</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;sync_mode&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;free_run&quot;</span><span class="nt">/&gt;</span>
-<span class="w">    </span><span class="nt">&lt;/include&gt;</span>
-<span class="nt">&lt;/launch&gt;</span>
-</pre></div>
-</div>
-<p><strong>运行启动文件</strong></p>
-<p>使用以下命令执行启动配置：</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>multi_camera.launch
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_launch_description</span><span class="p">():</span>
+    <span class="c1"># Include launch files</span>
+    <span class="n">package_dir</span> <span class="o">=</span> <span class="n">get_package_share_directory</span><span class="p">(</span><span class="s2">&quot;orbbec_camera&quot;</span><span class="p">)</span>
+    <span class="n">launch_file_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">package_dir</span><span class="p">,</span> <span class="s2">&quot;launch&quot;</span><span class="p">)</span>
+    <span class="n">config_file_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">package_dir</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">)</span>
+    <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config_file_dir</span><span class="p">,</span> <span class="s2">&quot;camera_params.yaml&quot;</span><span class="p">)</span>
+    <span class="n">secondary_config_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config_file_dir</span><span class="p">,</span> <span class="s2">&quot;camera_secondary_params.yaml&quot;</span><span class="p">)</span>
+
+    <span class="n">launch1_include</span> <span class="o">=</span> <span class="n">IncludeLaunchDescription</span><span class="p">(</span>
+        <span class="n">PythonLaunchDescriptionSource</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">launch_file_dir</span><span class="p">,</span> <span class="s2">&quot;gemini_330_series.launch.py&quot;</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">launch_arguments</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;camera_name&quot;</span><span class="p">:</span> <span class="s2">&quot;camera_01&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;usb_port&quot;</span><span class="p">:</span> <span class="s2">&quot;2-2.3&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;device_num&quot;</span><span class="p">:</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sync_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;primary&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;config_file_path&quot;</span><span class="p">:</span> <span class="n">config_file_path</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_out_enabled&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span>
+        <span class="p">}</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+    <span class="n">launch2_include</span> <span class="o">=</span> <span class="n">IncludeLaunchDescription</span><span class="p">(</span>
+        <span class="n">PythonLaunchDescriptionSource</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">launch_file_dir</span><span class="p">,</span> <span class="s2">&quot;gemini_330_series.launch.py&quot;</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">launch_arguments</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;camera_name&quot;</span><span class="p">:</span> <span class="s2">&quot;camera_02&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;usb_port&quot;</span><span class="p">:</span> <span class="s2">&quot;2-1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;device_num&quot;</span><span class="p">:</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sync_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_synced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;config_file_path&quot;</span><span class="p">:</span> <span class="n">secondary_config_file_path</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_out_enabled&quot;</span><span class="p">:</span> <span class="s2">&quot;false&quot;</span>
+        <span class="p">}</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+    <span class="n">launch3_include</span> <span class="o">=</span> <span class="n">IncludeLaunchDescription</span><span class="p">(</span>
+        <span class="n">PythonLaunchDescriptionSource</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">launch_file_dir</span><span class="p">,</span> <span class="s2">&quot;gemini_330_series.launch.py&quot;</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">launch_arguments</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;camera_name&quot;</span><span class="p">:</span> <span class="s2">&quot;camera_03&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;usb_port&quot;</span><span class="p">:</span> <span class="s2">&quot;2-3&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;device_num&quot;</span><span class="p">:</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sync_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_synced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;config_file_path&quot;</span><span class="p">:</span> <span class="n">secondary_config_file_path</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_out_enabled&quot;</span><span class="p">:</span> <span class="s2">&quot;false&quot;</span>
+        <span class="p">}</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+    <span class="n">launch4_include</span> <span class="o">=</span> <span class="n">IncludeLaunchDescription</span><span class="p">(</span>
+        <span class="n">PythonLaunchDescriptionSource</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">launch_file_dir</span><span class="p">,</span> <span class="s2">&quot;gemini_330_series.launch.py&quot;</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">launch_arguments</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;camera_name&quot;</span><span class="p">:</span> <span class="s2">&quot;camera_04&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;usb_port&quot;</span><span class="p">:</span> <span class="s2">&quot;2-4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;device_num&quot;</span><span class="p">:</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sync_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_synced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;config_file_path&quot;</span><span class="p">:</span> <span class="n">secondary_config_file_path</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_out_enabled&quot;</span><span class="p">:</span> <span class="s2">&quot;false&quot;</span>
+        <span class="p">}</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+
+
+    <span class="c1"># Launch description</span>
+    <span class="n">ld</span> <span class="o">=</span> <span class="n">LaunchDescription</span><span class="p">(</span>
+        <span class="p">[</span>
+
+            <span class="n">TimerAction</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="p">[</span><span class="n">GroupAction</span><span class="p">([</span><span class="n">launch2_include</span><span class="p">])]),</span>
+            <span class="n">TimerAction</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="p">[</span><span class="n">GroupAction</span><span class="p">([</span><span class="n">launch3_include</span><span class="p">])]),</span>
+            <span class="n">TimerAction</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="p">[</span><span class="n">GroupAction</span><span class="p">([</span><span class="n">launch4_include</span><span class="p">])]),</span>
+            <span class="n">TimerAction</span><span class="p">(</span><span class="n">period</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="p">[</span><span class="n">GroupAction</span><span class="p">([</span><span class="n">launch1_include</span><span class="p">])]),</span>
+            <span class="c1"># The primary camera should be launched at last</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ld</span>
 </pre></div>
 </div>
 </section>
-<section id="tf">
-<h2><span class="section-number">5.2.1.5. </span>为多相机配置TF树<a class="headerlink" href="#tf" title="Link to this heading"></a></h2>
-<p>为您的标定相机设置创建TF配置文件（例如，<code class="docutils literal notranslate"><span class="pre">multi_camera_tf.launch</span></code>）：</p>
-<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;launch&gt;</span>
-<span class="w">    </span><span class="nt">&lt;node</span><span class="w"> </span><span class="na">pkg=</span><span class="s">&quot;tf&quot;</span><span class="w"> </span><span class="na">type=</span><span class="s">&quot;static_transform_publisher&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;camera_01_tf&quot;</span><span class="w"> </span><span class="na">args=</span><span class="s">&quot;0 0 0 0 0 0 base_link camera_01_link&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
-<span class="w">    </span><span class="nt">&lt;node</span><span class="w"> </span><span class="na">pkg=</span><span class="s">&quot;tf&quot;</span><span class="w"> </span><span class="na">type=</span><span class="s">&quot;static_transform_publisher&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;camera_02_tf&quot;</span><span class="w"> </span><span class="na">args=</span><span class="s">&quot;0 0 0 0 0 0 base_link camera_02_link&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
-<span class="nt">&lt;/launch&gt;</span>
+<hr class="docutils" />
+<section id="id3">
+<h2><span class="section-number">5.2.3.2. </span>必要系统配置<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<ol class="simple">
+<li><p><strong>提升 USB 缓冲区容量</strong></p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="mi">512</span> <span class="o">|</span> <span class="n">sudo</span> <span class="n">tee</span> <span class="o">/</span><span class="n">sys</span><span class="o">/</span><span class="n">module</span><span class="o">/</span><span class="n">usbcore</span><span class="o">/</span><span class="n">parameters</span><span class="o">/</span><span class="n">usbfs_memory_mb</span>
 </pre></div>
 </div>
-<p>运行TF配置：</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>multi_camera_tf.launch
-</pre></div>
-</div>
-<p>此设置允许您在ROS环境中同时使用多个Orbbec相机。请记住，
-增加usbfs_memory_mb值的第一步对于确保您的相机在多相机设置中正常工作至关重要。</p>
+<ol class="simple">
+<li><p><strong>配置 Fast DDS</strong></p></li>
+</ol>
+<p>优化 ROS2 节点间通信延迟，可以有效减少图像传输延迟，<a class="reference external" href="../performance/fastdds_tuning">配置过程见此章节</a>。</p>
 </section>
 </section>
 
@@ -430,8 +501,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="页脚">
-        <a href="../performance/lower_cpu_usage.html" class="btn btn-neutral float-left" title="5.1.1. 使用Orbbec ROS包降低CPU使用率" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
-        <a href="multi_camera_synced.html" class="btn btn-neutral float-right" title="5.2.2. 多相机同步说明" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="multi_camera_synced.html" class="btn btn-neutral float-left" title="5.2.2. 多相机同步说明" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="multi_camera_nodelet.html" class="btn btn-neutral float-right" title="5.2.4. 使用Orbbec ROS包配置多相机（Nodelet）" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

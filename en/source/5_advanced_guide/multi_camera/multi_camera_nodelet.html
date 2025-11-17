@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>5.2.3. Configuring Multiple Cameras with Orbbec ROS Package (Nodelet) &mdash; OrbbecSDK V2 ROS1 Wrapper  documentation</title>
+  <title>5.2.4. Configuring Multiple Cameras with Orbbec ROS Package (Nodelet) &mdash; OrbbecSDK V2 ROS1 Wrapper  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=63de077d" />
@@ -21,8 +21,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="5.2.4. Usage Limitations of GMSL Cameras" href="gmsl_cameras.html" />
-    <link rel="prev" title="5.2.2. Multi_camera synced Instructions" href="multi_camera_synced.html" /> 
+    <link rel="next" title="5.2.5. Usage Limitations of GMSL Cameras" href="gmsl_cameras.html" />
+    <link rel="prev" title="5.2.3. Multi-Camera Synchronization Verification Node" href="multi_camera_synced_verification_tool.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -210,13 +210,18 @@
 <li class="toctree-l4"><a class="reference internal" href="multi_camera_synced.html#run-the-following-command-to-start-the-multi-camera-synced">5.2.2.4. Run the following command to start the multi-camera synced</a></li>
 </ul>
 </li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">5.2.3. Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#configuring-the-nodelet-manager">5.2.3.1. Configuring the Nodelet Manager</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#configuring-camera-nodelets">5.2.3.2. Configuring Camera Nodelets</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#configuring-camera-parameters">5.2.3.3. Configuring Camera Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multi_camera_synced_verification_tool.html">5.2.3. Multi-Camera Synchronization Verification Node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced_verification_tool.html#usage-guide">5.2.3.1. Usage Guide</a></li>
+<li class="toctree-l4"><a class="reference internal" href="multi_camera_synced_verification_tool.html#system-configuration-requirements">5.2.3.2. System Configuration Requirements</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="gmsl_cameras.html">5.2.4. Usage Limitations of GMSL Cameras</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">5.2.4. Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-the-nodelet-manager">5.2.4.1. Configuring the Nodelet Manager</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-camera-nodelets">5.2.4.2. Configuring Camera Nodelets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-camera-parameters">5.2.4.3. Configuring Camera Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gmsl_cameras.html">5.2.5. Usage Limitations of GMSL Cameras</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced_guide.html#configuration-modes">5.3. Configuration &amp; Modes</a><ul>
@@ -322,7 +327,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../advanced_guide.html"><span class="section-number">5. </span>Advanced Guide</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">5.2.3. </span>Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)</li>
+      <li class="breadcrumb-item active"><span class="section-number">5.2.4. </span>Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../_sources/source/5_advanced_guide/multi_camera/multi_camera_nodelet.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -333,11 +338,11 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">中文</a> | <a class="lang-current" href="#">English</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="configuring-multiple-cameras-with-orbbec-ros-package-nodelet">
-<h1><span class="section-number">5.2.3. </span>Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)<a class="headerlink" href="#configuring-multiple-cameras-with-orbbec-ros-package-nodelet" title="Link to this heading"></a></h1>
+<h1><span class="section-number">5.2.4. </span>Configuring Multiple Cameras with Orbbec ROS Package (Nodelet)<a class="headerlink" href="#configuring-multiple-cameras-with-orbbec-ros-package-nodelet" title="Link to this heading"></a></h1>
 <p>This section describes how to set up multiple camera Node nodes in the same Nodelet Manager in a ROS 1 environment. Make sure you’ve already reviewed the <a class="reference internal" href="multi_camera.html"><span class="doc">multi_camera document</span></a>.</p>
 <p>The example launch files used in this section are <code class="docutils literal notranslate"><span class="pre">multi_camera_nodelet.launch</span></code> and <code class="docutils literal notranslate"><span class="pre">gemini_330_series_nodelet.launch</span></code>.</p>
 <section id="configuring-the-nodelet-manager">
-<h2><span class="section-number">5.2.3.1. </span>Configuring the Nodelet Manager<a class="headerlink" href="#configuring-the-nodelet-manager" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.4.1. </span>Configuring the Nodelet Manager<a class="headerlink" href="#configuring-the-nodelet-manager" title="Link to this heading"></a></h2>
 <p>You can start a specific <strong>Nodelet Manager</strong> by setting the <code class="docutils literal notranslate"><span class="pre">manager</span></code> parameter. Here’s an example of launching a <strong>Nodelet Manager</strong> named <code class="docutils literal notranslate"><span class="pre">orbbec_camera_manager</span></code> in ROS 1.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;launch&gt;
 <span class="w">    </span>&lt;arg<span class="w"> </span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;manager&quot;</span><span class="w"> </span><span class="nv">default</span><span class="o">=</span><span class="s2">&quot;orbbec_camera_manager&quot;</span>/&gt;
@@ -349,7 +354,7 @@
 </div>
 </section>
 <section id="configuring-camera-nodelets">
-<h2><span class="section-number">5.2.3.2. </span>Configuring Camera Nodelets<a class="headerlink" href="#configuring-camera-nodelets" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.4.2. </span>Configuring Camera Nodelets<a class="headerlink" href="#configuring-camera-nodelets" title="Link to this heading"></a></h2>
 <p>In this example, we launch a <strong>Nodelet Manager</strong> called <code class="docutils literal notranslate"><span class="pre">orbbec_camera_manager</span></code>, and then use the <code class="docutils literal notranslate"><span class="pre">manager</span></code> parameter to launch two <code class="docutils literal notranslate"><span class="pre">gemini_330_series_nodelet.launch</span></code> files. By doing this, both camera nodelets will be managed by the same <code class="docutils literal notranslate"><span class="pre">orbbec_camera_manager</span></code>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;launch&gt;
 <span class="w">    </span>&lt;arg<span class="w"> </span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;camera_name&quot;</span><span class="w"> </span><span class="nv">default</span><span class="o">=</span><span class="s2">&quot;ob_camera&quot;</span>/&gt;
@@ -389,7 +394,7 @@
 </div>
 </section>
 <section id="configuring-camera-parameters">
-<h2><span class="section-number">5.2.3.3. </span>Configuring Camera Parameters<a class="headerlink" href="#configuring-camera-parameters" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.4.3. </span>Configuring Camera Parameters<a class="headerlink" href="#configuring-camera-parameters" title="Link to this heading"></a></h2>
 <p><strong>Identical Parameters for All Cameras</strong></p>
 <p>When you need to apply the same configuration to all cameras, since the camera nodes launched in <code class="docutils literal notranslate"><span class="pre">multi_camera_nodelet.launch</span></code> are based on the <code class="docutils literal notranslate"><span class="pre">gemini_330_series_nodelet.launch</span></code> file, you only need to modify the relevant parameters in <code class="docutils literal notranslate"><span class="pre">gemini_330_series_nodelet.launch</span></code>.</p>
 <p><strong>Different Parameters for Each Camera</strong></p>
@@ -435,15 +440,15 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="multi_camera_synced.html" class="btn btn-neutral float-left" title="5.2.2. Multi_camera synced Instructions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="gmsl_cameras.html" class="btn btn-neutral float-right" title="5.2.4. Usage Limitations of GMSL Cameras" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="multi_camera_synced_verification_tool.html" class="btn btn-neutral float-left" title="5.2.3. Multi-Camera Synchronization Verification Node" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gmsl_cameras.html" class="btn btn-neutral float-right" title="5.2.5. Usage Limitations of GMSL Cameras" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2025, ORBBEC INC. www.orbbec.com..
-      <span class="lastupdated">Last updated on 2025-10-31 03:05:43.
+      <span class="lastupdated">Last updated on 2025-11-17 01:41:03.
       </span></p>
   </div>
 
