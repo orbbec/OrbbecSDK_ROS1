@@ -346,8 +346,8 @@
 <li><p>When using the Max96712 as a deserializer chip, due to the characteristics of the Max96712 chip, a multi - machine synchronous trigger signal must be provided in the secondary_synced mode. Otherwise, data flow interruption will occur when switching the data stream</p></li>
 <li><p>Two cameras connected on the same MAX9296, MAX96712 LinkA/B, or MAX96712 LinkC/D have the following limitations:</p>
 <ul>
-<li><p>Before driver version v12.02, there was a restriction that the RGB of one camera and the right IR of another camera could not stream simultaneously. After driver version v12.02, the restriction was modified to that the RGB of one camera and the left IR of another camera cannot stream simultaneously.</p></li>
-<li><p>Before driver version v12.02, there was a restriction that the DEPTH of one camera and the left IR of another camera could not stream simultaneously. After driver version v12.02, the restriction was modified to that the DEPTH of one camera and the right IR of another camera cannot stream simultaneously.</p></li>
+<li><p>Before driver version v1.2.02, there was a restriction that the RGB of one camera and the right IR of another camera could not stream simultaneously. After driver version v1.2.02, the restriction was modified to that the RGB of one camera and the left IR of another camera cannot stream simultaneously.</p></li>
+<li><p>Before driver version v1.2.02, there was a restriction that the DEPTH of one camera and the left IR of another camera could not stream simultaneously. After driver version v1.2.02, the restriction was modified to that the DEPTH of one camera and the right IR of another camera cannot stream simultaneously.</p></li>
 <li><p>The combined maximum number of active streams from both cameras is limited to four (satisfying the above two conditions ensures compliance).</p></li>
 </ul>
 </li>
@@ -367,7 +367,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2025, ORBBEC INC. www.orbbec.com..
-      <span class="lastupdated">Last updated on 2025-11-17 01:41:03.
+      <span class="lastupdated">Last updated on 2025-11-19 07:26:20.
       </span></p>
   </div>
 
