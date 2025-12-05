@@ -129,17 +129,14 @@
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">4.2. All available services for camera control</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#stream-control">4.2.1. Stream Control</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#color-stream">4.2.1.1. Color Stream</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#depth-stream">4.2.1.2. Depth Stream</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#ir-stream">4.2.1.3. IR Stream</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#sensor-emitter-control">4.2.2. Sensor &amp; Emitter Control</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#device-information-management">4.2.3. Device Information &amp; Management</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#synchronization">4.2.4. Synchronization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#depth-filter-configuration">4.2.5. Depth Filter Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#data-capture-calibration-management">4.2.6. Data Capture &amp; Calibration Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#color-stream">4.2.1. Color Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#depth-stream">4.2.2. Depth Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ir-stream">4.2.3. IR Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sensor-emitter-control">4.2.4. Sensor &amp; Emitter Control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-information-management">4.2.5. Device Information &amp; Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#synchronization">4.2.6. Synchronization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#depth-filter-configuration">4.2.7. Depth Filter Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-capture-calibration-management">4.2.8. Data Capture &amp; Calibration Management</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="topics.html">4.3. Available Topics</a><ul>
@@ -337,237 +334,354 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">中文</a> | <a class="lang-current" href="#">English</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><p>Of course. I have analyzed the ROS2 service documentation and am ready to reformat the ROS1 version. Here is the reformatted document.</p>
-<hr class="docutils" />
-<section id="all-available-services-for-camera-control">
+  <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">中文</a> | <a class="lang-current" href="#">English</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="all-available-services-for-camera-control">
 <h1><span class="section-number">4.2. </span>All available services for camera control<a class="headerlink" href="#all-available-services-for-camera-control" title="Link to this heading"></a></h1>
-<blockquote>
-<div><p><strong>Note:</strong> Services related to a specific stream (e.g., <code class="docutils literal notranslate"><span class="pre">/camera/set_color_*</span></code>) are only available if that stream is enabled in the launch file (e.g., by setting the corresponding <code class="docutils literal notranslate"><span class="pre">enable_color</span></code> parameter to true).</p>
-</div></blockquote>
-<section id="stream-control">
-<h2><span class="section-number">4.2.1. </span>Stream Control<a class="headerlink" href="#stream-control" title="Link to this heading"></a></h2>
+<p>The service names intuitively reflect their purposes. It’s crucial to understand that services related to setting or getting parameters—denoted as <code class="docutils literal notranslate"><span class="pre">set_*</span></code> and <code class="docutils literal notranslate"><span class="pre">get_*</span></code>—become available only when the respective <code class="docutils literal notranslate"><span class="pre">enable_*</span></code> parameters are activated. For instance, enabling features such as left infrared (IR) with <code class="docutils literal notranslate"><span class="pre">enable_left_ir</span></code>, right IR with <code class="docutils literal notranslate"><span class="pre">enable_right_ir</span></code>, depth sensing with <code class="docutils literal notranslate"><span class="pre">enable_depth</span></code>, or color processing with <code class="docutils literal notranslate"><span class="pre">enable_color</span></code> (refer to <a class="reference internal" href="launch_parameters.html"><span class="doc">Launch Parameters</span></a>) is a prerequisite for their corresponding services to be operational. This configuration ensures that services are accessible only when their specific stream is enabled in the launch file’s stream argument.</p>
 <section id="color-stream">
-<h3><span class="section-number">4.2.1.1. </span>Color Stream<a class="headerlink" href="#color-stream" title="Link to this heading"></a></h3>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/toggle_color</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/toggle_color<span class="w"> </span><span class="m">1</span>
+<h2><span class="section-number">4.2.1. </span>Color Stream<a class="headerlink" href="#color-stream" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_camera_info</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_color_camera_info
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_exposure</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_color_exposure</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_exposure</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_color_exposure
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_exposure<span class="w"> </span><span class="m">100</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_gain</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_color_gain</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_gain</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_color_gain
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_gain<span class="w"> </span><span class="m">16</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_auto_exposure</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_color_auto_exposure</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_color_auto_exposure</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_auto_exposure<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_auto_exposure</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_color_auto_exposure
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_auto_exposure<span class="w"> </span><span class="m">1</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_color_exposure</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/reset_color_gain</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_color_exposure</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_exposure<span class="w"> </span><span class="m">100</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_color_exposure</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_color_exposure
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_color_gain
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_color_ae_roi</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># data_param: [Left, Right, Top, Bottom]</span>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_color_gain</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_gain<span class="w"> </span><span class="m">16</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_color_gain</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_color_gain
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_color_ae_roi</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># In data_param, the first value is the Left setting, the second value is the Right setting, the third value is the Top setting, and the fourth value is the Bottom setting.</span>
 rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_ae_roi<span class="w"> </span><span class="s1">&#39;{data_param:[0,1279,0,719]}&#39;</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_color_mirror</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_color_mirror</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_mirror<span class="w"> </span><span class="m">1</span>
 </pre></div>
 </div>
-</li>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/toggle_color</span></code></p></li>
 </ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/toggle_color<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
 </section>
 <section id="depth-stream">
-<h3><span class="section-number">4.2.1.2. </span>Depth Stream<a class="headerlink" href="#depth-stream" title="Link to this heading"></a></h3>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/toggle_depth</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/toggle_depth<span class="w"> </span><span class="m">1</span>
+<h2><span class="section-number">4.2.2. </span>Depth Stream<a class="headerlink" href="#depth-stream" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_camera_info</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_depth_camera_info
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_exposure</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_depth_exposure</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_exposure</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_depth_exposure
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_exposure<span class="w"> </span><span class="m">3000</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_gain</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_depth_gain</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_depth_exposure</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_depth_exposure
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_gain</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_depth_gain
-<span class="c1"># v2 version is not supported yet</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_depth_gain</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_depth_gain
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_depth_auto_exposure</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_auto_exposure<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_auto_exposure</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_depth_auto_exposure
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_depth_exposure</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_exposure<span class="w"> </span><span class="m">3000</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_depth_gain</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># v2 version is not supported yet</span>
 rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_gain<span class="w"> </span><span class="m">64</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_auto_exposure</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_depth_auto_exposure</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_depth_auto_exposure
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_auto_exposure<span class="w"> </span><span class="m">1</span>
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_depth_exposure</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/reset_depth_gain</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_depth_exposure
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_depth_gain
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_depth_ae_roi</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># data_param: [Left, Right, Top, Bottom]</span>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_depth_ae_roi</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># In data_param, the first value is the Left setting, the second value is the Right setting, the third value is the Top setting, and the fourth value is the Bottom setting.</span>
 rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_ae_roi<span class="w"> </span><span class="s1">&#39;{data_param:[0,1279,0,719]}&#39;</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_depth_mirror</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_depth_mirror</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_mirror<span class="w"> </span><span class="m">1</span>
 </pre></div>
 </div>
-</li>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/toggle_depth</span></code></p></li>
 </ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/toggle_depth<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
 </section>
 <section id="ir-stream">
-<h3><span class="section-number">4.2.1.3. </span>IR Stream<a class="headerlink" href="#ir-stream" title="Link to this heading"></a></h3>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/toggle_ir</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/toggle_ir<span class="w"> </span><span class="m">1</span>
+<h2><span class="section-number">4.2.3. </span>IR Stream<a class="headerlink" href="#ir-stream" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ir_camera_info</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ir_camera_info
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ir_exposure</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_ir_exposure</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ir_exposure</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ir_exposure
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ir_exposure<span class="w"> </span><span class="m">3000</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ir_gain</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_ir_gain</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_ir_exposure</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_ir_exposure
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ir_gain</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ir_gain
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ir_gain<span class="w"> </span><span class="m">64</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_ir_auto_exposure</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_ir_gain</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_ir_gain
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_ir_auto_exposure</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ir_auto_exposure<span class="w"> </span><span class="m">1</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_ir_exposure</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/reset_ir_gain</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_ir_exposure
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_ir_gain
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_ir_exposure</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ir_exposure<span class="w"> </span><span class="m">3000</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_ir_mirror</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_ir_gain</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ir_gain<span class="w"> </span><span class="m">64</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_ir_mirror</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ir_mirror<span class="w"> </span><span class="m">1</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/switch_ir</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/switch_ir</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/switch_ir<span class="w"> </span>left
 </pre></div>
 </div>
-</li>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/toggle_ir</span></code></p></li>
 </ul>
-</section>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/toggle_ir<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
 </section>
 <section id="sensor-emitter-control">
-<h2><span class="section-number">4.2.2. </span>Sensor &amp; Emitter Control<a class="headerlink" href="#sensor-emitter-control" title="Link to this heading"></a></h2>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_auto_white_balance</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_auto_white_balance</span></code></p>
+<h2><span class="section-number">4.2.4. </span>Sensor &amp; Emitter Control<a class="headerlink" href="#sensor-emitter-control" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_auto_white_balance</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_auto_white_balance
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_auto_white_balance<span class="w"> </span><span class="m">1</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_white_balance</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/reset_white_balance</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_auto_white_balance</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_auto_white_balance<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_white_balance</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_white_balance
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_white_balance
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_laser</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reset_white_balance</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reset_white_balance
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_laser</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_laser<span class="w"> </span><span class="m">1</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ldp_status</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_ldp</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ldp_status
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ldp<span class="w"> </span><span class="m">1</span>
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_flood</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_flood<span class="w"> </span><span class="m">1</span>
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_fan_work_mode</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_fan_work_mode<span class="w"> </span><span class="m">1</span>
-</pre></div>
-</div>
-</li>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_ldp</span></code></p></li>
 </ul>
-</section>
-<section id="device-information-management">
-<h2><span class="section-number">4.2.3. </span>Device Information &amp; Management<a class="headerlink" href="#device-information-management" title="Link to this heading"></a></h2>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_device_info</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_device_info
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ldp<span class="w"> </span><span class="m">1</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_sdk_version</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_sdk_version
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ldp_status</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ldp_status
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_serial</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_serial
-<span class="sb">```</span>*<span class="w">   </span><span class="sb">`</span>/camera/get_device_type<span class="sb">`</span>
-<span class="sb">```</span>bash
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_device_type
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_lrm_measure_distance</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_lrm_measure_distance</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_lrm_measure_distance
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reboot_device</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_flood</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_flood<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_fan_work_mode</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_fan_work_mode<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+<section id="device-information-management">
+<h2><span class="section-number">4.2.5. </span>Device Information &amp; Management<a class="headerlink" href="#device-information-management" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_device_info</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_device_info
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_device_type</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_device_type
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_serial</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_serial
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_sdk_version</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_sdk_version
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_camera_params</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_camera_params
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/reboot_device</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/reboot_device
 </pre></div>
 </div>
-</li>
-</ul>
 </section>
 <section id="synchronization">
-<h2><span class="section-number">4.2.4. </span>Synchronization<a class="headerlink" href="#synchronization" title="Link to this heading"></a></h2>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ptp_config</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">/camera/set_ptp_config</span></code></p>
+<h2><span class="section-number">4.2.6. </span>Synchronization<a class="headerlink" href="#synchronization" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ptp_config</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ptp_config
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ptp_config<span class="w"> </span><span class="nb">true</span>
 </pre></div>
 </div>
-</li>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_ptp_config</span></code></p></li>
 </ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_ptp_config<span class="w"> </span><span class="nb">true</span>
+</pre></div>
+</div>
 </section>
 <section id="depth-filter-configuration">
-<h2><span class="section-number">4.2.5. </span>Depth Filter Configuration<a class="headerlink" href="#depth-filter-configuration" title="Link to this heading"></a></h2>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_filter</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># filter_name, filter_enable, filter_param</span>
+<h2><span class="section-number">4.2.7. </span>Depth Filter Configuration<a class="headerlink" href="#depth-filter-configuration" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_filter</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># filter_name is the filter name, filter_enable is whether to enable the filter switch, and filter_param is the filter parameter</span>
 
 <span class="c1"># Set DecimationFilter</span>
 rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_filter<span class="w"> </span><span class="s1">&#39;{filter_name: DecimationFilter, filter_enable: false, filter_param: [5]}&#39;</span>
@@ -594,35 +708,39 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_filter
 rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_filter<span class="w"> </span><span class="s1">&#39;{filter_name: SpatialModerateFilter, filter_enable: true, filter_param: [160,1,3]}&#39;</span>
 </pre></div>
 </div>
-</li>
-</ul>
 </section>
 <section id="data-capture-calibration-management">
-<h2><span class="section-number">4.2.6. </span>Data Capture &amp; Calibration Management<a class="headerlink" href="#data-capture-calibration-management" title="Link to this heading"></a></h2>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_camera_params</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_camera_params
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_camera_info</span></code>, <code class="docutils literal notranslate"><span class="pre">/camera/get_depth_camera_info</span></code>, <code class="docutils literal notranslate"><span class="pre">/camera/get_ir_camera_info</span></code></p>
+<h2><span class="section-number">4.2.8. </span>Data Capture &amp; Calibration Management<a class="headerlink" href="#data-capture-calibration-management" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_camera_info</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_color_camera_info
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_depth_camera_info
-rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ir_camera_info
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/save_images</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_camera_info</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_depth_camera_info
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ir_camera_info</span></code></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ir_camera_info
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/save_images</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/save_images
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">/camera/save_point_cloud</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/camera/save_point_cloud</span></code></p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosservice<span class="w"> </span>call<span class="w"> </span>/camera/save_point_cloud
 </pre></div>
 </div>
-</li>
-</ul>
 </section>
 </section>
 
@@ -638,7 +756,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/get_ir_cam
 
   <div role="contentinfo">
     <p>&#169; Copyright 2025, ORBBEC INC. www.orbbec.com..
-      <span class="lastupdated">Last updated on 2025-11-19 07:26:20.
+      <span class="lastupdated">Last updated on 2025-12-05 02:00:57.
       </span></p>
   </div>
 
