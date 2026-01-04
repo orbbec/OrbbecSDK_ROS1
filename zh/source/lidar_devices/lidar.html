@@ -1,0 +1,613 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1. 安装 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=63de077d" />
+
+  
+    <link rel="shortcut icon" href="../../_static/orbbec_footerlogo_3d_world.svg"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=7d86a446"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/translations.js?v=beaddf03"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="prev" title="Lidar Devices" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OrbbecSDK V2 ROS1 包装器
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="搜索文档" aria-label="搜索文档" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="导航菜单">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../camera_devices/index.html">Camera Devices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../camera_devices/1_overview/overview.html">1. 概述</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/1_overview/introduction.html">1.1. 介绍</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/1_overview/introduction.html#id2">1.1.1. 支持的硬件产品</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/1_overview/introduction.html#id3">1.1.2. 奥比中光相机数据手册</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/1_overview/introduction.html#id4">1.1.3. 支持平台</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/1_overview/orbbecsdk_overview.html">1.2. Orbbec SDK概述</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/1_overview/orbbecsdk_overview.html#id1">1.2.1. 术语表</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/1_overview/orbbecsdk_overview.html#orbbec-sdk-v2">1.2.2. Orbbec SDK v2架构概述</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/1_overview/orbbecsdk_overview.html#sdk">1.2.3. SDK概念概述</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/1_overview/orbbecsdk_overview.html#id2">1.2.4. SDK编程模型</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../camera_devices/2_installation/installation.html">2. 安装</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/2_installation/build_the_package.html">2.1. 从源代码构建</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/2_installation/build_the_package.html#id2">2.1.1. 环境</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/2_installation/build_the_package.html#ros">2.1.2. 创建ROS工作空间并构建</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/2_installation/registration_script.html">2.2. 注册脚本（必需）</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstarts.html">3. 快速开始</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html">3.1. ROS包快速开始</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#id1">3.1.1. 介绍</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#id2">3.1.2. 构建您的第一个相机应用程序</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#ros-1">3.1.2.1. 步骤1：配置ROS 1和工作空间环境</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#id3">3.1.2.2. 步骤2：启动相机节点</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#rviz">3.1.2.3. 步骤3：在RViz中可视化</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#id4">3.1.3. 示例功能</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#id5">3.1.3.1. 列出可用的话题/服务/参数</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#id6">3.1.3.2. 回显话题</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#id7">3.1.3.3. 调用服务</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/3_quickstarts/quickstart.html#rosbag">3.1.3.4. 使用rosbag录制</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/3_quickstarts/orbbecviewer.html">3.2. OrbbecViewer快速开始</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/3_quickstarts/orbbecviewer.html#id1">3.2.1. 下载</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/3_quickstarts/orbbecviewer.html#id2">3.2.2. 连接设备</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/3_quickstarts/orbbecviewer.html#id3">3.2.3. 相机控制</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/3_quickstarts/orbbecviewer.html#id4">3.2.4. 设备信息和固件升级</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../camera_devices/4_application_guide/application_guide.html">4. 应用指南</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html">4.1. 启动参数</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id2">4.1.1. 核心和流配置</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#sensor-controls">4.1.2. Sensor Controls</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#color-stream">4.1.2.1. Color Stream</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id3">4.1.2.2. 深度流</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id4">4.1.2.3. 红外流</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#ldp">4.1.2.4. 激光 / LDP</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id5">4.1.3. 设备、同步和高级功能</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id6">4.1.3.1. 多相机同步</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id7">4.1.3.2. 网络相机</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id8">4.1.3.3. 设备特定参数</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id9">4.1.3.4. 视差</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#ae">4.1.3.5. 交替AE模式</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id10">4.1.3.6. 相机内同步</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#basic-general-parameters">4.1.4. Basic &amp; General Parameters</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#firmware-backend">4.1.4.1. Firmware &amp; Backend</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#tf-extrinsics-calibration">4.1.4.2. TF, Extrinsics &amp; Calibration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#time-synchronization">4.1.4.3. Time Synchronization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#logging-diagnostics">4.1.4.4. Logging &amp; Diagnostics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id11">4.1.4.5. 其他设置</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#imu">4.1.5. IMU参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/launch_parameters.html#id12">4.1.6. 深度滤波器</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/4_application_guide/services.html">4.2. 相机控制的所有可用服务</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/services.html#color-stream">4.2.1. 彩色流（Color Stream）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/services.html#depth-stream">4.2.2. 深度流（Depth Stream）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/services.html#ir-stream">4.2.3. 红外流（IR Stream）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/services.html#sensor-emitter-control">4.2.4. 传感器与发射器控制（Sensor &amp; Emitter Control）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/services.html#device-information-management">4.2.5. 设备信息与管理（Device Information &amp; Management）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/services.html#synchronization">4.2.6. 同步（Synchronization）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/services.html#depth-filter-configuration">4.2.7. 深度滤波器配置（Depth Filter Configuration）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/services.html#data-capture-calibration-management">4.2.8. 数据采集与标定管理（Data Capture &amp; Calibration Management）</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/4_application_guide/topics.html">4.3. 可用话题</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/topics.html#id2">4.3.1. 图像流</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/topics.html#id3">4.3.2. 点云话题</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/topics.html#id4">4.3.3. 设备状态和诊断</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html">4.4. 坐标系和 TF 变换</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html#id1">4.4.1. 相机传感器结构</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html#ros-vs">4.4.2. ROS机器人坐标系 vs 相机光学坐标系</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html#ros1-tf">4.4.3. ROS1 TF工具的使用</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html#id2">4.4.3.1. 查看TF树结构</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html#rviztf">4.4.3.2. 使用rviz可视化TF树</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html#ros1tf">4.4.4. ROS1相机TF计算和发布机制</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html#obcameranode-calcandpublishstatictransform">4.4.4.1. 核心函数：OBCameraNode::calcAndPublishStaticTransform()</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/coordinate_and_tf.html#id3">4.4.4.2. 函数解析</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/4_application_guide/point_cloud.html">4.5. 在ROS 1中启用和可视化点云</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/point_cloud.html#id1">4.5.1. 启用深度点云</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/point_cloud.html#id2">4.5.1.1. 启用深度点云的命令</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/point_cloud.html#rviz">4.5.1.2. 在RViz中可视化深度点云</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/4_application_guide/point_cloud.html#id3">4.5.2. 启用彩色点云</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/point_cloud.html#id4">4.5.2.1. 启用彩色点云的命令</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/4_application_guide/point_cloud.html#id5">4.5.2.2. 在RViz中可视化彩色点云</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../camera_devices/5_advanced_guide/advanced_guide.html">5. 高级指南</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/5_advanced_guide/advanced_guide.html#id2">5.1. 性能与优化</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html">5.1.1. 使用Orbbec ROS包降低CPU使用率</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#cpu">5.1.1.1. 降低CPU使用率的推荐设置</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#id1">5.1.1.2. 用于测试的启动文件</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#id2">5.1.1.3. 测试环境</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#id3">5.1.1.4. 测试设置</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#id4">5.1.1.5. 测试结果</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#uvc-backend-rgb">5.1.1.6. uvc_backend比较（RGB格式）</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#color-format-mjpg-vs-rgb">5.1.1.7. color_format比较（MJPG vs RGB）</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#filter-configuration-impact">5.1.1.8. Filter Configuration Impact</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/performance/lower_cpu_usage.html#further-optimization">5.1.1.9. Further Optimization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/5_advanced_guide/advanced_guide.html#multi-camera">5.2. Multi-Camera</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera.html">5.2.1. 在Orbbec ROS包中使用多个相机</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera.html#id1">5.2.1.1. 前提条件</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera.html#usbfs-memory-mb">5.2.1.2. 增加usbfs_memory_mb值（关键步骤）</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera.html#usb">5.2.1.3. 识别相机USB端口</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera.html#id2">5.2.1.4. 启动多相机</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera.html#tf">5.2.1.5. 为多相机配置TF树</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_synced.html">5.2.2. 多相机同步说明</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_synced.html#id2">5.2.2.1. 设置说明</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_synced.html#orbbecsdk-ros1">5.2.2.2. 使用OrbbecSDK_ROS1检查相机端口</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_synced.html#id3">5.2.2.3. OrbbecSDK_ROS1多相机同步配置</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_synced.html#id4">5.2.2.4. 运行以下命令启动多相机同步</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_synced_verification_tool.html">5.2.3. 多相机同步验证节点</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_synced_verification_tool.html#id2">5.2.3.1. 使用教程</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_synced_verification_tool.html#id3">5.2.3.2. 必要系统配置</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_nodelet.html">5.2.4. 使用Orbbec ROS包配置多相机（Nodelet）</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_nodelet.html#nodelet-manager">5.2.4.1. 配置Nodelet Manager</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_nodelet.html#nodelets">5.2.4.2. 配置相机Nodelets</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/multi_camera_nodelet.html#id1">5.2.4.3. 配置相机参数</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/multi_camera/gmsl_cameras.html">5.2.5. GMSL相机的使用限制</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/5_advanced_guide/advanced_guide.html#configuration-modes">5.3. Configuration &amp; Modes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/align_depth_color.html">5.3.1. 在ROS中对齐深度到彩色图像</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/align_depth_color.html#id1">5.3.1.1. 对齐和查看深度和彩色图像的命令</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/align_depth_color.html#rviz">5.3.1.2. 在RViz中选择话题</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/align_depth_color.html#id2">5.3.1.3. 深度到彩色叠加示例</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/configuration_of_depth_NFOV_and_WFOV_modes.html">5.3.2. 深度NFOV和WFOV模式配置</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/depth_work_mode_switch.html">5.3.3. 深度工作模式切换</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/disparity_search_offset.html">5.3.4. 视差搜索偏移</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/disparity_search_offset.html#id2">5.3.4.1. 功能介绍</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/disparity_search_offset.html#id3">5.3.4.2. 参数介绍</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/disparity_search_offset.html#id4">5.3.4.3. 运行启动文件</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/interleave_ae_mode.html">5.3.5. 在Gemini330系列相机中使用interleave_ae</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/interleave_ae_mode.html#id1">5.3.5.1. 参数介绍</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/interleave_ae_mode.html#id2">5.3.5.2. 运行启动文件</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/interleave_ae_mode.html#multi-camera-synced-interleave-ae">5.3.5.3. Multi_camera_synced + Interleave_ae</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/predefined_presets.html">5.3.6. 预定义预设</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/net_camera.html">5.3.7. 网络相机</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/net_camera.html#femto-mega">5.3.7.1. Femto Mega</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/net_camera.html#set-device-ip">5.3.7.2. set_device_ip实用程序</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/5_advanced_guide/configuration/net_camera.html#ip">5.3.7.3. 强制IP功能</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark.html">6. 基准测试</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/6_benchmark/introduction.html">6.1. 简介</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/6_benchmark/introduction.html#id2">6.1.1. 通用基准测试节点</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/6_benchmark/introduction.html#id3">6.1.2. 服务基准测试节点</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_usage.html">6.2. 基准测试使用指南</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_usage.html#common-benchmark-node">6.2.1. 使用通用基准测试节点（common_benchmark_node）</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_usage.html#service-benchmark-node">6.2.2. 使用服务基准测试节点（service_benchmark_node）</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_usage.html#ros1-c">6.2.2.1. ROS1 C++</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_usage.html#ros1-python">6.2.2.2. ROS1 Python</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_usage.html#yaml">6.2.2.3. 示例 YAML 配置文件</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_usage.html#id2">6.2.3. 使用建议</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_data.html">6.3. 基准测试数据</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_data.html#id2">6.3.1. 通用基准测试数据</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/6_benchmark/benchmark_data.html#id3">6.3.2. 服务基准测试数据</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../camera_devices/7_developer_guide/developer_guide.html">7. 开发者指南</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html">7.1. 从 main 迁移到开源 v2-main 分支</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id1">7.1.1. 简介</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#v2-main">7.1.2. 迁移到 v2-main 的优势</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id2">7.1.2.1. <strong>全面设备支持</strong></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id3">7.1.2.2. <strong>透明与可扩展性</strong></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id4">7.1.2.3. <strong>维护与更新优势</strong></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id5">7.1.2.4. <strong>社区与生态支持</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id6">7.1.3. main 与 v2-main 分支对比</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id7">7.1.3.1. <strong>启动文件差异</strong></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id8">7.1.3.2. <strong>参数差异</strong></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id9">7.1.3.3. <strong>话题差异</strong></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../camera_devices/7_developer_guide/migration_guide.html#id10">7.1.3.4. <strong>服务差异</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/7_developer_guide/building_a_Debian_Package.html">7.2. 构建Debian包</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../camera_devices/8_FAQ/FAQ.html">8. 常见问题</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/8_FAQ/FAQ.html#id2">8.1. 多相机无数据流</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/8_FAQ/FAQ.html#opencv">8.2. 由于OpenCV版本问题导致编译失败</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/8_FAQ/FAQ.html#id3">8.3. 其他故障排除</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../camera_devices/8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Lidar Devices</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">1. 安装</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">1.1. 先决条件</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">1.2. 安装依赖项</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#udev">1.3. 安装 udev 规则</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">1.4. 构建包</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">1.5. 启动激光雷达节点</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">2. 使用方法</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">2.1. 运行驱动程序</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">2.2. 获取已连接设备信息</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">2.3. 检查支持的配置</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">2.4. 参数和配置</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">3. 点云数据详细说明</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id12">3.1. 点云格式</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13">3.2. 点云聚合功能</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id14">3.2.1. 功能特点：</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id15">3.2.2. 使用示例：</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#imu">4. IMU数据</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id16">4.1. IMU话题</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id17">4.2. 使用IMU数据</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="移动版导航菜单" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OrbbecSDK V2 ROS1 包装器</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="页面导航">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Lidar Devices</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">1. </span>安装</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/lidar_devices/lidar.md.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><p>此 ROS1 驱动程序支持您使用 Orbbec 单线/多线激光雷达。本文档提供安装说明、使用指南和其他重要信息，帮助您快速开始使用此驱动程序。</p>
+<section id="id1">
+<h1><span class="section-number">1. </span>安装<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<section id="id2">
+<h2><span class="section-number">1.1. </span>先决条件<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>在使用 OrbbecSDK ROS1 激光雷达驱动程序之前，请确保您的系统上安装了以下依赖项：</p>
+<ul class="simple">
+<li><p><strong>ROS1</strong>: 有效安装 ROS1（Melodic、Noetic 或其他受支持的发行版）。</p>
+<ul>
+<li><p>如果您需要帮助，请参阅 <a class="reference external" href="http://wiki.ros.org/ROS/Installation">ROS1 安装指南</a>。</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id3">
+<h2><span class="section-number">1.2. </span>安装依赖项<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 假设您已经配置了 ROS 环境</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libgflags-dev<span class="w"> </span>nlohmann-json3-dev
+</pre></div>
+</div>
+</section>
+<section id="udev">
+<h2><span class="section-number">1.3. </span>安装 udev 规则<a class="headerlink" href="#udev" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>~/catkin_ws/src/orbbec-ros-sdk/scripts
+sudo<span class="w"> </span>bash<span class="w"> </span>install_udev_rules.sh
+sudo<span class="w"> </span>udevadm<span class="w"> </span>control<span class="w"> </span>--reload-rules<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>udevadm<span class="w"> </span>trigger
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h2><span class="section-number">1.4. </span>构建包<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>~/catkin_ws/
+<span class="c1"># 构建发布版本，默认为调试版本</span>
+catkin_make<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h2><span class="section-number">1.5. </span>启动激光雷达节点<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>第一个终端</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>devel/setup.bash
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>第二个终端</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>devel/setup.bash
+rviz
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>打开 RViz。</p></li>
+<li><p>添加 <code class="docutils literal notranslate"><span class="pre">PointCloud2</span></code> 或 <code class="docutils literal notranslate"><span class="pre">LaserScan</span></code> 显示。</p></li>
+<li><p>对于 <code class="docutils literal notranslate"><span class="pre">PointCloud2</span></code>，选择 <code class="docutils literal notranslate"><span class="pre">/lidar/cloud/points</span></code> 话题；对于 <code class="docutils literal notranslate"><span class="pre">LaserScan</span></code>，选择 <code class="docutils literal notranslate"><span class="pre">/lidar/scan/points</span></code> 话题。</p></li>
+<li><p>将 <code class="docutils literal notranslate"><span class="pre">Fixed</span> <span class="pre">Frame</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">lidar_lidar_frame</span></code> 以正确对齐数据。</p></li>
+</ol>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PointCloud2</span></code> 可视化示例：</p></li>
+</ul>
+<p><img alt="PointCloud2可视化示例" src="../../_images/lidar0.jpg" /></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LaserScan</span></code> 可视化示例：</p></li>
+</ul>
+<p><img alt="LaserScan可视化示例" src="../../_images/lidar1.png" /></p>
+</section>
+</section>
+<section id="id6">
+<h1><span class="section-number">2. </span>使用方法<a class="headerlink" href="#id6" title="Link to this heading"></a></h1>
+<section id="id7">
+<h2><span class="section-number">2.1. </span>运行驱动程序<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<p>要启动驱动程序，请启动提供的 ROS1 启动文件：</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>devel/setup.bash
+<span class="c1"># 启动带有点云数据的驱动</span>
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch<span class="w"> </span>lidar_format:<span class="o">=</span>LIDAR_POINT
+<span class="c1"># 启动带有球面点云数据的驱动</span>
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch<span class="w"> </span>lidar_format:<span class="o">=</span>LIDAR_SPHERE_POINT
+<span class="c1"># 启动带有激光扫描数据的驱动</span>
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch<span class="w"> </span>lidar_format:<span class="o">=</span>LIDAR_SCAN
+<span class="c1"># 启动启用IMU的驱动</span>
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch<span class="w"> </span>enable_imu:<span class="o">=</span><span class="nb">true</span><span class="w"> </span>imu_rate:<span class="o">=</span>50hz
+<span class="c1"># 启动同时包含点云和IMU数据的驱动</span>
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch<span class="w"> </span>lidar_format:<span class="o">=</span>LIDAR_POINT<span class="w"> </span>enable_imu:<span class="o">=</span><span class="nb">true</span><span class="w"> </span>imu_rate:<span class="o">=</span>100hz
+</pre></div>
+</div>
+<p>此命令将启动与奥比中光激光雷达设备接口的节点。请确保在运行此命令之前正确连接激光雷达硬件。</p>
+</section>
+<section id="id8">
+<h2><span class="section-number">2.2. </span>获取已连接设备信息<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosrun<span class="w"> </span>orbbec_camera<span class="w"> </span>list_devices_node
+</pre></div>
+</div>
+<p>此命令将列出已连接的激光雷达设备并显示其各自的IP地址和端口。您可以使用此信息配置驱动以连接到特定设备。</p>
+</section>
+<section id="id9">
+<h2><span class="section-number">2.3. </span>检查支持的配置<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosrun<span class="w"> </span>orbbec_camera<span class="w"> </span>list_camera_profile_mode_node
+</pre></div>
+</div>
+</section>
+<section id="id10">
+<h2><span class="section-number">2.4. </span>参数和配置<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">lidar.launch</span></code> 文件包含驱动的默认参数。您可以通过修改启动文件或创建自定义配置文件来自定义这些设置。关键参数包括：</p>
+<ul class="simple">
+<li><p><strong>device_type</strong>: 要启动的设备类型。可选值：<code class="docutils literal notranslate"><span class="pre">lidar</span></code>、<code class="docutils literal notranslate"><span class="pre">camera</span></code>。将此参数设置为 <code class="docutils literal notranslate"><span class="pre">lidar</span></code> 启动激光雷达设备，设置为 <code class="docutils literal notranslate"><span class="pre">camera</span></code> 启动摄像头设备。</p></li>
+<li><p><strong>camera_name</strong>: 启动节点命名空间。</p></li>
+<li><p><strong>device_num</strong>: 设备数量。如果需要启动多个设备，则必须填写此项。</p></li>
+<li><p><strong>upgrade_firmware</strong>: 固件升级功能。输入参数是固件路径。</p></li>
+<li><p><strong>connection_delay</strong>: 重新打开设备的延迟时间（毫秒）。在热插拔期间立即重新打开设备可能导致固件崩溃。</p></li>
+<li><p><strong>publish_tf</strong>: 启用TF发布。</p></li>
+<li><p><strong>tf_publish_rate</strong>: TF发布频率。</p></li>
+<li><p><strong>lidar_format</strong>: 激光雷达的数据格式。可选值：<code class="docutils literal notranslate"><span class="pre">LIDAR_POINT</span></code>、<code class="docutils literal notranslate"><span class="pre">LIDAR_SPHERE_POINT</span></code>、<code class="docutils literal notranslate"><span class="pre">LIDAR_SCAN</span></code></p></li>
+<li><p><strong>lidar_rate</strong>: 激光雷达的扫描频率。</p></li>
+<li><p><strong>publish_n_pkts</strong>: 发布合并数据前累积的帧数量。范围：1-12000。仅在激光雷达格式为 <code class="docutils literal notranslate"><span class="pre">LIDAR_POINT</span></code> 或 <code class="docutils literal notranslate"><span class="pre">LIDAR_SPHERE_POINT</span></code> 时有效，用于累积指定数量的帧后再发布合并的点云数据。默认值：<code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><strong>enable_scan_to_point</strong>: 启用扫描数据到点云数据的转换，发布PointCloud2数据类型话题。</p></li>
+<li><p><strong>repetitive_scan_mode</strong>: 重复扫描模式参数。</p></li>
+<li><p><strong>filter_level</strong>: 过滤级别参数。</p></li>
+<li><p><strong>vertical_fov</strong>: 垂直角度参数。</p></li>
+<li><p><strong>min_angle</strong>: 激光雷达扫描范围的最小角度（度）（例如，<code class="docutils literal notranslate"><span class="pre">-135.0</span></code>）。默认值：<code class="docutils literal notranslate"><span class="pre">-135.0</span></code></p></li>
+<li><p><strong>max_angle</strong>: 激光雷达扫描范围的最大角度（度）（例如，<code class="docutils literal notranslate"><span class="pre">135.0</span></code>）。默认值：<code class="docutils literal notranslate"><span class="pre">135.0</span></code></p></li>
+<li><p><strong>min_range</strong>: 激光雷达可测量的最小距离（米）。默认值：<code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></li>
+<li><p><strong>max_range</strong>: 激光雷达可测量的最大距离（米）。默认值：<code class="docutils literal notranslate"><span class="pre">30.0</span></code></p></li>
+<li><p><strong>echo_mode</strong>: 激光雷达的回波模式。可选值：<code class="docutils literal notranslate"><span class="pre">Last</span> <span class="pre">Echo</span></code>、<code class="docutils literal notranslate"><span class="pre">First</span> <span class="pre">Echo</span></code></p></li>
+<li><p><strong>enumerate_net_device</strong>: 启用网络设备的自动枚举。</p></li>
+<li><p><strong>net_device_ip</strong>: 网络设备的IP地址。</p></li>
+<li><p><strong>net_device_port</strong>: 网络设备的端口号。</p></li>
+<li><p><strong>log_level</strong>: SDK日志级别，默认值为 <code class="docutils literal notranslate"><span class="pre">none</span></code>，可选值为 <code class="docutils literal notranslate"><span class="pre">debug</span></code>、<code class="docutils literal notranslate"><span class="pre">info</span></code>、<code class="docutils literal notranslate"><span class="pre">warn</span></code>、<code class="docutils literal notranslate"><span class="pre">error</span></code>、<code class="docutils literal notranslate"><span class="pre">fatal</span></code></p></li>
+<li><p><strong>time_domain</strong>: 设备的时间戳类型。可选值为 <code class="docutils literal notranslate"><span class="pre">device</span></code>、<code class="docutils literal notranslate"><span class="pre">global</span></code>、<code class="docutils literal notranslate"><span class="pre">system</span></code></p></li>
+<li><p><strong>enable_heartbeat</strong>: 启用心跳功能，默认为 <code class="docutils literal notranslate"><span class="pre">false</span></code>。如果设置为 <code class="docutils literal notranslate"><span class="pre">true</span></code>，相机节点将向固件发送心跳信号；如果需要硬件日志记录，也应将其设置为 <code class="docutils literal notranslate"><span class="pre">true</span></code>。</p></li>
+<li><p><strong>enable_imu</strong>: 启用IMU（加速度计+陀螺仪）并输出统一的IMU话题数据。</p></li>
+<li><p><strong>imu_rate</strong>: IMU的统一频率（加速度计和陀螺仪）。</p></li>
+<li><p><strong>accel_range</strong>: 加速度计的量程。</p></li>
+<li><p><strong>gyro_range</strong>: 陀螺仪的量程。</p></li>
+<li><p><strong>linear_accel_cov</strong>: 线性加速度协方差值，默认为 <code class="docutils literal notranslate"><span class="pre">0.0001</span></code>。</p></li>
+<li><p><strong>angular_vel_cov</strong>: 角速度协方差值，默认为 <code class="docutils literal notranslate"><span class="pre">0.0001</span></code>。</p></li>
+</ul>
+</section>
+</section>
+<section id="id11">
+<h1><span class="section-number">3. </span>点云数据详细说明<a class="headerlink" href="#id11" title="Link to this heading"></a></h1>
+<section id="id12">
+<h2><span class="section-number">3.1. </span>点云格式<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<p>PointCloud2 (PointXYZITO) 点云格式如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">float32</span> <span class="n">x</span>               <span class="c1"># X轴，单位：米</span>
+<span class="n">float32</span> <span class="n">y</span>               <span class="c1"># Y轴，单位：米</span>
+<span class="n">float32</span> <span class="n">z</span>               <span class="c1"># Z轴，单位：米</span>
+<span class="n">uint8</span>   <span class="n">intensity</span>       <span class="c1"># 激光雷达强度</span>
+<span class="n">uint8</span>   <span class="n">tag</span>             <span class="c1"># 激光雷达标签</span>
+<span class="n">uint32</span>  <span class="n">offset_time</span>     <span class="c1"># 点云相对话题时间的偏移量，单位纳秒</span>
+</pre></div>
+</div>
+</section>
+<section id="id13">
+<h2><span class="section-number">3.2. </span>点云聚合功能<a class="headerlink" href="#id13" title="Link to this heading"></a></h2>
+<p>通过 <code class="docutils literal notranslate"><span class="pre">publish_n_pkts</span></code> 参数可以开启点云聚合功能，该功能允许激光雷达在发布数据前累积指定数量的帧，然后将这些帧合并为一个更大的点云数据包进行发布。</p>
+<section id="id14">
+<h3><span class="section-number">3.2.1. </span>功能特点：<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>参数范围</strong>: 1-12000 帧</p></li>
+<li><p><strong>适用格式</strong>: 仅在激光雷达格式为 <code class="docutils literal notranslate"><span class="pre">LIDAR_POINT</span></code> 或 <code class="docutils literal notranslate"><span class="pre">LIDAR_SPHERE_POINT</span></code> 时有效</p></li>
+<li><p><strong>默认值</strong>: 1（即不聚合，每帧单独发布）</p></li>
+<li><p><strong>用途</strong>: 提高点云密度，适用于需要更密集点云数据的应用场景</p></li>
+</ul>
+</section>
+<section id="id15">
+<h3><span class="section-number">3.2.2. </span>使用示例：<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 聚合10帧数据后发布</span>
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch<span class="w"> </span>lidar_format:<span class="o">=</span>LIDAR_POINT<span class="w"> </span>publish_n_pkts:<span class="o">=</span><span class="m">10</span>
+
+<span class="c1"># 聚合100帧数据后发布</span>
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch<span class="w"> </span>lidar_format:<span class="o">=</span>LIDAR_SPHERE_POINT<span class="w"> </span>publish_n_pkts:<span class="o">=</span><span class="m">100</span>
+</pre></div>
+</div>
+<p><strong>注意</strong>: 增加 <code class="docutils literal notranslate"><span class="pre">publish_n_pkts</span></code> 值会提高点云密度，但同时会增加延迟和内存使用量，请根据实际应用需求进行调整。</p>
+</section>
+</section>
+</section>
+<section id="imu">
+<h1><span class="section-number">4. </span>IMU数据<a class="headerlink" href="#imu" title="Link to this heading"></a></h1>
+<section id="id16">
+<h2><span class="section-number">4.1. </span>IMU话题<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
+<p>启用IMU时，将发布以下话题：</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">/lidar/imu/sample</span></code></strong>: 统一的IMU话题，包含 <code class="docutils literal notranslate"><span class="pre">sensor_msgs/Imu</span></code> 格式的同步加速度计和陀螺仪数据。</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">/lidar/lidar_to_imu</span></code></strong>: 从激光雷达坐标系到IMU坐标系的变换关系。</p></li>
+</ul>
+</section>
+<section id="id17">
+<h2><span class="section-number">4.2. </span>使用IMU数据<a class="headerlink" href="#id17" title="Link to this heading"></a></h2>
+<p>要启用IMU数据采集：</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 启动并启用IMU</span>
+roslaunch<span class="w"> </span>orbbec_camera<span class="w"> </span>lidar.launch<span class="w"> </span>enable_imu:<span class="o">=</span><span class="nb">true</span><span class="w"> </span>imu_rate:<span class="o">=</span>50hz
+
+<span class="c1"># 检查IMU话题</span>
+rostopic<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>imu
+
+<span class="c1"># 查看IMU数据</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/lidar/imu/sample
+</pre></div>
+</div>
+<p>IMU数据包括：</p>
+<ul class="simple">
+<li><p><strong>linear_acceleration</strong>: 3D加速度数据（x、y、z），单位：m/s²</p></li>
+<li><p><strong>angular_velocity</strong>: 3D角速度数据（x、y、z），单位：rad/s</p></li>
+<li><p><strong>orientation</strong>: 四元数方向（硬件不提供，设置为零）</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="页脚">
+        <a href="index.html" class="btn btn-neutral float-left" title="Lidar Devices" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
+      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
