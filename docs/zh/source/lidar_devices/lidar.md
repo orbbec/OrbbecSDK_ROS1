@@ -1,22 +1,22 @@
 此 ROS1 驱动程序支持您使用 Orbbec 单线/多线激光雷达。本文档提供安装说明、使用指南和其他重要信息，帮助您快速开始使用此驱动程序。
 
-## 1. 安装
+## 安装
 
-### 1.1 先决条件
+### 先决条件
 
 在使用 OrbbecSDK ROS1 激光雷达驱动程序之前，请确保您的系统上安装了以下依赖项：
 
 - **ROS1**: 有效安装 ROS1（Melodic、Noetic 或其他受支持的发行版）。
   - 如果您需要帮助，请参阅 [ROS1 安装指南](http://wiki.ros.org/ROS/Installation)。
 
-### 1.2 安装依赖项
+### 安装依赖项
 
 ```bash
 # 假设您已经配置了 ROS 环境
 sudo apt install libgflags-dev nlohmann-json3-dev
 ```
 
-### 1.3 安装 udev 规则
+### 安装 udev 规则
 
 ```bash
 cd ~/catkin_ws/src/orbbec-ros-sdk/scripts
@@ -24,7 +24,7 @@ sudo bash install_udev_rules.sh
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
-### 1.4 构建包
+### 构建包
 
 ```bash
 cd ~/catkin_ws/
@@ -32,7 +32,7 @@ cd ~/catkin_ws/
 catkin_make -DCMAKE_BUILD_TYPE=Release
 ```
 
-### 1.5 启动激光雷达节点
+### 启动激光雷达节点
 
 * 第一个终端
 
@@ -61,9 +61,9 @@ rviz
 
 ![LaserScan可视化示例](./image/lidar1.png)
 
-## 2. 使用方法
+## 使用方法
 
-### 2.1 运行驱动程序
+### 运行驱动程序
 
 要启动驱动程序，请启动提供的 ROS1 启动文件：
 
@@ -83,7 +83,7 @@ roslaunch orbbec_camera lidar.launch lidar_format:=LIDAR_POINT enable_imu:=true 
 
 此命令将启动与奥比中光激光雷达设备接口的节点。请确保在运行此命令之前正确连接激光雷达硬件。
 
-### 2.2 获取已连接设备信息
+### 获取已连接设备信息
 
 ```bash
 rosrun orbbec_camera list_devices_node
@@ -91,13 +91,13 @@ rosrun orbbec_camera list_devices_node
 
 此命令将列出已连接的激光雷达设备并显示其各自的IP地址和端口。您可以使用此信息配置驱动以连接到特定设备。
 
-### 2.3 检查支持的配置
+### 检查支持的配置
 
 ```bash
 rosrun orbbec_camera list_camera_profile_mode_node
 ```
 
-### 2.4 参数和配置
+### 参数和配置
 
 `lidar.launch` 文件包含驱动的默认参数。您可以通过修改启动文件或创建自定义配置文件来自定义这些设置。关键参数包括：
 
@@ -133,9 +133,9 @@ rosrun orbbec_camera list_camera_profile_mode_node
 - **linear_accel_cov**: 线性加速度协方差值，默认为 `0.0001`。
 - **angular_vel_cov**: 角速度协方差值，默认为 `0.0001`。
 
-## 3. 点云数据详细说明
+## 点云数据详细说明
 
-### 3.1 点云格式
+### 点云格式
 
 PointCloud2 (PointXYZITO) 点云格式如下：
 
@@ -148,7 +148,7 @@ uint8   tag             # 激光雷达标签
 uint32  offset_time     # 点云相对话题时间的偏移量，单位纳秒
 ```
 
-### 3.2 点云聚合功能
+### 点云聚合功能
 
 通过 `publish_n_pkts` 参数可以开启点云聚合功能，该功能允许激光雷达在发布数据前累积指定数量的帧，然后将这些帧合并为一个更大的点云数据包进行发布。
 
@@ -171,16 +171,16 @@ roslaunch orbbec_camera lidar.launch lidar_format:=LIDAR_SPHERE_POINT publish_n_
 
 **注意**: 增加 `publish_n_pkts` 值会提高点云密度，但同时会增加延迟和内存使用量，请根据实际应用需求进行调整。
 
-## 4. IMU数据
+## IMU数据
 
-### 4.1 IMU话题
+### IMU话题
 
 启用IMU时，将发布以下话题：
 
 - **`/lidar/imu/sample`**: 统一的IMU话题，包含 `sensor_msgs/Imu` 格式的同步加速度计和陀螺仪数据。
 - **`/lidar/lidar_to_imu`**: 从激光雷达坐标系到IMU坐标系的变换关系。
 
-### 4.2 使用IMU数据
+### 使用IMU数据
 
 要启用IMU数据采集：
 

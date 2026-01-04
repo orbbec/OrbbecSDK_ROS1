@@ -1,22 +1,22 @@
 This ROS1 driver supports your use of Orbbec single-line/multi-line LiDAR. This document provides installation instructions, usage guides, and other important information to help you quickly get started using this driver.
 
-## 1. Installation
+## Installation
 
-### 1.1 Prerequisites
+### Prerequisites
 
 Before using the OrbbecSDK ROS1 LiDAR driver, please ensure that the following dependencies are installed on your system:
 
 - **ROS1**: A valid installation of ROS1 (Melodic, Noetic, or other supported distributions).
   - If you need help, please refer to the [ROS1 Installation Guide](http://wiki.ros.org/ROS/Installation).
 
-### 1.2 Install Dependencies
+### Install Dependencies
 
 ```bash
 # Assume you have sourced ROS environment
 sudo apt install libgflags-dev nlohmann-json3-dev
 ```
 
-### 1.3 Install udev Rules
+### Install udev Rules
 
 ```bash
 cd ~/catkin_ws/src/orbbec-ros-sdk/scripts
@@ -24,7 +24,7 @@ sudo bash install_udev_rules.sh
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
-### 1.4 Build the Package
+### Build the Package
 
 ```bash
 cd ~/catkin_ws/
@@ -32,7 +32,7 @@ cd ~/catkin_ws/
 catkin_make -DCMAKE_BUILD_TYPE=Release
 ```
 
-### 1.5 Launch the LiDAR Node
+### Launch the LiDAR Node
 
 * First terminal
 
@@ -61,9 +61,9 @@ rviz
 
 ![LaserScan Visualization Example](image/lidar1.png)
 
-## 2. Usage
+## Usage
 
-### 2.1 Running the Driver
+### Running the Driver
 
 To start the driver, launch the provided ROS1 launch file:
 
@@ -83,7 +83,7 @@ roslaunch orbbec_camera lidar.launch lidar_format:=LIDAR_POINT enable_imu:=true 
 
 This command will start the node that interfaces with the Orbbec LiDAR device. Please ensure that the LiDAR hardware is properly connected before running this command.
 
-### 2.2 Get Device Information for Connected LiDARs
+### Get Device Information for Connected LiDARs
 
 ```bash
 rosrun orbbec_camera list_devices_node
@@ -91,7 +91,7 @@ rosrun orbbec_camera list_devices_node
 
 This command will list the connected LiDAR devices and display their respective IP addresses and ports. You can use this information to configure the driver to connect to specific devices.
 
-### 2.3 Check Which Configurations the LiDAR Supports
+### Check Which Configurations the LiDAR Supports
 
 ```bash
 rosrun orbbec_camera list_camera_profile_mode_node
@@ -133,9 +133,9 @@ The `lidar.launch` file contains default parameters for the driver. You can cust
 - **linear_accel_cov**: Linear acceleration covariance value, default is `0.0001`.
 - **angular_vel_cov**: Angular velocity covariance value, default is `0.0001`.
 
-## 3. Point Cloud Data Details
+## Point Cloud Data Details
 
-### 3.1 Point Cloud Format
+### Point Cloud Format
 
 PointCloud2 (PointXYZITO) point cloud format is as follows:
 
@@ -148,7 +148,7 @@ uint8   tag             # LiDAR tag
 uint32  offset_time     # Point cloud offset relative to topic time, unit nanoseconds
 ```
 
-### 3.2 Point Cloud Aggregation Functionality
+### Point Cloud Aggregation Functionality
 
 The `publish_n_pkts` parameter enables point cloud aggregation functionality, which allows the LiDAR to accumulate a specified number of frames before publishing, then merge these frames into a larger point cloud data package for publishing.
 
@@ -171,16 +171,16 @@ roslaunch orbbec_camera lidar.launch lidar_format:=LIDAR_SPHERE_POINT publish_n_
 
 **Note**: Increasing the `publish_n_pkts` value will improve point cloud density but will also increase latency and memory usage. Please adjust according to actual application requirements.
 
-## 4. IMU Data
+## IMU Data
 
-### 4.1 IMU Topics
+### IMU Topics
 
 When IMU is enabled, the following topics will be published:
 
 - **`/lidar/imu/sample`**: Unified IMU topic containing synchronized accelerometer and gyroscope data in `sensor_msgs/Imu` format.
 - **`/lidar/lidar_to_imu`**: Transform relationship from LiDAR coordinate system to IMU coordinate system.
 
-### 4.2 Using IMU Data
+### Using IMU Data
 
 To enable IMU data collection:
 
