@@ -1,5 +1,3 @@
-# OrbbecSDK ROS1 LiDAR Driver
-
 This ROS1 driver supports your use of Orbbec single-line/multi-line LiDAR. This document provides installation instructions, usage guides, and other important information to help you quickly get started using this driver.
 
 ## 1. Installation
