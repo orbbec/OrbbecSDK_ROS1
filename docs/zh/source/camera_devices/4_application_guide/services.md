@@ -253,6 +253,12 @@ rosservice call /camera/reset_white_balance
 rosservice call /camera/set_laser 1
 ```
 
+* `/camera/get_laser_status`
+```bash
+rosservice call /camera/get_laser_status
+```
+
+
 * `/camera/set_ldp`
 
 ```bash

@@ -24,6 +24,8 @@ The following are the launch parameters available:
     *   Point cloud downsampling factor. Range: `1–8`. `1` means no downsampling.
 *   **`ordered_pc`**
     *   Enable filtering of invalid point clouds.
+*   **`preset_resolution_config`**
+    * Preset resolution configuration for the camera device. Format: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". Only supported on 435Le. Leave empty to disable.
 
 ### Sensor Controls
 
@@ -196,6 +198,8 @@ The following are the launch parameters available:
 
 *   **`log_level`**
     *   SDK log level. Default is `info`. Optional values: `debug`, `info`, `warn`, `error`, `fatal`.
+* **`log_file_name`**
+    * Saved SDK log file name. Effective when `log_level` is `debug`.
 *   **`diagnostics_frequency`**
     *   Diagnostic period in seconds.
 *   **`enable_heartbeat`**

@@ -24,6 +24,8 @@
     *   点云下采样因子。范围：`1–8`，`1`表示不下采样，数值越大下采样倍数越大。
 *   **`ordered_pc`**
     *   启用无效点云的过滤。
+*   **`preset_resolution_config`**
+    * 摄像头设备的预设分辨率配置。格式: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". 仅在 Gemini435Le 设备上受支持。留空禁用。
 
 ### Sensor Controls
 
@@ -196,6 +198,8 @@
 
 *   **`log_level`**
     *   SDK log level. Default is `info`. Optional values: `debug`, `info`, `warn`, `error`, `fatal`.
+*   **`log_file_name`**
+    *   保存的SDK日志文件名。当`log_level`为`debug`时生效。
 *   **`diagnostics_frequency`**
     *   Diagnostic period in seconds.
 *   **`enable_heartbeat`**
