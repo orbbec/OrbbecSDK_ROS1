@@ -20,6 +20,8 @@ The following are the launch parameters available:
     *   Enable the point cloud.
 *   **`enable_colored_point_cloud`**
     *   Enable the RGB point cloud.
+*   **`point_cloud_decimation_filter_factor`**
+    *   Point cloud downsampling factor. Range: `1–8`. `1` means no downsampling.
 *   **`ordered_pc`**
     *   Enable filtering of invalid point clouds.
 

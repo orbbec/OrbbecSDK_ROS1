@@ -20,6 +20,8 @@
     *   启用点云。
 *   **`enable_colored_point_cloud`**
     *   启用RGB点云。
+*   **`point_cloud_decimation_filter_factor`**
+    *   点云下采样因子。范围：`1–8`，`1`表示不下采样，数值越大下采样倍数越大。
 *   **`ordered_pc`**
     *   启用无效点云的过滤。
 
