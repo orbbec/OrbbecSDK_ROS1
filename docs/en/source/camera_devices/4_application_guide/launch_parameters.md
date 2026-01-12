@@ -14,6 +14,11 @@ The following are the launch parameters available:
     *   The USB port of the camera. This is required when multiple cameras are used.
 *   **`device_num`**
     *   The number of devices. This must be filled in if multiple cameras are required.
+* **`device_preset`**
+    * The default value is `Default`. You can use the following command to view the configurable mode
+    ```bash
+    ros2 run orbbec_camera list_camera_profile_mode_node
+    ```
 *   **`[color|depth|left_ir|right_ir|ir]_[width|height|fps|format]`**
     *   The resolution and frame rate of the sensor stream.
 *   **`enable_point_cloud`**
@@ -24,8 +29,6 @@ The following are the launch parameters available:
     *   Point cloud downsampling factor. Range: `1–8`. `1` means no downsampling.
 *   **`ordered_pc`**
     *   Enable filtering of invalid point clouds.
-*   **`preset_resolution_config`**
-    * Preset resolution configuration for the camera device. Format: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". Only supported on 435Le. Leave empty to disable.
 
 ### Sensor Controls
 
@@ -125,9 +128,25 @@ The following are the launch parameters available:
 > Used for [net camera](../5_advanced_guide/configuration/net_camera.md).
 
 #### Device-Specific
+*   **`preset_resolution_config`**
+    * Preset resolution configuration for the camera device. Format: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". Leave empty to disable.
+    > Only supported 435Le.
+    >
+* **`ae_mode`**
+  * `colorbased`: Automatic exposure based on color flow. `depthbased`: Automatic exposure based on depth flow. **默认值：** `depthbased`
+    > Only supports Gemini 305.
+    >
+* **`enalbe_sports_mode`**
+  * Whether to enable sports mode. **Default:** `false`
+    > Only supports Gemini 305.
+    >
+* **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
+  * Set the downsampling multiple. You can use `ros2 run orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
+    > Only supports Gemini 305.
+    >
+*   **`enable_ptp_config`**
+    *   Enable PTP time synchronization. Only for Gemini 335Le. Requires `enable_sync_host_time` to be `false`.
 
-*   **`device_preset`**
-    *   The default value is `Default`. Only the G330 series is supported. For more information, refer to the [G330 documentation](https://www.orbbec.com/docs/g330-use-depth-presets/). The value should be one of the preset names listed [in the table](../5_advanced_guide/configuration/predefined_presets.md).
 
 #### Disparity
 
@@ -189,8 +208,6 @@ The following are the launch parameters available:
     *   Enable synchronization of the host time with the camera time. The default value is `true`. If using global time, set to `false`.
 *   **`time_domain`**
     *   Select timestamp type: `device`, `global`, and `system`.
-*   **`enable_ptp_config`**
-    *   Enable PTP time synchronization.
 *   **`enable_frame_sync`**
     *   Enable the frame synchronization.
 
