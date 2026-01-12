@@ -65,7 +65,11 @@
     *   启用深度自动曝光优先级。
 *   **`mean_intensity_set_point`**
     *   设置深度图像的目标平均强度。
-    > **注意：** 这取代了已弃用的`depth_brightness`，但为了向后兼容仍然支持该参数。
+    > **注意：** 这取代了已弃用的`depth_brightness`，后者仍支持以保持向后兼容性。
+*   **`enable_depth_scale`**
+    *   设置D2C后是否启用深度缩放。`true`表示启用，默认为`true`。
+*   **`depth_precision`**
+    *   深度精度应为 `1mm` 格式。默认值为 `1mm`。
 *   **`depth_ae_roi_[left|right|top|bottom]`**
     *   设置深度自动曝光ROI区域。
 
@@ -73,8 +77,8 @@
 
 *   **`enable_ir_auto_exposure`**
     *   启用红外自动曝光。
-*   **`ir_exposure`**
-    *   设置红外曝光。
+*   **`ir_exposure`** / **`ir_gain`**
+    *   设置红外曝光和增益。
 *   **`ir_ae_max_exposure`**
     *   设置红外自动曝光的最大曝光值。
 *   **`ir_brightness`**
