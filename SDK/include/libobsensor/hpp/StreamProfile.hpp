@@ -88,25 +88,26 @@ public:
 
     /**
      * @brief Set the extrinsic parameters from current stream profile to the given target stream profile.
-     * 
+     *
      * @tparam target Target stream profile.
      * @tparam extrinsic The extrinsic.
      */
     void bindExtrinsicTo(std::shared_ptr<StreamProfile> target, const OBExtrinsic &extrinsic) {
         ob_error *error = nullptr;
-        ob_stream_profile_set_extrinsic_to(const_cast<ob_stream_profile_t *>(impl_), const_cast<const ob_stream_profile_t *>(target->getImpl()), extrinsic, &error);
+        ob_stream_profile_set_extrinsic_to(const_cast<ob_stream_profile_t *>(impl_), const_cast<const ob_stream_profile_t *>(target->getImpl()), extrinsic,
+                                           &error);
         Error::handle(&error);
     }
 
     /**
      * @brief Set the extrinsic parameters from current stream profile to the given target stream type.
-     * 
+     *
      * @tparam targetStreamType Target stream type.
      * @tparam extrinsic The extrinsic.
      */
     void bindExtrinsicTo(const OBStreamType &targetStreamType, const OBExtrinsic &extrinsic) {
         ob_error *error = nullptr;
-        ob_stream_profile_set_extrinsic_to_type(const_cast<ob_stream_profile_t *>(impl_),targetStreamType,extrinsic, &error);
+        ob_stream_profile_set_extrinsic_to_type(const_cast<ob_stream_profile_t *>(impl_), targetStreamType, extrinsic, &error);
         Error::handle(&error);
     }
 
@@ -252,6 +253,19 @@ public:
         ob_error *error = nullptr;
         ob_video_stream_profile_set_distortion(const_cast<ob_stream_profile_t *>(impl_), distortion, &error);
         Error::handle(&error);
+    }
+
+    /**
+     * @brief Get the decimation configuration of the stream.
+     *        Includes original resolution and scale factor.
+     *
+     * @return OBHardwareDecimationConfig Return the decimation configuration.
+     */
+    OBHardwareDecimationConfig getDecimationConfig() const {
+        ob_error *error            = nullptr;
+        auto      decimationConfig = ob_video_stream_profile_get_decimation_config(const_cast<ob_stream_profile_t *>(impl_), &error);
+        Error::handle(&error);
+        return decimationConfig;
     }
 
 public:
@@ -406,6 +420,8 @@ template <typename T> bool StreamProfile::is() const {
     case OB_STREAM_IR_LEFT:
     case OB_STREAM_IR_RIGHT:
     case OB_STREAM_COLOR:
+    case OB_STREAM_COLOR_LEFT:
+    case OB_STREAM_COLOR_RIGHT:
     case OB_STREAM_DEPTH:
     case OB_STREAM_RAW_PHASE:
     case OB_STREAM_CONFIDENCE:
@@ -434,6 +450,8 @@ public:
         case OB_STREAM_IR_RIGHT:
         case OB_STREAM_DEPTH:
         case OB_STREAM_COLOR:
+        case OB_STREAM_COLOR_LEFT:
+        case OB_STREAM_COLOR_RIGHT:
         case OB_STREAM_VIDEO:
         case OB_STREAM_CONFIDENCE:
             return std::make_shared<VideoStreamProfile>(impl);
@@ -506,6 +524,25 @@ public:
                                                               int fps = OB_FPS_ANY) const {
         ob_error *error   = nullptr;
         auto      profile = ob_stream_profile_list_get_video_stream_profile(impl_, width, height, format, fps, &error);
+        Error::handle(&error);
+        auto vsp = StreamProfileFactory::create(profile);
+        return vsp->as<VideoStreamProfile>();
+    }
+
+    /**
+     * @brief Match the corresponding video stream profile according to the decimation configuration. If multiple profiles match, the first one in the list is
+     * returned. Throws an exception when no matching profile is found.
+     *
+     * @param[in] decimationConfig Decimation configuration. The actual resolution is computed fromthe original resolution and scale factor.
+     * @param[in] format Stream format. Pass OB_FORMAT_ANY if no matching condition is required.
+     * @param[in] fps Frame rate. Pass OB_FPS_ANY if no matching condition is required.
+     *
+     * @return std::shared_ptr<VideoStreamProfile> Return the matched video stream profile.
+     */
+    std::shared_ptr<VideoStreamProfile> getVideoStreamProfile(OBHardwareDecimationConfig decimationConfig, OBFormat format = OB_FORMAT_ANY,
+                                                              int fps = OB_FPS_ANY) const {
+        ob_error *error   = nullptr;
+        auto      profile = ob_stream_profile_list_get_video_stream_profile_by_decimation_config(impl_, decimationConfig, format, fps, &error);
         Error::handle(&error);
         auto vsp = StreamProfileFactory::create(profile);
         return vsp->as<VideoStreamProfile>();

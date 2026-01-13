@@ -183,7 +183,7 @@ public:
     }
 
     void unregisterDeviceChangedCallback(OBCallbackId id) {
-        ob_error *error       = nullptr;
+        ob_error *error = nullptr;
         ob_unregister_device_changed_callback(impl_, id, &error);
         {
             std::unique_lock<std::mutex> lock(callbackMtx_);

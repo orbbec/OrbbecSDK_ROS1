@@ -225,6 +225,22 @@ OB_EXPORT void ob_config_enable_video_stream(ob_config *config, ob_stream_type s
                                              ob_error **error);
 
 /**
+ * @brief Enable a video stream using a decimation configuration.
+ *
+ * @attention The stream_type should be a video stream type, such as OB_STREAM_IR, OB_STREAM_DEPTH, etc.
+ *
+ * @param[in] config The pipeline configuration object
+ * @param[in] stream_type The type of the stream to be enabled
+ * @param[in] decimation_config The decimation configuration for the stream
+ * @param[in] fps The frame rate of the video stream
+ * @param[in] format The format of the video stream
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_config_enable_video_stream_by_decimation_config(ob_config *config, ob_stream_type stream_type,
+                                                                  ob_hardware_decimation_config decimation_config, uint32_t fps, ob_format format,
+                                                                  ob_error **error);
+
+/**
  * @brief Enable accelerometer stream with specified parameters
  *
  * @param[in] config The pipeline configuration object
