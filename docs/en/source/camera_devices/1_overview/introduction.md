@@ -18,6 +18,17 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   </thead>
   <tbody>
       <tr>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 340</td>
+      <td>Gemini 345</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 345Lg</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+      <tr>
       <td style="text-align: center; font-weight: bold;">Gemini 435Le</td>
       <td>Gemini 435Le</td>
       <td>not supported</td>
@@ -176,6 +187,8 @@ To learn how to obtain and upgrade the latest firmware, [please click here](../3
 | Femto Mega              | [1.3.1](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-Firmware)              |                                               femto_mega.launch  |
 | Femto Mega I             | [2.0.4](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-I-Firmware)              |                                               femto_mega.launch  |
 | Astra 2                 | [2.8.20](https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Astra2_Release_2.8.20.zip)    |                                               astra2.launch    |
+| Gemini 345            | 1.7.12 | gemini345.launch.py |
+| Gemini 345Lg            | 1.7.12 | gemini345_lg.launch.py |
 | Pulsar SL450            | 2.2.4.5 | lidar.launch.py |
 | Pulsar ME450            | 1.0.0.6 | lidar.launch.py |
 
