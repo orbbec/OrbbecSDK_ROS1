@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>5.2.4. 使用Orbbec ROS包配置多相机（Nodelet） &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=63de077d" />
 
   
@@ -16,9 +16,9 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=7d86a446"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script src="../../../../_static/translations.js?v=beaddf03"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../../_static/translations.js?v=540d3cec"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../../search.html" />
@@ -308,6 +308,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id7">8.7. 图像未达到预设帧率</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id8">8.8. 软触发模式相关问题</a></li>
 </ul>
 </li>
 </ul>
@@ -373,11 +375,11 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="orbbec-ros-nodelet">
-<h1><span class="section-number">5.2.4. </span>使用Orbbec ROS包配置多相机（Nodelet）<a class="headerlink" href="#orbbec-ros-nodelet" title="Link to this heading"></a></h1>
+<h1><span class="section-number">5.2.4. </span>使用Orbbec ROS包配置多相机（Nodelet）<a class="headerlink" href="#orbbec-ros-nodelet" title="链接到此标题。"></a></h1>
 <p>本节描述如何在ROS 1环境中在同一个Nodelet Manager中设置多个相机节点。请确保您已经阅读了<a class="reference internal" href="multi_camera.html"><span class="doc">多相机文档</span></a>。</p>
 <p>本节使用的示例启动文件是<code class="docutils literal notranslate"><span class="pre">multi_camera_nodelet.launch</span></code>和<code class="docutils literal notranslate"><span class="pre">gemini_330_series_nodelet.launch</span></code>。</p>
 <section id="nodelet-manager">
-<h2><span class="section-number">5.2.4.1. </span>配置Nodelet Manager<a class="headerlink" href="#nodelet-manager" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.4.1. </span>配置Nodelet Manager<a class="headerlink" href="#nodelet-manager" title="链接到此标题。"></a></h2>
 <p>您可以通过设置<code class="docutils literal notranslate"><span class="pre">manager</span></code>参数来启动特定的<strong>Nodelet Manager</strong>。以下是在ROS 1中启动名为<code class="docutils literal notranslate"><span class="pre">orbbec_camera_manager</span></code>的<strong>Nodelet Manager</strong>的示例。</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;launch&gt;
 <span class="w">    </span>&lt;arg<span class="w"> </span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;manager&quot;</span><span class="w"> </span><span class="nv">default</span><span class="o">=</span><span class="s2">&quot;orbbec_camera_manager&quot;</span>/&gt;
@@ -389,7 +391,7 @@
 </div>
 </section>
 <section id="nodelets">
-<h2><span class="section-number">5.2.4.2. </span>配置相机Nodelets<a class="headerlink" href="#nodelets" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.4.2. </span>配置相机Nodelets<a class="headerlink" href="#nodelets" title="链接到此标题。"></a></h2>
 <p>在此示例中，我们启动一个名为<code class="docutils literal notranslate"><span class="pre">orbbec_camera_manager</span></code>的<strong>Nodelet Manager</strong>，然后使用<code class="docutils literal notranslate"><span class="pre">manager</span></code>参数启动两个<code class="docutils literal notranslate"><span class="pre">gemini_330_series_nodelet.launch</span></code>文件。通过这样做，两个相机nodelets都将由同一个<code class="docutils literal notranslate"><span class="pre">orbbec_camera_manager</span></code>管理。</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;launch&gt;
 <span class="w">    </span>&lt;arg<span class="w"> </span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;camera_name&quot;</span><span class="w"> </span><span class="nv">default</span><span class="o">=</span><span class="s2">&quot;ob_camera&quot;</span>/&gt;
@@ -429,7 +431,7 @@
 </div>
 </section>
 <section id="id1">
-<h2><span class="section-number">5.2.4.3. </span>配置相机参数<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.4.3. </span>配置相机参数<a class="headerlink" href="#id1" title="链接到此标题。"></a></h2>
 <p><strong>所有相机的相同参数</strong></p>
 <p>当您需要对所有相机应用相同的配置时，由于在<code class="docutils literal notranslate"><span class="pre">multi_camera_nodelet.launch</span></code>中启动的相机节点基于<code class="docutils literal notranslate"><span class="pre">gemini_330_series_nodelet.launch</span></code>文件，您只需在<code class="docutils literal notranslate"><span class="pre">gemini_330_series_nodelet.launch</span></code>中修改相关参数即可。</p>
 <p><strong>每个相机的不同参数</strong></p>
@@ -483,7 +485,7 @@
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      <span class="lastupdated">最后更新于 2026-01-13 06:35:38.
       </span></p>
   </div>
 

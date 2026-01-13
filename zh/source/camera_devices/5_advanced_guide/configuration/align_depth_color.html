@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>5.3.1. 在ROS中对齐深度到彩色图像 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=63de077d" />
 
   
@@ -16,9 +16,9 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=7d86a446"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script src="../../../../_static/translations.js?v=beaddf03"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../../_static/translations.js?v=540d3cec"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../../search.html" />
@@ -308,6 +308,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id7">8.7. 图像未达到预设帧率</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id8">8.8. 软触发模式相关问题</a></li>
 </ul>
 </li>
 </ul>
@@ -373,10 +375,10 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="ros">
-<h1><span class="section-number">5.3.1. </span>在ROS中对齐深度到彩色图像<a class="headerlink" href="#ros" title="Link to this heading"></a></h1>
+<h1><span class="section-number">5.3.1. </span>在ROS中对齐深度到彩色图像<a class="headerlink" href="#ros" title="链接到此标题。"></a></h1>
 <p>本节说明如何将深度图像与彩色图像对齐，以使用ROS创建叠加图像。这对于需要来自不同传感器模态的同步视觉信息的应用特别有用。</p>
 <section id="id1">
-<h2><span class="section-number">5.3.1.1. </span>对齐和查看深度和彩色图像的命令<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.3.1.1. </span>对齐和查看深度和彩色图像的命令<a class="headerlink" href="#id1" title="链接到此标题。"></a></h2>
 <ol>
 <li><p><strong>基本深度到彩色对齐：</strong></p>
 <p>要简单地将深度图像对齐到彩色图像，请使用以下命令：</p>
@@ -395,7 +397,7 @@
 </ol>
 </section>
 <section id="rviz">
-<h2><span class="section-number">5.3.1.2. </span>在RViz中选择话题<a class="headerlink" href="#rviz" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.3.1.2. </span>在RViz中选择话题<a class="headerlink" href="#rviz" title="链接到此标题。"></a></h2>
 <p>要在RViz中可视化对齐的图像：</p>
 <ol>
 <li><p>在运行上述命令之一后启动RViz。</p></li>
@@ -405,7 +407,7 @@
 </ol>
 </section>
 <section id="id2">
-<h2><span class="section-number">5.3.1.3. </span>深度到彩色叠加示例<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.3.1.3. </span>深度到彩色叠加示例<a class="headerlink" href="#id2" title="链接到此标题。"></a></h2>
 <p>在RViz中选择适当的话题后，您将能够看到深度到彩色叠加图像。它可能看起来像这样：</p>
 <p><img alt="深度到彩色叠加图像" src="../../../../_images/image4.jpg" /></p>
 </section>
@@ -423,7 +425,7 @@
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      <span class="lastupdated">最后更新于 2026-01-13 06:35:38.
       </span></p>
   </div>
 

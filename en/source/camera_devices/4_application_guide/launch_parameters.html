@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>4.1. Launch parameters &mdash; OrbbecSDK V2 ROS1 Wrapper  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=63de077d" />
 
   
@@ -16,8 +16,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -307,6 +307,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#why-are-there-so-many-launch-files">8.5. Why Are There So Many Launch Files?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#how-to-launch-a-specific-camera-when-multiple-cameras-are-connected">8.6. How to Launch a Specific Camera When Multiple Cameras Are Connected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#why-is-it-necessary-to-add-delays-when-starting-multiple-cameras-or-switching-streams">8.7. Why Is It Necessary to Add Delays When Starting Multiple Cameras or Switching Streams?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#the-image-does-not-reach-the-preset-frame-rate">8.8. The image does not reach the preset frame rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#issues-related-to-soft-trigger-mode">8.9. Issues related to soft trigger mode</a></li>
 </ul>
 </li>
 </ul>
@@ -379,55 +381,58 @@
 <p>The following are the launch parameters available:</p>
 <section id="core-stream-configuration">
 <h2><span class="section-number">4.1.1. </span>Core &amp; Stream Configuration<a class="headerlink" href="#core-stream-configuration" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">camera_name</span></code></strong></p>
 <ul>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">camera_name</span></code></strong></p>
+<ul class="simple">
 <li><p>Start the node namespace.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">serial_number</span></code></strong></p>
-<ul>
+<ul class="simple">
 <li><p>The serial number of the camera. This is required when multiple cameras are used.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">usb_port</span></code></strong></p>
-<ul>
+<ul class="simple">
 <li><p>The USB port of the camera. This is required when multiple cameras are used.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">device_num</span></code></strong></p>
-<ul>
+<ul class="simple">
 <li><p>The number of devices. This must be filled in if multiple cameras are required.</p></li>
 </ul>
 </li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">device_preset</span></code></strong></p>
+<ul class="simple">
+<li><p>The default value is <code class="docutils literal notranslate"><span class="pre">Default</span></code>. You can use the following command to view the configurable mode</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ros2<span class="w"> </span>run<span class="w"> </span>orbbec_camera<span class="w"> </span>list_camera_profile_mode_node
+</pre></div>
+</div>
+</li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">[color|depth|left_ir|right_ir|ir]_[width|height|fps|format]</span></code></strong></p>
-<ul>
+<ul class="simple">
 <li><p>The resolution and frame rate of the sensor stream.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">enable_point_cloud</span></code></strong></p>
-<ul>
+<ul class="simple">
 <li><p>Enable the point cloud.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">enable_colored_point_cloud</span></code></strong></p>
-<ul>
+<ul class="simple">
 <li><p>Enable the RGB point cloud.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">point_cloud_decimation_filter_factor</span></code></strong></p>
-<ul>
+<ul class="simple">
 <li><p>Point cloud downsampling factor. Range: <code class="docutils literal notranslate"><span class="pre">1–8</span></code>. <code class="docutils literal notranslate"><span class="pre">1</span></code> means no downsampling.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">ordered_pc</span></code></strong></p>
-<ul>
+<ul class="simple">
 <li><p>Enable filtering of invalid point clouds.</p></li>
-</ul>
-</li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">preset_resolution_config</span></code></strong></p>
-<ul>
-<li><p>Preset resolution configuration for the camera device. Format: “width,height,ir_decimation_factor,depth_decimation_factor”. Example: “1280,720,4,4”. Only supported on 435Le. Leave empty to disable.</p></li>
 </ul>
 </li>
 </ul>
@@ -504,7 +509,7 @@
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">mean_intensity_set_point</span></code></strong></p>
 <ul class="simple">
-<li><p>Set the target mean intensity of the Depth image.</p></li>
+<li><p>Set the target average intensity of the depth image when auto-exposure is turned on.</p></li>
 </ul>
 <blockquote>
 <div><p><strong>Note:</strong> This replaces the deprecated <code class="docutils literal notranslate"><span class="pre">depth_brightness</span></code>, which is still supported for backward compatibility.</p>
@@ -513,6 +518,16 @@
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">depth_ae_roi_[left|right|top|bottom]</span></code></strong></p>
 <ul class="simple">
 <li><p>Set Depth auto exposure ROI.</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">enable_depth_scale</span></code></strong></p>
+<ul class="simple">
+<li><p>Whether to enable depth scaling after setting D2C. <code class="docutils literal notranslate"><span class="pre">true</span></code> means enabled, the default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">depth_precision</span></code></strong></p>
+<ul class="simple">
+<li><p>The depth precision should be in the format <code class="docutils literal notranslate"><span class="pre">1mm</span></code>. The default value is <code class="docutils literal notranslate"><span class="pre">1mm</span></code>.</p></li>
 </ul>
 </li>
 </ul>
@@ -525,9 +540,9 @@
 <li><p>Enable the IR auto exposure.</p></li>
 </ul>
 </li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">ir_exposure</span></code></strong></p>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">ir_exposure</span></code></strong> / <strong><code class="docutils literal notranslate"><span class="pre">ir_gain</span></code></strong></p>
 <ul>
-<li><p>Set the IR exposure.</p></li>
+<li><p>Set the IR exposure and gain.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">ir_ae_max_exposure</span></code></strong></p>
@@ -537,7 +552,7 @@
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">ir_brightness</span></code></strong></p>
 <ul>
-<li><p>Set the IR brightness.</p></li>
+<li><p>Set the target average intensity of the ir image when auto-exposure is turned on.</p></li>
 </ul>
 </li>
 </ul>
@@ -643,10 +658,45 @@
 </section>
 <section id="device-specific">
 <h3><span class="section-number">4.1.3.3. </span>Device-Specific<a class="headerlink" href="#device-specific" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">device_preset</span></code></strong></p>
 <ul>
-<li><p>The default value is <code class="docutils literal notranslate"><span class="pre">Default</span></code>. Only the G330 series is supported. For more information, refer to the <a class="reference external" href="https://www.orbbec.com/docs/g330-use-depth-presets/">G330 documentation</a>. The value should be one of the preset names listed <a class="reference internal" href="../5_advanced_guide/configuration/predefined_presets.html"><span class="doc">in the table</span></a>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">preset_resolution_config</span></code></strong></p>
+<ul class="simple">
+<li><p>Preset resolution configuration for the camera device. Format: “width,height,ir_decimation_factor,depth_decimation_factor”. Example: “1280,720,4,4”. Leave empty to disable.</p></li>
+</ul>
+<blockquote>
+<div><p>Only supported 435Le.</p>
+</div></blockquote>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">ae_mode</span></code></strong></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">colorbased</span></code>: Automatic exposure based on color flow. <code class="docutils literal notranslate"><span class="pre">depthbased</span></code>: Automatic exposure based on depth flow. <strong>默认值：</strong> <code class="docutils literal notranslate"><span class="pre">depthbased</span></code></p>
+<blockquote>
+<div><p>Only supports Gemini 305.</p>
+</div></blockquote>
+</li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">enalbe_sports_mode</span></code></strong></p>
+<ul>
+<li><p>Whether to enable sports mode. <strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+<blockquote>
+<div><p>Only supports Gemini 305.</p>
+</div></blockquote>
+</li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">depth_downscale</span></code></strong> / <strong><code class="docutils literal notranslate"><span class="pre">left_ir_downscale</span></code></strong> /<strong><code class="docutils literal notranslate"><span class="pre">right_ir_downscale</span></code></strong></p>
+<ul>
+<li><p>Set the downsampling multiple. You can use <code class="docutils literal notranslate"><span class="pre">ros2</span> <span class="pre">run</span> <span class="pre">orbbec_camera</span> <span class="pre">list_camera_profile_mode_node</span></code> to view the settable resolution. <strong>Default value:</strong> <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+<blockquote>
+<div><p>Only supports Gemini 305.</p>
+</div></blockquote>
+</li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">enable_ptp_config</span></code></strong></p>
+<ul class="simple">
+<li><p>Enable PTP time synchronization. Only for Gemini 335Le. Requires <code class="docutils literal notranslate"><span class="pre">enable_sync_host_time</span></code> to be <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
 </ul>
 </li>
 </ul>
@@ -772,11 +822,6 @@
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">time_domain</span></code></strong></p>
 <ul>
 <li><p>Select timestamp type: <code class="docutils literal notranslate"><span class="pre">device</span></code>, <code class="docutils literal notranslate"><span class="pre">global</span></code>, and <code class="docutils literal notranslate"><span class="pre">system</span></code>.</p></li>
-</ul>
-</li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">enable_ptp_config</span></code></strong></p>
-<ul>
-<li><p>Enable PTP time synchronization.</p></li>
 </ul>
 </li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">enable_frame_sync</span></code></strong></p>
@@ -930,7 +975,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2025, ORBBEC INC. www.orbbec.com..
-      <span class="lastupdated">Last updated on 2026-01-04 07:13:43.
+      <span class="lastupdated">Last updated on 2026-01-13 06:35:35.
       </span></p>
   </div>
 

@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>4.4. 坐标系和 TF 变换 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=63de077d" />
 
   
@@ -16,9 +16,9 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=7d86a446"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script src="../../../_static/translations.js?v=beaddf03"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/translations.js?v=540d3cec"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
@@ -308,6 +308,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id7">8.7. 图像未达到预设帧率</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id8">8.8. 软触发模式相关问题</a></li>
 </ul>
 </li>
 </ul>
@@ -373,14 +375,14 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="tf">
-<h1><span class="section-number">4.4. </span>坐标系和 TF 变换<a class="headerlink" href="#tf" title="Link to this heading"></a></h1>
+<h1><span class="section-number">4.4. </span>坐标系和 TF 变换<a class="headerlink" href="#tf" title="链接到此标题。"></a></h1>
 <section id="id1">
-<h2><span class="section-number">4.4.1. </span>相机传感器结构<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.4.1. </span>相机传感器结构<a class="headerlink" href="#id1" title="链接到此标题。"></a></h2>
 <p><img alt="相机模块结构图" src="../../../_images/image3.png" /></p>
 <p><img alt="相机传感器布局" src="../../../_images/image1.png" /></p>
 </section>
 <section id="ros-vs">
-<h2><span class="section-number">4.4.2. </span>ROS机器人坐标系 vs 相机光学坐标系<a class="headerlink" href="#ros-vs" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.4.2. </span>ROS机器人坐标系 vs 相机光学坐标系<a class="headerlink" href="#ros-vs" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p>观察视角：</p>
 <ul>
@@ -398,9 +400,9 @@
 </ul>
 </section>
 <section id="ros1-tf">
-<h2><span class="section-number">4.4.3. </span>ROS1 TF工具的使用<a class="headerlink" href="#ros1-tf" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.4.3. </span>ROS1 TF工具的使用<a class="headerlink" href="#ros1-tf" title="链接到此标题。"></a></h2>
 <section id="id2">
-<h3><span class="section-number">4.4.3.1. </span>查看TF树结构<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<h3><span class="section-number">4.4.3.1. </span>查看TF树结构<a class="headerlink" href="#id2" title="链接到此标题。"></a></h3>
 <p>可以使用以下ROS1命令来打印和可视化相机包发布的TF树：</p>
 <p><strong>打印所有TF关系：</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rosrun<span class="w"> </span>tf<span class="w"> </span>view_frames
@@ -436,7 +438,7 @@
 </div>
 </section>
 <section id="rviztf">
-<h3><span class="section-number">4.4.3.2. </span>使用rviz可视化TF树<a class="headerlink" href="#rviztf" title="Link to this heading"></a></h3>
+<h3><span class="section-number">4.4.3.2. </span>使用rviz可视化TF树<a class="headerlink" href="#rviztf" title="链接到此标题。"></a></h3>
 <p>在rviz中可以实时可视化TF树结构和坐标系的相对位置：</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rviz
 </pre></div>
@@ -451,9 +453,9 @@
 </section>
 </section>
 <section id="ros1tf">
-<h2><span class="section-number">4.4.4. </span>ROS1相机TF计算和发布机制<a class="headerlink" href="#ros1tf" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.4.4. </span>ROS1相机TF计算和发布机制<a class="headerlink" href="#ros1tf" title="链接到此标题。"></a></h2>
 <section id="obcameranode-calcandpublishstatictransform">
-<h3><span class="section-number">4.4.4.1. </span>核心函数：<a class="reference external" href="https://github.com/orbbec/OrbbecSDK_ROS1/blob/3a59c7a6d3037fc41454b573e0b6701103fde67a/src/ob_camera_node.cpp#L2013">OBCameraNode::calcAndPublishStaticTransform()</a><a class="headerlink" href="#obcameranode-calcandpublishstatictransform" title="Link to this heading"></a></h3>
+<h3><span class="section-number">4.4.4.1. </span>核心函数：<a class="reference external" href="https://github.com/orbbec/OrbbecSDK_ROS1/blob/3a59c7a6d3037fc41454b573e0b6701103fde67a/src/ob_camera_node.cpp#L2013">OBCameraNode::calcAndPublishStaticTransform()</a><a class="headerlink" href="#obcameranode-calcandpublishstatictransform" title="链接到此标题。"></a></h3>
 <p>相机节点通过此函数计算和发布所有传感器之间的静态转换关系。</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">OBCameraNode::calcAndPublishStaticTransform</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">tf2</span><span class="o">::</span><span class="n">Quaternion</span><span class="w"> </span><span class="n">quaternion_optical</span><span class="p">,</span><span class="w"> </span><span class="n">zero_rot</span><span class="p">;</span>
@@ -523,7 +525,7 @@
 </div>
 </section>
 <section id="id3">
-<h3><span class="section-number">4.4.4.2. </span>函数解析<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<h3><span class="section-number">4.4.4.2. </span>函数解析<a class="headerlink" href="#id3" title="链接到此标题。"></a></h3>
 <p>下面是ROS1代码的详细解释：</p>
 <p><strong>四元数初始化与坐标系变换</strong></p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">tf2</span><span class="o">::</span><span class="n">Quaternion</span><span class="w"> </span><span class="n">quaternion_optical</span><span class="p">,</span><span class="w"> </span><span class="n">zero_rot</span><span class="p">;</span>
@@ -634,7 +636,7 @@
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      <span class="lastupdated">最后更新于 2026-01-13 06:35:38.
       </span></p>
   </div>
 

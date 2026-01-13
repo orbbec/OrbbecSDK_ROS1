@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>4.2. 相机控制的所有可用服务 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=63de077d" />
 
   
@@ -16,9 +16,9 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=7d86a446"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script src="../../../_static/translations.js?v=beaddf03"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/translations.js?v=540d3cec"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
@@ -308,6 +308,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id7">8.7. 图像未达到预设帧率</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id8">8.8. 软触发模式相关问题</a></li>
 </ul>
 </li>
 </ul>
@@ -373,10 +375,10 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="id1">
-<h1><span class="section-number">4.2. </span>相机控制的所有可用服务<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<h1><span class="section-number">4.2. </span>相机控制的所有可用服务<a class="headerlink" href="#id1" title="链接到此标题。"></a></h1>
 <p>服务名称直观地反映了其用途。需要注意的是，所有与设置/获取参数相关的服务（以 <code class="docutils literal notranslate"><span class="pre">set_*</span></code> 与 <code class="docutils literal notranslate"><span class="pre">get_*</span></code> 表示）只有在对应的 <code class="docutils literal notranslate"><span class="pre">enable_*</span></code> 参数被启用时才会生效。例如，启用左红外（IR）<code class="docutils literal notranslate"><span class="pre">enable_left_ir</span></code>、右红外 <code class="docutils literal notranslate"><span class="pre">enable_right_ir</span></code>、深度 <code class="docutils literal notranslate"><span class="pre">enable_depth</span></code> 或彩色 <code class="docutils literal notranslate"><span class="pre">enable_color</span></code>（参见 <a class="reference internal" href="launch_parameters.html"><span class="doc">启动参数</span></a>）是使用相应服务的前提条件。这样可以确保只有当启动文件的流参数开启时，才会提供对应流的服务。</p>
 <section id="color-stream">
-<h2><span class="section-number">4.2.1. </span>彩色流（Color Stream）<a class="headerlink" href="#color-stream" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.2.1. </span>彩色流（Color Stream）<a class="headerlink" href="#color-stream" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_camera_info</span></code></p></li>
 </ul>
@@ -452,7 +454,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_color_
 </div>
 </section>
 <section id="depth-stream">
-<h2><span class="section-number">4.2.2. </span>深度流（Depth Stream）<a class="headerlink" href="#depth-stream" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.2.2. </span>深度流（Depth Stream）<a class="headerlink" href="#depth-stream" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_depth_camera_info</span></code></p></li>
 </ul>
@@ -529,7 +531,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_
 </div>
 </section>
 <section id="ir-stream">
-<h2><span class="section-number">4.2.3. </span>红外流（IR Stream）<a class="headerlink" href="#ir-stream" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.2.3. </span>红外流（IR Stream）<a class="headerlink" href="#ir-stream" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ir_camera_info</span></code></p></li>
 </ul>
@@ -598,7 +600,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_
 </div>
 </section>
 <section id="sensor-emitter-control">
-<h2><span class="section-number">4.2.4. </span>传感器与发射器控制（Sensor &amp; Emitter Control）<a class="headerlink" href="#sensor-emitter-control" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.2.4. </span>传感器与发射器控制（Sensor &amp; Emitter Control）<a class="headerlink" href="#sensor-emitter-control" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_auto_white_balance</span></code></p></li>
 </ul>
@@ -667,7 +669,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_
 </div>
 </section>
 <section id="device-information-management">
-<h2><span class="section-number">4.2.5. </span>设备信息与管理（Device Information &amp; Management）<a class="headerlink" href="#device-information-management" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.2.5. </span>设备信息与管理（Device Information &amp; Management）<a class="headerlink" href="#device-information-management" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_device_info</span></code></p></li>
 </ul>
@@ -706,7 +708,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_
 </div>
 </section>
 <section id="synchronization">
-<h2><span class="section-number">4.2.6. </span>同步（Synchronization）<a class="headerlink" href="#synchronization" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.2.6. </span>同步（Synchronization）<a class="headerlink" href="#synchronization" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_ptp_config</span></code></p></li>
 </ul>
@@ -721,7 +723,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_depth_
 </div>
 </section>
 <section id="depth-filter-configuration">
-<h2><span class="section-number">4.2.7. </span>深度滤波器配置（Depth Filter Configuration）<a class="headerlink" href="#depth-filter-configuration" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.2.7. </span>深度滤波器配置（Depth Filter Configuration）<a class="headerlink" href="#depth-filter-configuration" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/camera/set_filter</span></code></p></li>
 </ul>
@@ -754,7 +756,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_filter
 </div>
 </section>
 <section id="data-capture-calibration-management">
-<h2><span class="section-number">4.2.8. </span>数据采集与标定管理（Data Capture &amp; Calibration Management）<a class="headerlink" href="#data-capture-calibration-management" title="Link to this heading"></a></h2>
+<h2><span class="section-number">4.2.8. </span>数据采集与标定管理（Data Capture &amp; Calibration Management）<a class="headerlink" href="#data-capture-calibration-management" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">/camera/get_color_camera_info</span></code></p></li>
 </ul>
@@ -800,7 +802,7 @@ rosservice<span class="w"> </span>call<span class="w"> </span>/camera/set_filter
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      <span class="lastupdated">最后更新于 2026-01-13 06:35:38.
       </span></p>
   </div>
 

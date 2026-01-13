@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>5.1.1. 使用Orbbec ROS包降低CPU使用率 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=63de077d" />
 
   
@@ -16,9 +16,9 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=7d86a446"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script src="../../../../_static/translations.js?v=beaddf03"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../../_static/translations.js?v=540d3cec"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../../search.html" />
@@ -308,6 +308,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id7">8.7. 图像未达到预设帧率</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id8">8.8. 软触发模式相关问题</a></li>
 </ul>
 </li>
 </ul>
@@ -373,7 +375,7 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="orbbec-roscpu">
-<h1><span class="section-number">5.1.1. </span>使用Orbbec ROS包降低CPU使用率<a class="headerlink" href="#orbbec-roscpu" title="Link to this heading"></a></h1>
+<h1><span class="section-number">5.1.1. </span>使用Orbbec ROS包降低CPU使用率<a class="headerlink" href="#orbbec-roscpu" title="链接到此标题。"></a></h1>
 <p>本文档概述了在使用<strong>Gemini 330系列相机</strong>的**OrbbecSDK_RO### 滤波器配置影响</p>
 <p>| 应用的滤波### 进一步优化</p>
 <table border="1" class="docutils">
@@ -433,7 +435,7 @@
 </tbody>
 </table><p>您可以在<a class="reference external" href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples">示例</a>中找到示例使用代码。</p>
 <section id="cpu">
-<h2><span class="section-number">5.1.1.1. </span>降低CPU使用率的推荐设置<a class="headerlink" href="#cpu" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.1. </span>降低CPU使用率的推荐设置<a class="headerlink" href="#cpu" title="链接到此标题。"></a></h2>
 <p>为了在OrbbecSDK_ROS1中实现尽可能低的CPU使用率，建议配置以下参数。</p>
 <table border="1" class="docutils">
 <thead>
@@ -462,14 +464,14 @@
 </tbody>
 </table></section>
 <section id="id1">
-<h2><span class="section-number">5.1.1.2. </span>用于测试的启动文件<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.2. </span>用于测试的启动文件<a class="headerlink" href="#id1" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">gemini_330_lower_cpu_usage.launch</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">multi_camera_lower_cpu_usage.launch</span></code></p></li>
 </ul>
 </section>
 <section id="id2">
-<h2><span class="section-number">5.1.1.3. </span>测试环境<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.3. </span>测试环境<a class="headerlink" href="#id2" title="链接到此标题。"></a></h2>
 <p><strong>硬件配置</strong></p>
 <ul class="simple">
 <li><p><strong>CPU</strong>: Intel i7-8700 &#64; 3.20GHz</p></li>
@@ -490,7 +492,7 @@
 </ul>
 </section>
 <section id="id3">
-<h2><span class="section-number">5.1.1.4. </span>测试设置<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.4. </span>测试设置<a class="headerlink" href="#id3" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><strong>流设置：</strong></p>
 <ul>
@@ -502,10 +504,10 @@
 <p>注意：以下CPU使用率数据主要关注<code class="docutils literal notranslate"><span class="pre">uvc_backend</span></code>、<code class="docutils literal notranslate"><span class="pre">color_format</span></code>和各种滤波器组合。</p>
 </section>
 <section id="id4">
-<h2><span class="section-number">5.1.1.5. </span>测试结果<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.5. </span>测试结果<a class="headerlink" href="#id4" title="链接到此标题。"></a></h2>
 </section>
 <section id="uvc-backend-rgb">
-<h2><span class="section-number">5.1.1.6. </span>uvc_backend比较（RGB格式）<a class="headerlink" href="#uvc-backend-rgb" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.6. </span>uvc_backend比较（RGB格式）<a class="headerlink" href="#uvc-backend-rgb" title="链接到此标题。"></a></h2>
 <table border="1" class="docutils">
 <thead>
 <tr>
@@ -524,7 +526,7 @@
 </table><p>使用v4l2后端可以显著降低CPU使用率。在我们的实现中，v4l2无需对Linux内核进行任何补丁即可工作，允许用户轻松在v4l2和libuvc之间切换，并保持与标准Linux发行版的完全兼容性。</p>
 </section>
 <section id="color-format-mjpg-vs-rgb">
-<h2><span class="section-number">5.1.1.7. </span>color_format比较（MJPG vs RGB）<a class="headerlink" href="#color-format-mjpg-vs-rgb" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.7. </span>color_format比较（MJPG vs RGB）<a class="headerlink" href="#color-format-mjpg-vs-rgb" title="链接到此标题。"></a></h2>
 <table border="1" class="docutils">
 <thead>
 <tr>
@@ -551,7 +553,7 @@
 </table><p>选择RGB格式而不是MJPG可以降低CPU使用率，因为MJPG图像的解码会消耗主机CPU资源。</p>
 </section>
 <section id="filter-configuration-impact">
-<h2><span class="section-number">5.1.1.8. </span>Filter Configuration Impact<a class="headerlink" href="#filter-configuration-impact" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.8. </span>Filter Configuration Impact<a class="headerlink" href="#filter-configuration-impact" title="链接到此标题。"></a></h2>
 <table border="1" class="docutils">
 <thead>
 <tr>
@@ -602,7 +604,7 @@
 </table><p>根据测试结果，仅使用<code class="docutils literal notranslate"><span class="pre">hardware_noise_removal_filter</span></code>对于<code class="docutils literal notranslate"><span class="pre">libuvc</span></code>（-0.3%）和<code class="docutils literal notranslate"><span class="pre">v4l2</span></code>（-0.1%）相比无滤波器基准，CPU使用率变化可忽略不计，因为此滤波器在相机硬件内部运行。相反，其他滤波器在主机系统上执行。将<code class="docutils literal notranslate"><span class="pre">spatial_filter</span></code>添加到硬件滤波器会导致CPU使用率适度增加，而应用基于软件的<code class="docutils literal notranslate"><span class="pre">noise_removal_filter</span></code>（无论是单独使用还是与<code class="docutils literal notranslate"><span class="pre">spatial_filter</span></code>结合使用）都会显著增加CPU负载。为了保持低CPU使用率，建议避免使用基于软件的滤波器，仅依赖<code class="docutils literal notranslate"><span class="pre">hardware_noise_removal_filter</span></code>。</p>
 </section>
 <section id="further-optimization">
-<h2><span class="section-number">5.1.1.9. </span>Further Optimization<a class="headerlink" href="#further-optimization" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.1.1.9. </span>Further Optimization<a class="headerlink" href="#further-optimization" title="链接到此标题。"></a></h2>
 <table border="1" class="docutils">
 <thead>
 <tr>
@@ -643,7 +645,7 @@
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      <span class="lastupdated">最后更新于 2026-01-13 06:35:38.
       </span></p>
   </div>
 

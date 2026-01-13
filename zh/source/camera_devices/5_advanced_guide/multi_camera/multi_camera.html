@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>5.2.1. 在Orbbec ROS包中使用多个相机 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=63de077d" />
 
   
@@ -16,9 +16,9 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=7d86a446"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script src="../../../../_static/translations.js?v=beaddf03"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../../_static/translations.js?v=540d3cec"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../../search.html" />
@@ -308,6 +308,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id7">8.7. 图像未达到预设帧率</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../8_FAQ/FAQ.html#id8">8.8. 软触发模式相关问题</a></li>
 </ul>
 </li>
 </ul>
@@ -373,14 +375,14 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="orbbec-ros">
-<h1><span class="section-number">5.2.1. </span>在Orbbec ROS包中使用多个相机<a class="headerlink" href="#orbbec-ros" title="Link to this heading"></a></h1>
+<h1><span class="section-number">5.2.1. </span>在Orbbec ROS包中使用多个相机<a class="headerlink" href="#orbbec-ros" title="链接到此标题。"></a></h1>
 <p>本指南描述了如何在ROS 1环境中同时配置和使用多个Orbbec相机。</p>
 <section id="id1">
-<h2><span class="section-number">5.2.1.1. </span>前提条件<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.1.1. </span>前提条件<a class="headerlink" href="#id1" title="链接到此标题。"></a></h2>
 <p>首先假设您已经安装了Orbbec ROS包。如果没有，请参考<a class="reference internal" href="../../2_installation/build_the_package.html"><span class="doc">Orbbec ROS包安装指南</span></a>。</p>
 </section>
 <section id="usbfs-memory-mb">
-<h2><span class="section-number">5.2.1.2. </span>增加usbfs_memory_mb值（关键步骤）<a class="headerlink" href="#usbfs-memory-mb" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.1.2. </span>增加usbfs_memory_mb值（关键步骤）<a class="headerlink" href="#usbfs-memory-mb" title="链接到此标题。"></a></h2>
 <p><strong>重要提示：这个步骤对于多相机设置至关重要。如果不增加usbfs_memory_mb值，您可能无法从相机接收任何数据。</strong></p>
 <p>对于多相机设置，增加<code class="docutils literal notranslate"><span class="pre">usbfs_memory_mb</span></code>值是必要的。将其设置为128MB（可根据系统需要调整）：</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/sys/module/usbcore/parameters/usbfs_memory_mb
@@ -390,7 +392,7 @@
 <p>如果您跳过此步骤或将值设置得太低，您的相机可能无法正常工作或根本无法提供任何数据。</p>
 </section>
 <section id="usb">
-<h2><span class="section-number">5.2.1.3. </span>识别相机USB端口<a class="headerlink" href="#usb" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.1.3. </span>识别相机USB端口<a class="headerlink" href="#usb" title="链接到此标题。"></a></h2>
 <p><strong>列出已连接相机的脚本</strong></p>
 <p>使用此bash脚本列出所有已连接的Orbbec设备及其USB端口和序列号：</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -416,7 +418,7 @@
 </div>
 </section>
 <section id="id2">
-<h2><span class="section-number">5.2.1.4. </span>启动多相机<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.1.4. </span>启动多相机<a class="headerlink" href="#id2" title="链接到此标题。"></a></h2>
 <p><strong>多相机启动设置</strong></p>
 <p>创建一个启动文件（例如，<code class="docutils literal notranslate"><span class="pre">multi_camera.launch</span></code>），为每个相机配置单独的设置：</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;launch&gt;</span>
@@ -443,7 +445,7 @@
 </div>
 </section>
 <section id="tf">
-<h2><span class="section-number">5.2.1.5. </span>为多相机配置TF树<a class="headerlink" href="#tf" title="Link to this heading"></a></h2>
+<h2><span class="section-number">5.2.1.5. </span>为多相机配置TF树<a class="headerlink" href="#tf" title="链接到此标题。"></a></h2>
 <p>为您的标定相机设置创建TF配置文件（例如，<code class="docutils literal notranslate"><span class="pre">multi_camera_tf.launch</span></code>）：</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;launch&gt;</span>
 <span class="w">    </span><span class="nt">&lt;node</span><span class="w"> </span><span class="na">pkg=</span><span class="s">&quot;tf&quot;</span><span class="w"> </span><span class="na">type=</span><span class="s">&quot;static_transform_publisher&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;camera_01_tf&quot;</span><span class="w"> </span><span class="na">args=</span><span class="s">&quot;0 0 0 0 0 0 base_link camera_01_link&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
@@ -472,7 +474,7 @@
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      <span class="lastupdated">最后更新于 2026-01-13 06:35:38.
       </span></p>
   </div>
 

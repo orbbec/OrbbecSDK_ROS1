@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>文档应用文档（中文版） &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/custom.css?v=63de077d" />
 
   
@@ -16,9 +16,9 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=7d86a446"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script src="_static/translations.js?v=beaddf03"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/translations.js?v=540d3cec"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="索引" href="genindex.html" />
     <link rel="search" title="搜索" href="search.html" /> 
@@ -306,6 +306,8 @@
 <li class="toctree-l3"><a class="reference internal" href="source/camera_devices/8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="source/camera_devices/8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 <li class="toctree-l3"><a class="reference internal" href="source/camera_devices/8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source/camera_devices/8_FAQ/FAQ.html#id7">8.7. 图像未达到预设帧率</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source/camera_devices/8_FAQ/FAQ.html#id8">8.8. 软触发模式相关问题</a></li>
 </ul>
 </li>
 </ul>
@@ -369,27 +371,27 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="id1">
-<h1>文档应用文档（中文版）<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<h1>文档应用文档（中文版）<a class="headerlink" href="#id1" title="链接到此标题。"></a></h1>
 <section id="id2">
-<h2>编译环境<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2>编译环境<a class="headerlink" href="#id2" title="链接到此标题。"></a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>docs/zh
 pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </pre></div>
 </div>
 </section>
 <section id="id3">
-<h2>编译<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<h2>编译<a class="headerlink" href="#id3" title="链接到此标题。"></a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>clean
 make<span class="w"> </span>html
 </pre></div>
 </div>
 </section>
 <section id="id4">
-<h2>编译结果<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<h2>编译结果<a class="headerlink" href="#id4" title="链接到此标题。"></a></h2>
 <p>用浏览器打开 <code class="docutils literal notranslate"><span class="pre">_build/html/index.html</span></code> 查看编译结果</p>
 </section>
 <section id="id5">
-<h2>注意事项<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<h2>注意事项<a class="headerlink" href="#id5" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p>本文档为中文版本，语言设置为 <code class="docutils literal notranslate"><span class="pre">zh_CN</span></code></p></li>
 <li><p>确保系统已安装中文字体支持</p></li>
@@ -397,7 +399,7 @@ make<span class="w"> </span>html
 </ul>
 </section>
 <section id="id6">
-<h2>文档结构<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<h2>文档结构<a class="headerlink" href="#id6" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">source/</span></code> - 文档源文件目录</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">_static/</span></code> - 静态资源文件（CSS、JS、图片等）</p></li>
@@ -416,7 +418,7 @@ make<span class="w"> </span>html
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      <span class="lastupdated">最后更新于 2026-01-13 06:35:38.
       </span></p>
   </div>
 

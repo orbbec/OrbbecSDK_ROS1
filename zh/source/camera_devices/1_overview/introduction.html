@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>1.1. 介绍 &mdash; OrbbecSDK V2 ROS1 包装器  文档</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=63de077d" />
 
   
@@ -16,9 +16,9 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=7d86a446"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script src="../../../_static/translations.js?v=beaddf03"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/translations.js?v=540d3cec"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
@@ -308,6 +308,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id4">8.4. 为什么有这么多启动文件？</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id5">8.5. 多相机连接时如何指定启动某一个相机</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id6">8.6. 多相机启动或切换流时为什么需要设置延迟？</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id7">8.7. 图像未达到预设帧率</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../8_FAQ/FAQ.html#id8">8.8. 软触发模式相关问题</a></li>
 </ul>
 </li>
 </ul>
@@ -373,7 +375,7 @@
            <div itemprop="articleBody">
              
   <div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;"><a class="lang-other" href="#">English</a> | <a class="lang-current" href="#">中文</a></div><script>(function(){var p=window.location.pathname;var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;if(p.indexOf('/zh/')!==-1) isEn=false;var other = isEn ? p.replace(/\/en\//, '/zh/') : p.replace(/\/zh\//, '/en/');var current=p;var sw=document.querySelector('.lang-switch'); if(!sw) return;var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }o.setAttribute('href', other); c.setAttribute('href', current);})();</script><section id="id1">
-<h1><span class="section-number">1.1. </span>介绍<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<h1><span class="section-number">1.1. </span>介绍<a class="headerlink" href="#id1" title="链接到此标题。"></a></h1>
 <p>OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。它支持ROS Kinetic、Melodic和Noetic发行版。
 默认情况下，我们推荐使用<strong>v2-main</strong>分支。对于v2-main不支持的较旧OpenNI设备，请使用<strong>main</strong>分支。仅支持main分支的设备型号列在下表中。</p>
 <p>如果您是中国用户，建议使用<a class="reference external" href="https://gitee.com/orbbecdeveloper/OrbbecSDK_ROS1">gitee仓库</a>。</p>
@@ -388,6 +390,17 @@
     </tr>
   </thead>
   <tbody>
+      <tr>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 340</td>
+      <td>Gemini 345</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 345Lg</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
       <tr>
       <td style="text-align: center; font-weight: bold;">Gemini 435Le</td>
       <td>Gemini 435Le</td>
@@ -521,7 +534,7 @@
 <li><p>待支持：我们将在不久的将来添加支持。</p></li>
 </ol>
 <section id="id2">
-<h2><span class="section-number">1.1.1. </span>支持的硬件产品<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<h2><span class="section-number">1.1.1. </span>支持的硬件产品<a class="headerlink" href="#id2" title="链接到此标题。"></a></h2>
 <p>以下设备由OrbbecSDK ROS包装器v2-main分支支持。更多设备支持将在不久的将来添加。如果您在下表中找不到您的设备，请尝试使用<a class="reference external" href="https://github.com/orbbec/OrbbecSDK_ROS1">main</a>分支。</p>
 <p>为了获得最佳性能，我们强烈建议更新到最新的固件版本。这确保您能受益于最新的增强功能和错误修复。</p>
 <p>以下设备由OrbbecSDK ROS包装器支持。</p>
@@ -596,6 +609,16 @@
 <td>astra2.launch</td>
 </tr>
 <tr>
+<td>Gemini 345</td>
+<td>1.7.12</td>
+<td>gemini345.launch.py</td>
+</tr>
+<tr>
+<td>Gemini 345Lg</td>
+<td>1.7.12</td>
+<td>gemini345_lg.launch.py</td>
+</tr>
+<tr>
 <td>Pulsar SL450</td>
 <td>2.2.4.5</td>
 <td>lidar.launch.py</td>
@@ -609,7 +632,7 @@
 </table><p>所有启动文件本质上都是相似的，主要区别在于为同一系列中的不同型号设置的参数默认值。USB标准的差异（如USB 2.0与USB 3.0）可能需要调整这些参数。如果遇到启动失败，请仔细查阅规格说明书。特别注意启动文件中的分辨率设置以及其他参数，以确保兼容性和最佳性能。</p>
 </section>
 <section id="id3">
-<h2><span class="section-number">1.1.2. </span>奥比中光相机数据手册<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<h2><span class="section-number">1.1.2. </span>奥比中光相机数据手册<a class="headerlink" href="#id3" title="链接到此标题。"></a></h2>
 <p>请参考相机数据手册获取更多信息。</p>
 <style>
 table {
@@ -698,7 +721,7 @@ thead th {
 </table></section>
 <hr class="docutils" />
 <section id="id4">
-<h2><span class="section-number">1.1.3. </span>支持平台<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<h2><span class="section-number">1.1.3. </span>支持平台<a class="headerlink" href="#id4" title="链接到此标题。"></a></h2>
 <ul class="simple">
 <li><p>Linux x64：在Ubuntu 20.04上测试</p></li>
 <li><p>Linux ARM64：在NVIDIA Jetson AGX Orin、NVIDIA Jetson Orin NX、NVIDIA Jetson Orin Nano、NVIDIA Jetson AGX Xavier、NVIDIA Jetson Xavier NX上测试</p></li>
@@ -718,7 +741,7 @@ thead th {
 
   <div role="contentinfo">
     <p>&#169; 版权所有 2025, 奥比中光股份有限公司 www.orbbec.com.。
-      <span class="lastupdated">最后更新于 2026-01-04 07:13:46.
+      <span class="lastupdated">最后更新于 2026-01-13 06:35:38.
       </span></p>
   </div>
 

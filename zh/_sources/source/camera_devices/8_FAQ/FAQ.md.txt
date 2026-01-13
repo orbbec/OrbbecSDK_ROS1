@@ -18,21 +18,20 @@
 
 ### 多相机无数据流
 
-**Insufficient Power Supply**:
+**电源供应不足**：
 
-- Ensure that each camera is connected to a separate hub.
-- Use a powered hub to provide sufficient power to each camera.
+- 确保每个相机连接到单独的集线器。
+- 使用有源集线器为每个相机提供足够的电力。
 
-**High Resolution**:
+**高分辨率**：
 
-- Try lowering the resolution to resolve data stream issues.
+- 尝试降低分辨率以解决数据流问题。
 
-**Increase usbfs_memory_mb Value**:
+**增加usbfs_memory_mb值**：
 
-- Increase the `usbfs_memory_mb` value to 128MB (this is a reference value and can be adjusted based on your system’s needs)
-  by running the following command:
+- 通过运行以下命令将 `usbfs_memory_mb` 值增加到128MB（这是参考值，可根据系统需求调整）：
 
-```bash
+```
     echo 128 | sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb
 ```
 
@@ -63,7 +62,8 @@ find_package(OpenCV REQUIRED)
 
 - 如果您遇到其他问题，请将`log_level`参数设置为`debug`。这将在运行目录中生成SDK日志文件：`~/.ros/Log/OrbbecSDK.log.txt`。
   请将此文件提供给支持团队以获得进一步帮助。
-- 如果需要固件日志，请将`enable_heartbeat`设置为`true`以激活此功能。
+- 如果需要固件日志，将`log_level` 参数设置为 `debug`的同时，将 `enable_heartbeat` 设置为 `true` 以激活此功能。
+- 若将`log_level` 参数设置为 `debug`的同时，又不想终端刷新太多日志，可以在`launch`中将`output="screen"`改为`output="log"`，日志会被保存在`~/.ros/log`目录下。
 
 ### 为什么有这么多启动文件？
 
@@ -97,3 +97,42 @@ roslaunch orbbec_camera femto_bolt.launch serial_number:=CL8H741005J
   在调用开关流相关服务（如 `set_streams_enable`、`toggle_depth`、`toggle_color`）时，不建议同时触发多个接口调用，应在各操作之间设置合理的时间间隔（例如 **20 ms**），以保证流状态切换的可靠性。
 
 遵循上述时序控制原则，有助于提升多相机系统在启动和运行过程中的稳定性，减少异常和不可预期行为的发生。
+
+### 图像未达到预设帧率
+
+首先需要确认图像是否确实未达到预设帧率。在 ROS 2 中可通过多种方式查看帧率，例如：
+
+* `ros2 topic hz`
+* `rqt`
+* 自定义工具（如本 ROS 包提供的 `benchmark` 工具）
+
+需要注意的是，不同工具的统计方式和 QoS 配置不同，因此得到的帧率结果可能存在差异。当发现帧率低于预期时，请优先排查是否为帧率统计工具本身导致的误差。
+
+若确认图像帧率确实未达到预设值，可尝试以下排查步骤：
+
+1. **降低分辨率或帧率**，判断是否由于 USB / 网络带宽受限导致帧率下降；
+2. **确认相机固件版本及 ROS 包版本是否为最新**，旧版本可能存在性能或兼容性问题。
+
+若以上方法仍无法解决问题，请联系我司 **FAE**，或在 **GitHub Issue** 中提交问题以获得进一步支持。
+
+
+### 软触发模式相关问题
+
+* **信号触发时各传感器未同时出流**
+  请开启帧汇聚功能，将参数`frame_aggregate_mode`设置为`full_frame`，以保证多传感器数据在同一次触发下同步输出。
+
+* **自动触发模式下无法达到预设帧率**
+  设置 `software_trigger_period` 时，需要综合考虑实际开流帧率与曝光时间。例如，当 `color_fps` 设置为 10 FPS 时，`software_trigger_period` 不能低于以下计算值：
+
+  ```
+  software_trigger_period ≥ 1000000 / fps × N + 2 × expo
+  ```
+
+  其中：
+
+  * `fps`：传感器帧率
+  * `N`：单次触发采集的帧数量
+  * `expo`：曝光时间
+  * `单位`：µs
+
+  若 `software_trigger_period` 设置过小，将导致触发频率受限，从而丢帧。
