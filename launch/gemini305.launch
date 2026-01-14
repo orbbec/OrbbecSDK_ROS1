@@ -83,6 +83,7 @@
     <!-- Depth camera parameters -->
     <arg name="depth_width" default="0"/>
     <arg name="depth_height" default="0"/>
+    <arg name="depth_downscale" default="1"/>
     <arg name="depth_fps" default="0"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="ANY"/>
@@ -101,6 +102,7 @@
     <!-- Left IR camera parameters -->
     <arg name="left_ir_width" default="0"/>
     <arg name="left_ir_height" default="0"/>
+    <arg name="left_ir_downscale" default="1"/>
     <arg name="left_ir_fps" default="0"/>
     <arg name="enable_left_ir" default="false"/>
     <arg name="left_ir_format" default="ANY"/>
@@ -115,6 +117,7 @@
     <!-- Right IR camera parameters -->
     <arg name="right_ir_width" default="0"/>
     <arg name="right_ir_height" default="0"/>
+    <arg name="right_ir_downscale" default="1"/>
     <arg name="right_ir_fps" default="0"/>
     <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="ANY"/>
@@ -323,6 +326,7 @@
 
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
+            <param name="depth_downscale" value="$(arg depth_downscale)"/>
             <param name="depth_fps" value="$(arg depth_fps)"/>
             <param name="enable_depth" value="$(arg enable_depth)"/>
             <param name="depth_format" value="$(arg depth_format)"/>
@@ -339,6 +343,7 @@
 
             <param name="left_ir_width" value="$(arg left_ir_width)"/>
             <param name="left_ir_height" value="$(arg left_ir_height)"/>
+            <param name="left_ir_downscale" value="$(arg left_ir_downscale)"/>
             <param name="left_ir_fps" value="$(arg left_ir_fps)"/>
             <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
             <param name="left_ir_format" value="$(arg left_ir_format)"/>
@@ -350,6 +355,7 @@
 
             <param name="right_ir_width" value="$(arg right_ir_width)"/>
             <param name="right_ir_height" value="$(arg right_ir_height)"/>
+            <param name="right_ir_downscale" value="$(arg right_ir_downscale)"/>
             <param name="right_ir_fps" value="$(arg right_ir_fps)"/>
             <param name="enable_right_ir" value="$(arg enable_right_ir)"/>
             <param name="right_ir_format" value="$(arg right_ir_format)"/>

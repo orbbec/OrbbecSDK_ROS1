@@ -970,6 +970,7 @@ void OBCameraNode::printProfiles(const std::shared_ptr<ob::Sensor>& sensor) {
 }
 
 void OBCameraNode::setupProfiles() {
+  auto pid = device_->getDeviceInfo()->getPid();
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (!enable_stream_[stream_index] && stream_index != base_stream_) {
       continue;
@@ -982,8 +983,32 @@ void OBCameraNode::setupProfiles() {
           format_[stream_index] == OB_FORMAT_UNKNOWN) {
         selected_profile = profile_list->getProfile(0)->as<ob::VideoStreamProfile>();
       } else {
-        selected_profile = profile_list->getVideoStreamProfile(
-            width_[stream_index], height_[stream_index], format_[stream_index], fps_[stream_index]);
+        if (pid == GEMINI_305_PID && stream_index == DEPTH) {
+          OBHardwareDecimationConfig conf;
+          conf.originWidth = width_[stream_index];
+          conf.originHeight = height_[stream_index];
+          conf.factor = depth_downscale_;
+          selected_profile =
+              profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
+        } else if (pid == GEMINI_305_PID && stream_index == INFRA1) {
+          OBHardwareDecimationConfig conf;
+          conf.originWidth = width_[stream_index];
+          conf.originHeight = height_[stream_index];
+          conf.factor = left_ir_downscale_;
+          selected_profile =
+              profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
+        } else if (pid == GEMINI_305_PID && stream_index == INFRA2) {
+          OBHardwareDecimationConfig conf;
+          conf.originWidth = width_[stream_index];
+          conf.originHeight = height_[stream_index];
+          conf.factor = right_ir_downscale_;
+          selected_profile =
+              profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
+        } else {
+          selected_profile =
+              profile_list->getVideoStreamProfile(width_[stream_index], height_[stream_index],
+                                                  format_[stream_index], fps_[stream_index]);
+        }
       }
 
       auto default_profile = profile_list->getProfile(0)->as<ob::VideoStreamProfile>();

@@ -15,14 +15,25 @@ std::shared_ptr<ob::Device> initializeDevice(std::shared_ptr<ob::Pipeline> pipel
 
 void listSensorProfiles(const std::shared_ptr<ob::Device>& device) {
   auto sensor_list = device->getSensorList();
+  auto pid = device->getDeviceInfo()->getPid();
   for (size_t i = 0; i < sensor_list->count(); i++) {
     auto sensor = sensor_list->getSensor(i);
     auto profile_list = sensor->getStreamProfileList();
     for (size_t j = 0; j < profile_list->count(); j++) {
       auto origin_profile = profile_list->getProfile(j);
-      if (sensor->type() == OB_SENSOR_COLOR || sensor->type() == OB_SENSOR_DEPTH ||
-          sensor->type() == OB_SENSOR_IR || sensor->type() == OB_SENSOR_IR_LEFT ||
-          sensor->type() == OB_SENSOR_IR_RIGHT) {
+      if ((sensor->getType() == OB_SENSOR_DEPTH || sensor->getType() == OB_SENSOR_IR_LEFT ||
+           sensor->getType() == OB_SENSOR_IR_RIGHT) &&
+          pid == GEMINI_305_PID) {
+        // Gemini 305
+        auto profile = origin_profile->as<ob::VideoStreamProfile>();
+        std::cout << sensor->type() << " profile: " << profile->getWidth() << "x"
+                  << profile->getHeight() << " " << profile->getFps() << "fps " << sensor->type()
+                  << " | width: " << profile->getDecimationConfig().originWidth
+                  << " height: " << profile->getDecimationConfig().originHeight
+                  << " downscale:" << profile->getDecimationConfig().factor << std::endl;
+      } else if (sensor->type() == OB_SENSOR_COLOR || sensor->type() == OB_SENSOR_DEPTH ||
+                 sensor->type() == OB_SENSOR_IR || sensor->type() == OB_SENSOR_IR_LEFT ||
+                 sensor->type() == OB_SENSOR_IR_RIGHT) {
         auto profile = origin_profile->as<ob::VideoStreamProfile>();
         std::cout << sensor->type() << " profile: " << profile->width() << "x" << profile->height()
                   << " " << profile->fps() << "fps " << profile->format() << std::endl;
@@ -86,7 +97,8 @@ int main() {
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("list_camera_profile_mode: " << e.what());
   } catch (...) {
-    ROS_ERROR_STREAM("list_camera_profile_mode: " << "unknown error");
+    ROS_ERROR_STREAM("list_camera_profile_mode: "
+                     << "unknown error");
   }
   return 0;
 }

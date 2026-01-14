@@ -728,6 +728,10 @@ class OBCameraNode {
   std::unique_ptr<FpsDelayStatus> fps_delay_status_depth_{nullptr};
 
   std::string intra_camera_sync_reference_ = "";
+
+  int depth_downscale_ = 1;
+  int left_ir_downscale_ = 1;
+  int right_ir_downscale_ = 1;
 };
 
 }  // namespace orbbec_camera

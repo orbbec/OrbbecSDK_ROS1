@@ -118,5 +118,6 @@ const int32_t GEMINI_336LG_PID = 0x080D;
 const int32_t GEMINI_335LE_PID = 0x080E;  // Gemini 335Le
 const int32_t GEMINI_336LE_PID = 0x0810;  // Gemini 335Le
 const std::string ORB_DEFAULT_LOCK_NAME = "orbbec_device.lock";
-const int32_t DABAI_MAX_PID = 0x069a;  // DABAI MAX
+const int32_t DABAI_MAX_PID = 0x069a;   // DABAI MAX
+const int32_t GEMINI_305_PID = 0x0840;  // Gemini 305
 }  // namespace orbbec_camera
