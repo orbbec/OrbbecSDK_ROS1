@@ -53,6 +53,8 @@ int ROSOBSensor::getExposure() {
       data = device_->getIntProperty(OB_PROP_DEPTH_EXPOSURE_INT);
       break;
     case OB_SENSOR_COLOR:
+    case OB_SENSOR_COLOR_LEFT:
+    case OB_SENSOR_COLOR_RIGHT:
       data = device_->getIntProperty(OB_PROP_COLOR_EXPOSURE_INT);
       break;
     case OB_SENSOR_IR_LEFT:
@@ -74,6 +76,8 @@ OBIntPropertyRange ROSOBSensor::getExposureRange() {
       range = device_->getIntPropertyRange(OB_PROP_DEPTH_EXPOSURE_INT);
       break;
     case OB_SENSOR_COLOR:
+    case OB_SENSOR_COLOR_LEFT:
+    case OB_SENSOR_COLOR_RIGHT:
       range = device_->getIntPropertyRange(OB_PROP_COLOR_EXPOSURE_INT);
       break;
     case OB_SENSOR_IR_LEFT:
@@ -94,6 +98,8 @@ void ROSOBSensor::setExposure(int data) {
       device_->setIntProperty(OB_PROP_DEPTH_EXPOSURE_INT, data);
       break;
     case OB_SENSOR_COLOR:
+    case OB_SENSOR_COLOR_LEFT:
+    case OB_SENSOR_COLOR_RIGHT:
       device_->setIntProperty(OB_PROP_COLOR_EXPOSURE_INT, data);
       break;
     case OB_SENSOR_IR_LEFT:
@@ -119,6 +125,8 @@ int ROSOBSensor::getGain() {
       data = device_->getIntProperty(OB_PROP_IR_GAIN_INT);
       break;
     case OB_SENSOR_COLOR:
+    case OB_SENSOR_COLOR_LEFT:
+    case OB_SENSOR_COLOR_RIGHT:
       data = device_->getIntProperty(OB_PROP_COLOR_GAIN_INT);
       break;
     default:
@@ -140,6 +148,8 @@ OBIntPropertyRange ROSOBSensor::getGainRange() {
       range = device_->getIntPropertyRange(OB_PROP_IR_GAIN_INT);
       break;
     case OB_SENSOR_COLOR:
+    case OB_SENSOR_COLOR_LEFT:
+    case OB_SENSOR_COLOR_RIGHT:
       range = device_->getIntPropertyRange(OB_PROP_COLOR_GAIN_INT);
       break;
     default:
@@ -159,6 +169,8 @@ void ROSOBSensor::setGain(int data) {
       device_->setIntProperty(OB_PROP_IR_GAIN_INT, data);
       break;
     case OB_SENSOR_COLOR:
+    case OB_SENSOR_COLOR_LEFT:
+    case OB_SENSOR_COLOR_RIGHT:
       device_->setIntProperty(OB_PROP_COLOR_GAIN_INT, data);
       break;
     default:

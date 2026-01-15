@@ -310,6 +310,12 @@ bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
       case OB_STREAM_COLOR:
         device_->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, request.data);
         break;
+      case OB_STREAM_COLOR_LEFT:
+        device_->setBoolProperty(OB_PROP_COLOR_LEFT_MIRROR_BOOL, request.data);
+        break;
+      case OB_STREAM_COLOR_RIGHT:
+        device_->setBoolProperty(OB_PROP_COLOR_RIGHT_MIRROR_BOOL, request.data);
+        break;
       default:
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
         return false;
@@ -348,6 +354,12 @@ bool OBCameraNode::setFlipCallback(std_srvs::SetBoolRequest& request,
         break;
       case OB_STREAM_COLOR:
         device_->setBoolProperty(OB_PROP_COLOR_FLIP_BOOL, request.data);
+        break;
+      case OB_STREAM_COLOR_LEFT:
+        device_->setBoolProperty(OB_PROP_COLOR_LEFT_FLIP_BOOL, request.data);
+        break;
+      case OB_STREAM_COLOR_RIGHT:
+        device_->setBoolProperty(OB_PROP_COLOR_RIGHT_FLIP_BOOL, request.data);
         break;
       default:
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
@@ -390,6 +402,14 @@ bool OBCameraNode::setRotationCallback(SetInt32Request& request, SetInt32Respons
         break;
       case OB_STREAM_COLOR:
         device_->setIntProperty(OB_PROP_COLOR_ROTATE_INT, request.data);
+        return true;
+        break;
+      case OB_STREAM_COLOR_LEFT:
+        device_->setIntProperty(OB_PROP_COLOR_LEFT_ROTATE_INT, request.data);
+        return true;
+        break;
+      case OB_STREAM_COLOR_RIGHT:
+        device_->setIntProperty(OB_PROP_COLOR_RIGHT_ROTATE_INT, request.data);
         return true;
         break;
       default:
@@ -493,6 +513,8 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
                         << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
         break;
       case OB_STREAM_COLOR:
+      case OB_STREAM_COLOR_LEFT:
+      case OB_STREAM_COLOR_RIGHT:
         config.x0_left = (static_cast<short int>(request.data_param[0]) < 0)
                              ? 0
                              : static_cast<short int>(request.data_param[0]);

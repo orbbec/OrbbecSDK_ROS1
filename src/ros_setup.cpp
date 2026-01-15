@@ -424,6 +424,10 @@ void OBCameraNode::setupDevices() {
       OBPropertyID rotationPropertyID = OB_PROP_DEPTH_ROTATE_INT;
       if (stream_index == COLOR) {
         rotationPropertyID = OB_PROP_COLOR_ROTATE_INT;
+      } else if (stream_index == COLOR_LEFT) {
+        rotationPropertyID = OB_PROP_COLOR_LEFT_ROTATE_INT;
+      } else if (stream_index == COLOR_RIGHT) {
+        rotationPropertyID = OB_PROP_COLOR_RIGHT_ROTATE_INT;
       } else if (stream_index == DEPTH) {
         rotationPropertyID = OB_PROP_DEPTH_ROTATE_INT;
       } else if (stream_index == INFRA0) {
@@ -443,6 +447,10 @@ void OBCameraNode::setupDevices() {
       OBPropertyID flipPropertyID = OB_PROP_DEPTH_FLIP_BOOL;
       if (stream_index == COLOR) {
         flipPropertyID = OB_PROP_COLOR_FLIP_BOOL;
+      } else if (stream_index == COLOR_LEFT) {
+        flipPropertyID = OB_PROP_COLOR_LEFT_FLIP_BOOL;
+      } else if (stream_index == COLOR_RIGHT) {
+        flipPropertyID = OB_PROP_COLOR_RIGHT_FLIP_BOOL;
       } else if (stream_index == DEPTH) {
         flipPropertyID = OB_PROP_DEPTH_FLIP_BOOL;
       } else if (stream_index == INFRA0) {
@@ -461,6 +469,10 @@ void OBCameraNode::setupDevices() {
       OBPropertyID mirrorPropertyID = OB_PROP_DEPTH_MIRROR_BOOL;
       if (stream_index == COLOR) {
         mirrorPropertyID = OB_PROP_COLOR_MIRROR_BOOL;
+      } else if (stream_index == COLOR_LEFT) {
+        mirrorPropertyID = OB_PROP_COLOR_LEFT_MIRROR_BOOL;
+      } else if (stream_index == COLOR_RIGHT) {
+        mirrorPropertyID = OB_PROP_COLOR_RIGHT_MIRROR_BOOL;
       } else if (stream_index == DEPTH) {
         mirrorPropertyID = OB_PROP_DEPTH_MIRROR_BOOL;
       } else if (stream_index == INFRA0) {
