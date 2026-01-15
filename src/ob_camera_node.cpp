@@ -1579,6 +1579,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
       frame_set->pushFrame(color_frame);
     }
     if (left_color_frame) {
+      setColorAutoExposureROI();
       left_color_frame = processColorFrameFilter(left_color_frame);
       frame_set->pushFrame(left_color_frame);
     }
