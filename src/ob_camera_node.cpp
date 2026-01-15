@@ -458,6 +458,8 @@ void OBCameraNode::getParameters() {
       nh_private_.param<int>("laser_index0_ir_ae_max_exposure", 17000);
   intra_camera_sync_reference_ =
       nh_private_.param<std::string>("intra_camera_sync_reference", "Middle");
+  ae_mode_ = nh_private_.param<std::string>("ae_mode", "");
+  enable_sports_mode_ = nh_private_.param<bool>("enable_sports_mode", false);
   depth_downscale_ = nh_private_.param<int>("depth_downscale", 1);
   left_ir_downscale_ = nh_private_.param<int>("left_ir_downscale", 1);
   right_ir_downscale_ = nh_private_.param<int>("right_ir_downscale", 1);

@@ -975,6 +975,16 @@ void OBCameraNode::setupDevices() {
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.what());
   }
+  if (device_->isPropertySupported(OB_PROP_COLOR_AE_MODE_INT, OB_PERMISSION_WRITE)) {
+    device_->setIntProperty(OB_PROP_COLOR_AE_MODE_INT, enable_sports_mode_);
+    ROS_INFO_STREAM("Setting Sports Mode to " << (enable_sports_mode_ ? "ON" : "OFF"));
+  }
+  if ((ae_mode_ == "depthbased" || ae_mode_ == "colorbased") &&
+      device_->isPropertySupported(OB_PROP_COLOR_AE_MODE_INT, OB_PERMISSION_WRITE)) {
+    auto ae_mode = ae_mode_ == "depthbased" ? 0 : 1;
+    device_->setIntProperty(OB_PROP_COLOR_AE_MODE_INT, ae_mode);
+    ROS_INFO_STREAM("Setting AE Mode to " << ae_mode_);
+  }
 }
 
 void OBCameraNode::setupFrameCallback() {
