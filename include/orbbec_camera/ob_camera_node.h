@@ -259,6 +259,8 @@ class OBCameraNode {
 
   bool isGemini435LePID(uint32_t pid);
 
+  bool isPublishMetaData(uint32_t pid);
+
   boost::optional<OBCameraParam> getCameraParam();
 
   boost::optional<OBCameraParam> getCameraDepthParam();

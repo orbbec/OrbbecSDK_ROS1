@@ -2440,4 +2440,8 @@ bool OBCameraNode::isGemini435LePID(uint32_t pid) {
   const uint16_t GEMINI_435Le_PID = 0x815;  // Gemini 435Le
   return pid == GEMINI_435Le_PID;
 }
+
+bool OBCameraNode::isPublishMetaData(uint32_t pid) {
+  return isGemini335PID(pid) || isGemini435LePID(pid) || pid == GEMINI_305_PID;
+}
 }  // namespace orbbec_camera

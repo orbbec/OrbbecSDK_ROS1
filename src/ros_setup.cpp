@@ -608,12 +608,6 @@ void OBCameraNode::setupDevices() {
         ROS_ERROR_STREAM("Depth process is keep default");
       }
     }
-    if (!device_preset_.empty()) {
-      ROS_INFO_STREAM("Loading device preset: " << device_preset_);
-      if (isGemini335PID(device_info_->pid())) {
-        device_->loadPreset(device_preset_.c_str());
-      }
-    }
     if (!sync_mode_str_.empty() &&
         device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
@@ -1264,7 +1258,8 @@ void OBCameraNode::setupPublishers() {
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     CHECK_NOTNULL(device_info_.get());
-    if (isGemini335PID(device_info_->pid()) || isGemini435LePID(device_info_->pid())) {
+    auto pid = device_info_->getPid();
+    if (isPublishMetaData(pid)) {
       metadata_publishers_[stream_index] =
           nh_.advertise<orbbec_camera::Metadata>("/" + camera_name_ + "/" + name + "/metadata", 1,
                                                  image_subscribed_cb, image_unsubscribed_cb);
