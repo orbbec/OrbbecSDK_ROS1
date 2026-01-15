@@ -284,6 +284,19 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getPointCloudDecimationCallback(request, response);
         return response.success;
       });
+  set_ae_mode_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
+      "/" + camera_name_ + "/" + "set_ae_mode",
+      [this](const SetStringRequest& request, SetStringResponse& response) {
+        this->setAEModeCallback(request, response);
+        return true;
+      });
+
+  set_sports_mode_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+      "/" + camera_name_ + "/" + "set_sports_mode",
+      [this](const std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+        this->setSportsModeCallback(request, response);
+        return true;
+      });
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -1246,6 +1259,40 @@ bool OBCameraNode::getPointCloudDecimationCallback(GetInt32Request& request,
     response.success = false;
     response.message = e.what();
     return false;
+  }
+}
+
+void OBCameraNode::setAEModeCallback(const SetStringRequest& request, SetStringResponse& response) {
+  try {
+    if (device_->isPropertySupported(OB_PROP_COLOR_AE_MODE_INT, OB_PERMISSION_WRITE) &&
+        (request.data == "depthbased" || request.data == "colorbased")) {
+      device_->setIntProperty(OB_PROP_COLOR_AE_MODE_INT, request.data == "depthbased" ? 0 : 1);
+      response.success = true;
+      response.message = "set AE mode success";
+    } else {
+      response.success = false;
+      response.message = "set AE mode failed";
+    }
+  } catch (...) {
+    response.success = false;
+    response.message = "exception occurred";
+  }
+}
+
+void OBCameraNode::setSportsModeCallback(const std_srvs::SetBoolRequest& request,
+                                         std_srvs::SetBoolResponse& response) {
+  try {
+    if (device_->isPropertySupported(OB_PROP_COLOR_FAST_AE_BOOL, OB_PERMISSION_WRITE)) {
+      device_->setIntProperty(OB_PROP_COLOR_FAST_AE_BOOL, request.data ? 1 : 0);
+      response.success = true;
+      response.message = "set sports mode success";
+    } else {
+      response.success = false;
+      response.message = "set sports mode failed";
+    }
+  } catch (...) {
+    response.success = false;
+    response.message = "exception occurred";
   }
 }
 }  // namespace orbbec_camera
