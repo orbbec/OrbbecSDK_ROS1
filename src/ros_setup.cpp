@@ -35,6 +35,20 @@ void OBCameraNode::setupConfig() {
   encoding_[COLOR] = sensor_msgs::image_encodings::RGB8;
   format_str_[COLOR] = "RGB";
 
+  stream_name_[COLOR_LEFT] = "left_color";
+  unit_step_size_[COLOR_LEFT] = 3;
+  format_[COLOR_LEFT] = OB_FORMAT_RGB888;
+  image_format_[COLOR_LEFT] = CV_8UC3;
+  encoding_[COLOR_LEFT] = sensor_msgs::image_encodings::RGB8;
+  format_str_[COLOR_LEFT] = "RGB";
+
+  stream_name_[COLOR_RIGHT] = "right_color";
+  unit_step_size_[COLOR_RIGHT] = 3;
+  format_[COLOR_RIGHT] = OB_FORMAT_RGB888;
+  image_format_[COLOR_RIGHT] = CV_8UC3;
+  encoding_[COLOR_RIGHT] = sensor_msgs::image_encodings::RGB8;
+  format_str_[COLOR_RIGHT] = "RGB";
+
   stream_name_[INFRA0] = "ir";
   unit_step_size_[INFRA0] = sizeof(uint16_t);
   format_[INFRA0] = OB_FORMAT_Y16;
@@ -74,15 +88,39 @@ void OBCameraNode::selectBaseStream() {
     base_stream_ = INFRA2;
   } else if (enable_stream_[COLOR]) {
     base_stream_ = COLOR;
+  } else if (enable_stream_[COLOR_LEFT]) {
+    base_stream_ = COLOR_LEFT;
+  } else if (enable_stream_[COLOR_RIGHT]) {
+    base_stream_ = COLOR_RIGHT;
   } else {
     ROS_ERROR_STREAM("No base stream is enabled!");
   }
 }
 void OBCameraNode::setupColorPostProcessFilter() {
-  auto color_sensor = device_->getSensor(OB_SENSOR_COLOR);
-  color_filter_list_ = color_sensor->createRecommendedFilters();
-  if (color_filter_list_.empty()) {
-    ROS_WARN("Failed to get color sensor filter list");
+  try {
+    auto color_sensor = device_->getSensor(OB_SENSOR_COLOR);
+    if (color_sensor) {
+      color_filter_list_ = color_sensor->createRecommendedFilters();
+    }
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Main color sensor not found, trying left/right color sensors");
+    try {
+      auto left_color_sensor = device_->getSensor(OB_SENSOR_COLOR_LEFT);
+      if (left_color_sensor) {
+        left_color_filter_list_ = left_color_sensor->createRecommendedFilters();
+      }
+      auto right_color_sensor = device_->getSensor(OB_SENSOR_COLOR_RIGHT);
+      if (right_color_sensor) {
+        right_color_filter_list_ = right_color_sensor->createRecommendedFilters();
+      }
+    } catch (const std::exception& e) {
+      ROS_DEBUG_STREAM("Left/Right color sensors not found either.");
+    }
+  }
+
+  if (color_filter_list_.empty() && left_color_filter_list_.empty() &&
+      right_color_filter_list_.empty()) {
+    ROS_WARN("Failed to get any color sensor filter list");
     return;
   }
   for (size_t i = 0; i < color_filter_list_.size(); i++) {
@@ -115,6 +153,10 @@ void OBCameraNode::setupColorPostProcessFilter() {
   }
 }
 void OBCameraNode::setupLeftIrPostProcessFilter() {
+  if (device_preset_ == "Dual Color Streams") {
+    ROS_DEBUG_STREAM("Dual Color Streams preset, skip left ir filter setup");
+    return;
+  }
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
   auto pid = device_info->getPid();
@@ -149,6 +191,10 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
 }
 
 void OBCameraNode::setupRightIrPostProcessFilter() {
+  if (device_preset_ == "Dual Color Streams") {
+    ROS_DEBUG_STREAM("Dual Color Streams preset, skip right ir filter setup");
+    return;
+  }
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
   auto pid = device_info->getPid();
@@ -184,6 +230,10 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
 }
 
 void OBCameraNode::setupDepthPostProcessFilter() {
+  if (device_preset_ == "Dual Color Streams") {
+    ROS_DEBUG_STREAM("Dual Color Streams preset, skip depth filter setup");
+    return;
+  }
   // set depth sensor to filter
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
   depth_filter_list_ = depth_sensor->createRecommendedFilters();
@@ -298,6 +348,24 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       });
 }
 void OBCameraNode::setupDevices() {
+  if (!device_preset_.empty()) {
+    try {
+      ROS_INFO_STREAM("Available presets:");
+      auto preset_list = device_->getAvailablePresetList();
+      for (uint32_t i = 0; i < preset_list->getCount(); i++) {
+        ROS_INFO_STREAM("Preset " << i << ": " << preset_list->getName(i));
+      }
+      ROS_INFO_STREAM("Load device preset: " << device_preset_);
+      device_->loadPreset(device_preset_.c_str());
+      ROS_INFO_STREAM("Device preset " << device_->getCurrentPresetName() << " loaded");
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM("Failed to load device preset: " << e.getMessage());
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM("Failed to load device preset: " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("Failed to load device preset");
+    }
+  }
   if (!preset_resolution_config_.empty()) {
     OBPresetResolutionConfig presetResolutionConfig;
     std::istringstream iss(preset_resolution_config_);

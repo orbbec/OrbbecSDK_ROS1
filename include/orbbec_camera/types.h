@@ -47,6 +47,8 @@ namespace orbbec_camera {
 typedef std::pair<ob_stream_type, int> stream_index_pair;
 
 const stream_index_pair COLOR{OB_STREAM_COLOR, 0};
+const stream_index_pair COLOR_LEFT{OB_STREAM_COLOR_LEFT, 0};
+const stream_index_pair COLOR_RIGHT{OB_STREAM_COLOR_RIGHT, 0};
 const stream_index_pair DEPTH{OB_STREAM_DEPTH, 0};
 const stream_index_pair INFRA0{OB_STREAM_IR, 0};
 const stream_index_pair INFRA1{OB_STREAM_IR_LEFT, 0};
@@ -57,7 +59,8 @@ const stream_index_pair LIDAR{OB_STREAM_LIDAR, 0};
 const stream_index_pair GYRO{OB_STREAM_GYRO, 0};
 const stream_index_pair ACCEL{OB_STREAM_ACCEL, 0};
 
-const std::vector<stream_index_pair> IMAGE_STREAMS = {COLOR, DEPTH, INFRA0, INFRA1, INFRA2};
+const std::vector<stream_index_pair> IMAGE_STREAMS = {COLOR,  COLOR_LEFT, COLOR_RIGHT, DEPTH,
+                                                      INFRA0, INFRA1,     INFRA2};
 
 const std::vector<stream_index_pair> LIDAR_STREAMS = {LIDAR};
 
@@ -69,6 +72,8 @@ const std::map<std::string, OBDepthPrecisionLevel> DEPTH_PRECISION_STR2ENUM = {
 
 const std::map<OBStreamType, OBFrameType> STREAM_TYPE_TO_FRAME_TYPE = {
     {OB_STREAM_COLOR, OB_FRAME_COLOR},
+    {OB_STREAM_COLOR_LEFT, OB_FRAME_COLOR_LEFT},
+    {OB_STREAM_COLOR_RIGHT, OB_FRAME_COLOR_RIGHT},
     {OB_STREAM_DEPTH, OB_FRAME_DEPTH},
     {OB_STREAM_IR, OB_FRAME_IR},
     {OB_STREAM_IR_LEFT, OB_FRAME_IR_LEFT},

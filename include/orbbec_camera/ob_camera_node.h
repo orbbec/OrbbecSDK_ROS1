@@ -169,6 +169,10 @@ class OBCameraNode {
 
   void onNewColorFrameCallback();
 
+  void onNewLeftColorFrameCallback();
+
+  void onNewRightColorFrameCallback();
+
   void publishPointCloud(const std::shared_ptr<ob::FrameSet> &frame_set);
 
   void publishDepthPointCloud(const std::shared_ptr<ob::FrameSet> &frame_set);
@@ -499,6 +503,8 @@ class OBCameraNode {
   std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_manager_ = nullptr;
   std::vector<std::shared_ptr<ob::Filter>> depth_filter_list_;
   std::vector<std::shared_ptr<ob::Filter>> color_filter_list_;
+  std::vector<std::shared_ptr<ob::Filter>> left_color_filter_list_;
+  std::vector<std::shared_ptr<ob::Filter>> right_color_filter_list_;
   std::vector<std::shared_ptr<ob::Filter>> left_ir_filter_list_;
   std::vector<std::shared_ptr<ob::Filter>> right_ir_filter_list_;
   std::string ir_info_uri_;
@@ -606,14 +612,30 @@ class OBCameraNode {
 
   // mjpeg decoder
   std::shared_ptr<JPEGDecoder> mjpeg_decoder_ = nullptr;
+  std::shared_ptr<JPEGDecoder> jpeg_decoder_left_ = nullptr;
+  std::shared_ptr<JPEGDecoder> jpeg_decoder_right_ = nullptr;
   uint8_t *rgb_buffer_ = nullptr;
+  uint8_t *rgb_buffer_left_ = nullptr;
+  uint8_t *rgb_buffer_right_ = nullptr;
   std::atomic_bool rgb_is_decoded_{false};
+  std::atomic_bool rgb_left_is_decoded_{false};
+  std::atomic_bool rgb_right_is_decoded_{false};
 
   // For color
   std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
   std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
   std::mutex colorFrameMtx_;
   std::condition_variable colorFrameCV_;
+  // For left color
+  std::queue<std::shared_ptr<ob::FrameSet>> leftColorFrameQueue_;
+  std::shared_ptr<std::thread> leftColorFrameThread_ = nullptr;
+  std::mutex leftColorFrameMtx_;
+  std::condition_variable leftColorFrameCV_;
+  // For right color
+  std::queue<std::shared_ptr<ob::FrameSet>> rightColorFrameQueue_;
+  std::shared_ptr<std::thread> rightColorFrameThread_ = nullptr;
+  std::mutex rightColorFrameMtx_;
+  std::condition_variable rightColorFrameCV_;
   // ordered point cloud
   bool ordered_pc_ = false;
   std::string device_preset_ = "Default";
