@@ -542,6 +542,11 @@ class OBCameraNode {
   int color_backlight_compensation_ = false;
   std::string color_powerline_freq_;
   bool enable_color_decimation_filter_ = false;
+  int color_decimation_filter_scale_ = -1;
+  bool enable_left_color_decimation_filter_ = false;
+  int left_color_decimation_filter_scale_ = -1;
+  bool enable_right_color_decimation_filter_ = false;
+  int right_color_decimation_filter_scale_ = -1;
   // color ae roi
   int color_ae_roi_left_ = -1;
   int color_ae_roi_top_ = -1;
@@ -558,7 +563,6 @@ class OBCameraNode {
   int color_contrast_ = -1;
   int color_hue_ = -1;
   int color_ae_max_exposure_ = -1;
-  int color_decimation_filter_scale_ = -1;
   int color_denoising_level_ = -1;
   bool enable_ir_auto_exposure_ = true;
   bool enable_depth_scale_ = true;

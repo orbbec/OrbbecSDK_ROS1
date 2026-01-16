@@ -58,6 +58,8 @@ color_camera_info_qos: default
 color_rotation: -1
 color_flip: false
 color_mirror: false
+enable_color_decimation_filter: false
+color_decimation_filter_scale: -1
 
 # left_color
 enable_left_color: true
@@ -70,6 +72,8 @@ left_color_camera_info_qos: default
 left_color_rotation: -1
 left_color_flip: false
 left_color_mirror: false
+enable_left_color_decimation_filter: false
+left_color_decimation_filter_scale: -1
 
 # right_color
 enable_right_color: true
@@ -82,6 +86,8 @@ right_color_camera_info_qos: default
 right_color_rotation: -1
 right_color_flip: false
 right_color_mirror: false
+enable_right_color_decimation_filter: false
+right_color_decimation_filter_scale: -1
 
 # color_common
 enable_color_auto_exposure_priority: false
@@ -103,8 +109,6 @@ color_contrast: -1
 color_hue: -1
 color_backlight_compensation: -1
 color_powerline_freq: ""
-enable_color_decimation_filter: false
-color_decimation_filter_scale: -1
 color_denoising_level: -1
 enable_color_undistortion: false
 
@@ -261,19 +265,3 @@ laser_index0_depth_gain: 16
 laser_index0_ir_brightness: 60
 laser_index0_ir_ae_max_exposure: 30000
 
-# publishers and transports
-color_image_transport_plugins:
-  - image_transport/compressed
-  - image_transport/raw
-  - image_transport/theora
-depth_image_transport_plugins:
-  - image_transport/compressedDepth
-  - image_transport/raw
-left_ir_image_transport_plugins:
-  - image_transport/compressed
-  - image_transport/raw
-  - image_transport/theora
-right_ir_image_transport_plugins:
-  - image_transport/compressed
-  - image_transport/raw
-  - image_transport/theora

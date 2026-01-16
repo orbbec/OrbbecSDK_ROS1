@@ -129,7 +129,7 @@ void OBCameraNode::setupColorPostProcessFilter() {
         {"DecimationFilter", enable_color_decimation_filter_},
     };
     std::string filter_name = filter->type();
-    ROS_INFO_STREAM("Setting " << filter_name << "......");
+    ROS_INFO_STREAM("Setting color " << filter_name << "......");
     if (filter_params.find(filter_name) != filter_params.end()) {
       std::string value = filter_params[filter_name] ? "true" : "false";
       ROS_INFO_STREAM("set color " << filter_name << " to " << value);
@@ -147,6 +147,67 @@ void OBCameraNode::setupColorPostProcessFilter() {
       if (color_decimation_filter_scale_ != -1 && (color_decimation_filter_scale_ < range.min ||
                                                    color_decimation_filter_scale_ > range.max)) {
         ROS_ERROR_STREAM("Color Decimation filter scale value is out of range "
+                         << range.min << " - " << range.max);
+      }
+    }
+  }
+  for (size_t i = 0; i < left_color_filter_list_.size(); i++) {
+    auto filter = left_color_filter_list_[i];
+    std::map<std::string, bool> filter_params = {
+        {"DecimationFilter", enable_left_color_decimation_filter_},
+    };
+    std::string filter_name = filter->type();
+    ROS_INFO_STREAM("Setting left color " << filter_name << "......");
+    if (filter_params.find(filter_name) != filter_params.end()) {
+      std::string value = filter_params[filter_name] ? "true" : "false";
+      ROS_INFO_STREAM("set left color " << filter_name << " to " << value);
+      filter->enable(filter_params[filter_name]);
+    }
+    if (filter_name == "DecimationFilter" && enable_left_color_decimation_filter_) {
+      auto decimation_filter = filter->as<ob::DecimationFilter>();
+      auto range = decimation_filter->getScaleRange();
+      if (left_color_decimation_filter_scale_ != -1 &&
+          left_color_decimation_filter_scale_ <= range.max &&
+          left_color_decimation_filter_scale_ >= range.min) {
+        ROS_INFO_STREAM("Set left color decimation filter scale value to "
+                        << left_color_decimation_filter_scale_);
+        decimation_filter->setScaleValue(left_color_decimation_filter_scale_);
+      }
+      if (left_color_decimation_filter_scale_ != -1 &&
+          (left_color_decimation_filter_scale_ < range.min ||
+           left_color_decimation_filter_scale_ > range.max)) {
+        ROS_ERROR_STREAM("Left Color Decimation filter scale value is out of range "
+                         << range.min << " - " << range.max);
+      }
+    }
+  }
+
+  for (size_t i = 0; i < right_color_filter_list_.size(); i++) {
+    auto filter = right_color_filter_list_[i];
+    std::map<std::string, bool> filter_params = {
+        {"DecimationFilter", enable_right_color_decimation_filter_},
+    };
+    std::string filter_name = filter->type();
+    ROS_INFO_STREAM("Setting right color " << filter_name << "......");
+    if (filter_params.find(filter_name) != filter_params.end()) {
+      std::string value = filter_params[filter_name] ? "true" : "false";
+      ROS_INFO_STREAM("set right color " << filter_name << " to " << value);
+      filter->enable(filter_params[filter_name]);
+    }
+    if (filter_name == "DecimationFilter" && enable_right_color_decimation_filter_) {
+      auto decimation_filter = filter->as<ob::DecimationFilter>();
+      auto range = decimation_filter->getScaleRange();
+      if (right_color_decimation_filter_scale_ != -1 &&
+          right_color_decimation_filter_scale_ <= range.max &&
+          right_color_decimation_filter_scale_ >= range.min) {
+        ROS_INFO_STREAM("Set right color decimation filter scale value to "
+                        << right_color_decimation_filter_scale_);
+        decimation_filter->setScaleValue(right_color_decimation_filter_scale_);
+      }
+      if (right_color_decimation_filter_scale_ != -1 &&
+          (right_color_decimation_filter_scale_ < range.min ||
+           right_color_decimation_filter_scale_ > range.max)) {
+        ROS_ERROR_STREAM("Right Color Decimation filter scale value is out of range "
                          << range.min << " - " << range.max);
       }
     }
@@ -510,7 +571,8 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
     }
-    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
+    if (sensors_.find(DEPTH) != sensors_.end() &&
+        device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
       auto default_noise_removal_filter_min_diff =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
       ROS_INFO_STREAM(
@@ -524,7 +586,8 @@ void OBCameraNode::setupDevices() {
             "after set noise_removal_filter_min_diff: " << new_noise_removal_filter_min_diff);
       }
     }
-    if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
+    if (sensors_.find(DEPTH) != sensors_.end() &&
+        device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
       auto default_noise_removal_filter_max_size =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
       ROS_INFO_STREAM(
@@ -538,7 +601,8 @@ void OBCameraNode::setupDevices() {
             "after set noise_removal_filter_max_size: " << new_noise_removal_filter_max_size);
       }
     }
-    if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+    if (sensors_.find(DEPTH) != sensors_.end() &&
+        device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_noise_removal_filter_);
       ROS_INFO_STREAM("enable_noise_removal_filter:" << enable_noise_removal_filter_);
     }
@@ -589,7 +653,8 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
     }
-    if (device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE) &&
+    if (sensors_.find(DEPTH) != sensors_.end() &&
+        device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE) &&
         device_->isPropertySupported(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
       if (disparity_to_depth_mode_ == "HW") {
@@ -793,7 +858,8 @@ void OBCameraNode::setupDevices() {
     if (device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     }
-    if (device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT,
+    if (sensors_.find(DEPTH) != sensors_.end() &&
+        device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT,
                                      OB_PERMISSION_WRITE)) {
       int set_enable_depth_auto_exposure_priority = enable_depth_auto_exposure_priority_ ? 1 : 0;
       ROS_INFO_STREAM("Setting depth auto exposure priority to "
