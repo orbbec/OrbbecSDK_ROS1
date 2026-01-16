@@ -161,7 +161,7 @@
 
 **迁移指南**
 
-如果您需要将现有项目从 main (v1.x) 分支迁移到 v2-main (v2.x) 分支，请参考官方[迁移指南](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/7_developer_guide/migration_guide.html)
+如果您需要将现有项目从 main (v1.x) 分支迁移到 v2-main (v2.x) 分支，请参考官方[迁移指南](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/camera_devices/7_developer_guide/migration_guide.html)
 
 ## 安装依赖
 
@@ -252,7 +252,7 @@ rostopic echo /camera/depth/camera_info
 rosservice call /camera/get_sdk_version "{}"
 ```
 
-> 更多使用细节，请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/4_application_guide/application_guide.html)
+> 更多使用细节，请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/camera_devices/4_application_guide/application_guide.html)
 
 ## 支持的设备
 
@@ -283,7 +283,7 @@ rosservice call /camera/get_sdk_version "{}"
 
 ## 教程
 
-请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/4_application_guide/application_guide.html)
+请参考官方 [OrbbecSDK ROS 文档](https://orbbec.github.io/OrbbecSDK_ROS1/zh/source/camera_devices/4_application_guide/application_guide.html)
 
 ## 示例
 
