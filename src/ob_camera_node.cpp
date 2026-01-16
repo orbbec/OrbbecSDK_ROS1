@@ -1863,10 +1863,28 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     ROS_ERROR_STREAM("frame is not decoded");
     return;
   }
+  if (frame->getType() == OB_FRAME_COLOR_LEFT && !rgb_left_is_decoded_) {
+    ROS_ERROR_STREAM("left color frame is not decoded");
+    return;
+  }
+  if (frame->getType() == OB_FRAME_COLOR_RIGHT && !rgb_right_is_decoded_) {
+    ROS_ERROR_STREAM("right color frame is not decoded");
+    return;
+  }
   if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
       frame->format() != OB_FORMAT_Y16 && frame->format() != OB_FORMAT_BGRA &&
       frame->format() != OB_FORMAT_RGBA && image_publishers_[COLOR].getNumSubscribers() > 0) {
     memcpy(image.data, rgb_buffer_, width * height * 3);
+  } else if (frame->getType() == OB_FRAME_COLOR_LEFT && frame->format() != OB_FORMAT_Y8 &&
+             frame->format() != OB_FORMAT_Y16 && frame->format() != OB_FORMAT_BGRA &&
+             frame->format() != OB_FORMAT_RGBA &&
+             image_publishers_[COLOR_LEFT].getNumSubscribers() > 0) {
+    memcpy(image.data, rgb_buffer_left_, width * height * 3);
+  } else if (frame->getType() == OB_FRAME_COLOR_RIGHT && frame->format() != OB_FORMAT_Y8 &&
+             frame->format() != OB_FORMAT_Y16 && frame->format() != OB_FORMAT_BGRA &&
+             frame->format() != OB_FORMAT_RGBA &&
+             image_publishers_[COLOR_RIGHT].getNumSubscribers() > 0) {
+    memcpy(image.data, rgb_buffer_right_, width * height * 3);
   } else {
     memcpy(image.data, video_frame->data(), video_frame->dataSize());
   }

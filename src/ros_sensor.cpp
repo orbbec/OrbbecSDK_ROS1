@@ -246,7 +246,6 @@ void ROSOBSensor::setAutoExposure(bool data) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, data);
       break;
     default:
-      ROS_ERROR_STREAM("-----------------111---------------------");
       ROS_ERROR_STREAM(name_ << " does not support set auto exposure");
       break;
   }
