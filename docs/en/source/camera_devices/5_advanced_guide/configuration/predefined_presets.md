@@ -47,6 +47,8 @@ This document lists available presets, features, and recommended scenarios by pr
 | Close Range High Accuracy | Adjustable larger parallax search range, Mini-Z reduction<br> The rest of the performance remains consistent with High Accuracy |
 | Dual Color Streams | Supports left and right color streams at the same time, no depth IR information<br> The left and right output effects are consistent |
 | Custom | Custom modifications, such as new configurations of post-processing pipelines and modifications to deep AE functions |
+> Since the parameter configuration of `Dual Color Streams` mode is quite different from that of `Default` mode, we provide the corresponding YAML configuration file.
+Please set `config_file_path` to `gemini305_dual_color.yaml`, the configuration file is located in the config directory.
 
 ## Extended presets
 
