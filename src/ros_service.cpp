@@ -1264,9 +1264,10 @@ bool OBCameraNode::getPointCloudDecimationCallback(GetInt32Request& request,
 
 void OBCameraNode::setAEModeCallback(const SetStringRequest& request, SetStringResponse& response) {
   try {
-    if (device_->isPropertySupported(OB_PROP_COLOR_AE_MODE_INT, OB_PERMISSION_WRITE) &&
+    if (device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE) &&
         (request.data == "depthbased" || request.data == "colorbased")) {
-      device_->setIntProperty(OB_PROP_COLOR_AE_MODE_INT, request.data == "depthbased" ? 0 : 1);
+      device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT,
+                              request.data == "depthbased" ? 0 : 1);
       response.success = true;
       response.message = "set AE mode success";
     } else {
@@ -1282,8 +1283,8 @@ void OBCameraNode::setAEModeCallback(const SetStringRequest& request, SetStringR
 void OBCameraNode::setSportsModeCallback(const std_srvs::SetBoolRequest& request,
                                          std_srvs::SetBoolResponse& response) {
   try {
-    if (device_->isPropertySupported(OB_PROP_COLOR_FAST_AE_BOOL, OB_PERMISSION_WRITE)) {
-      device_->setIntProperty(OB_PROP_COLOR_FAST_AE_BOOL, request.data ? 1 : 0);
+    if (device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
+      device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, request.data ? 1 : 0);
       response.success = true;
       response.message = "set sports mode success";
     } else {
