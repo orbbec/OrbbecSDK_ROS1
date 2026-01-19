@@ -14,7 +14,7 @@
 
 
 
-Multi-Camera
+多相机
 ------------------------------------------------------
 
 .. toctree::
@@ -27,7 +27,7 @@ Multi-Camera
     multi_camera/gmsl_cameras.md
 
 
-Configuration & Modes
+配置与模式
 ------------------------------------------------------
 
 .. toctree::

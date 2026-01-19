@@ -1,4 +1,4 @@
-## Aligning Depth to Color in ROS
+## Aligning Depth to Color
 
 This section explains how to align depth images with color images to create an overlay image using ROS. This is particularly useful for applications requiring synchronized visual information from different sensor modalities.
 
