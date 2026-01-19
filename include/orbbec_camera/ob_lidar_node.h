@@ -46,8 +46,6 @@
 #include <orbbec_camera/Metadata.h>
 #include <orbbec_camera/IMUInfo.h>
 
-#include "jpeg_decoder.h"
-
 #include <diagnostic_updater/diagnostic_updater.h>
 
 namespace orbbec_camera {

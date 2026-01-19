@@ -17,11 +17,6 @@
 #include "orbbec_camera/ob_lidar_node.h"
 #include "orbbec_camera/utils.h"
 #include "libobsensor/hpp/Utils.hpp"
-#if defined(USE_RK_HW_DECODER)
-#include "orbbec_camera/rk_mpp_decoder.h"
-#elif defined(USE_NV_HW_DECODER)
-#include "orbbec_camera/jetson_nv_decoder.h"
-#endif
 
 namespace orbbec_camera {
 namespace orbbec_lidar {
@@ -45,11 +40,6 @@ void OBLidarNode::init() {
   setupProfiles();
   setupPublishers();
   startStreams();
-#if defined(USE_RK_HW_DECODER)
-  mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
-#elif defined(USE_NV_HW_DECODER)
-  mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
-#endif
   is_initialized_ = true;
 }
 
