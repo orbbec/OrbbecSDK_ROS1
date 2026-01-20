@@ -1268,6 +1268,7 @@ void OBCameraNode::setAEModeCallback(const SetStringRequest& request, SetStringR
         (request.data == "depthbased" || request.data == "colorbased")) {
       device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT,
                               request.data == "depthbased" ? 0 : 1);
+      ae_mode_ = request.data;
       response.success = true;
       response.message = "set AE mode success";
     } else {
