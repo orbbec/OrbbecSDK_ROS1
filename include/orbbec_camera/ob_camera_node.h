@@ -651,7 +651,7 @@ class OBCameraNode {
   std::condition_variable rightColorFrameCV_;
   // ordered point cloud
   bool ordered_pc_ = false;
-  std::string device_preset_ = "Default";
+  std::string device_preset_ = "";
   // filter switch
   bool enable_decimation_filter_ = false;
   bool enable_hdr_merge_ = false;
