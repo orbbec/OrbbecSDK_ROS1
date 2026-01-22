@@ -53,7 +53,7 @@
     <arg name="color_height" default="0"/>
     <arg name="color_fps" default="0"/>
     <arg name="enable_color" default="true"/>
-    <arg name="color_format" default="ANY"/>
+    <arg name="color_format" default="MJPG"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="-1"/>
     <arg name="color_flip" default="false"/>
