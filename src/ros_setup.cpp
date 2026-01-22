@@ -1137,21 +1137,21 @@ void OBCameraNode::setupProfiles() {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
-          conf.factor = depth_downscale_;
+          conf.factor = depth_decimation_factor_;
           selected_profile =
               profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
         } else if (pid == GEMINI_305_PID && stream_index == INFRA1) {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
-          conf.factor = left_ir_downscale_;
+          conf.factor = left_ir_decimation_factor_;
           selected_profile =
               profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
         } else if (pid == GEMINI_305_PID && stream_index == INFRA2) {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
-          conf.factor = right_ir_downscale_;
+          conf.factor = right_ir_decimation_factor_;
           selected_profile =
               profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
         } else {

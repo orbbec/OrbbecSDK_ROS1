@@ -766,9 +766,9 @@ class OBCameraNode {
   std::string ae_mode_;
   bool enable_sports_mode_ = false;
 
-  int depth_downscale_ = 1;
-  int left_ir_downscale_ = 1;
-  int right_ir_downscale_ = 1;
+  int depth_decimation_factor_ = 1;
+  int left_ir_decimation_factor_ = 1;
+  int right_ir_decimation_factor_ = 1;
 };
 
 }  // namespace orbbec_camera
