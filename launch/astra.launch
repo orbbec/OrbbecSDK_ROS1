@@ -11,6 +11,7 @@
     <arg name="product_id" default=""/>
     <arg name="enable_point_cloud" default="true"/>
     <arg name="enable_colored_point_cloud" default="true"/>
+    <arg name="point_cloud_decimation_filter_factor" default="1"/>
     <arg name="connection_delay" default="100"/>
     <arg name="color_width" default="640"/>
     <arg name="color_height" default="480"/>
