@@ -1963,6 +1963,10 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                         << "\nmagnitude:" << params.magnitude << "\nradius:" << params.radius
                         << "\ndisp_diff:" << params.disp_diff);
       }
+    } else if (request.filter_name == "FalsePositiveFilter") {
+      auto false_positive_filter = std::make_shared<ob::FalsePositiveFilter>();
+      false_positive_filter->enable(request.filter_enable);
+      depth_filter_list_.push_back(false_positive_filter);
     } else {
       ROS_INFO_STREAM(request.filter_name
                       << " Cannot be set\n"
@@ -1970,7 +1974,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                          "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, "
                          "NoiseRemovalFilter, HardwareNoiseRemoval, "
                          "SpatialAdvancedFilter, TemporalFilter, "
-                         "SpatialFastFilter, SpatialModerateFilter");
+                         "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter");
     }
     for (auto& filter : depth_filter_list_) {
       std::cout << " - " << filter->getName() << ": "
