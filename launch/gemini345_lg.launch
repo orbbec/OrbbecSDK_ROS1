@@ -14,7 +14,7 @@
     <arg name="enable_sync_host_time" default="true"/>
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
-    <arg name="device_preset" default="Default"/>
+    <arg name="device_preset" default="Standard default"/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
     <arg name="sync_mode" default="standalone"/>
@@ -98,6 +98,8 @@
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_hole_filling_filter" default="false"/>
+    <arg name="enable_false_positive_filter" default="false"/>
+
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
     <arg name="threshold_filter_min" default="-1"/>
@@ -208,6 +210,8 @@
             <param name="spatial_filter_magnitude" value="$(arg spatial_filter_magnitude)"/>
             <param name="spatial_filter_radius" value="$(arg spatial_filter_radius)"/>
             <param name="temporal_filter_diff_threshold" value="$(arg temporal_filter_diff_threshold)"/>
+            <param name="enable_false_positive_filter" value="$(arg enable_false_positive_filter)"/>
+
             <param name="temporal_filter_weight" value="$(arg temporal_filter_weight)"/>
             <param name="hole_filling_filter_mode" value="$(arg hole_filling_filter_mode)"/>
             <param name="hdr_merge_exposure_1" value="$(arg hdr_merge_exposure_1)"/>

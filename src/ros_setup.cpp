@@ -315,6 +315,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"ThresholdFilter", enable_threshold_filter_},
         {"SpatialFastFilter", enable_spatial_fast_filter_},
         {"SpatialModerateFilter", enable_spatial_moderate_filter_},
+        {"FalsePositiveFilter", enable_false_positive_filter_},
     };
     std::string filter_name = filter->type();
     ROS_INFO_STREAM("Setting " << filter_name << "......");
