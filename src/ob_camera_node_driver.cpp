@@ -394,12 +394,18 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   // if (!isOpenNIDevice(device_info_->pid())) {
   //   ctx_->enableDeviceClockSync(1800000);
   // }
+  std::string major = std::to_string(ob::Version::getMajor());
+  std::string minor = std::to_string(ob::Version::getMinor());
+  std::string patch = std::to_string(ob::Version::getPatch());
+  std::string version = major + "." + minor + "." + patch;
   CHECK_NOTNULL(device_info_.get());
   std::string connection_type = device_info_->connectionType();
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
   ROS_INFO_STREAM("Serial number: " << device_info_->serialNumber());
   ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
   ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
+  ROS_INFO_STREAM("Wrapper version: " << OB_ROS_VERSION_STR);
+  ROS_INFO_STREAM("SDK version: " << version);
   ROS_INFO_STREAM("device uid: " << device_info_->uid());
   ROS_INFO_STREAM("device connection Type: " << connection_type);
   ROS_INFO_STREAM("Current node pid: " << getpid());
