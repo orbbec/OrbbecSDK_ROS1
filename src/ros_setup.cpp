@@ -428,6 +428,30 @@ void OBCameraNode::setupDevices() {
       ROS_ERROR_STREAM("Failed to load device preset");
     }
   }
+  if (!color_preset_.empty() &&
+      device_->isPropertySupported(OB_PROP_COLOR_PRESET_PRIORITY_INT, OB_PERMISSION_WRITE)) {
+    std::string preset_key = color_preset_;
+    std::transform(preset_key.begin(), preset_key.end(), preset_key.begin(), ::tolower);
+    int preset_value = -1;
+    if (preset_key == "default") {
+      preset_value = 0;
+    } else if (preset_key == "warm biased awb") {
+      preset_value = 1;
+    } else {
+      ROS_WARN_STREAM("Unsupported color_preset: "
+                      << color_preset_ << ". Supported values: Default, Warm Biased AWB");
+    }
+    if (preset_value >= 0) {
+      ROS_INFO_STREAM("Setting color preset to " << color_preset_);
+      device_->setIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT, preset_value);
+      auto current_value = device_->getIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT);
+      if (current_value == 0) {
+        ROS_INFO_STREAM("Color preset set to Default");
+      } else if (current_value == 1) {
+        ROS_INFO_STREAM("Color preset set to Warm Biased AWB");
+      }
+    }
+  }
   if (!preset_resolution_config_.empty()) {
     OBPresetResolutionConfig presetResolutionConfig;
     std::istringstream iss(preset_resolution_config_);
@@ -1307,7 +1331,8 @@ void OBCameraNode::setupPublishers() {
     ros::SubscriberStatusCallback image_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
 
-    // Create wrapper callbacks for image_transport::Publisher (they have different parameter types)
+    // Create wrapper callbacks for image_transport::Publisher (they have different parameter
+    // types)
     image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
         [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
           this->imageSubscribedCallback(stream_index);

@@ -652,6 +652,7 @@ class OBCameraNode {
   // ordered point cloud
   bool ordered_pc_ = false;
   std::string device_preset_ = "";
+  std::string color_preset_ = "";
   // filter switch
   bool enable_decimation_filter_ = false;
   bool enable_hdr_merge_ = false;
