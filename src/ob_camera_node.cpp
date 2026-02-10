@@ -74,7 +74,7 @@ void OBCameraNode::init() {
     xy_table_data_ = new float[xy_table_data_size_];
   }
   rgb_is_decoded_ = false;
-  if (diagnostics_frequency_ > 0.0) {
+  if (diagnostics_frequency_ > 0.0 && !isOpenNIDevice(device_->getDeviceInfo()->pid())) {
     diagnostics_thread_ = std::make_shared<std::thread>([this]() { setupDiagnosticUpdater(); });
   }
   is_initialized_ = true;
