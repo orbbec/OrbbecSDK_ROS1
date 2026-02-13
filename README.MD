@@ -156,7 +156,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   </tbody>
 </table>
 
-   **Note**: If you do not find your device, please contact our FAE or sales representative for help.
+   **Note**: Lidar devices are supported in v2.6.3 and later versions.For usage details, please refer to [Document](https://orbbec.github.io/OrbbecSDK_ROS2/en/source/lidar_devices/index.html).If you do not find your device, please contact our FAE or sales representative for help.
 
    **Definition**:
 
@@ -282,10 +282,12 @@ The following devices are supported by the OrbbecSDK ROS Wrapper.
 | Gemini 210              | [1.0.9](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini210-Firmware)               |                                               gemini210.launch    |
 | Gemini 2                | [1.4.98](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini2-Firmware)                |                                               gemini2.launch     |
 | Gemini 2 L              | [1.5.2](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini2L-Firmware)                |                                               gemini2L.launch  |
-| Femto Bolt              | [1.1.2](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Bolt-Firmware)              |                               femto_bolt.launch |
+| Femto Bolt              | [1.1.3](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Bolt-Firmware)              |                               femto_bolt.launch |
 | Femto Mega              | [1.3.1](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-Firmware)              |                                               femto_mega.launch  |
 | Femto Mega I             | [2.0.4](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-I-Firmware)              |                                               femto_mega.launch  |
 | Astra 2                 | [2.8.20](https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Astra2_Release_2.8.20.zip)    |                                               astra2.launch    |
+| Gemini 345            | 1.9.03 | gemini345.launch |
+| Gemini 345Lg            | 1.9.03 | gemini345_lg.launch |
 | Pulsar SL450            | 2.2.4.5 | lidar.launch |
 | Pulsar ME450            | 1.0.0.6 | lidar.launch |
 
