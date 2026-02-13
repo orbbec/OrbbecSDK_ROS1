@@ -15,6 +15,7 @@
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
     <arg name="device_preset" default="Default"/>
+    <arg name="preset_firmware_path" default=""/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="disparity_to_depth_mode" default="HW"/><!-- HW, SW, disable -->
@@ -134,6 +135,7 @@
             <param name="connection_delay" value="$(arg connection_delay)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="log_file_name" value="$(arg log_file_name)"/>
+            <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
             <param name="publish_tf" value="$(arg publish_tf)"/>
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
