@@ -380,6 +380,10 @@ class OBCameraNode {
 
   bool getPointCloudDecimationCallback(GetInt32Request &request, GetInt32Response &response);
 
+  bool setDisparityRangeModeCallback(SetInt32Request &request, SetInt32Response &response);
+
+  bool setDisparitySearchOffsetCallback(SetInt32Request &request, SetInt32Response &response);
+
   void setAEModeCallback(const SetStringRequest &request, SetStringResponse &response);
 
   void setSportsModeCallback(const std_srvs::SetBoolRequest &request,
@@ -495,6 +499,8 @@ class OBCameraNode {
   ros::ServiceServer get_laser_status_srv_;
   ros::ServiceServer set_point_cloud_decimation_srv_;
   ros::ServiceServer get_point_cloud_decimation_srv_;
+  ros::ServiceServer set_disparity_range_mode_srv_;
+  ros::ServiceServer set_disparity_search_offset_srv_;
   ros::ServiceServer set_ae_mode_srv_;
   ros::ServiceServer set_sports_mode_srv_;
 

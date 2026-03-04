@@ -17,6 +17,42 @@
 
 namespace orbbec_camera {
 
+namespace {
+
+bool isGemini330SeriesForDisparity(uint32_t pid) {
+  return pid == GEMINI_335_PID || pid == GEMINI_336_PID || pid == GEMINI_330_PID ||
+         pid == GEMINI_335L_PID || pid == GEMINI_336L_PID || pid == GEMINI_330L_PID ||
+         pid == GEMINI_335LG_PID || pid == GEMINI_335LE_PID;
+}
+
+bool isSupportedDisparityResolutionForPid(uint32_t pid, int width, int height) {
+  if (pid == GEMINI_335LE_PID) {
+    return (width == 1280 && height == 800) || (width == 640 && height == 400) ||
+           (width == 424 && height == 266) || (width == 320 && height == 200);
+  }
+
+  return (width == 1280 && height == 800) || (width == 1280 && height == 720) ||
+         (width == 640 && height == 400) || (width == 424 && height == 266);
+}
+
+std::string getDisparityResolutionHintByPid(uint32_t pid) {
+  if (pid == GEMINI_335LE_PID) {
+    return "Supported resolutions for Gemini 335Le: 1280x800/640x400/424x266/320x200";
+  }
+
+  return "Supported resolutions for Gemini 335/336/330/335L/336L/335Lg/330L: "
+         "1280x800/1280x720/640x400/424x266";
+}
+
+bool setDisparityServiceFailure(SetInt32Response& response, const std::string& message) {
+  response.success = false;
+  response.message = message;
+  ROS_INFO_STREAM(message);
+  return true;
+}
+
+}  // namespace
+
 void OBCameraNode::setupCameraCtrlServices() {
   using std_srvs::SetBool;
   for (const auto& stream_index : IMAGE_STREAMS) {
@@ -283,6 +319,16 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](GetInt32Request& request, GetInt32Response& response) {
         response.success = this->getPointCloudDecimationCallback(request, response);
         return response.success;
+      });
+  set_disparity_range_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+      "/" + camera_name_ + "/" + "set_disparity_range_mode",
+      [this](SetInt32Request& request, SetInt32Response& response) {
+        return this->setDisparityRangeModeCallback(request, response);
+      });
+  set_disparity_search_offset_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+      "/" + camera_name_ + "/" + "set_disparity_search_offset",
+      [this](SetInt32Request& request, SetInt32Response& response) {
+        return this->setDisparitySearchOffsetCallback(request, response);
       });
   set_ae_mode_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
       "/" + camera_name_ + "/" + "set_ae_mode",
@@ -1259,6 +1305,120 @@ bool OBCameraNode::getPointCloudDecimationCallback(GetInt32Request& request,
     response.success = false;
     response.message = e.what();
     return false;
+  }
+}
+
+bool OBCameraNode::setDisparityRangeModeCallback(SetInt32Request& request,
+                                                 SetInt32Response& response) {
+  try {
+    if (!device_->isPropertySupported(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, OB_PERMISSION_WRITE)) {
+      return setDisparityServiceFailure(response,
+                                        "Current device does not support disparity range mode");
+    }
+
+    const bool allow_set = isGemini435LePID(device_info_->pid()) ||
+                           (enable_stream_.count(DEPTH) > 0 && enable_stream_.at(DEPTH));
+    if (!allow_set) {
+      return setDisparityServiceFailure(
+          response, "Disparity range mode can only be set when depth stream is enabled");
+    }
+
+    const int depth_width = width_.count(DEPTH) > 0 ? width_.at(DEPTH) : 0;
+    const int depth_height = height_.count(DEPTH) > 0 ? height_.at(DEPTH) : 0;
+    if (isGemini330SeriesForDisparity(device_info_->pid()) &&
+        !isSupportedDisparityResolutionForPid(device_info_->pid(), depth_width, depth_height)) {
+      return setDisparityServiceFailure(
+          response, "Current depth resolution " + std::to_string(depth_width) + "x" +
+                        std::to_string(depth_height) + " is not supported. " +
+                        getDisparityResolutionHintByPid(device_info_->pid()));
+    }
+
+    auto range = device_->getIntPropertyRange(OB_PROP_DISP_SEARCH_RANGE_MODE_INT);
+    const int requested_mode_value = request.data;
+    int hw_mode_index = -1;
+    if (requested_mode_value == 64) {
+      hw_mode_index = 0;
+    } else if (requested_mode_value == 128) {
+      hw_mode_index = 1;
+    } else if (requested_mode_value == 256) {
+      hw_mode_index = 2;
+    }
+
+    if (hw_mode_index < range.min || hw_mode_index > range.max) {
+      std::string supported_mode;
+      for (int i = range.min; i <= range.max; ++i) {
+        supported_mode += (i == 0)   ? "64"
+                          : (i == 1) ? "/128"
+                          : (i == 2) ? "/256"
+                                     : "/" + std::to_string(i);
+      }
+      return setDisparityServiceFailure(
+          response, "Invalid disparity range mode. Allowed values:" + supported_mode);
+    }
+
+    device_->setIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, hw_mode_index);
+    auto current_mode_index = device_->getIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT);
+    auto current_mode_value = (current_mode_index == 0)   ? 64
+                              : (current_mode_index == 1) ? 128
+                              : (current_mode_index == 2) ? 256
+                                                          : current_mode_index;
+    response.success = true;
+    response.message = "disparity_range_mode updated to " + std::to_string(current_mode_value);
+    ROS_INFO_STREAM(response.message);
+    return true;
+  } catch (const ob::Error& e) {
+    return setDisparityServiceFailure(response, e.getMessage());
+  } catch (const std::exception& e) {
+    return setDisparityServiceFailure(response, e.what());
+  } catch (...) {
+    return setDisparityServiceFailure(response, "unknown error");
+  }
+}
+
+bool OBCameraNode::setDisparitySearchOffsetCallback(SetInt32Request& request,
+                                                    SetInt32Response& response) {
+  try {
+    if (!device_->isPropertySupported(OB_PROP_DISP_SEARCH_OFFSET_INT, OB_PERMISSION_WRITE)) {
+      return setDisparityServiceFailure(response,
+                                        "Current device does not support disparity search offset");
+    }
+
+    const bool allow_set = isGemini435LePID(device_info_->pid()) ||
+                           (enable_stream_.count(DEPTH) > 0 && enable_stream_.at(DEPTH));
+    if (!allow_set) {
+      return setDisparityServiceFailure(
+          response, "Disparity search offset can only be set when depth stream is enabled");
+    }
+
+    const int depth_width = width_.count(DEPTH) > 0 ? width_.at(DEPTH) : 0;
+    const int depth_height = height_.count(DEPTH) > 0 ? height_.at(DEPTH) : 0;
+    if (isGemini330SeriesForDisparity(device_info_->pid()) &&
+        !isSupportedDisparityResolutionForPid(device_info_->pid(), depth_width, depth_height)) {
+      return setDisparityServiceFailure(
+          response, "Current depth resolution " + std::to_string(depth_width) + "x" +
+                        std::to_string(depth_height) + " is not supported. " +
+                        getDisparityResolutionHintByPid(device_info_->pid()));
+    }
+
+    auto range = device_->getIntPropertyRange(OB_PROP_DISP_SEARCH_OFFSET_INT);
+    if (request.data < range.min || request.data > range.max) {
+      return setDisparityServiceFailure(
+          response, "Invalid disparity search offset. Allowed values:" + std::to_string(range.min) +
+                        " to " + std::to_string(range.max));
+    }
+
+    device_->setIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, request.data);
+    auto current_offset = device_->getIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT);
+    ROS_INFO_STREAM("Set disparity_search_offset to " << current_offset);
+    response.success = true;
+    response.message = "disparity_search_offset updated to " + std::to_string(current_offset);
+    return true;
+  } catch (const ob::Error& e) {
+    return setDisparityServiceFailure(response, e.getMessage());
+  } catch (const std::exception& e) {
+    return setDisparityServiceFailure(response, e.what());
+  } catch (...) {
+    return setDisparityServiceFailure(response, "unknown error");
   }
 }
 
