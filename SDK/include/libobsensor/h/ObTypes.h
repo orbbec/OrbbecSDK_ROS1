@@ -125,6 +125,15 @@ typedef struct ob_error {
 } ob_error;
 
 /**
+ * @brief GVCP port scheme
+ */
+typedef enum {
+    OB_GVCP_PORT_SCHEME_STANDARD = 0, /**< Standard GVCP port (3956) */
+    OB_GVCP_PORT_SCHEME_B        = 1, /**< Vendor-defined GVCP port scheme */
+} OBGvcpPortScheme,
+    ob_gvcp_port_scheme;
+
+/**
  * @brief Enumeration value describing the sensor type
  */
 typedef enum {
@@ -1860,6 +1869,14 @@ typedef enum {
     OB_DEVICE_DEFAULT_ACCESS   = 4,  ///< Default access: control access for capable devices, ignored otherwise
 } ob_device_access_mode,
     OBDeviceAccessMode;
+
+typedef enum {
+    OB_IP_SOURCE_NONE       = 0,  ///< No IP configuration active (e.g. USB device).
+    OB_IP_SOURCE_LLA        = 1,  ///< LLA (Link-Local Address / Auto IP).
+    OB_IP_SOURCE_DHCP       = 2,  ///< DHCP (Dynamic Host Configuration Protocol).
+    OB_IP_SOURCE_PERSISTENT = 3,  ///< Persistent IP (Static IP stored in memory).
+} ob_ip_source_type,
+    OBIpSourceType;
 
 /**
  * @brief Callback for file transfer
