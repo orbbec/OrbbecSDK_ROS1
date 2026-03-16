@@ -1477,7 +1477,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::processColorFrameFilter(
     return nullptr;
   }
   auto frame_type = frame->type();
-  if (frame_type != OB_FRAME_COLOR) {
+  if (frame_type == OB_FRAME_COLOR) {
     for (size_t i = 0; i < color_filter_list_.size(); i++) {
       auto filter = color_filter_list_[i];
       CHECK_NOTNULL(filter.get());
