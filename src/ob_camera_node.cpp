@@ -152,6 +152,10 @@ void OBCameraNode::clean() {
 
   ROS_INFO_STREAM("OBCameraNode::clean() start");
   is_running_ = false;
+  {
+    std::lock_guard<std::mutex> lk(frame_info_logged_mutex_);
+    frame_info_logged_.clear();
+  }
   ROS_INFO_STREAM("OBCameraNode::clean() stop tf thread");
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
@@ -1612,6 +1616,46 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
         return;
       }
     }
+
+    // Refresh frame from current frameset before logging to reflect post-filter/alignment output.
+    for (const auto& stream_index : IMAGE_STREAMS) {
+      if (!enable_stream_[stream_index]) {
+        continue;
+      }
+      auto frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(stream_index.first);
+      auto updated_frame = frame_set->getFrame(frame_type);
+      if (!updated_frame) {
+        continue;
+      }
+      // Check if frame is a video frame
+      if (updated_frame->type() != OB_FRAME_COLOR &&
+          updated_frame->type() != OB_FRAME_COLOR_LEFT &&
+          updated_frame->type() != OB_FRAME_COLOR_RIGHT &&
+          updated_frame->type() != OB_FRAME_DEPTH &&
+          updated_frame->type() != OB_FRAME_IR &&
+          updated_frame->type() != OB_FRAME_IR_LEFT &&
+          updated_frame->type() != OB_FRAME_IR_RIGHT) {
+        continue;
+      }
+      auto updated_video = updated_frame->as<ob::VideoFrame>();
+
+      // For D2C, avoid logging an early unaligned depth frame before align target is available.
+      if (stream_index == DEPTH && depth_registration_) {
+        auto align_target_frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(align_target_stream_);
+        auto align_target_frame = frame_set->getFrame(align_target_frame_type);
+        if (!align_target_frame) {
+          continue;
+        }
+        auto target_video = align_target_frame->as<ob::VideoFrame>();
+        if (updated_video->getWidth() != target_video->getWidth() ||
+            updated_video->getHeight() != target_video->getHeight()) {
+          continue;
+        }
+      }
+
+      logFrameInfoOnce(stream_index, updated_video);
+    }
+
     if (enable_stream_[COLOR] && color_frame) {
       std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
@@ -1662,6 +1706,27 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   } catch (...) {
     ROS_ERROR_STREAM("onNewFrameSetCallback error: unknown error");
   }
+}
+
+void OBCameraNode::logFrameInfoOnce(const stream_index_pair& stream_index,
+                                    const std::shared_ptr<ob::VideoFrame>& video_frame) {
+  if (!video_frame) {
+    return;
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(frame_info_logged_mutex_);
+    auto iter = frame_info_logged_.find(stream_index);
+    if (iter != frame_info_logged_.end() && iter->second) {
+      return;
+    }
+    frame_info_logged_[stream_index] = true;
+  }
+
+  ROS_INFO_STREAM(stream_name_[stream_index]
+                  << " Frame - Width: " << video_frame->getWidth() << " Height: "
+                  << video_frame->getHeight() << " fps: " << fps_[stream_index]
+                  << " Format: " << video_frame->getFormat());
 }
 
 void OBCameraNode::onNewColorFrameCallback() {

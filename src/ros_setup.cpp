@@ -1225,9 +1225,6 @@ void OBCameraNode::setupProfiles() {
         images_[stream_index] =
             cv::Mat(height, width, image_format_[stream_index], cv::Scalar(0, 0, 0));
       }
-      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " is enabled - width: " << width
-                                << ", height: " << height << ", fps: " << fps << ", "
-                                << "Format: " << selected_profile->format());
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("Failed to setup  "
                        << stream_name_[stream_index] << " profile: " << width_[stream_index] << "x"
@@ -1565,25 +1562,10 @@ void OBCameraNode::setupPipelineConfig() {
 
       if (stream_index == COLOR && enable_stream_[COLOR] && align_filter_) {
         auto video_profile = profile;
-        ROS_INFO_STREAM("color video_profile: "
-                        << video_profile->getWidth() << "x" << video_profile->getHeight() << " "
-                        << video_profile->getFps() << "fps " << video_profile->getFormat());
         align_filter_->setAlignToStreamProfile(video_profile);
       }
-
-      ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " width: " << profile->getWidth()
-                                << " height: " << profile->getHeight() << " fps: "
-                                << profile->getFps() << " format: " << profile->getFormat());
-
       pipeline_config_->enableStream(stream_profile_[stream_index]);
     }
-  }
-  if (enable_stream_[DEPTH] && depth_registration_) {
-    auto profile = stream_profile_[COLOR]->as<ob::VideoStreamProfile>();
-    ROS_INFO_STREAM("depth_registration is enabled. "
-                    << "Depth stream will be aligned to COLOR stream resolution:"
-                    << " width: " << profile->getWidth() << " height: " << profile->getHeight()
-                    << " fps: " << profile->getFps());
   }
   if (frame_aggregate_mode_ == "full_frame") {
     pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE);
