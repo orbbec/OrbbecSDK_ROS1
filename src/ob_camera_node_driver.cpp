@@ -467,6 +467,11 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   std::string connection_type = device_info_->connectionType();
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
   ROS_INFO_STREAM("Serial number: " << device_info_->serialNumber());
+  ROS_INFO_STREAM("ROS Wrapper version: " << OB_ROS_VERSION_STR);
+  std::string sdk_version = std::to_string(ob::Version::getMajor()) + "." +
+                            std::to_string(ob::Version::getMinor()) + "." +
+                            std::to_string(ob::Version::getPatch());
+  ROS_INFO_STREAM("SDK version: " << sdk_version);
   ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
   ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
   ROS_INFO_STREAM("device uid: " << device_info_->uid());
