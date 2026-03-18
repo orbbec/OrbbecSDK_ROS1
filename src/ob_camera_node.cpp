@@ -1154,6 +1154,44 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   }
 }
 
+void OBCameraNode::publishRawDepthImage(const std::shared_ptr<ob::Frame>& depth_frame) {
+  if (!depth_frame || !depth_unaligned_publisher_ ||
+      depth_unaligned_publisher_.getNumSubscribers() == 0) {
+    return;
+  }
+
+  auto video_frame = depth_frame->as<ob::DepthFrame>();
+  if (!video_frame) {
+    return;
+  }
+
+  int width = static_cast<int>(video_frame->width());
+  int height = static_cast<int>(video_frame->height());
+  auto frame_timestamp = getFrameTimestampUs(depth_frame);
+  auto timestamp = fromUsToROSTime(frame_timestamp);
+
+  std::string frame_id = optical_frame_id_[DEPTH];
+
+  cv::Mat depth_image(height, width, image_format_[DEPTH]);
+  memcpy(depth_image.data, video_frame->getData(), video_frame->getDataSize());
+
+  auto depth_scale = video_frame->getValueScale();
+  depth_image.convertTo(depth_image, depth_image.type(), depth_scale);
+
+  sensor_msgs::Image image_msg;
+  image_msg.header.stamp = timestamp;
+  image_msg.header.frame_id = frame_id;
+  image_msg.height = height;
+  image_msg.width = width;
+  image_msg.encoding = encoding_[DEPTH];
+  image_msg.is_bigendian = false;
+  image_msg.step = width * unit_step_size_[DEPTH];
+  image_msg.data.resize(image_msg.step * height);
+  memcpy(image_msg.data.data(), depth_image.data, image_msg.data.size());
+
+  depth_unaligned_publisher_.publish(image_msg);
+}
+
 IMUInfo OBCameraNode::createIMUInfo(const stream_index_pair& stream_index) {
   IMUInfo imu_info;
   imu_info.header.frame_id = optical_frame_id_[stream_index];
@@ -1607,6 +1645,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     }
 
     if (depth_registration_ && align_filter_ && depth_frame) {
+      publishRawDepthImage(depth_frame);
       if (auto new_frame = align_filter_->process(frame_set)) {
         auto new_frame_set = new_frame->as<ob::FrameSet>();
         CHECK_NOTNULL(new_frame_set.get());
@@ -1628,13 +1667,10 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
         continue;
       }
       // Check if frame is a video frame
-      if (updated_frame->type() != OB_FRAME_COLOR &&
-          updated_frame->type() != OB_FRAME_COLOR_LEFT &&
+      if (updated_frame->type() != OB_FRAME_COLOR && updated_frame->type() != OB_FRAME_COLOR_LEFT &&
           updated_frame->type() != OB_FRAME_COLOR_RIGHT &&
-          updated_frame->type() != OB_FRAME_DEPTH &&
-          updated_frame->type() != OB_FRAME_IR &&
-          updated_frame->type() != OB_FRAME_IR_LEFT &&
-          updated_frame->type() != OB_FRAME_IR_RIGHT) {
+          updated_frame->type() != OB_FRAME_DEPTH && updated_frame->type() != OB_FRAME_IR &&
+          updated_frame->type() != OB_FRAME_IR_LEFT && updated_frame->type() != OB_FRAME_IR_RIGHT) {
         continue;
       }
       auto updated_video = updated_frame->as<ob::VideoFrame>();
@@ -1723,10 +1759,10 @@ void OBCameraNode::logFrameInfoOnce(const stream_index_pair& stream_index,
     frame_info_logged_[stream_index] = true;
   }
 
-  ROS_INFO_STREAM(stream_name_[stream_index]
-                  << " Frame - Width: " << video_frame->getWidth() << " Height: "
-                  << video_frame->getHeight() << " fps: " << fps_[stream_index]
-                  << " Format: " << video_frame->getFormat());
+  ROS_INFO_STREAM(stream_name_[stream_index] << " Frame - Width: " << video_frame->getWidth()
+                                             << " Height: " << video_frame->getHeight()
+                                             << " fps: " << fps_[stream_index]
+                                             << " Format: " << video_frame->getFormat());
 }
 
 void OBCameraNode::onNewColorFrameCallback() {

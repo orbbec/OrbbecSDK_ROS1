@@ -16,6 +16,7 @@
 
 #include "orbbec_camera/ob_camera_node.h"
 #include "orbbec_camera/utils.h"
+#include <image_transport/image_transport.h>
 #include <std_msgs/String.h>
 
 namespace orbbec_camera {
@@ -1371,6 +1372,15 @@ void OBCameraNode::setupPublishers() {
     depth_registered_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth_registered/points", 1, depth_registered_cloud_subscribed_cb,
         depth_registered_cloud_unsubscribed_cb);
+  }
+
+  if (depth_registration_ && align_mode_ == "SW") {
+    image_transport::SubscriberStatusCallback depth_unaligned_subscribed_cb =
+        boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+    image_transport::SubscriberStatusCallback depth_unaligned_unsubscribed_cb =
+        boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
+    depth_unaligned_publisher_ = image_transport::ImageTransport(nh_).advertise(
+        "depth/image_unaligned", 1, depth_unaligned_subscribed_cb, depth_unaligned_unsubscribed_cb);
   }
 
   if (enable_sync_output_accel_gyro_) {
