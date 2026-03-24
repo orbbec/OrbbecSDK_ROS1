@@ -23,6 +23,7 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <sys/stat.h>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -34,7 +35,6 @@ namespace {
 
 struct CliArgs {
   std::string serial_number;
-  std::vector<std::string> serial_numbers;
   std::string usb_port;
   std::string device_ip;
   int device_port = 8090;
@@ -51,7 +51,9 @@ struct CliArgs {
 struct FirmwareUpdateResult {
   bool success = false;
   bool need_reupdate = false;
+  bool retryable = true;
   OBFwUpdateState final_state = STAT_START;
+  std::string error_message;
 };
 
 std::string trim(std::string value) {
@@ -107,7 +109,21 @@ void printUsage(const char *program) {
 bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
   auto appendSerialNumbers = [&](const std::string &value) {
     auto list = splitCsv(value);
-    args.serial_numbers.insert(args.serial_numbers.end(), list.begin(), list.end());
+    if (list.empty()) {
+      return;
+    }
+
+    std::stringstream ss;
+    if (!args.serial_number.empty()) {
+      ss << args.serial_number << ",";
+    }
+    for (size_t i = 0; i < list.size(); ++i) {
+      if (i > 0) {
+        ss << ",";
+      }
+      ss << list[i];
+    }
+    args.serial_number = ss.str();
   };
 
   for (int i = 1; i < argc; ++i) {
@@ -269,8 +285,8 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
     return false;
   }
 
-  const int selected_by = (!args.serial_numbers.empty() ? 1 : 0) +
-                          (!args.usb_port.empty() ? 1 : 0) + (!args.device_ip.empty() ? 1 : 0);
+  const int selected_by = (!args.serial_number.empty() ? 1 : 0) + (!args.usb_port.empty() ? 1 : 0) +
+                          (!args.device_ip.empty() ? 1 : 0);
   if (selected_by > 1) {
     error = "Only one selector can be used at a time: serial_number / usb_port / device_ip";
     return false;
@@ -301,6 +317,11 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
 
 std::vector<std::string> splitPresetPaths(const std::string &path_arg) {
   return splitCsv(path_arg);
+}
+
+bool isRegularFilePath(const std::string &path) {
+  struct stat st = {};
+  return !path.empty() && ::stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode);
 }
 
 const char *stateToString(OBFwUpdateState state) {
@@ -337,6 +358,26 @@ void printUpdateProgress(const std::string &task, OBFwUpdateState state, const c
                          uint8_t percent) {
   std::cout << "[" << task << "] " << static_cast<uint32_t>(percent) << "% | "
             << stateToString(state) << " | " << (message != nullptr ? message : "") << std::endl;
+}
+
+void logCurrentPresetList(const std::shared_ptr<ob::Device> &device, const char *stage) {
+  try {
+    auto preset_list = device->getAvailablePresetList();
+    if (!preset_list) {
+      ROS_INFO("[%s] Current preset list is empty or unavailable", stage);
+      return;
+    }
+
+    const uint32_t count = preset_list->getCount();
+    ROS_INFO("[%s] Current preset count: %u", stage, count);
+    for (uint32_t i = 0; i < count; ++i) {
+      ROS_INFO("[%s] Preset[%u]: %s", stage, i, preset_list->getName(i));
+    }
+  } catch (const ob::Error &e) {
+    ROS_WARN("[%s] Failed to query preset list: %s", stage, e.getMessage());
+  } catch (const std::exception &e) {
+    ROS_WARN("[%s] Failed to query preset list: %s", stage, e.what());
+  }
 }
 
 std::shared_ptr<ob::Device> selectDeviceFromList(const std::shared_ptr<ob::DeviceList> &list,
@@ -410,8 +451,12 @@ std::shared_ptr<ob::Device> waitForReconnect(const std::shared_ptr<ob::Context> 
         }
         return device;
       }
+    } catch (const ob::Error &e) {
+      ROS_WARN_THROTTLE(5.0, "Reconnect attempt failed (SDK): %s", e.getMessage());
+    } catch (const std::exception &e) {
+      ROS_WARN_THROTTLE(5.0, "Reconnect attempt failed: %s", e.what());
     } catch (...) {
-      // Keep retrying until timeout.
+      ROS_WARN_THROTTLE(5.0, "Reconnect attempt failed: unknown error");
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(args.reconnect_poll_ms));
   }
@@ -419,18 +464,44 @@ std::shared_ptr<ob::Device> waitForReconnect(const std::shared_ptr<ob::Context> 
   throw std::runtime_error("Timeout waiting for device reconnection");
 }
 
-bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::string &path_arg) {
+std::shared_ptr<ob::Device> waitForReconnectUntil(
+    const std::shared_ptr<ob::Context> &ctx, const CliArgs &args, bool require_non_boot,
+    const std::chrono::steady_clock::time_point &deadline) {
+  const auto now = std::chrono::steady_clock::now();
+  if (now >= deadline) {
+    throw std::runtime_error("Timeout waiting for device reconnection");
+  }
+
+  const auto remaining_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now).count();
+  CliArgs bounded_args = args;
+  bounded_args.reconnect_timeout_sec = std::max(1, static_cast<int>((remaining_ms + 999) / 1000));
+  bounded_args.reconnect_poll_ms =
+      std::max(100, std::min(bounded_args.reconnect_poll_ms, static_cast<int>(remaining_ms)));
+  return waitForReconnect(ctx, bounded_args, require_non_boot);
+}
+
+bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::string &path_arg,
+                          std::string *error_message = nullptr) {
+  auto set_error = [&](const std::string &message) {
+    if (error_message != nullptr) {
+      *error_message = message;
+    }
+  };
+
   if (path_arg.empty()) {
     return true;
   }
 
+  logCurrentPresetList(device, "before preset update");
+
   auto paths = splitPresetPaths(path_arg);
   if (paths.empty()) {
-    ROS_ERROR("preset_path is empty after parsing");
+    set_error("preset_path is empty after parsing");
     return false;
   }
   if (paths.size() > 255) {
-    ROS_ERROR("Too many preset files: %zu, maximum is 255", paths.size());
+    set_error("Too many preset files: " + std::to_string(paths.size()) + ", maximum is 255");
     return false;
   }
 
@@ -439,8 +510,12 @@ bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::
   auto *file_paths = reinterpret_cast<char(*)[OB_PATH_MAX]>(raw_file_paths.get());
 
   for (uint8_t i = 0; i < count; ++i) {
+    if (!isRegularFilePath(paths[i])) {
+      set_error("Preset file not found: " + paths[i]);
+      return false;
+    }
     if (paths[i].size() >= OB_PATH_MAX) {
-      ROS_ERROR("Preset path too long: %s", paths[i].c_str());
+      set_error("Preset path too long: " + paths[i]);
       return false;
     }
     std::strncpy(file_paths[i], paths[i].c_str(), OB_PATH_MAX - 1);
@@ -459,12 +534,12 @@ bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::
       });
 
   if (final_state == STAT_DONE || final_state == STAT_DONE_WITH_DUPLICATES) {
-    auto preset_list = device->getAvailablePresetList();
-    ROS_INFO("Preset update succeeded. Preset count: %u", preset_list->getCount());
+    logCurrentPresetList(device, "after preset update");
+    ROS_INFO("Preset update succeeded.");
     return true;
   }
 
-  ROS_ERROR("Preset update ended with state: %d", static_cast<int>(final_state));
+  set_error("Preset update ended with state: " + std::to_string(static_cast<int>(final_state)));
   return false;
 }
 
@@ -476,12 +551,32 @@ FirmwareUpdateResult updateFirmware(const std::shared_ptr<ob::Device> &device,
     return result;
   }
 
+  if (!isRegularFilePath(firmware_path)) {
+    result.retryable = false;
+    result.error_message = "Firmware file not found: " + firmware_path;
+    return result;
+  }
+
   ROS_INFO("Start firmware update from: %s", firmware_path.c_str());
+  OBFwUpdateState last_logged_state = STAT_START;
+  int last_logged_bucket = -1;
   device->updateFirmware(
       firmware_path.c_str(),
-      [&result](OBFwUpdateState state, const char *message, uint8_t percent) {
+      [&result, &last_logged_state, &last_logged_bucket](OBFwUpdateState state, const char *message,
+                                                         uint8_t percent) {
         result.final_state = state;
-        printUpdateProgress("firmware", state, message, percent);
+
+        const int bucket = static_cast<int>(percent) / 10;
+        const bool first_log = (last_logged_bucket < 0);
+        const bool state_changed = (!first_log && state != last_logged_state);
+        const bool bucket_changed = (!first_log && bucket != last_logged_bucket);
+        const bool is_boundary = (percent == 0 || percent == 100);
+
+        if (first_log || state_changed || bucket_changed || is_boundary) {
+          printUpdateProgress("firmware", state, message, percent);
+          last_logged_state = state;
+          last_logged_bucket = bucket;
+        }
       },
       false);
 
@@ -491,12 +586,14 @@ FirmwareUpdateResult updateFirmware(const std::shared_ptr<ob::Device> &device,
   }
 
   if (!result.success) {
-    ROS_ERROR("Firmware update failed with state: %d", static_cast<int>(result.final_state));
+    result.error_message = "Firmware update failed with state: " +
+                           std::to_string(static_cast<int>(result.final_state));
     return result;
   }
 
   ROS_INFO("Rebooting device after firmware update...");
   device->reboot();
+  ROS_INFO("Device reboot command sent.");
   return result;
 }
 
@@ -522,10 +619,8 @@ int main(int argc, char **argv) {
   try {
     ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
     auto ctx = std::make_shared<ob::Context>();
-    std::vector<std::string> batch_targets;
-    if (!args.serial_numbers.empty()) {
-      batch_targets = args.serial_numbers;
-    } else {
+    std::vector<std::string> batch_targets = splitCsv(args.serial_number);
+    if (batch_targets.empty()) {
       batch_targets.emplace_back("");
     }
 
@@ -540,13 +635,12 @@ int main(int argc, char **argv) {
     std::vector<std::string> failed_targets;
     for (size_t i = 0; i < batch_targets.size(); ++i) {
       CliArgs run_args = args;
-      run_args.serial_numbers.clear();
       if (!batch_targets[i].empty()) {
         run_args.serial_number = batch_targets[i];
         run_args.usb_port.clear();
         run_args.device_ip.clear();
       }
-      if (args.serial_numbers.size() > 1) {
+      if (batch_targets.size() > 1) {
         ROS_INFO("========== Batch %zu/%zu, target SN: %s ==========", i + 1, batch_targets.size(),
                  run_args.serial_number.c_str());
       }
@@ -557,56 +651,62 @@ int main(int argc, char **argv) {
         ROS_INFO("Selected device: %s, SN: %s, UID: %s", device_info->getName(),
                  device_info->getSerialNumber(), device_info->getUid());
 
+        if (!run_args.preset_path.empty()) {
+          std::string preset_error;
+          const bool preset_ok = updatePresetFirmware(device, run_args.preset_path, &preset_error);
+          if (!preset_ok) {
+            throw std::runtime_error(preset_error.empty() ? "Preset firmware update failed"
+                                                          : preset_error);
+          }
+        }
+
         if (!run_args.firmware_path.empty()) {
           auto first_update = updateFirmware(device, run_args.firmware_path);
           if (!first_update.success) {
-            throw std::runtime_error("First firmware update failed");
+            throw std::runtime_error(first_update.error_message.empty()
+                                         ? "First firmware update failed"
+                                         : first_update.error_message);
           }
 
           if (first_update.need_reupdate) {
             ROS_INFO("Firmware requires reboot and second update. Waiting for device reconnect...");
-            device = waitForReconnect(ctx, run_args, true);
             const auto second_deadline = std::chrono::steady_clock::now() +
                                          std::chrono::seconds(run_args.reconnect_timeout_sec);
+            device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
             bool second_ok = false;
             while (std::chrono::steady_clock::now() < second_deadline) {
               try {
                 auto second_update = updateFirmware(device, run_args.firmware_path);
                 if (!second_update.success) {
-                  ROS_WARN("Second firmware update attempt failed, retrying...");
-                  device = waitForReconnect(ctx, run_args, true);
+                  if (!second_update.retryable) {
+                    throw std::runtime_error(second_update.error_message.empty()
+                                                 ? "Second firmware update failed"
+                                                 : second_update.error_message);
+                  }
+                  if (second_update.error_message.empty()) {
+                    ROS_WARN("Second firmware update attempt failed, retrying...");
+                  } else {
+                    ROS_WARN("Second firmware update attempt failed: %s, retrying...",
+                             second_update.error_message.c_str());
+                  }
+                  device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
                   continue;
                 }
                 if (second_update.need_reupdate) {
                   ROS_WARN("Second attempt still requires reupdate, waiting and retrying...");
-                  device = waitForReconnect(ctx, run_args, true);
+                  device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
                   continue;
                 }
                 second_ok = true;
                 break;
               } catch (const ob::Error &e) {
                 ROS_WARN("Second update transient error: %s, retrying...", e.getMessage());
-                device = waitForReconnect(ctx, run_args, true);
-              } catch (const std::exception &e) {
-                ROS_WARN("Second update transient exception: %s, retrying...", e.what());
-                device = waitForReconnect(ctx, run_args, true);
+                device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
               }
             }
             if (!second_ok) {
               throw std::runtime_error("Second firmware update failed after retries");
             }
-          }
-
-          if (!run_args.preset_path.empty()) {
-            ROS_INFO("Waiting for reconnect before preset update...");
-            device = waitForReconnect(ctx, run_args, true);
-          }
-        }
-
-        if (!run_args.preset_path.empty()) {
-          const bool preset_ok = updatePresetFirmware(device, run_args.preset_path);
-          if (!preset_ok) {
-            throw std::runtime_error("Preset firmware update failed");
           }
         }
 
@@ -641,7 +741,8 @@ int main(int argc, char **argv) {
       throw std::runtime_error("Batch firmware update finished with failures");
     }
 
-    ROS_INFO("Firmware tool completed successfully. total=%zu", success_count);
+    ROS_INFO("Firmware tool completed successfully. Updated %zu/%zu target device(s).",
+             success_count, batch_targets.size());
     ros::shutdown();
     return 0;
   } catch (const ob::Error &e) {
