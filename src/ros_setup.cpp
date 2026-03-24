@@ -300,7 +300,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
   auto pid = device_info->getPid();
-  const bool support_advanced_noise_filters = isOpenNIUvcDeviceForAdvancedNoiseFilters(pid);
+  const bool support_advanced_noise_filters = isOpenniToUvcDevice(pid);
   // set depth sensor to filter
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
   depth_filter_list_ = depth_sensor->createRecommendedFilters();
@@ -412,31 +412,6 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       ROS_INFO_STREAM("Skip setting " << filter_name);
     }
   }
-
-  auto hasDepthFilter = [this](const std::string& name) {
-    return std::any_of(depth_filter_list_.begin(), depth_filter_list_.end(),
-                       [&name](const std::shared_ptr<ob::Filter>& filter) {
-                         return filter && filter->type() == name;
-                       });
-  };
-
-  if (support_advanced_noise_filters && enable_mgc_noise_removal_filter_ &&
-      !hasDepthFilter("MgcNoiseRemovalFilter")) {
-    auto mgc_noise_filter = std::make_shared<ob::MgcNoiseRemovalFilter>();
-    mgc_noise_filter->enable(true);
-    depth_filter_list_.push_back(mgc_noise_filter);
-    filter_status_["MgcNoiseRemovalFilter"] = true;
-    ROS_INFO_STREAM("MgcNoiseRemovalFilter is enabled");
-  }
-  if (support_advanced_noise_filters && enable_lut_noise_removal_filter_ &&
-      !hasDepthFilter("LutNoiseRemovalFilter")) {
-    auto lut_noise_filter = std::make_shared<ob::LutNoiseRemovalFilter>();
-    lut_noise_filter->enable(true);
-    depth_filter_list_.push_back(lut_noise_filter);
-    filter_status_["LutNoiseRemovalFilter"] = true;
-    ROS_INFO_STREAM("LutNoiseRemovalFilter is enabled");
-  }
-
   set_filter_srv_ = nh_.advertiseService<SetFilterRequest, SetFilterResponse>(
       "/" + camera_name_ + "/" + "set_filter",
       [this](SetFilterRequest& request, SetFilterResponse& response) {
@@ -1058,8 +1033,8 @@ void OBCameraNode::setupDevices() {
         device_->loadPresetFromJsonFile(load_config_json_file_path_.c_str());
         ROS_INFO_STREAM("Loading config json file path : " << load_config_json_file_path_);
       } else {
-        ROS_WARN_STREAM("Skip loading config json file, file not found: "
-                        << load_config_json_file_path_);
+        ROS_WARN_STREAM(
+            "Skip loading config json file, file not found: " << load_config_json_file_path_);
       }
     }
     if (!export_config_json_file_path_.empty()) {
@@ -2025,20 +2000,20 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
       false_positive_filter->enable(request.filter_enable);
       depth_filter_list_.push_back(false_positive_filter);
     } else if (request.filter_name == "MgcNoiseRemovalFilter") {
-      if (!isOpenNIUvcDeviceForAdvancedNoiseFilters(device_->getDeviceInfo()->getPid())) {
+      if (!isOpenniToUvcDevice(device_->getDeviceInfo()->getPid())) {
         response.message =
             "MgcNoiseRemovalFilter is only supported on OpenNI->UVC devices: "
-            "0x065b, 0x0698, 0x06a0, 0x069e";
+            "Astra Mini (s) pro.";
         return response.success = false;
       }
       auto mgc_noise_filter = std::make_shared<ob::MgcNoiseRemovalFilter>();
       mgc_noise_filter->enable(request.filter_enable);
       depth_filter_list_.push_back(mgc_noise_filter);
     } else if (request.filter_name == "LutNoiseRemovalFilter") {
-      if (!isOpenNIUvcDeviceForAdvancedNoiseFilters(device_->getDeviceInfo()->getPid())) {
+      if (!isOpenniToUvcDevice(device_->getDeviceInfo()->getPid())) {
         response.message =
             "LutNoiseRemovalFilter is only supported on OpenNI->UVC devices: "
-            "0x065b, 0x0698, 0x06a0, 0x069e";
+            "Astra Mini (s) pro.";
         return response.success = false;
       }
       auto lut_noise_filter = std::make_shared<ob::LutNoiseRemovalFilter>();
