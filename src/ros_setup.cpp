@@ -297,6 +297,10 @@ void OBCameraNode::setupDepthPostProcessFilter() {
     ROS_DEBUG_STREAM("Dual Color Streams preset, skip depth filter setup");
     return;
   }
+  auto device_info = device_->getDeviceInfo();
+  CHECK_NOTNULL(device_info);
+  auto pid = device_info->getPid();
+  const bool support_advanced_noise_filters = isOpenNIUvcDeviceForAdvancedNoiseFilters(pid);
   // set depth sensor to filter
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
   depth_filter_list_ = depth_sensor->createRecommendedFilters();
@@ -318,6 +322,10 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"SpatialFastFilter", enable_spatial_fast_filter_},
         {"SpatialModerateFilter", enable_spatial_moderate_filter_},
         {"FalsePositiveFilter", enable_false_positive_filter_},
+        {"MgcNoiseRemovalFilter",
+         support_advanced_noise_filters && enable_mgc_noise_removal_filter_},
+        {"LutNoiseRemovalFilter",
+         support_advanced_noise_filters && enable_lut_noise_removal_filter_},
     };
     std::string filter_name = filter->type();
     ROS_INFO_STREAM("Setting " << filter_name << "......");
@@ -404,6 +412,31 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       ROS_INFO_STREAM("Skip setting " << filter_name);
     }
   }
+
+  auto hasDepthFilter = [this](const std::string& name) {
+    return std::any_of(depth_filter_list_.begin(), depth_filter_list_.end(),
+                       [&name](const std::shared_ptr<ob::Filter>& filter) {
+                         return filter && filter->type() == name;
+                       });
+  };
+
+  if (support_advanced_noise_filters && enable_mgc_noise_removal_filter_ &&
+      !hasDepthFilter("MgcNoiseRemovalFilter")) {
+    auto mgc_noise_filter = std::make_shared<ob::MgcNoiseRemovalFilter>();
+    mgc_noise_filter->enable(true);
+    depth_filter_list_.push_back(mgc_noise_filter);
+    filter_status_["MgcNoiseRemovalFilter"] = true;
+    ROS_INFO_STREAM("MgcNoiseRemovalFilter is enabled");
+  }
+  if (support_advanced_noise_filters && enable_lut_noise_removal_filter_ &&
+      !hasDepthFilter("LutNoiseRemovalFilter")) {
+    auto lut_noise_filter = std::make_shared<ob::LutNoiseRemovalFilter>();
+    lut_noise_filter->enable(true);
+    depth_filter_list_.push_back(lut_noise_filter);
+    filter_status_["LutNoiseRemovalFilter"] = true;
+    ROS_INFO_STREAM("LutNoiseRemovalFilter is enabled");
+  }
+
   set_filter_srv_ = nh_.advertiseService<SetFilterRequest, SetFilterResponse>(
       "/" + camera_name_ + "/" + "set_filter",
       [this](SetFilterRequest& request, SetFilterResponse& response) {
@@ -1991,6 +2024,26 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
       auto false_positive_filter = std::make_shared<ob::FalsePositiveFilter>();
       false_positive_filter->enable(request.filter_enable);
       depth_filter_list_.push_back(false_positive_filter);
+    } else if (request.filter_name == "MgcNoiseRemovalFilter") {
+      if (!isOpenNIUvcDeviceForAdvancedNoiseFilters(device_->getDeviceInfo()->getPid())) {
+        response.message =
+            "MgcNoiseRemovalFilter is only supported on OpenNI->UVC devices: "
+            "0x065b, 0x0698, 0x06a0, 0x069e";
+        return response.success = false;
+      }
+      auto mgc_noise_filter = std::make_shared<ob::MgcNoiseRemovalFilter>();
+      mgc_noise_filter->enable(request.filter_enable);
+      depth_filter_list_.push_back(mgc_noise_filter);
+    } else if (request.filter_name == "LutNoiseRemovalFilter") {
+      if (!isOpenNIUvcDeviceForAdvancedNoiseFilters(device_->getDeviceInfo()->getPid())) {
+        response.message =
+            "LutNoiseRemovalFilter is only supported on OpenNI->UVC devices: "
+            "0x065b, 0x0698, 0x06a0, 0x069e";
+        return response.success = false;
+      }
+      auto lut_noise_filter = std::make_shared<ob::LutNoiseRemovalFilter>();
+      lut_noise_filter->enable(request.filter_enable);
+      depth_filter_list_.push_back(lut_noise_filter);
     } else {
       ROS_INFO_STREAM(request.filter_name
                       << " Cannot be set\n"
@@ -1998,7 +2051,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                          "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, "
                          "NoiseRemovalFilter, HardwareNoiseRemoval, "
                          "SpatialAdvancedFilter, TemporalFilter, "
-                         "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter");
+                         "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter, "
+                         "MgcNoiseRemovalFilter, LutNoiseRemovalFilter");
     }
     for (auto& filter : depth_filter_list_) {
       std::cout << " - " << filter->getName() << ": "

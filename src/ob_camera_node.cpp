@@ -385,6 +385,10 @@ void OBCameraNode::getParameters() {
   enable_spatial_moderate_filter_ =
       nh_private_.param<bool>("enable_spatial_moderate_filter", false);
   enable_false_positive_filter_ = nh_private_.param<bool>("enable_false_positive_filter", false);
+  enable_mgc_noise_removal_filter_ =
+      nh_private_.param<bool>("enable_mgc_noise_removal_filter", false);
+  enable_lut_noise_removal_filter_ =
+      nh_private_.param<bool>("enable_lut_noise_removal_filter", false);
   decimation_filter_scale_range_ = nh_private_.param<int>("decimation_filter_scale_range", -1);
   sequence_id_filter_id_ = nh_private_.param<int>("sequence_id_filter_id", -1);
   threshold_filter_max_ = nh_private_.param<int>("threshold_filter_max", -1);
@@ -501,6 +505,16 @@ void OBCameraNode::getParameters() {
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info.get());
   auto pid = device_info->pid();
+  if (!isOpenNIUvcDeviceForAdvancedNoiseFilters(pid)) {
+    if (enable_mgc_noise_removal_filter_ || enable_lut_noise_removal_filter_) {
+      ROS_WARN_STREAM("MgcNoiseRemovalFilter and LutNoiseRemovalFilter are only supported on "
+                      << "OpenNI->UVC devices: 0x065b, 0x0698, 0x06a0, 0x069e. "
+                      << "Current PID: 0x" << std::hex << pid << std::dec
+                      << ". Force disable these two filters.");
+    }
+    enable_mgc_noise_removal_filter_ = false;
+    enable_lut_noise_removal_filter_ = false;
+  }
   if (device_preset_ == "Dual Color Streams") {
     ROS_INFO_STREAM(
         "Using Dual Color Streams preset, only left and right color streams are enabled.");
@@ -2565,6 +2579,10 @@ bool OBCameraNode::isGemini335PID(uint32_t pid) {
 bool OBCameraNode::isGemini435LePID(uint32_t pid) {
   const uint16_t GEMINI_435Le_PID = 0x815;  // Gemini 435Le
   return pid == GEMINI_435Le_PID;
+}
+
+bool OBCameraNode::isOpenNIUvcDeviceForAdvancedNoiseFilters(uint32_t pid) {
+  return pid == 0x065b || pid == 0x0698 || pid == 0x06a0 || pid == 0x069e;
 }
 
 bool OBCameraNode::isPublishMetaData(uint32_t pid) {

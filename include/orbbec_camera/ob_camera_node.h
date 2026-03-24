@@ -264,6 +264,8 @@ class OBCameraNode {
 
   bool isGemini435LePID(uint32_t pid);
 
+  bool isOpenNIUvcDeviceForAdvancedNoiseFilters(uint32_t pid);
+
   bool isPublishMetaData(uint32_t pid);
 
   boost::optional<OBCameraParam> getCameraParam();
@@ -681,6 +683,8 @@ class OBCameraNode {
   bool enable_spatial_fast_filter_ = false;
   bool enable_spatial_moderate_filter_ = false;
   bool enable_false_positive_filter_ = false;
+  bool enable_mgc_noise_removal_filter_ = false;
+  bool enable_lut_noise_removal_filter_ = false;
   // filter params
   int decimation_filter_scale_range_ = -1;
   int sequence_id_filter_id_ = -1;
