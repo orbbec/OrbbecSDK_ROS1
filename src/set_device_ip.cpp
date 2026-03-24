@@ -1,9 +1,29 @@
 #include <ros/ros.h>
 #include <orbbec_camera/types.h>
+#include <iostream>
 #include <sstream>
 #include <string>
 
 using namespace ob;
+
+void printUsage(const char *program) {
+  std::cout << "Usage:\n"
+            << "  " << program << " [OPTIONS] [_old_ip:=IP] [_port:=PORT] [_dhcp:=BOOL] "
+            << "[_new_ip:=IP] [_mask:=IP] [_gateway:=IP] [_lla:=BOOL]\n\n"
+            << "Parameters:\n"
+            << "  -h, --help                Show this help message and exit\n"
+            << "  _old_ip (string)          Device current IP (default: 192.168.1.10)\n"
+            << "  _port (int)               Device port (default: 8090)\n"
+            << "  _dhcp (bool)              Enable DHCP (default: false)\n"
+            << "  _new_ip (string)          New static IP (default: 192.168.1.200)\n"
+            << "  _mask (string)            Subnet mask (default: 255.255.255.0)\n"
+            << "  _gateway (string)         Gateway (default: 192.168.1.1)\n"
+            << "  _lla (bool)               Enable/disable LLA (optional)\n\n"
+            << "Examples:\n"
+            << "  rosrun orbbec_camera set_device_ip _old_ip:=192.168.1.10 _new_ip:=192.168.1.200\n"
+            << "  rosrun orbbec_camera set_device_ip _old_ip:=192.168.1.10 _dhcp:=true\n"
+            << "  rosrun orbbec_camera set_device_ip _old_ip:=192.168.1.10 _lla:=true\n";
+}
 
 bool parseIpString(const std::string &ip_str, uint8_t ip[4]) {
   std::stringstream ss(ip_str);
@@ -23,12 +43,22 @@ bool parseIpString(const std::string &ip_str, uint8_t ip[4]) {
 }
 
 int main(int argc, char **argv) {
+  for (int i = 1; i < argc; ++i) {
+    const std::string arg = argv[i];
+    if (arg == "-h" || arg == "--help") {
+      printUsage(argv[0]);
+      return 0;
+    }
+  }
+
   ros::init(argc, argv, "set_device_ip");
   ros::NodeHandle nh("~");
 
   std::string device_ip_str, new_ip_str, mask_str, gateway_str;
   int port;
   bool dhcp;
+  bool lla = false;
+  bool lla_set = false;
 
   nh.param<std::string>("old_ip", device_ip_str, "192.168.1.10");
   nh.param<int>("port", port, 8090);
@@ -36,6 +66,9 @@ int main(int argc, char **argv) {
   nh.param<std::string>("new_ip", new_ip_str, "192.168.1.200");
   nh.param<std::string>("mask", mask_str, "255.255.255.0");
   nh.param<std::string>("gateway", gateway_str, "192.168.1.1");
+  if (nh.getParam("lla", lla)) {
+    lla_set = true;
+  }
 
   ob_net_ip_config ip_config{};
   ip_config.dhcp = dhcp ? 1 : 0;
@@ -62,6 +95,13 @@ int main(int argc, char **argv) {
     ROS_INFO("Setting new IP configuration...");
     device->setStructuredData(OB_STRUCT_DEVICE_IP_ADDR_CONFIG,
                               reinterpret_cast<const uint8_t *>(&ip_config), sizeof(ip_config));
+    if (lla_set) {
+      ROS_INFO("Setting LLA to %s...", lla ? "true" : "false");
+      device->setBoolProperty(OB_PROP_DEVICE_NETWORK_LLA_BOOL, lla);
+      ROS_INFO("LLA set to %s.", lla ? "true" : "false");
+    } else {
+      ROS_INFO("LLA not specified, keeping current device LLA setting.");
+    }
 
     ROS_INFO("IP configuration applied successfully.");
     if (dhcp) {
