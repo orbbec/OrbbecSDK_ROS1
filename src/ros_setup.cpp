@@ -734,6 +734,11 @@ void OBCameraNode::setupDevices() {
       device_->setIntProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT,
                               set_enable_color_auto_exposure_priority);
     }
+    if (isGemini335PID(pid) &&
+        device_->isPropertySupported(OB_PROP_COLOR_ANTI_FLICKER_BOOL, OB_PERMISSION_WRITE)) {
+      ROS_INFO_STREAM("Setting color anti flicker to " << (color_anti_flicker_ ? "ON" : "OFF"));
+      device_->setBoolProperty(OB_PROP_COLOR_ANTI_FLICKER_BOOL, color_anti_flicker_);
+    }
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, OB_PERMISSION_WRITE)) {
       ROS_INFO_STREAM("Setting color auto white balance to "
                       << (enable_color_auto_white_balance_ ? "ON" : "OFF"));
@@ -1025,8 +1030,8 @@ void OBCameraNode::setupDevices() {
         device_->loadPresetFromJsonFile(load_config_json_file_path_.c_str());
         ROS_INFO_STREAM("Loading config json file path : " << load_config_json_file_path_);
       } else {
-        ROS_WARN_STREAM("Skip loading config json file, file not found: "
-                        << load_config_json_file_path_);
+        ROS_WARN_STREAM(
+            "Skip loading config json file, file not found: " << load_config_json_file_path_);
       }
     }
     if (!export_config_json_file_path_.empty()) {
