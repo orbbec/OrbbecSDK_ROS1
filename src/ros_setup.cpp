@@ -671,6 +671,8 @@ void OBCameraNode::setupDevices() {
         }
       }
     }
+    ROS_INFO_STREAM("Setting firmware log to " << (enable_firmware_log_ ? "true" : "false"));
+    device_->enableFirmwareLog(enable_firmware_log_);
     if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
       ROS_INFO_STREAM("Setting heartbeat to " << (enable_heartbeat_ ? "true" : "false"));
       device_->setBoolProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);

@@ -128,6 +128,7 @@
     <arg name="laser_energy_level" default="-1"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
+    <arg name="enable_firmware_log" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
 
     <group ns="$(arg camera_name)">
@@ -239,6 +240,7 @@
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
+            <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
 
             <!-- Remap the depth registered point cloud topic -->

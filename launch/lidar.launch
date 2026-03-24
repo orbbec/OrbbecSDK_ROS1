@@ -28,6 +28,7 @@
     <!-- Misc parameters -->
     <arg name="device_num" default="1"/>
     <arg name="enable_heartbeat" default="false"/>
+    <arg name="enable_firmware_log" default="false"/>
     <!-- IMU parameters -->
     <arg name="enable_imu" default="false"/>
     <arg name="imu_rate" default="50hz"/>
@@ -65,6 +66,8 @@
             <param name="max_range" value="$(arg max_range)"/>
             <param name="echo_mode" value="$(arg echo_mode)"/>
             <param name="device_num" value="$(arg device_num)"/>
+            <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
+            <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
             <!-- IMU parameters -->
             <param name="enable_imu" value="$(arg enable_imu)"/>
             <param name="imu_rate" value="$(arg imu_rate)"/>
