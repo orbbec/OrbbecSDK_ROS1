@@ -44,6 +44,8 @@ int main() {
     auto context = std::make_shared<ob::Context>();
     auto list = context->queryDeviceList();
     for (size_t i = 0; i < list->deviceCount(); i++) {
+      auto device_ = list->getDevice(i);
+      auto device_info_ = device_->getDeviceInfo();
       if (std::string(list->getConnectionType(i)) != "Ethernet") {
         std::string serial = list->serialNumber(i);
         std::string uid = list->uid(i);
@@ -54,6 +56,7 @@ int main() {
         ROS_INFO_STREAM("- Name: " << list->getName(i) << ", PID: 0x" << pid_hex.str()
                                    << ", SN/ID: " << serial << ", Connection: " << connection_type);
         ROS_INFO_STREAM("serial: " << serial);
+        ROS_INFO_STREAM("firmware version: " << device_info_->getFirmwareVersion());
         ROS_INFO_STREAM("port id : " << usb_port);
         ROS_INFO_STREAM("usb connect type: " << connection_type);
         std::cout << std::endl;
@@ -66,6 +69,7 @@ int main() {
         ROS_INFO_STREAM("- Name: " << list->getName(i) << ", PID: 0x" << pid_hex.str()
                                    << ", SN/ID: " << serial << ", Connection: " << connection_type);
         ROS_INFO_STREAM("serial: " << serial);
+        ROS_INFO_STREAM("firmware version: " << device_info_->getFirmwareVersion());
         ROS_INFO_STREAM("ip address: " << ip_address);
         ROS_INFO_STREAM("usb connect type: " << connection_type);
         ROS_INFO_STREAM("mac : " << list->getUid(i));

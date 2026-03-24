@@ -254,6 +254,7 @@ add_orbbec_executable(list_devices_node src/list_devices_node.cpp)
 add_orbbec_executable(list_depth_work_mode_node src/list_depth_work_mode.cpp)
 add_orbbec_executable(list_camera_profile_mode_node src/list_camera_profile_mode.cpp)
 add_orbbec_executable(set_device_ip src/set_device_ip.cpp)
+add_orbbec_executable(firmware_update_tool src/firmware_update_tool.cpp)
 add_orbbec_executable(orbbec_camera_node src/main.cpp)
 add_orbbec_executable(service_benchmark_node scripts/service_benchmark_node.cpp)
 add_orbbec_executable(image_sync_example_node examples/multi_camera_time_sync/image_sync_example_node.cpp)
@@ -270,6 +271,7 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${EXECUTABLES}
   list_devices_node
   list_depth_work_mode_node
   list_camera_profile_mode_node
+  firmware_update_tool
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
