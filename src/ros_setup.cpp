@@ -1279,7 +1279,7 @@ void OBCameraNode::setupProfiles() {
       ROS_ERROR_STREAM("set d2c error " << e.getMessage());
     }
   }
-  if (depth_registration_ || align_mode_ == "SW") {
+  if (depth_registration_ && align_mode_ == "SW") {
     align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
   }
 }
