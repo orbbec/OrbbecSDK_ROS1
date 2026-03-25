@@ -727,6 +727,7 @@ class OBCameraNode {
   uint32_t rgb_point_cloud_buffer_size_ = 0;
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
+  bool enable_firmware_log_ = false;
   bool has_first_color_frame_ = false;
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;

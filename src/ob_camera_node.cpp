@@ -427,6 +427,7 @@ void OBCameraNode::getParameters() {
   enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
+  enable_firmware_log_ = nh_private_.param<bool>("enable_firmware_log", false);
   time_domain_ = nh_private_.param<std::string>("time_domain", "global");
   exposure_range_mode_ = nh_private_.param<std::string>("exposure_range_mode", "default");
   load_config_json_file_path_ = nh_private_.param<std::string>("load_config_json_file_path", "");
