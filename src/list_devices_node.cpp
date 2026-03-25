@@ -38,6 +38,22 @@ std::string parseUsbPort(const std::string &line) {
   }
   return port_id;
 }
+
+std::string ipSourceTypeToString(int type) {
+  switch (type) {
+    case OB_IP_SOURCE_NONE:
+      return "NONE";
+    case OB_IP_SOURCE_LLA:
+      return "LLA";
+    case OB_IP_SOURCE_DHCP:
+      return "DHCP";
+    case OB_IP_SOURCE_PERSISTENT:
+      return "PERSISTENT";
+    default:
+      return "UNKNOWN(" + std::to_string(type) + ")";
+  }
+}
+
 int main() {
   try {
     ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
@@ -75,6 +91,9 @@ int main() {
         ROS_INFO_STREAM("mac : " << list->getUid(i));
         ROS_INFO_STREAM("subnet mask : " << list->getSubnetMask(i));
         ROS_INFO_STREAM("gateway : " << list->getGateway(i));
+        ROS_INFO_STREAM("local net interface: " << list->getLocalNetInterfaceName(static_cast<uint32_t>(i)));
+        ROS_INFO_STREAM("ip source type: "
+                        << ipSourceTypeToString(static_cast<int>(list->getIpSourceType(static_cast<uint32_t>(i)))));
         std::cout << std::endl;
       }
     }

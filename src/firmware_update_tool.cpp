@@ -360,6 +360,26 @@ void printUpdateProgress(const std::string &task, OBFwUpdateState state, const c
             << stateToString(state) << " | " << (message != nullptr ? message : "") << std::endl;
 }
 
+constexpr int kProgressBucketSizePercent = 25;
+
+int progressBucket(uint8_t percent, int bucket_size_percent) {
+  return static_cast<int>(percent) / std::max(1, bucket_size_percent);
+}
+
+bool shouldPrintProgressLog(bool first_log, OBFwUpdateState state, OBFwUpdateState last_state,
+                            int bucket, int last_bucket, uint8_t percent) {
+  if (first_log) {
+    return true;
+  }
+  if (percent == 0 || percent == 100) {
+    return true;
+  }
+  if (state != last_state) {
+    return true;
+  }
+  return bucket != last_bucket;
+}
+
 void logCurrentPresetList(const std::shared_ptr<ob::Device> &device, const char *stage) {
   try {
     auto preset_list = device->getAvailablePresetList();
@@ -524,13 +544,23 @@ bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::
   }
 
   OBFwUpdateState final_state = STAT_START;
+  OBFwUpdateState last_logged_state = STAT_START;
+  int last_logged_bucket = -1;
   ROS_INFO("Start updating optional depth presets...");
 
   device->updateOptionalDepthPresets(
       file_paths, count,
-      [&final_state](OBFwUpdateState state, const char *message, uint8_t percent) {
+      [&final_state, &last_logged_state, &last_logged_bucket](
+          OBFwUpdateState state, const char *message, uint8_t percent) {
         final_state = state;
-        printUpdateProgress("preset", state, message, percent);
+        const int bucket = progressBucket(percent, kProgressBucketSizePercent);
+        const bool first_log = (last_logged_bucket < 0);
+        if (shouldPrintProgressLog(first_log, state, last_logged_state, bucket, last_logged_bucket,
+                                   percent)) {
+          printUpdateProgress("preset", state, message, percent);
+          last_logged_state = state;
+          last_logged_bucket = bucket;
+        }
       });
 
   if (final_state == STAT_DONE || final_state == STAT_DONE_WITH_DUPLICATES) {
@@ -565,14 +595,10 @@ FirmwareUpdateResult updateFirmware(const std::shared_ptr<ob::Device> &device,
       [&result, &last_logged_state, &last_logged_bucket](OBFwUpdateState state, const char *message,
                                                          uint8_t percent) {
         result.final_state = state;
-
-        const int bucket = static_cast<int>(percent) / 10;
+        const int bucket = progressBucket(percent, kProgressBucketSizePercent);
         const bool first_log = (last_logged_bucket < 0);
-        const bool state_changed = (!first_log && state != last_logged_state);
-        const bool bucket_changed = (!first_log && bucket != last_logged_bucket);
-        const bool is_boundary = (percent == 0 || percent == 100);
-
-        if (first_log || state_changed || bucket_changed || is_boundary) {
+        if (shouldPrintProgressLog(first_log, state, last_logged_state, bucket, last_logged_bucket,
+                                   percent)) {
           printUpdateProgress("firmware", state, message, percent);
           last_logged_state = state;
           last_logged_bucket = bucket;
