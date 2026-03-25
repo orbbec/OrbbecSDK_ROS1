@@ -297,6 +297,8 @@ void OBCameraNode::setupDepthPostProcessFilter() {
     ROS_DEBUG_STREAM("Dual Color Streams preset, skip depth filter setup");
     return;
   }
+  auto device_info = device_->getDeviceInfo();
+  CHECK_NOTNULL(device_info);
   // set depth sensor to filter
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
   depth_filter_list_ = depth_sensor->createRecommendedFilters();
@@ -318,6 +320,8 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"SpatialFastFilter", enable_spatial_fast_filter_},
         {"SpatialModerateFilter", enable_spatial_moderate_filter_},
         {"FalsePositiveFilter", enable_false_positive_filter_},
+        {"MgcNoiseRemovalFilter", enable_mgc_noise_removal_filter_},
+        {"LutNoiseRemovalFilter", enable_lut_noise_removal_filter_},
     };
     std::string filter_name = filter->type();
     ROS_INFO_STREAM("Setting " << filter_name << "......");
@@ -1805,6 +1809,15 @@ void OBCameraNode::setColorAutoExposureROI() {
 
 bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterResponse& response) {
   try {
+    if (std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
+                     [&request](const auto& filter) {
+                       return filter->type() == request.filter_name;
+                     }) == depth_filter_list_.end()) {
+      response.success = false;
+      response.message = "Filter '" + request.filter_name + "' is not supported by this device";
+      return true;
+    }
+
     ROS_INFO_STREAM("filter_name: " << request.filter_name << "  filter_enable: "
                                     << (request.filter_enable ? "true" : "false"));
     auto it = std::remove_if(depth_filter_list_.begin(), depth_filter_list_.end(),
@@ -1944,8 +1957,10 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         params.radius = request.filter_param[3];
         spatial_filter->setFilterParams(params);
         ROS_INFO_STREAM("Set spatial filter params: "
-                        << "\nalpha:" << params.alpha << "\nradius:" << params.radius
-                        << "\ndisp_diff:" << params.disp_diff);
+                        << "\nalpha:" << params.alpha
+                        << "\ndisp_diff:" << params.disp_diff
+                        << "\nmagnitude:" << static_cast<int>(params.magnitude)
+                        << "\nradius:" << params.radius);
       } else {
         response.message =
             "The filter switch setting is successful, but the filter parameter setting fails";
@@ -1974,7 +1989,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         OBSpatialFastFilterParams params{};
         params.radius = request.filter_param[0];
         spatial_fast_filter->setFilterParams(params);
-        ROS_INFO_STREAM("Set SpatialFastFilter radius to " << params.radius);
+        ROS_INFO_STREAM("Set SpatialFastFilter radius to " << static_cast<int>(params.radius));
       } else {
         response.message =
             "The filter switch setting is successful, but the filter parameter setting fails";
@@ -1991,13 +2006,26 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         params.radius = request.filter_param[2];
         spatial_moderate_filter->setFilterParams(params);
         ROS_INFO_STREAM("Set SpatialModerateFilter params: "
-                        << "\nmagnitude:" << params.magnitude << "\nradius:" << params.radius
-                        << "\ndisp_diff:" << params.disp_diff);
+                        << "\ndisp_diff:" << params.disp_diff
+                        << "\nmagnitude:" << static_cast<int>(params.magnitude)
+                        << "\nradius:" << static_cast<int>(params.radius));
+      } else {
+        response.message =
+            "The filter switch setting is successful, but the filter parameter setting fails";
+        return true;
       }
     } else if (request.filter_name == "FalsePositiveFilter") {
       auto false_positive_filter = std::make_shared<ob::FalsePositiveFilter>();
       false_positive_filter->enable(request.filter_enable);
       depth_filter_list_.push_back(false_positive_filter);
+    } else if (request.filter_name == "MgcNoiseRemovalFilter") {
+      auto mgc_noise_filter = std::make_shared<ob::MgcNoiseRemovalFilter>();
+      mgc_noise_filter->enable(request.filter_enable);
+      depth_filter_list_.push_back(mgc_noise_filter);
+    } else if (request.filter_name == "LutNoiseRemovalFilter") {
+      auto lut_noise_filter = std::make_shared<ob::LutNoiseRemovalFilter>();
+      lut_noise_filter->enable(request.filter_enable);
+      depth_filter_list_.push_back(lut_noise_filter);
     } else {
       ROS_INFO_STREAM(request.filter_name
                       << " Cannot be set\n"
@@ -2005,17 +2033,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                          "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, "
                          "NoiseRemovalFilter, HardwareNoiseRemoval, "
                          "SpatialAdvancedFilter, TemporalFilter, "
-                         "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter");
-    }
-    for (auto& filter : depth_filter_list_) {
-      std::cout << " - " << filter->getName() << ": "
-                << (filter->isEnabled() ? "enabled" : "disabled") << std::endl;
-      auto configSchemaVec = filter->getConfigSchemaVec();
-      for (auto& configSchema : configSchemaVec) {
-        std::cout << "    - {" << configSchema.name << ", " << configSchema.type << ", "
-                  << configSchema.min << ", " << configSchema.max << ", " << configSchema.step
-                  << ", " << configSchema.def << ", " << configSchema.desc << "}" << std::endl;
-      }
+                         "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter, "
+                         "MgcNoiseRemovalFilter, LutNoiseRemovalFilter");
     }
     return response.success = true;
   } catch (const ob::Error& e) {

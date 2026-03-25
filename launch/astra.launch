@@ -74,6 +74,8 @@
     <arg name="temporal_filter_weight" default="-1.0"/>
     <arg name="enable_hole_filling_filter" default="false"/>
     <arg name="hole_filling_filter_mode" default=""/>
+    <arg name="enable_mgc_noise_removal_filter" default="false"/>
+    <arg name="enable_lut_noise_removal_filter" default="false"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
@@ -149,6 +151,8 @@
             <param name="temporal_filter_weight" value="$(arg temporal_filter_weight)"/>
             <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
             <param name="hole_filling_filter_mode" value="$(arg hole_filling_filter_mode)"/>
+            <param name="enable_mgc_noise_removal_filter" value="$(arg enable_mgc_noise_removal_filter)"/>
+            <param name="enable_lut_noise_removal_filter" value="$(arg enable_lut_noise_removal_filter)"/>
 
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
