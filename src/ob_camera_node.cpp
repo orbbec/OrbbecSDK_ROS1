@@ -505,14 +505,6 @@ void OBCameraNode::getParameters() {
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info.get());
   auto pid = device_info->pid();
-  if (!isOpenniToUvcDevice(pid)) {
-    if (enable_mgc_noise_removal_filter_ || enable_lut_noise_removal_filter_) {
-      ROS_WARN_STREAM("MgcNoiseRemovalFilter and LutNoiseRemovalFilter are only supported on "
-                      << "OpenNI->UVC devices: Astra Mini (s) pro. ");
-    }
-    enable_mgc_noise_removal_filter_ = false;
-    enable_lut_noise_removal_filter_ = false;
-  }
   if (device_preset_ == "Dual Color Streams") {
     ROS_INFO_STREAM(
         "Using Dual Color Streams preset, only left and right color streams are enabled.");
@@ -2577,10 +2569,6 @@ bool OBCameraNode::isGemini335PID(uint32_t pid) {
 bool OBCameraNode::isGemini435LePID(uint32_t pid) {
   const uint16_t GEMINI_435Le_PID = 0x815;  // Gemini 435Le
   return pid == GEMINI_435Le_PID;
-}
-
-bool OBCameraNode::isOpenniToUvcDevice(uint32_t pid) {
-  return pid == 0x065b || pid == 0x0698 || pid == 0x06a0 || pid == 0x069e;
 }
 
 bool OBCameraNode::isPublishMetaData(uint32_t pid) {
