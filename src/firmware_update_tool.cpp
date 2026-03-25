@@ -91,6 +91,7 @@ std::vector<std::string> splitCsv(const std::string &value) {
 }
 
 void printUsage(const char *program) {
+  (void)program;
   std::cout
       << "Usage:\n"
       << "rosrun orbbec_camera firmware_update_tool\\\n"
@@ -98,6 +99,12 @@ void printUsage(const char *program) {
       << "      [--firmware_path /path/to/firmware.bin]\\\n"
       << "      [--preset_path /path/a.bin,/path/b.bin]\\\n"
       << "      [--continue_on_error]\n\n"
+      << "Parameters:\n"
+      << "  --serial_number SN[,SN2...]   Target serial number(s). Supports comma-separated "
+         "values.\n"
+      << "  --firmware_path PATH          Firmware image file path for firmware update.\n"
+      << "  --preset_path PATH[,PATH2...] Preset file path(s), comma-separated.\n"
+      << "  --continue_on_error           Continue with next target if one device update fails.\n"
       << "Notes:\n"
       << "  1) At least one of --firmware_path / --preset_path must be provided.\n"
       << "  2) If multiple devices are connected, specify target by serial/usb/ip to avoid wrong "
