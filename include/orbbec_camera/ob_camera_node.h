@@ -552,6 +552,7 @@ class OBCameraNode {
   bool enable_soft_filter_ = true;
   bool enable_color_auto_exposure_ = true;
   bool enable_color_auto_exposure_priority_ = false;
+  bool color_anti_flicker_ = false;
   bool enable_color_auto_white_balance_ = true;
   int color_backlight_compensation_ = false;
   std::string color_powerline_freq_;

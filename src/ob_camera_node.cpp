@@ -276,6 +276,7 @@ void OBCameraNode::getParameters() {
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
   enable_color_auto_exposure_priority_ =
       nh_private_.param<bool>("enable_color_auto_exposure_priority", false);
+  color_anti_flicker_ = nh_private_.param<bool>("color_anti_flicker", false);
   enable_color_auto_white_balance_ =
       nh_private_.param<bool>("enable_color_auto_white_balance", true);
   color_backlight_compensation_ = nh_private_.param<int>("color_backlight_compensation", -1);
