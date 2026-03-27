@@ -182,7 +182,6 @@ class OBLidarNode {
   double tf_publish_rate_ = 10.0;
   std::recursive_mutex device_lock_;
   bool enable_heartbeat_ = false;
-  bool enable_firmware_log_ = false;
 
   std::shared_ptr<ob::Pipeline> pipeline_ = nullptr;
   std::shared_ptr<ob::Pipeline> imuPipeline_ = nullptr;

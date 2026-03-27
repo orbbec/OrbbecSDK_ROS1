@@ -113,7 +113,6 @@ void OBLidarNode::getParameters() {
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   time_domain_ = nh_private_.param<std::string>("time_domain", "global");
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
-  enable_firmware_log_ = nh_private_.param<bool>("enable_firmware_log", false);
   echo_mode_ = nh_private_.param<std::string>("echo_mode", "");
   min_angle_ = nh_private_.param<float>("min_angle", -135.0);
   max_angle_ = nh_private_.param<float>("max_angle", 135.0);
@@ -166,8 +165,6 @@ void OBLidarNode::setupDevices() {
       sensors_[sip] = sensor;
     }
   }
-  ROS_INFO_STREAM("Setting firmware log to " << (enable_firmware_log_ ? "ON" : "OFF"));
-  device_->enableFirmwareLog(enable_firmware_log_);
   if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
     ROS_INFO_STREAM("Setting heartbeat to " << (enable_heartbeat_ ? "ON" : "OFF"));
     device_->setIntProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);
