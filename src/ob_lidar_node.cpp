@@ -166,11 +166,11 @@ void OBLidarNode::setupDevices() {
       sensors_[sip] = sensor;
     }
   }
-  ROS_INFO_STREAM("Setting firmware log to " << (enable_firmware_log_ ? "ON" : "OFF"));
   device_->enableFirmwareLog(enable_firmware_log_);
+  ROS_INFO_STREAM("Current firmware log: " << (enable_firmware_log_ ? "ON" : "OFF"));
   if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
-    ROS_INFO_STREAM("Setting heartbeat to " << (enable_heartbeat_ ? "ON" : "OFF"));
     device_->setIntProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);
+    ROS_INFO_STREAM("Current heartbeat: " << (device_->getBoolProperty(OB_PROP_HEARTBEAT_BOOL) ? "ON" : "OFF"));
   }
   if (!echo_mode_.empty() &&
       device_->isPropertySupported(OB_PROP_LIDAR_SPECIFIC_MODE_INT, OB_PERMISSION_READ_WRITE)) {
@@ -179,7 +179,7 @@ void OBLidarNode::setupDevices() {
     } else if (echo_mode_ == "First Echo") {
       device_->setIntProperty(OB_PROP_LIDAR_SPECIFIC_MODE_INT, 1);
     }
-    ROS_INFO_STREAM("Setting echo mode to "
+    ROS_INFO_STREAM("Current echo mode: "
                     << (device_->getIntProperty(OB_PROP_LIDAR_SPECIFIC_MODE_INT) ? "First Echo"
                                                                                  : "Last Echo"));
   }
@@ -192,7 +192,7 @@ void OBLidarNode::setupDevices() {
                 range.min, range.max);
     } else {
       device_->setIntProperty(OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT, repetitive_scan_mode_);
-      ROS_INFO_STREAM("Setting repetitive scan mode to "
+      ROS_INFO_STREAM("Current repetitive scan mode: "
                       << device_->getIntProperty(OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT));
     }
   }
@@ -205,7 +205,7 @@ void OBLidarNode::setupDevices() {
     } else {
       device_->setIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT, filter_level_);
       device_->setIntProperty(OB_PROP_LIDAR_APPLY_CONFIGS_INT, 1);
-      ROS_INFO_STREAM("Setting filter level to "
+      ROS_INFO_STREAM("Current filter level: "
                       << device_->getIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT));
     }
   }
@@ -218,7 +218,7 @@ void OBLidarNode::setupDevices() {
                 range.max);
     } else {
       device_->setFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT, vertical_fov_);
-      ROS_INFO_STREAM("Setting vertical fov to "
+      ROS_INFO_STREAM("Current vertical fov: "
                       << device_->getFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT));
     }
   }
