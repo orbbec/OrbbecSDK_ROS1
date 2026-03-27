@@ -28,7 +28,7 @@ OBFormat OBFormatFromString(const std::string &format) {
   std::string fixed_format;
   std::transform(format.begin(), format.end(), std::back_inserter(fixed_format),
                  [](const char ch) { return std::isalpha(ch) ? toupper(ch) : ch; });
-  std::cout << "OBFormatFromString: " << fixed_format << std::endl;
+  ROS_DEBUG_STREAM("OBFormatFromString: " << fixed_format);
   if (fixed_format == "MJPG") {
     return OB_FORMAT_MJPG;
   } else if (fixed_format == "YUYV") {

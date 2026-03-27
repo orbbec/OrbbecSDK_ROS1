@@ -423,7 +423,6 @@ void OBCameraNode::getParameters() {
   std::string align_target_stream_str_;
   align_target_stream_str_ = nh_private_.param<std::string>("align_target_stream", "COLOR");
   align_target_stream_ = obStreamTypeFromString(align_target_stream_str_);
-  ROS_INFO_STREAM("align_target_stream_: " << align_target_stream_);
   enable_color_hdr_ = nh_private_.param<bool>("enable_color_hdr", false);
   enable_depth_scale_ = nh_private_.param<bool>("enable_depth_scale", true);
   retry_on_usb3_detection_failure_ =
@@ -535,7 +534,7 @@ void OBCameraNode::getParameters() {
   ROS_INFO_STREAM("current time domain:" << time_domain_);
 
   enable_sync_host_time_ = nh_private_.param<bool>("enable_sync_host_time", true);
-  ROS_INFO_STREAM("enable_sync_host_time:" << enable_sync_host_time_);
+  ROS_INFO_STREAM("enable_sync_host_time:" << enable_sync_host_time_ ? "true" : "false");
   if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid())) {
     device_->timerSyncWithHost();
     if (time_domain_ != "global") {
@@ -2410,11 +2409,11 @@ void OBCameraNode::calcAndPublishStaticTransform() {
     }
     publishStaticTF(timestamp, zero_trans, quaternion_optical, frame_id_[stream_index],
                     optical_frame_id_[stream_index]);
-    ROS_INFO_STREAM("Publishing static transform from " << stream_name_[stream_index] << " to "
-                                                        << stream_name_[base_stream_]);
-    ROS_INFO_STREAM("Translation " << trans[0] << ", " << trans[1] << ", " << trans[2]);
-    ROS_INFO_STREAM("Rotation " << Q.getX() << ", " << Q.getY() << ", " << Q.getZ() << ", "
-                                << Q.getW());
+    ROS_DEBUG_STREAM("Publishing static transform from " << stream_name_[stream_index] << " to "
+                                                         << stream_name_[base_stream_]);
+    ROS_DEBUG_STREAM("Translation " << trans[0] << ", " << trans[1] << ", " << trans[2]);
+    ROS_DEBUG_STREAM("Rotation " << Q.getX() << ", " << Q.getY() << ", " << Q.getZ() << ", "
+                                 << Q.getW());
   }
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);

@@ -511,9 +511,9 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
   bool start_device_failed = false;
   try {
     std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
-    ROS_INFO_STREAM("deviceConnectCallback : Before process lock lock");
+    ROS_DEBUG_STREAM("deviceConnectCallback : Before process lock lock");
     pthread_mutex_lock(orb_device_lock_);
-    ROS_INFO_STREAM("deviceConnectCallback : After process lock lock");
+    ROS_DEBUG_STREAM("deviceConnectCallback : After process lock lock");
     std::shared_ptr<int> lock_guard(nullptr,
                                     [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
 
@@ -569,7 +569,7 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     reset_device_ = true;
     reset_device_cv_.notify_all();
   }
-  ROS_INFO_STREAM("Device connect callback completed");
+  ROS_DEBUG_STREAM("Device connect callback completed");
 }
 
 void OBCameraNodeDriver::connectNetDevice(const std::string &ip_address, int port) {

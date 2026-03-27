@@ -410,7 +410,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
                         << ", diff_threshold: " << spatial_moderate_filter_diff_threshold_);
       }
     } else {
-      ROS_INFO_STREAM("Skip setting " << filter_name);
+      ROS_DEBUG_STREAM("Skip setting " << filter_name);
     }
   }
   set_filter_srv_ = nh_.advertiseService<SetFilterRequest, SetFilterResponse>(
@@ -638,7 +638,8 @@ void OBCameraNode::setupDevices() {
     if (sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_noise_removal_filter_);
-      ROS_INFO_STREAM("enable_noise_removal_filter:" << enable_noise_removal_filter_);
+      ROS_INFO_STREAM("enable_noise_removal_filter:" << enable_noise_removal_filter_ ? "ON"
+                                                                                     : "OFF");
     }
     if (!depth_work_mode_.empty() &&
         device_->isPropertySupported(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, OB_PERMISSION_READ_WRITE)) {
@@ -1400,7 +1401,7 @@ void OBCameraNode::setupTopics() {
 
 void OBCameraNode::setupPublishers() {
   for (const auto& stream_index : IMAGE_STREAMS) {
-    ROS_INFO_STREAM("Setting up publisher for stream: " << stream_name_[stream_index]);
+    ROS_DEBUG_STREAM("Setting up publisher for stream: " << stream_name_[stream_index]);
     if (!enable_stream_[stream_index]) {
       continue;
     }
@@ -1560,7 +1561,7 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
       global_nh_ = std::make_shared<ros::NodeHandle>();
     }
     global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
-    ROS_INFO_STREAM(
+    ROS_DEBUG_STREAM(
         "Created persistent global image_transport instance to prevent plugin reloading");
   }
 
@@ -1577,7 +1578,7 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
       global_image_transport_->advertise(topic_name, 1, connect_cb, disconnect_cb);
   global_image_publishers_[topic_name] = pub;
 
-  ROS_INFO_STREAM("Created new image publisher with callbacks for topic: " << topic_name);
+  ROS_DEBUG_STREAM("Created new image publisher with callbacks for topic: " << topic_name);
   return pub;
 }
 
@@ -1720,7 +1721,7 @@ void OBCameraNode::readDefaultGain() {
       auto sensor = sensors_[stream_index];
       CHECK_NOTNULL(sensor.get());
       auto gain = sensor->getGain();
-      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " gain " << gain);
+      ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " gain " << gain);
       default_gain_[stream_index] = gain;
     } catch (ob::Error& e) {
       default_gain_[stream_index] = 0;
@@ -1739,9 +1740,9 @@ void OBCameraNode::readDefaultExposure() {
       CHECK_NOTNULL(sensor.get());
       auto exposure = sensor->getExposure();
       bool is_auto_exposure = sensor->getAutoExposure();
-      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure
-                                << " auto exposure " << is_auto_exposure);
-      ROS_INFO_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure);
+      ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure
+                                 << " auto exposure " << is_auto_exposure);
+      ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure);
       default_exposure_[stream_index] = exposure;
     } catch (ob::Error& e) {
       default_exposure_[stream_index] = 0;
@@ -1755,12 +1756,12 @@ void OBCameraNode::readDefaultWhiteBalance() {
   try {
     auto sensor = sensors_[COLOR];
     if (!sensor) {
-      ROS_INFO_STREAM("does not have color sensor");
+      ROS_DEBUG_STREAM("does not have color sensor");
       return;
     }
     CHECK_NOTNULL(sensor.get());
     auto wb = sensor->getWhiteBalance();
-    ROS_INFO_STREAM("stream " << stream_name_[COLOR] << " wb " << wb);
+    ROS_DEBUG_STREAM("stream " << stream_name_[COLOR] << " wb " << wb);
     default_white_balance_ = wb;
   } catch (ob::Error& e) {
     default_white_balance_ = 0;
