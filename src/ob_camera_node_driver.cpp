@@ -31,6 +31,23 @@
 namespace orbbec_camera {
 backward::SignalHandling sh;
 
+namespace {
+ros::console::levels::Level rosLogSeverityFromString(const std::string &log_level) {
+  if (log_level == "debug") {
+    return ros::console::levels::Debug;
+  } else if (log_level == "info") {
+    return ros::console::levels::Info;
+  } else if (log_level == "warn") {
+    return ros::console::levels::Warn;
+  } else if (log_level == "error") {
+    return ros::console::levels::Error;
+  } else if (log_level == "fatal") {
+    return ros::console::levels::Fatal;
+  }
+  return ros::console::levels::Info;  // Default to Info
+}
+}  // namespace
+
 std::string g_camera_name = "camera";
 
 void signalHandler(int signum) {
@@ -151,6 +168,7 @@ void OBCameraNodeDriver::init() {
   ob::Context::setExtensionsDirectory(extension_path_.c_str());
 
   auto log_level = nh_private_.param<std::string>("log_level", "info");
+  auto ros_log_level_str = nh_private_.param<std::string>("ros_log_level", "info");
   g_camera_name = nh_private_.param<std::string>("camera_name", "camera");
   device_type_ = nh_private_.param<std::string>("device_type", "camera");
   auto ob_log_level = obLogSeverityFromString(log_level);
@@ -160,6 +178,9 @@ void OBCameraNodeDriver::init() {
   std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : "";
   std::string log_path = home_dir + "/.ros/Log/" + g_camera_name;
   ob::Context::setLoggerToFile(ob_log_level, log_path.c_str());
+  // Set ROS log level
+  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, rosLogSeverityFromString(ros_log_level_str));
+  ROS_INFO_STREAM("ROS log level set to: " << ros_log_level_str);
   if (!log_file_name.empty()) {
     try {
       ob::Context::setLoggerFileName(log_file_name);
