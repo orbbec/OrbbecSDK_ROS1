@@ -467,15 +467,28 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   std::string connection_type = device_info_->connectionType();
   ROS_INFO_STREAM("Device " << device_info_->name() << " connected");
   ROS_INFO_STREAM("Serial number: " << device_info_->serialNumber());
+  ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
   ROS_INFO_STREAM("ROS Wrapper version: " << OB_ROS_VERSION_STR);
   std::string sdk_version = std::to_string(ob::Version::getMajor()) + "." +
                             std::to_string(ob::Version::getMinor()) + "." +
                             std::to_string(ob::Version::getPatch());
   ROS_INFO_STREAM("SDK version: " << sdk_version);
-  ROS_INFO_STREAM("Firmware version: " << device_info_->firmwareVersion());
   ROS_INFO_STREAM("Hardware version: " << device_info_->hardwareVersion());
   ROS_INFO_STREAM("device uid: " << device_info_->uid());
   ROS_INFO_STREAM("device connection Type: " << connection_type);
+  try {
+    std::string isp_fw_version = device_->getExtensionInfo("IspFwVer");
+    if (!isp_fw_version.empty()) {
+      ROS_INFO_STREAM("ISP firmware version: " << isp_fw_version);
+    }
+    std::string isp_need_version = device_->getExtensionInfo("IspNeedVer");
+    if (!isp_need_version.empty()) {
+      ROS_INFO_STREAM("ISP needed version: " << isp_need_version);
+    }
+  } catch (const ob::Error &e) {
+    // Some devices don't support ISP firmware version query
+    ROS_DEBUG_STREAM("Current device not support ISP firmware version query: " << e.getMessage());
+  }
   ROS_INFO_STREAM("Current node pid: " << getpid());
   if (device_info_->pid() == FEMTO_BOLT_PID) {
     if (connection_type != "USB3.0" && connection_type != "USB3.1" && connection_type != "USB3.2") {
