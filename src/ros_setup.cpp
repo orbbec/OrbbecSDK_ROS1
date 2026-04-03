@@ -1244,21 +1244,21 @@ void OBCameraNode::setupProfiles() {
           format_[stream_index] == OB_FORMAT_UNKNOWN) {
         selected_profile = profile_list->getProfile(0)->as<ob::VideoStreamProfile>();
       } else {
-        if (pid == GEMINI_305_PID && stream_index == DEPTH) {
+        if (isGemini305SeriesPID(pid) && stream_index == DEPTH) {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
           conf.factor = depth_decimation_factor_;
           selected_profile =
               profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
-        } else if (pid == GEMINI_305_PID && stream_index == INFRA1) {
+        } else if (isGemini305SeriesPID(pid) && stream_index == INFRA1) {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
           conf.factor = left_ir_decimation_factor_;
           selected_profile =
               profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
-        } else if (pid == GEMINI_305_PID && stream_index == INFRA2) {
+        } else if (isGemini305SeriesPID(pid) && stream_index == INFRA2) {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
