@@ -76,8 +76,8 @@ void OBCameraNode::setupCameraCtrlServices() {
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_ae_roi";
     set_ae_roi_srv_[stream_index] = nh_.advertiseService<SetArraysRequest, SetArraysResponse>(
         service_name, [this, stream_index](SetArraysRequest& request, SetArraysResponse& response) {
-          response.success = this->setAeRoiCallback(request, response, stream_index);
-          return response.success;
+          this->setAeRoiCallback(request, response, stream_index);
+          return true;
         });
     service_name = "/" + camera_name_ + "/" + "reset_" + stream_name + "_exposure";
     reset_exposure_srv_[stream_index] =
@@ -535,13 +535,15 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
       (stream != OB_STREAM_COLOR && ae_reference_stream_ == "color")) {
     response.success = false;
     response.message = "AE Reference Stream is color, other sensors setting is not supported";
-    return false;
+    ROS_ERROR_STREAM(response.message);
+    return true;
   }
   if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) &&
       (stream != OB_STREAM_DEPTH && ae_reference_stream_ == "depth")) {
     response.success = false;
     response.message = "AE Reference Stream is depth, other sensors setting is not supported";
-    return false;
+    ROS_ERROR_STREAM(response.message);
+    return true;
   }
   auto config = OBRegionOfInterest();
   uint32_t data_size = sizeof(config);
@@ -622,18 +624,26 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
         response.success = false;
         response.message = "NOT a video stream";
-        return response.success = false;
+        return true;
     }
-    return response.success = true;
+    response.success = true;
+    response.message = "set AE ROI success";
+    return true;
   } catch (const ob::Error& e) {
-    return response.success = false;
     response.message = e.getMessage();
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << response.message);
+    return true;
   } catch (const std::exception& e) {
-    return response.success = false;
     response.message = e.what();
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << response.message);
+    return true;
   } catch (...) {
-    return response.success = false;
     response.message = "unknown error";
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << response.message);
+    return true;
   }
 }
 
