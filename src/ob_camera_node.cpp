@@ -538,12 +538,14 @@ void OBCameraNode::getParameters() {
   if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid())) {
     device_->timerSyncWithHost();
     if (time_domain_ != "global") {
+      device_->enableGlobalTimestamp(false);
       sync_host_time_timer_ =
           nh_private_.createTimer(ros::Duration(60.0), [this](const ros::TimerEvent&) {
             if (device_) {
               device_->timerSyncWithHost();
             }
           });
+      ROS_INFO_STREAM("Enabled timer sync with host every 60 seconds");
     }
   }
 }
