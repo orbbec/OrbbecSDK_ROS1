@@ -272,6 +272,8 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${EXECUTABLES}
   list_devices_node
   list_depth_work_mode_node
   list_camera_profile_mode_node
+  ip_config_tool
+  set_device_ip
   firmware_update_tool
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
