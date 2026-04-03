@@ -98,7 +98,7 @@ int main() {
       }
     }
   } catch (ob::Error &e) {
-    ROS_ERROR_STREAM("list_device_node: " << e.getMessage());
+    ROS_ERROR_STREAM("list_device_node: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception &e) {
     ROS_ERROR_STREAM("list_device_node: " << e.what());
   } catch (...) {

@@ -431,7 +431,7 @@ void OBCameraNode::setupDevices() {
       device_->loadPreset(device_preset_.c_str());
       ROS_INFO_STREAM("Loaded device preset: " << device_->getCurrentPresetName());
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to load device preset: " << e.getMessage());
+      ROS_ERROR_STREAM("Failed to load device preset: " << orbbec_camera::formatObErrorWithStatus(e));
     } catch (const std::exception& e) {
       ROS_ERROR_STREAM("Failed to load device preset: " << e.what());
     } catch (...) {
@@ -1140,7 +1140,7 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Current intra camera sync reference: " << ref_str);
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to setup devices: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to setup devices: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.what());
   }
@@ -1314,7 +1314,7 @@ void OBCameraNode::setupProfiles() {
       ROS_ERROR_STREAM("Failed to setup  "
                        << stream_name_[stream_index] << " profile: " << width_[stream_index] << "x"
                        << height_[stream_index] << " " << fps_[stream_index] << "fps "
-                       << OBFormatToString(format_[stream_index]) << " ERROR:" << e.getMessage());
+                       << OBFormatToString(format_[stream_index]) << " ERROR:" << orbbec_camera::formatObErrorWithStatus(e));
       printProfiles(sensors_[stream_index]->getSensor());
       ROS_ERROR(
           "Error: The device might be connected via USB 2.0. Please verify your launch file "
@@ -1347,7 +1347,7 @@ void OBCameraNode::setupProfiles() {
                                 << imu_rate_[stream_index]);
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("Failed to setup << " << stream_name_[stream_index]
-                                             << " profile: " << e.getMessage());
+                                             << " profile: " << orbbec_camera::formatObErrorWithStatus(e));
       enable_stream_[stream_index] = false;
       stream_profile_[stream_index] = nullptr;
     }
@@ -1358,7 +1358,7 @@ void OBCameraNode::setupProfiles() {
       device_->setIntProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_MODE_INT, index);
       device_->setBoolProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, depth_registration_);
     } catch (ob::Error& e) {
-      ROS_ERROR_STREAM("set d2c error " << e.getMessage());
+      ROS_ERROR_STREAM("set d2c error " << orbbec_camera::formatObErrorWithStatus(e));
     }
   }
   if (depth_registration_ || align_mode_ == "SW") {
@@ -1724,7 +1724,7 @@ void OBCameraNode::readDefaultGain() {
       default_gain_[stream_index] = gain;
     } catch (ob::Error& e) {
       default_gain_[stream_index] = 0;
-      ROS_DEBUG_STREAM("get gain error " << e.getMessage());
+      ROS_DEBUG_STREAM("get gain error " << orbbec_camera::formatObErrorWithStatus(e));
     }
   }
 }
@@ -1746,7 +1746,7 @@ void OBCameraNode::readDefaultExposure() {
     } catch (ob::Error& e) {
       default_exposure_[stream_index] = 0;
       ROS_DEBUG_STREAM("get " << stream_name_[stream_index] << " exposure error "
-                              << e.getMessage());
+                              << orbbec_camera::formatObErrorWithStatus(e));
     }
   }
 }
@@ -1764,7 +1764,7 @@ void OBCameraNode::readDefaultWhiteBalance() {
     default_white_balance_ = wb;
   } catch (ob::Error& e) {
     default_white_balance_ = 0;
-    ROS_DEBUG_STREAM("get white balance error " << e.getMessage());
+    ROS_DEBUG_STREAM("get white balance error " << orbbec_camera::formatObErrorWithStatus(e));
   }
 }
 
@@ -2138,7 +2138,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
 
     return response.success = true;
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set filter: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set filter: " << orbbec_camera::formatObErrorWithStatus(e));
     return response.success = false;
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("Failed to set filter: " << e.what());
