@@ -57,7 +57,7 @@ void OBCameraNode::setupCameraCtrlServices() {
   using std_srvs::SetBool;
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (!enable_stream_[stream_index]) {
-      ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " is disabled.");
+      ROS_DEBUG_STREAM("Stream " << stream_name_[stream_index] << " is disabled.");
       continue;
     }
     auto stream_name = stream_name_[stream_index];

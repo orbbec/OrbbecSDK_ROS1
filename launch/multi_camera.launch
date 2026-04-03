@@ -16,6 +16,7 @@
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
         <arg name="device_num" value="$(arg device_num)"/>
         <arg name="log_level" value="$(arg camera1_log_level)"/>
+    <arg name="ros_log_level" default="info"/>
         <arg name="log_file_name" value="$(arg camera1_log_file_name)"/>
     </include>
 
@@ -24,6 +25,7 @@
         <arg name="usb_port" value="$(arg camera2_usb_port)"/>
         <arg name="device_num" value="$(arg device_num)"/>
         <arg name="log_level" value="$(arg camera2_log_level)"/>
+    <arg name="ros_log_level" default="info"/>
         <arg name="log_file_name" value="$(arg camera2_log_file_name)"/>
     </include>
 </launch>

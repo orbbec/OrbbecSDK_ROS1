@@ -150,13 +150,13 @@ void OBCameraNode::clean() {
   }
   is_cleaned_ = true;
 
-  ROS_INFO_STREAM("OBCameraNode::clean() start");
+  ROS_DEBUG_STREAM("OBCameraNode::clean() start");
   is_running_ = false;
   {
     std::lock_guard<std::mutex> lk(frame_info_logged_mutex_);
     frame_info_logged_.clear();
   }
-  ROS_INFO_STREAM("OBCameraNode::clean() stop tf thread");
+  ROS_DEBUG_STREAM("OBCameraNode::clean() stop tf thread");
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
   }
@@ -195,10 +195,10 @@ void OBCameraNode::clean() {
     diagnostics_thread_->join();
   }
 
-  ROS_INFO_STREAM("OBCameraNode::clean() stop stream");
+  ROS_DEBUG_STREAM("OBCameraNode::clean() stop stream");
   stopIMU();
   stopStreams();
-  ROS_INFO_STREAM("OBCameraNode::clean() delete rgb_buffer");
+  ROS_DEBUG_STREAM("OBCameraNode::clean() delete rgb_buffer");
   if (rgb_buffer_) {
     delete[] rgb_buffer_;
     rgb_buffer_ = nullptr;
@@ -222,7 +222,7 @@ void OBCameraNode::clean() {
     ir_camera_info_manager_.reset();
   }
 
-  ROS_INFO_STREAM("OBCameraNode::clean() end (global image_transport persists)");
+  ROS_DEBUG_STREAM("OBCameraNode::clean() end (global image_transport persists)");
 }
 
 OBCameraNode::~OBCameraNode() noexcept { clean(); }
@@ -423,7 +423,6 @@ void OBCameraNode::getParameters() {
   std::string align_target_stream_str_;
   align_target_stream_str_ = nh_private_.param<std::string>("align_target_stream", "COLOR");
   align_target_stream_ = obStreamTypeFromString(align_target_stream_str_);
-  ROS_INFO_STREAM("align_target_stream_: " << align_target_stream_);
   enable_color_hdr_ = nh_private_.param<bool>("enable_color_hdr", false);
   enable_depth_scale_ = nh_private_.param<bool>("enable_depth_scale", true);
   retry_on_usb3_detection_failure_ =
@@ -480,30 +479,30 @@ void OBCameraNode::getParameters() {
   left_ir_decimation_factor_ = nh_private_.param<int>("left_ir_decimation_factor", 1);
   right_ir_decimation_factor_ = nh_private_.param<int>("right_ir_decimation_factor", 1);
 
-  ROS_INFO_STREAM("hdr_index1_laser_control_ "
-                  << hdr_index1_laser_control_ << " hdr_index1_depth_exposure_ "
-                  << hdr_index1_depth_exposure_ << " hdr_index1_depth_gain_ "
-                  << hdr_index1_depth_gain_ << " hdr_index1_ir_brightness_ "
-                  << hdr_index1_ir_brightness_ << " hdr_index1_ir_ae_max_exposure_ "
-                  << hdr_index1_ir_ae_max_exposure_ << "\n");
-  ROS_INFO_STREAM("hdr_index0_laser_control_ "
-                  << hdr_index0_laser_control_ << " hdr_index0_depth_exposure_ "
-                  << hdr_index0_depth_exposure_ << " hdr_index0_depth_gain_ "
-                  << hdr_index0_depth_gain_ << " hdr_index0_ir_brightness_ "
-                  << hdr_index0_ir_brightness_ << " hdr_index0_ir_ae_max_exposure_ "
-                  << hdr_index0_ir_ae_max_exposure_ << "\n");
-  ROS_INFO_STREAM("laser_index1_laser_control_ "
-                  << laser_index1_laser_control_ << " laser_index1_depth_exposure_ "
-                  << laser_index1_depth_exposure_ << " laser_index1_depth_gain_ "
-                  << laser_index1_depth_gain_ << " laser_index1_ir_brightness_ "
-                  << laser_index1_ir_brightness_ << " laser_index1_ir_ae_max_exposure_ "
-                  << laser_index1_ir_ae_max_exposure_ << "\n");
-  ROS_INFO_STREAM("laser_index0_laser_control_ "
-                  << laser_index0_laser_control_ << " laser_index0_depth_exposure_ "
-                  << laser_index0_depth_exposure_ << " laser_index0_depth_gain_ "
-                  << laser_index0_depth_gain_ << " laser_index0_ir_brightness_ "
-                  << laser_index0_ir_brightness_ << " laser_index0_ir_ae_max_exposure_ "
-                  << laser_index0_ir_ae_max_exposure_ << "\n");
+  ROS_DEBUG_STREAM("hdr_index1_laser_control_ "
+                   << hdr_index1_laser_control_ << " hdr_index1_depth_exposure_ "
+                   << hdr_index1_depth_exposure_ << " hdr_index1_depth_gain_ "
+                   << hdr_index1_depth_gain_ << " hdr_index1_ir_brightness_ "
+                   << hdr_index1_ir_brightness_ << " hdr_index1_ir_ae_max_exposure_ "
+                   << hdr_index1_ir_ae_max_exposure_ << "\n");
+  ROS_DEBUG_STREAM("hdr_index0_laser_control_ "
+                   << hdr_index0_laser_control_ << " hdr_index0_depth_exposure_ "
+                   << hdr_index0_depth_exposure_ << " hdr_index0_depth_gain_ "
+                   << hdr_index0_depth_gain_ << " hdr_index0_ir_brightness_ "
+                   << hdr_index0_ir_brightness_ << " hdr_index0_ir_ae_max_exposure_ "
+                   << hdr_index0_ir_ae_max_exposure_ << "\n");
+  ROS_DEBUG_STREAM("laser_index1_laser_control_ "
+                   << laser_index1_laser_control_ << " laser_index1_depth_exposure_ "
+                   << laser_index1_depth_exposure_ << " laser_index1_depth_gain_ "
+                   << laser_index1_depth_gain_ << " laser_index1_ir_brightness_ "
+                   << laser_index1_ir_brightness_ << " laser_index1_ir_ae_max_exposure_ "
+                   << laser_index1_ir_ae_max_exposure_ << "\n");
+  ROS_DEBUG_STREAM("laser_index0_laser_control_ "
+                   << laser_index0_laser_control_ << " laser_index0_depth_exposure_ "
+                   << laser_index0_depth_exposure_ << " laser_index0_depth_gain_ "
+                   << laser_index0_depth_gain_ << " laser_index0_ir_brightness_ "
+                   << laser_index0_ir_brightness_ << " laser_index0_ir_ae_max_exposure_ "
+                   << laser_index0_ir_ae_max_exposure_ << "\n");
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info.get());
   auto pid = device_info->pid();
@@ -535,7 +534,7 @@ void OBCameraNode::getParameters() {
   ROS_INFO_STREAM("current time domain:" << time_domain_);
 
   enable_sync_host_time_ = nh_private_.param<bool>("enable_sync_host_time", true);
-  ROS_INFO_STREAM("enable_sync_host_time:" << enable_sync_host_time_);
+  ROS_INFO_STREAM("enable_sync_host_time:" << enable_sync_host_time_ ? "true" : "false");
   if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid())) {
     device_->timerSyncWithHost();
     if (time_domain_ != "global") {
@@ -877,15 +876,16 @@ void OBCameraNode::stopIMU() {
 void OBCameraNode::startStream(const stream_index_pair& stream_index) {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
-    ROS_WARN_STREAM("Cannot start stream when pipeline is enabled");
+    ROS_DEBUG_STREAM("Cannot start stream when pipeline is enabled");
     return;
   }
   if (!enable_stream_[stream_index]) {
-    ROS_WARN_STREAM("Stream " << stream_name_[stream_index] << " is not enabled, cannot start it.");
+    ROS_DEBUG_STREAM("Stream " << stream_name_[stream_index]
+                               << " is not enabled, cannot start it.");
     return;
   }
   if (stream_started_[stream_index]) {
-    ROS_WARN_STREAM("Stream " << stream_name_[stream_index] << " is already started.");
+    ROS_DEBUG_STREAM("Stream " << stream_name_[stream_index] << " is already started.");
     return;
   }
   ROS_INFO_STREAM("Starting stream " << stream_name_[stream_index] << "...");
@@ -926,14 +926,13 @@ void OBCameraNode::startStream(const stream_index_pair& stream_index) {
 void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
-    ROS_WARN_STREAM("Cannot stop stream when pipeline is enabled");
+    ROS_DEBUG_STREAM("Cannot stop stream when pipeline is enabled");
     return;
   }
   if (!stream_started_[stream_index]) {
-    ROS_WARN_STREAM("Stream " << stream_name_[stream_index] << " is not started.");
+    ROS_DEBUG_STREAM("Stream " << stream_name_[stream_index] << " is not started.");
     return;
   }
-  ROS_INFO_STREAM("Stopping stream " << stream_name_[stream_index] << "...");
   sensors_[stream_index]->stopStream();
   stream_started_[stream_index] = false;
   ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " stopped.");
@@ -2410,11 +2409,11 @@ void OBCameraNode::calcAndPublishStaticTransform() {
     }
     publishStaticTF(timestamp, zero_trans, quaternion_optical, frame_id_[stream_index],
                     optical_frame_id_[stream_index]);
-    ROS_INFO_STREAM("Publishing static transform from " << stream_name_[stream_index] << " to "
-                                                        << stream_name_[base_stream_]);
-    ROS_INFO_STREAM("Translation " << trans[0] << ", " << trans[1] << ", " << trans[2]);
-    ROS_INFO_STREAM("Rotation " << Q.getX() << ", " << Q.getY() << ", " << Q.getZ() << ", "
-                                << Q.getW());
+    ROS_DEBUG_STREAM("Publishing static transform from " << stream_name_[stream_index] << " to "
+                                                         << stream_name_[base_stream_]);
+    ROS_DEBUG_STREAM("Translation " << trans[0] << ", " << trans[1] << ", " << trans[2]);
+    ROS_DEBUG_STREAM("Rotation " << Q.getX() << ", " << Q.getY() << ", " << Q.getZ() << ", "
+                                 << Q.getW());
   }
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
