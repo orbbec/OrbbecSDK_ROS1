@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "libobsensor/ObSensor.hpp"
+#include "orbbec_camera/utils.h"
 
 using namespace ob;
 
@@ -486,7 +487,7 @@ int main(int argc, char **argv) {
     }
 
   } catch (const ob::Error &e) {
-    ROS_ERROR_STREAM("ip_config_tool: " << e.getMessage());
+    ROS_ERROR_STREAM("ip_config_tool: " << orbbec_camera::formatObErrorWithStatus(e));
     return 1;
   } catch (const std::exception &e) {
     ROS_ERROR_STREAM("ip_config_tool: " << e.what());

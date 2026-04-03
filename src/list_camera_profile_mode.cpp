@@ -93,7 +93,7 @@ int main() {
     printDeviceProperties(device);
     printPreset(device);
   } catch (ob::Error& e) {
-    ROS_ERROR_STREAM("list_camera_profile_mode: " << e.getMessage());
+    ROS_ERROR_STREAM("list_camera_profile_mode: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("list_camera_profile_mode: " << e.what());
   } catch (...) {

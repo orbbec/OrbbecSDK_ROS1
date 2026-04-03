@@ -186,7 +186,7 @@ void OBCameraNodeDriver::init() {
       ob::Context::setLoggerFileName(log_file_name);
       ROS_INFO_STREAM("SDK log file name set to: " << log_file_name);
     } catch (const ob::Error &e) {
-      ROS_WARN_STREAM("Failed to set SDK log file name: " << e.getMessage());
+      ROS_WARN_STREAM("Failed to set SDK log file name: " << orbbec_camera::formatObErrorWithStatus(e));
     }
   }
   ctx_ = std::make_shared<ob::Context>(config_path_.c_str());
@@ -317,7 +317,7 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceBySerialNumber(
         }
       }
     } catch (ob::Error &e) {
-      ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
+      ROS_ERROR_STREAM("Failed to get device info " << orbbec_camera::formatObErrorWithStatus(e));
     } catch (std::exception &e) {
       ROS_ERROR_STREAM("Failed to get device info " << e.what());
     } catch (...) {
@@ -337,7 +337,7 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
     ROS_INFO_STREAM("selectDeviceByUSBPort : After getDeviceByUid");
     return device;
   } catch (ob::Error &e) {
-    ROS_ERROR_STREAM("Failed to get device info " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get device info " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (std::exception &e) {
     ROS_ERROR_STREAM("Failed to get device info " << e.what());
   } catch (...) {
@@ -366,7 +366,7 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByNetIP(
         return list->getDevice(i, device_access_mode_);
       }
     } catch (ob::Error &e) {
-      ROS_INFO_STREAM("Failed to get device info " << e.getMessage());
+      ROS_INFO_STREAM("Failed to get device info " << orbbec_camera::formatObErrorWithStatus(e));
       continue;
     } catch (std::exception &e) {
       ROS_INFO_STREAM("Failed to get device info " << e.what());
@@ -508,7 +508,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     }
   } catch (const ob::Error &e) {
     // Some devices don't support ISP firmware version query
-    ROS_DEBUG_STREAM("Current device not support ISP firmware version query: " << e.getMessage());
+    ROS_DEBUG_STREAM("Current device not support ISP firmware version query: " << orbbec_camera::formatObErrorWithStatus(e));
   }
   ROS_INFO_STREAM("Current node pid: " << getpid());
   if (device_info_->pid() == FEMTO_BOLT_PID) {
@@ -590,7 +590,7 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     initializeDevice(device);
   } catch (ob::Error &e) {
     start_device_failed = true;
-    ROS_ERROR_STREAM("Failed to initialize device " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to initialize device " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (std::exception &e) {
     start_device_failed = true;
     ROS_ERROR_STREAM("Failed to initialize device " << e.what());
@@ -855,7 +855,7 @@ void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
         }
       }
     } catch (ob::Error &e) {
-      ROS_ERROR_STREAM("Failed to update Preset Firmware " << e.getMessage());
+      ROS_ERROR_STREAM("Failed to update Preset Firmware " << orbbec_camera::formatObErrorWithStatus(e));
     } catch (std::exception &e) {
       ROS_ERROR_STREAM("Failed to update Preset Firmware " << e.what());
     } catch (...) {
@@ -1031,7 +1031,8 @@ bool OBCameraNodeDriver::applyForceIpConfig() {
       ROS_ERROR("Failed to apply Force IP config (SDK returned false)");
     }
   } catch (const ob::Error &e) {
-    ROS_ERROR("Force IP config failed with ob::Error: %s", e.getMessage());
+    ROS_ERROR("Force IP config failed with ob::Error: %s",
+              orbbec_camera::formatObErrorWithStatus(e).c_str());
   } catch (const std::exception &e) {
     ROS_ERROR("Force IP config failed with std::exception: %s", e.what());
   } catch (...) {
@@ -1067,10 +1068,11 @@ void OBCameraNodeDriver::deviceStatusTimer() {
           ob_camera_node_->getColorStatus(status_msg);
           ob_camera_node_->getDepthStatus(status_msg);
         } catch (const ob::Error &e) {
-          std::string error_msg = e.getMessage() ? e.getMessage() : "Unknown OB error";
-          if (error_msg.find("Device is deactivated") != std::string::npos ||
-              error_msg.find("disconnected") != std::string::npos ||
-              error_msg.find("Send control transfer failed") != std::string::npos) {
+          std::string raw_error_msg = orbbec_camera::getObErrorMessage(e);
+          std::string error_msg = orbbec_camera::formatObErrorWithStatus(e);
+          if (raw_error_msg.find("Device is deactivated") != std::string::npos ||
+              raw_error_msg.find("disconnected") != std::string::npos ||
+              raw_error_msg.find("Send control transfer failed") != std::string::npos) {
             ROS_WARN("Device communication error in %s at line %d: %s - Device may be disconnected",
                      __FUNCTION__, __LINE__, error_msg.c_str());
             device_communication_error = true;
@@ -1091,10 +1093,11 @@ void OBCameraNodeDriver::deviceStatusTimer() {
           status_msg.connection_type = device_info_->getConnectionType();
         }
       } catch (const ob::Error &e) {
-        std::string error_msg = e.getMessage() ? e.getMessage() : "Unknown OB error";
-        if (error_msg.find("Device is deactivated") != std::string::npos ||
-            error_msg.find("disconnected") != std::string::npos ||
-            error_msg.find("Send control transfer failed") != std::string::npos) {
+        std::string raw_error_msg = orbbec_camera::getObErrorMessage(e);
+        std::string error_msg = orbbec_camera::formatObErrorWithStatus(e);
+        if (raw_error_msg.find("Device is deactivated") != std::string::npos ||
+            raw_error_msg.find("disconnected") != std::string::npos ||
+            raw_error_msg.find("Send control transfer failed") != std::string::npos) {
           ROS_WARN("Device communication error in %s at line %d: %s - Device may be disconnected",
                    __FUNCTION__, __LINE__, error_msg.c_str());
           device_communication_error = true;
@@ -1115,10 +1118,11 @@ void OBCameraNodeDriver::deviceStatusTimer() {
           status_msg.calibration_from_factory = calibration_from_factory;
         }
       } catch (const ob::Error &e) {
-        std::string error_msg = e.getMessage() ? e.getMessage() : "Unknown OB error";
-        if (error_msg.find("Device is deactivated") != std::string::npos ||
-            error_msg.find("disconnected") != std::string::npos ||
-            error_msg.find("Send control transfer failed") != std::string::npos) {
+        std::string raw_error_msg = orbbec_camera::getObErrorMessage(e);
+        std::string error_msg = orbbec_camera::formatObErrorWithStatus(e);
+        if (raw_error_msg.find("Device is deactivated") != std::string::npos ||
+            raw_error_msg.find("disconnected") != std::string::npos ||
+            raw_error_msg.find("Send control transfer failed") != std::string::npos) {
           ROS_WARN("Device communication error in %s at line %d: %s - Device may be disconnected",
                    __FUNCTION__, __LINE__, error_msg.c_str());
           device_communication_error = true;

@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "libobsensor/ObSensor.hpp"
+#include "orbbec_camera/utils.h"
 
 namespace {
 
@@ -401,7 +402,8 @@ void logCurrentPresetList(const std::shared_ptr<ob::Device> &device, const char 
       ROS_INFO("[%s] Preset[%u]: %s", stage, i, preset_list->getName(i));
     }
   } catch (const ob::Error &e) {
-    ROS_WARN("[%s] Failed to query preset list: %s", stage, e.getMessage());
+    ROS_WARN("[%s] Failed to query preset list: %s", stage,
+             orbbec_camera::formatObErrorWithStatus(e).c_str());
   } catch (const std::exception &e) {
     ROS_WARN("[%s] Failed to query preset list: %s", stage, e.what());
   }
@@ -479,7 +481,8 @@ std::shared_ptr<ob::Device> waitForReconnect(const std::shared_ptr<ob::Context> 
         return device;
       }
     } catch (const ob::Error &e) {
-      ROS_WARN_THROTTLE(5.0, "Reconnect attempt failed (SDK): %s", e.getMessage());
+      ROS_WARN_THROTTLE(5.0, "Reconnect attempt failed (SDK): %s",
+                        orbbec_camera::formatObErrorWithStatus(e).c_str());
     } catch (const std::exception &e) {
       ROS_WARN_THROTTLE(5.0, "Reconnect attempt failed: %s", e.what());
     } catch (...) {
@@ -733,7 +736,8 @@ int main(int argc, char **argv) {
                 second_ok = true;
                 break;
               } catch (const ob::Error &e) {
-                ROS_WARN("Second update transient error: %s, retrying...", e.getMessage());
+                ROS_WARN("Second update transient error: %s, retrying...",
+                         orbbec_camera::formatObErrorWithStatus(e).c_str());
                 device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
               }
             }
@@ -747,7 +751,8 @@ int main(int argc, char **argv) {
       } catch (const ob::Error &e) {
         const std::string target =
             run_args.serial_number.empty() ? "<default>" : run_args.serial_number;
-        ROS_ERROR("Target %s failed: %s", target.c_str(), e.getMessage());
+        ROS_ERROR("Target %s failed: %s", target.c_str(),
+                  orbbec_camera::formatObErrorWithStatus(e).c_str());
         failed_targets.push_back(target);
         if (!args.continue_on_error) {
           throw;
@@ -779,7 +784,7 @@ int main(int argc, char **argv) {
     ros::shutdown();
     return 0;
   } catch (const ob::Error &e) {
-    ROS_ERROR("ob::Error: %s", e.getMessage());
+    ROS_ERROR("ob::Error: %s", orbbec_camera::formatObErrorWithStatus(e).c_str());
   } catch (const std::exception &e) {
     ROS_ERROR("Exception: %s", e.what());
   } catch (...) {
