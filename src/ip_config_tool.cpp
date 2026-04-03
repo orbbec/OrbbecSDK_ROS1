@@ -79,17 +79,12 @@ bool parseInt(const std::string &value, int &out) {
   }
 }
 
-bool isRosRemapArg(const std::string &arg) {
-  return arg.find(":=") != std::string::npos;
-}
+bool isRosRemapArg(const std::string &arg) { return arg.find(":=") != std::string::npos; }
 
 void printHelp() {
   std::cout
       << "Usage:\n"
       << "  rosrun orbbec_camera ip_config_tool <set_ip|force_ip> [options]\n"
-      << "  rosrun orbbec_camera set_device_ip <set_ip|force_ip> [options]\n"
-      << "  ros2 run orbbec_camera ip_config_tool -- <set_ip|force_ip> [options]\n"
-      << "  (legacy executable alias: set_device_ip)\n\n"
       << "Subcommands:\n"
       << "  set_ip                     Configure IP on device by current device address.\n"
       << "  force_ip                   Force IP by MAC address.\n\n"
@@ -350,7 +345,8 @@ int main(int argc, char **argv) {
         ROS_INFO("Set-ip target gateway: %d.%d.%d.%d", ip_config_v2.gateway[0],
                  ip_config_v2.gateway[1], ip_config_v2.gateway[2], ip_config_v2.gateway[3]);
 #else
-        ROS_WARN("IP config V2 symbols are unavailable in current SDK; fallback to legacy property.");
+        ROS_WARN(
+            "IP config V2 symbols are unavailable in current SDK; fallback to legacy property.");
 #endif
       } else {
         OBNetIpConfig ip_config{};
@@ -378,10 +374,12 @@ int main(int argc, char **argv) {
           std::memcpy(ip_config.gateway, gateway, sizeof(gateway));
         }
 
-        ROS_WARN("Device does not support IP config V2 (1088), fallback to legacy property (1041).");
+        ROS_WARN(
+            "Device does not support IP config V2 (1088), fallback to legacy property (1041).");
         if (args.dhcp) {
           ROS_WARN(
-              "Legacy IP config does not support DHCP and static IP simultaneously; static fields will "
+              "Legacy IP config does not support DHCP and static IP simultaneously; static fields "
+              "will "
               "be ignored.");
         }
 
@@ -393,8 +391,8 @@ int main(int argc, char **argv) {
         if (args.dhcp) {
           ROS_INFO("Set-ip target mode: DHCP.");
         } else {
-          ROS_INFO("Set-ip target static IP: %d.%d.%d.%d", ip_config.address[0], ip_config.address[1],
-                   ip_config.address[2], ip_config.address[3]);
+          ROS_INFO("Set-ip target static IP: %d.%d.%d.%d", ip_config.address[0],
+                   ip_config.address[1], ip_config.address[2], ip_config.address[3]);
           ROS_INFO("Set-ip target mask: %d.%d.%d.%d", ip_config.mask[0], ip_config.mask[1],
                    ip_config.mask[2], ip_config.mask[3]);
           ROS_INFO("Set-ip target gateway: %d.%d.%d.%d", ip_config.gateway[0], ip_config.gateway[1],
