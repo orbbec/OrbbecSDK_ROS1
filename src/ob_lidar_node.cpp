@@ -113,7 +113,6 @@ void OBLidarNode::getParameters() {
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   time_domain_ = nh_private_.param<std::string>("time_domain", "global");
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
-  enable_firmware_log_ = nh_private_.param<bool>("enable_firmware_log", false);
   echo_mode_ = nh_private_.param<std::string>("echo_mode", "");
   min_angle_ = nh_private_.param<float>("min_angle", -135.0);
   max_angle_ = nh_private_.param<float>("max_angle", 135.0);
@@ -166,11 +165,10 @@ void OBLidarNode::setupDevices() {
       sensors_[sip] = sensor;
     }
   }
-  device_->enableFirmwareLog(enable_firmware_log_);
-  ROS_INFO_STREAM("Current firmware log: " << (enable_firmware_log_ ? "ON" : "OFF"));
   if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
     device_->setIntProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);
-    ROS_INFO_STREAM("Current heartbeat: " << (device_->getBoolProperty(OB_PROP_HEARTBEAT_BOOL) ? "ON" : "OFF"));
+    ROS_INFO_STREAM(
+        "Current heartbeat: " << (device_->getBoolProperty(OB_PROP_HEARTBEAT_BOOL) ? "ON" : "OFF"));
   }
   if (!echo_mode_.empty() &&
       device_->isPropertySupported(OB_PROP_LIDAR_SPECIFIC_MODE_INT, OB_PERMISSION_READ_WRITE)) {
@@ -205,8 +203,8 @@ void OBLidarNode::setupDevices() {
     } else {
       device_->setIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT, filter_level_);
       device_->setIntProperty(OB_PROP_LIDAR_APPLY_CONFIGS_INT, 1);
-      ROS_INFO_STREAM("Current filter level: "
-                      << device_->getIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT));
+      ROS_INFO_STREAM(
+          "Current filter level: " << device_->getIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT));
     }
   }
 
@@ -218,8 +216,8 @@ void OBLidarNode::setupDevices() {
                 range.max);
     } else {
       device_->setFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT, vertical_fov_);
-      ROS_INFO_STREAM("Current vertical fov: "
-                      << device_->getFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT));
+      ROS_INFO_STREAM(
+          "Current vertical fov: " << device_->getFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT));
     }
   }
 }
