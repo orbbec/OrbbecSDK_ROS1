@@ -531,6 +531,18 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
 bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse& response,
                                     const stream_index_pair& stream_index) {
   auto stream = stream_index.first;
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) &&
+      (stream != OB_STREAM_COLOR && ae_reference_stream_ == "color")) {
+    response.success = false;
+    response.message = "AE Reference Stream is color, other sensors setting is not supported";
+    return false;
+  }
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) &&
+      (stream != OB_STREAM_DEPTH && ae_reference_stream_ == "depth")) {
+    response.success = false;
+    response.message = "AE Reference Stream is depth, other sensors setting is not supported";
+    return false;
+  }
   auto config = OBRegionOfInterest();
   uint32_t data_size = sizeof(config);
   try {

@@ -1800,6 +1800,11 @@ void OBCameraNode::setDepthAutoExposureROI() {
   if (depth_roi_has_run) {
     return;
   }
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "color") {
+    ROS_WARN_STREAM("Skip setting depth AE ROI because AE Reference Stream is color");
+    depth_roi_has_run = true;
+    return;
+  }
   if (device_->isPropertySupported(OB_STRUCT_DEPTH_AE_ROI, OB_PERMISSION_READ_WRITE)) {
     auto config = OBRegionOfInterest();
     uint32_t data_size = sizeof(config);
@@ -1837,6 +1842,11 @@ void OBCameraNode::setDepthAutoExposureROI() {
 void OBCameraNode::setColorAutoExposureROI() {
   static bool color_roi_has_run = false;
   if (color_roi_has_run) {
+    return;
+  }
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "depth") {
+    ROS_WARN_STREAM("Skip setting color AE ROI because AE Reference Stream is depth");
+    color_roi_has_run = true;
     return;
   }
   if (device_->isPropertySupported(OB_STRUCT_COLOR_AE_ROI, OB_PERMISSION_READ_WRITE)) {
