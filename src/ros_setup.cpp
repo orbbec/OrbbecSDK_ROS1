@@ -1145,16 +1145,15 @@ void OBCameraNode::setupDevices() {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.what());
   }
   if (device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
-    device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, enable_sports_mode_);
-    ROS_INFO_STREAM("Current Sports Mode: "
-                    << (device_->getIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT) ? "ON" : "OFF"));
+    device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, ae_strategy_ == "motion" ? 1 : 0);
+    ROS_INFO_STREAM("Current AE Strategy: " << ae_strategy_);
   }
-  if ((ae_mode_ == "depthbased" || ae_mode_ == "colorbased") &&
+  if ((ae_reference_stream_ == "depth" || ae_reference_stream_ == "color") &&
       device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE)) {
-    auto ae_mode = ae_mode_ == "depthbased" ? 0 : 1;
-    device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT, ae_mode);
-    auto current_ae_mode = device_->getIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT);
-    ROS_INFO_STREAM("Current AE Mode: " << (current_ae_mode == 0 ? "depthbased" : "colorbased"));
+    auto ae_reference = ae_reference_stream_ == "depth" ? 0 : 1;
+    device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT, ae_reference);
+    auto current_ae_reference = device_->getIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT);
+    ROS_INFO_STREAM("Current AE Reference Stream: " << (current_ae_reference == 0 ? "depth" : "color"));
   }
 }
 

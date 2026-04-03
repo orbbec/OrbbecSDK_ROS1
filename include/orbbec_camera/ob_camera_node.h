@@ -389,10 +389,9 @@ class OBCameraNode {
 
   bool setDisparitySearchOffsetCallback(SetInt32Request &request, SetInt32Response &response);
 
-  void setAEModeCallback(const SetStringRequest &request, SetStringResponse &response);
+  void setAEReferenceStreamCallback(const SetStringRequest &request, SetStringResponse &response);
 
-  void setSportsModeCallback(const std_srvs::SetBoolRequest &request,
-                             std_srvs::SetBoolResponse &response);
+  void setAEStrategyCallback(const SetStringRequest &request, SetStringResponse &response);
 
   // Set ROI
   void setColorAutoExposureROI();
@@ -508,8 +507,8 @@ class OBCameraNode {
   ros::ServiceServer get_point_cloud_decimation_srv_;
   ros::ServiceServer set_disparity_range_mode_srv_;
   ros::ServiceServer set_disparity_search_offset_srv_;
-  ros::ServiceServer set_ae_mode_srv_;
-  ros::ServiceServer set_sports_mode_srv_;
+  ros::ServiceServer set_ae_reference_stream_srv_;
+  ros::ServiceServer set_ae_strategy_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
@@ -783,8 +782,8 @@ class OBCameraNode {
   std::unique_ptr<FpsDelayStatus> fps_delay_status_depth_{nullptr};
 
   std::string intra_camera_sync_reference_ = "";
-  std::string ae_mode_;
-  bool enable_sports_mode_ = false;
+  std::string ae_reference_stream_;
+  std::string ae_strategy_;
 
   int depth_decimation_factor_ = 1;
   int left_ir_decimation_factor_ = 1;
