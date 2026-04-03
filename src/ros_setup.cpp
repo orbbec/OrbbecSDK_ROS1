@@ -1876,10 +1876,26 @@ void OBCameraNode::setColorAutoExposureROI() {
 
 bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterResponse& response) {
   try {
-    if (std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
-                     [&request](const auto& filter) {
-                       return filter->type() == request.filter_name;
-                     }) == depth_filter_list_.end()) {
+    const bool is_noise_removal_filter = (request.filter_name == "NoiseRemovalFilter");
+    const bool is_hardware_noise_removal_filter =
+        (request.filter_name == "HardwareNoiseRemoval" ||
+         request.filter_name == "HardwareNoiseRemovalFilter");
+    bool is_supported_by_property = false;
+    if (is_noise_removal_filter) {
+      is_supported_by_property =
+          device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE) ||
+          device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE) ||
+          device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE);
+    } else if (is_hardware_noise_removal_filter) {
+      is_supported_by_property = device_->isPropertySupported(
+          OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, OB_PERMISSION_READ_WRITE);
+    }
+
+    const bool is_supported_in_recommended_list =
+        std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(), [&request](const auto& filter) {
+          return filter->type() == request.filter_name;
+        }) != depth_filter_list_.end();
+    if (!is_supported_in_recommended_list && !is_supported_by_property) {
       response.success = false;
       response.message = "Filter '" + request.filter_name + "' is not supported by this device";
       return response.success;
@@ -1996,7 +2012,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
               "after set noise_removal_filter_max_size: " << new_noise_removal_filter_max_size);
         }
       }
-    } else if (request.filter_name == "HardwareNoiseRemoval") {
+    } else if (request.filter_name == "HardwareNoiseRemoval" ||
+               request.filter_name == "HardwareNoiseRemovalFilter") {
       if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                        OB_PERMISSION_READ_WRITE)) {
         device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, request.filter_enable);
@@ -2106,7 +2123,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                       << " Cannot be set\n"
                       << "The filter_name value that can be set is "
                          "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, "
-                         "NoiseRemovalFilter, HardwareNoiseRemoval, "
+                         "NoiseRemovalFilter, HardwareNoiseRemoval, HardwareNoiseRemovalFilter, "
                          "SpatialAdvancedFilter, TemporalFilter, "
                          "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter, "
                          "MgcNoiseRemovalFilter, LutNoiseRemovalFilter");
