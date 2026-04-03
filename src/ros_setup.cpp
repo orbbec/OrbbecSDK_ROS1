@@ -329,7 +329,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       std::string value = filter_params[filter_name] ? "true" : "false";
       ROS_INFO_STREAM("set " << filter_name << " to " << value);
       filter->enable(filter_params[filter_name]);
-      filter_status_[filter_name] = filter_params[filter_name];
+      filter_status_[filter_name] = static_cast<bool>(filter_params[filter_name]);
     }
     if (filter_name == "DecimationFilter" && enable_decimation_filter_) {
       auto decimation_filter = filter->as<ob::DecimationFilter>();
@@ -2128,6 +2128,14 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                          "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter, "
                          "MgcNoiseRemovalFilter, LutNoiseRemovalFilter");
     }
+
+    filter_status_[request.filter_name] = static_cast<bool>(request.filter_enable);
+    if (filter_status_pub_) {
+      std_msgs::String msg;
+      msg.data = filter_status_.dump(2);
+      filter_status_pub_.publish(msg);
+    }
+
     return response.success = true;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set filter: " << e.getMessage());
