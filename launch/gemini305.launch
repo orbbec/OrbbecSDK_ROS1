@@ -35,8 +35,8 @@
     <arg name="config_file_path" default=""/>
     <arg name="load_config_json_file_path" default=""/>
     <arg name="export_config_json_file_path" default=""/>
-    <arg name="ae_mode" default="depthbased"/> <!-- depthbased, colorbased, empty string means use default -->
-    <arg name="enable_sports_mode" default="false"/>
+    <arg name="ae_reference_stream" default="depth"/> <!-- depth or color -->
+    <arg name="ae_strategy" default="motion"/> <!-- default or motion -->
     <!-- Network device settings: default enumerate_net_device is set to true, which will automatically enumerate network devices -->
     <!-- If you do not want to automatically enumerate network devices, -->
     <!-- you can set enumerate_net_device to true, ip_address to the device's IP address, and port to the default value of 8090 -->
@@ -50,8 +50,8 @@
 
 
     <!-- Color camera parameters -->
-    <arg name="color_width" default="0"/>
-    <arg name="color_height" default="0"/>
+    <arg name="color_width" default="848"/>
+    <arg name="color_height" default="530"/>
     <arg name="color_fps" default="0"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
@@ -84,8 +84,8 @@
     <arg name="color_denoising_level" default="-1"/><!--0: Auto; 1-8: higher values indicate stronger denoising.Note: The color_denoising_level configuration is supported only when AE is enabled, and requires new firmware support.-->
 
     <!-- Depth camera parameters -->
-    <arg name="depth_width" default="0"/>
-    <arg name="depth_height" default="0"/>
+    <arg name="depth_width" default="848"/>
+    <arg name="depth_height" default="530"/>
     <arg name="depth_decimation_factor" default="1"/>
     <arg name="depth_fps" default="0"/>
     <arg name="enable_depth" default="true"/>
@@ -292,8 +292,8 @@
             <param name="config_file_path" value="$(arg config_file_path)"/>
             <param name="load_config_json_file_path" value="$(arg load_config_json_file_path)"/>
             <param name="export_config_json_file_path" value="$(arg export_config_json_file_path)"/>
-            <param name="ae_mode" value="$(arg ae_mode)"/>
-            <param name="enable_sports_mode" value="$(arg enable_sports_mode)"/>
+            <param name="ae_reference_stream" value="$(arg ae_reference_stream)"/>
+            <param name="ae_strategy" value="$(arg ae_strategy)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="ir_brightness" value="$(arg ir_brightness)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
