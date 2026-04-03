@@ -76,8 +76,8 @@ void OBCameraNode::setupCameraCtrlServices() {
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_ae_roi";
     set_ae_roi_srv_[stream_index] = nh_.advertiseService<SetArraysRequest, SetArraysResponse>(
         service_name, [this, stream_index](SetArraysRequest& request, SetArraysResponse& response) {
-          response.success = this->setAeRoiCallback(request, response, stream_index);
-          return response.success;
+          this->setAeRoiCallback(request, response, stream_index);
+          return true;
         });
     service_name = "/" + camera_name_ + "/" + "reset_" + stream_name + "_exposure";
     reset_exposure_srv_[stream_index] =
@@ -330,17 +330,17 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](SetInt32Request& request, SetInt32Response& response) {
         return this->setDisparitySearchOffsetCallback(request, response);
       });
-  set_ae_mode_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
-      "/" + camera_name_ + "/" + "set_ae_mode",
+  set_ae_reference_stream_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
+      "/" + camera_name_ + "/" + "set_ae_reference_stream",
       [this](const SetStringRequest& request, SetStringResponse& response) {
-        this->setAEModeCallback(request, response);
+        this->setAEReferenceStreamCallback(request, response);
         return true;
       });
 
-  set_sports_mode_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_sports_mode",
-      [this](const std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        this->setSportsModeCallback(request, response);
+  set_ae_strategy_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
+      "/" + camera_name_ + "/" + "set_ae_strategy",
+      [this](const SetStringRequest& request, SetStringResponse& response) {
+        this->setAEStrategyCallback(request, response);
         return true;
       });
 }
@@ -531,6 +531,20 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
 bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse& response,
                                     const stream_index_pair& stream_index) {
   auto stream = stream_index.first;
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) &&
+      (stream != OB_STREAM_COLOR && ae_reference_stream_ == "color")) {
+    response.success = false;
+    response.message = "AE Reference Stream is color, other sensors setting is not supported";
+    ROS_ERROR_STREAM(response.message);
+    return true;
+  }
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) &&
+      (stream != OB_STREAM_DEPTH && ae_reference_stream_ == "depth")) {
+    response.success = false;
+    response.message = "AE Reference Stream is depth, other sensors setting is not supported";
+    ROS_ERROR_STREAM(response.message);
+    return true;
+  }
   auto config = OBRegionOfInterest();
   uint32_t data_size = sizeof(config);
   try {
@@ -610,18 +624,26 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
         response.success = false;
         response.message = "NOT a video stream";
-        return response.success = false;
+        return true;
     }
-    return response.success = true;
+    response.success = true;
+    response.message = "set AE ROI success";
+    return true;
   } catch (const ob::Error& e) {
-    return response.success = false;
     response.message = e.getMessage();
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << response.message);
+    return true;
   } catch (const std::exception& e) {
-    return response.success = false;
     response.message = e.what();
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << response.message);
+    return true;
   } catch (...) {
-    return response.success = false;
     response.message = "unknown error";
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << response.message);
+    return true;
   }
 }
 
@@ -1422,18 +1444,18 @@ bool OBCameraNode::setDisparitySearchOffsetCallback(SetInt32Request& request,
   }
 }
 
-void OBCameraNode::setAEModeCallback(const SetStringRequest& request, SetStringResponse& response) {
+void OBCameraNode::setAEReferenceStreamCallback(const SetStringRequest& request, SetStringResponse& response) {
   try {
     if (device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE) &&
-        (request.data == "depthbased" || request.data == "colorbased")) {
+        (request.data == "depth" || request.data == "color")) {
       device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT,
-                              request.data == "depthbased" ? 0 : 1);
-      ae_mode_ = request.data;
+                              request.data == "depth" ? 0 : 1);
+      ae_reference_stream_ = request.data;
       response.success = true;
-      response.message = "set AE mode success";
+      response.message = "set AE reference stream success";
     } else {
       response.success = false;
-      response.message = "set AE mode failed";
+      response.message = "set AE reference stream failed";
     }
   } catch (...) {
     response.success = false;
@@ -1441,16 +1463,18 @@ void OBCameraNode::setAEModeCallback(const SetStringRequest& request, SetStringR
   }
 }
 
-void OBCameraNode::setSportsModeCallback(const std_srvs::SetBoolRequest& request,
-                                         std_srvs::SetBoolResponse& response) {
+void OBCameraNode::setAEStrategyCallback(const SetStringRequest& request,
+                                         SetStringResponse& response) {
   try {
-    if (device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
-      device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, request.data ? 1 : 0);
+    if (device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE) &&
+        (request.data == "default" || request.data == "motion")) {
+      device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, request.data == "motion" ? 1 : 0);
+      ae_strategy_ = request.data;
       response.success = true;
-      response.message = "set sports mode success";
+      response.message = "set AE strategy success";
     } else {
       response.success = false;
-      response.message = "set sports mode failed";
+      response.message = "set AE strategy failed";
     }
   } catch (...) {
     response.success = false;

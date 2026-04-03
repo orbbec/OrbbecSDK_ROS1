@@ -1145,16 +1145,15 @@ void OBCameraNode::setupDevices() {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.what());
   }
   if (device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
-    device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, enable_sports_mode_);
-    ROS_INFO_STREAM("Current Sports Mode: "
-                    << (device_->getIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT) ? "ON" : "OFF"));
+    device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, ae_strategy_ == "motion" ? 1 : 0);
+    ROS_INFO_STREAM("Current AE Strategy: " << ae_strategy_);
   }
-  if ((ae_mode_ == "depthbased" || ae_mode_ == "colorbased") &&
+  if ((ae_reference_stream_ == "depth" || ae_reference_stream_ == "color") &&
       device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE)) {
-    auto ae_mode = ae_mode_ == "depthbased" ? 0 : 1;
-    device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT, ae_mode);
-    auto current_ae_mode = device_->getIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT);
-    ROS_INFO_STREAM("Current AE Mode: " << (current_ae_mode == 0 ? "depthbased" : "colorbased"));
+    auto ae_reference = ae_reference_stream_ == "depth" ? 0 : 1;
+    device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT, ae_reference);
+    auto current_ae_reference = device_->getIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT);
+    ROS_INFO_STREAM("Current AE Reference Stream: " << (current_ae_reference == 0 ? "depth" : "color"));
   }
 }
 
@@ -1244,21 +1243,21 @@ void OBCameraNode::setupProfiles() {
           format_[stream_index] == OB_FORMAT_UNKNOWN) {
         selected_profile = profile_list->getProfile(0)->as<ob::VideoStreamProfile>();
       } else {
-        if (pid == GEMINI_305_PID && stream_index == DEPTH) {
+        if (isGemini305SeriesPID(pid) && stream_index == DEPTH) {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
           conf.factor = depth_decimation_factor_;
           selected_profile =
               profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
-        } else if (pid == GEMINI_305_PID && stream_index == INFRA1) {
+        } else if (isGemini305SeriesPID(pid) && stream_index == INFRA1) {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
           conf.factor = left_ir_decimation_factor_;
           selected_profile =
               profile_list->getVideoStreamProfile(conf, format_[stream_index], fps_[stream_index]);
-        } else if (pid == GEMINI_305_PID && stream_index == INFRA2) {
+        } else if (isGemini305SeriesPID(pid) && stream_index == INFRA2) {
           OBHardwareDecimationConfig conf;
           conf.originWidth = width_[stream_index];
           conf.originHeight = height_[stream_index];
@@ -1801,6 +1800,11 @@ void OBCameraNode::setDepthAutoExposureROI() {
   if (depth_roi_has_run) {
     return;
   }
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "color") {
+    ROS_WARN_STREAM("Skip setting depth AE ROI because AE Reference Stream is color");
+    depth_roi_has_run = true;
+    return;
+  }
   if (device_->isPropertySupported(OB_STRUCT_DEPTH_AE_ROI, OB_PERMISSION_READ_WRITE)) {
     auto config = OBRegionOfInterest();
     uint32_t data_size = sizeof(config);
@@ -1840,6 +1844,11 @@ void OBCameraNode::setColorAutoExposureROI() {
   if (color_roi_has_run) {
     return;
   }
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "depth") {
+    ROS_WARN_STREAM("Skip setting color AE ROI because AE Reference Stream is depth");
+    color_roi_has_run = true;
+    return;
+  }
   if (device_->isPropertySupported(OB_STRUCT_COLOR_AE_ROI, OB_PERMISSION_READ_WRITE)) {
     auto config = OBRegionOfInterest();
     uint32_t data_size = sizeof(config);
@@ -1876,10 +1885,26 @@ void OBCameraNode::setColorAutoExposureROI() {
 
 bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterResponse& response) {
   try {
-    if (std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
-                     [&request](const auto& filter) {
-                       return filter->type() == request.filter_name;
-                     }) == depth_filter_list_.end()) {
+    const bool is_noise_removal_filter = (request.filter_name == "NoiseRemovalFilter");
+    const bool is_hardware_noise_removal_filter =
+        (request.filter_name == "HardwareNoiseRemoval" ||
+         request.filter_name == "HardwareNoiseRemovalFilter");
+    bool is_supported_by_property = false;
+    if (is_noise_removal_filter) {
+      is_supported_by_property =
+          device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE) ||
+          device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE) ||
+          device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE);
+    } else if (is_hardware_noise_removal_filter) {
+      is_supported_by_property = device_->isPropertySupported(
+          OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, OB_PERMISSION_READ_WRITE);
+    }
+
+    const bool is_supported_in_recommended_list =
+        std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(), [&request](const auto& filter) {
+          return filter->type() == request.filter_name;
+        }) != depth_filter_list_.end();
+    if (!is_supported_in_recommended_list && !is_supported_by_property) {
       response.success = false;
       response.message = "Filter '" + request.filter_name + "' is not supported by this device";
       return true;
@@ -1992,7 +2017,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
               "after set noise_removal_filter_max_size: " << new_noise_removal_filter_max_size);
         }
       }
-    } else if (request.filter_name == "HardwareNoiseRemoval") {
+    } else if (request.filter_name == "HardwareNoiseRemoval" ||
+               request.filter_name == "HardwareNoiseRemovalFilter") {
       if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                        OB_PERMISSION_READ_WRITE)) {
         device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, request.filter_enable);
@@ -2097,7 +2123,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                       << " Cannot be set\n"
                       << "The filter_name value that can be set is "
                          "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, "
-                         "NoiseRemovalFilter, HardwareNoiseRemoval, "
+                         "NoiseRemovalFilter, HardwareNoiseRemoval, HardwareNoiseRemovalFilter, "
                          "SpatialAdvancedFilter, TemporalFilter, "
                          "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter, "
                          "MgcNoiseRemovalFilter, LutNoiseRemovalFilter");

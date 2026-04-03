@@ -473,8 +473,8 @@ void OBCameraNode::getParameters() {
       nh_private_.param<int>("laser_index0_ir_ae_max_exposure", 17000);
   intra_camera_sync_reference_ =
       nh_private_.param<std::string>("intra_camera_sync_reference", "Middle");
-  ae_mode_ = nh_private_.param<std::string>("ae_mode", "");
-  enable_sports_mode_ = nh_private_.param<bool>("enable_sports_mode", false);
+  ae_reference_stream_ = nh_private_.param<std::string>("ae_reference_stream", "depth");
+  ae_strategy_ = nh_private_.param<std::string>("ae_strategy", "motion");
   depth_decimation_factor_ = nh_private_.param<int>("depth_decimation_factor", 1);
   left_ir_decimation_factor_ = nh_private_.param<int>("left_ir_decimation_factor", 1);
   right_ir_decimation_factor_ = nh_private_.param<int>("right_ir_decimation_factor", 1);
@@ -2577,6 +2577,6 @@ bool OBCameraNode::isGemini435LePID(uint32_t pid) {
 }
 
 bool OBCameraNode::isPublishMetaData(uint32_t pid) {
-  return isGemini335PID(pid) || isGemini435LePID(pid) || pid == GEMINI_305_PID;
+  return isGemini335PID(pid) || isGemini435LePID(pid) || isGemini305SeriesPID(pid);
 }
 }  // namespace orbbec_camera

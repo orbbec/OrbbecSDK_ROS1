@@ -18,6 +18,7 @@
 
 #include <string>
 #include <cstdlib>
+#include <cstdint>
 
 #define THREAD_NUM 4
 
@@ -120,4 +121,10 @@ const int32_t GEMINI_336LE_PID = 0x0810;  // Gemini 335Le
 const std::string ORB_DEFAULT_LOCK_NAME = "orbbec_device.lock";
 const int32_t DABAI_MAX_PID = 0x069a;   // DABAI MAX
 const int32_t GEMINI_305_PID = 0x0840;  // Gemini 305
+const int32_t GEMINI_305_PID2 = 0x0841;  // Gemini 305
+const int32_t GEMINI_305G_PID = 0x0842;  // Gemini 305g
+
+inline bool isGemini305SeriesPID(uint32_t pid) {
+  return pid == GEMINI_305_PID || pid == GEMINI_305_PID2 || pid == GEMINI_305G_PID;
+}
 }  // namespace orbbec_camera
