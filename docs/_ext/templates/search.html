@@ -1,0 +1,63 @@
+{%- extends "layout.html" %}
+{% set title = _('Search') %}
+{% set is_zh = language and language.startswith('zh') %}
+
+{% block extrahead %}
+  <script src="{{ pathto('_static/section-search-index.js', 1) }}"></script>
+  <meta name="robots" content="noindex" />
+  {{ super() }}
+{% endblock %}
+
+{% block body %}
+  <h1 id="search-documentation">{{ _('Search') }}</h1>
+
+  <noscript>
+    <div class="admonition warning">
+      <p>
+        {{ '请启用 JavaScript 以使用搜索功能。' if is_zh else 'Please enable JavaScript to use search.' }}
+      </p>
+    </div>
+  </noscript>
+
+  <div
+    id="section-search-app"
+    data-empty-query="{{ '请输入搜索关键词。' if is_zh else 'Enter a keyword to search.' }}"
+    data-loading="{{ '正在搜索...' if is_zh else 'Searching...' }}"
+    data-load-error="{{ '搜索索引加载失败。' if is_zh else 'Search index failed to load.' }}"
+    data-no-results="{{ '没有找到匹配结果。' if is_zh else 'No matching results found.' }}"
+    data-result-one="{{ '找到 1 个匹配结果。' if is_zh else 'Found 1 matching result.' }}"
+    data-result-many="{{ '找到 {count} 个匹配结果。' if is_zh else 'Found {count} matching results.' }}"
+    data-history-title="{{ '最近搜索' if is_zh else 'Recent searches' }}"
+    data-history-empty="{{ '还没有搜索记录。' if is_zh else 'No recent searches yet.' }}"
+    data-clear-history="{{ '清空历史' if is_zh else 'Clear history' }}"
+  >
+    <p>
+      {{ '支持中文和英文搜索，结果会优先跳转到最接近的章节位置。' if is_zh else 'Supports both Chinese and English search and jumps to the closest matching section.' }}
+    </p>
+
+    <div class="section-search-panel">
+      <form action="" method="get" role="search" class="section-search-form">
+        <div class="section-search-form__field">
+          <span class="section-search-form__icon" aria-hidden="true">⌕</span>
+          <input
+            type="text"
+            name="q"
+            aria-labelledby="search-documentation"
+            value=""
+            placeholder="{{ '输入关键词，例如：相机、sync_mode、网络相机' if is_zh else 'Search keywords like camera, sync_mode, network camera' }}"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+        </div>
+        <button type="submit" class="section-search-form__submit">{{ _('search') }}</button>
+      </form>
+
+      <div id="section-search-history" class="section-search-history" hidden></div>
+    </div>
+
+    <p id="section-search-status" class="search-summary"></p>
+    <div id="section-search-results"></div>
+  </div>
+{% endblock %}

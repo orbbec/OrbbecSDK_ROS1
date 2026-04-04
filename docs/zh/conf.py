@@ -37,12 +37,12 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Project information -----------------------------------------------------
 
-project = 'OrbbecSDK V2 ROS1 包装器'
+project = 'OrbbecSDK V2 ROS2 封装'
 # project = """
-# OrbbecSDK ROS2 documentation
+# OrbbecSDK ROS2 文档
 # """
-copyright = '2025, 奥比中光股份有限公司 www.orbbec.com.'
-author = '奥比中光股份有限公司 www.orbbec.com.'
+copyright = '2025, 奥比中光科技集团股份有限公司 www.orbbec.com.'
+author = '奥比中光科技集团股份有限公司 www.orbbec.com.'
 
 
 # -- General configuration ---------------------------------------------------
@@ -54,8 +54,10 @@ master_doc = 'index'
 # ones.
 extensions = ['recommonmark',
   'sphinx_markdown_tables',
+  'sphinx_copybutton',
   'sphinx.ext.autosectionlabel',
   'language_switch',
+  'section_search',
 #   'myst_parser',
 ]
 
@@ -73,7 +75,6 @@ templates_path = ['_templates']
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
 language = 'zh_CN'
-# language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -101,7 +102,7 @@ html_extra_path = ['source/image']
 html_theme_options = {
     # 'analytics_id': 'G-EVD5Z6G6NH',
     'collapse_navigation': False,
-    # 启用导航栏的“粘性”头部，这样导航栏会固定在页面顶部
+    # 启用导航栏的"粘性"头部，这样导航栏会固定在页面顶部
     'sticky_navigation': True,
     # 配置导航栏的深度，-1 表示显示所有层级的标题
     'navigation_depth': 5,
@@ -130,7 +131,6 @@ html_theme_options = {
 
 
 # # 添加自定义的 JavaScript 文件
-# html_js_files = ["theme.js"]
 
 
 # #不需要添加_static目录，加了会不起作用
@@ -141,7 +141,7 @@ html_css_files = ["custom.css"]
 # html_extra_path = ["_extra"]
 
 # 在页面底部显示上一次更新于某某时间
-html_last_updated_fmt = "%Y-%m-%d %H:%M:%S"
+html_last_updated_fmt = "%Y年%m月%d日 %H:%M:%S"
 
 # 以下为 sphinx_book_theme 的主题配置/定制（sphinx_book_theme）
 # html_theme_options = {
@@ -182,6 +182,10 @@ html_last_updated_fmt = "%Y-%m-%d %H:%M:%S"
 
 # 是否显示页面下方的由sphinx创建, 默认为True
 html_show_sphinx = False
+
+copybutton_exclude = '.linenos, .gp, .go'
+copybutton_prompt_text = r'>>> |\.\.\. |\$ |# '
+copybutton_prompt_is_regexp = True
 
 # Function to copy video files to output directory
 def setup(app):

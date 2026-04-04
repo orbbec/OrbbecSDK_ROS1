@@ -1,0 +1,21 @@
+{% set is_zh = language and language.startswith('zh') %}
+{%- if 'singlehtml' not in builder %}
+<div class="sidebar-search-entry">
+  <a class="sidebar-search-entry__shortcut" href="{{ pathto('search') }}" aria-label="{{ '打开搜索页面' if is_zh else 'Open search page' }}">
+    <span class="sidebar-search-entry__shortcut-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5"></circle>
+        <path d="M16 16 L21 21"></path>
+      </svg>
+    </span>
+    <span class="sidebar-search-entry__shortcut-copy">
+      <span class="sidebar-search-entry__shortcut-title">
+        {{ '全站搜索' if is_zh else 'Global Search' }}
+      </span>
+      <span class="sidebar-search-entry__shortcut-text">
+        {{ '搜索中文、英文、参数名和章节' if is_zh else 'Search docs, sections, and parameters' }}
+      </span>
+    </span>
+  </a>
+</div>
+{%- endif %}
