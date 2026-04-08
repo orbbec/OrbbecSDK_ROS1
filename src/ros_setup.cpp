@@ -416,8 +416,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
   set_filter_srv_ = nh_.advertiseService<SetFilterRequest, SetFilterResponse>(
       "/" + camera_name_ + "/" + "set_filter",
       [this](SetFilterRequest& request, SetFilterResponse& response) {
-        response.success = setFilterCallback(request, response);
-        return response.success;
+        return setFilterCallback(request, response);
       });
 }
 void OBCameraNode::setupDevices() {
@@ -1888,6 +1887,14 @@ void OBCameraNode::setColorAutoExposureROI() {
 
 bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterResponse& response) {
   try {
+    response.success = false;
+    response.message.clear();
+    auto fail = [&response](const std::string& msg) {
+      response.success = false;
+      response.message = msg;
+      return true;
+    };
+
     const std::string filter_name = (request.filter_name == "HardwareNoiseRemovalFilter")
                                         ? "HardwareNoiseRemoval"
                                         : request.filter_name;
@@ -1910,20 +1917,15 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         [&filter_name](const std::shared_ptr<ob::Filter>& filter) {
           return filter && (filter->type() == filter_name || filter->getName() == filter_name);
         });
-    const bool is_in_depth_filter_list = (depth_filter_it != depth_filter_list_.end());
 
     if (is_noise_removal_filter || is_hardware_noise_removal_filter) {
       if (!is_supported_by_property) {
-        response.success = false;
-        response.message = "Filter '" + filter_name + "' is not supported by this device";
-        return true;
+        return fail("Filter '" + filter_name + "' is not supported by this device");
       }
     } else {
       if (depth_filter_it == depth_filter_list_.end()) {
-        response.success = false;
-        response.message = "Filter '" + filter_name +
-                           "' is not found in depth_filter_list_, refuse to auto-create it";
-        return true;
+        return fail("Filter '" + filter_name +
+                    "' is not found in depth_filter_list_, refuse to auto-create it");
       }
     }
 
@@ -1943,11 +1945,10 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
             (decimation_filter_scale < range.min || decimation_filter_scale > range.max)) {
           ROS_ERROR_STREAM("Decimation filter scale value is out of range " << range.min << " - "
                                                                             << range.max);
+          return fail("Decimation filter scale value is out of range");
         }
       } else {
-        response.message =
-            "The filter switch setting is successful, but the filter parameter setting fails";
-        return true;
+        return fail("The filter switch setting is successful, but the filter parameter setting fails");
       }
     } else if (filter_name == "HDRMerge") {
       auto hdr_merge_filter = (*depth_filter_it)->as<ob::HdrMerge>();
@@ -1966,9 +1967,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                         << request.filter_param[1] << "\nexposure_2: " << request.filter_param[2]
                         << "\ngain_2: " << request.filter_param[3]);
       } else {
-        response.message =
-            "The filter switch setting is successful, but the filter parameter setting fails";
-        return true;
+        return fail("The filter switch setting is successful, but the filter parameter setting fails");
       }
     } else if (filter_name == "SequenceIdFilter") {
       auto sequenced_filter = (*depth_filter_it)->as<ob::SequenceIdFilter>();
@@ -1978,9 +1977,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         ROS_INFO_STREAM("Set sequenced filter selectSequenceId value to "
                         << request.filter_param[0]);
       } else {
-        response.message =
-            "The filter switch setting is successful, but the filter parameter setting fails";
-        return true;
+        return fail("The filter switch setting is successful, but the filter parameter setting fails");
       }
     } else if (filter_name == "ThresholdFilter") {
       auto threshold_filter = (*depth_filter_it)->as<ob::ThresholdFilter>();
@@ -1992,9 +1989,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         ROS_INFO_STREAM("Set threshold filter value range to " << threshold_filter_min << " - "
                                                                << threshold_filter_max);
       } else {
-        response.message =
-            "The filter switch setting is successful, but the filter parameter setting fails";
-        return true;
+        return fail("The filter switch setting is successful, but the filter parameter setting fails");
       }
     } else if (filter_name == "NoiseRemovalFilter") {
       if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
@@ -2025,8 +2020,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
               "after set noise_removal_filter_max_size: " << new_noise_removal_filter_max_size);
         }
       }
-    } else if (filter_name == "HardwareNoiseRemoval" ||
-               filter_name == "HardwareNoiseRemovalFilter") {
+    } else if (filter_name == "HardwareNoiseRemoval") {
       if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                        OB_PERMISSION_READ_WRITE)) {
         device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, request.filter_enable);
@@ -2041,9 +2035,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                 "Setting hardware_noise_removal_filter_threshold :" << request.filter_param[0]);
           }
         } else {
-          response.message =
-              "The filter switch setting is successful, but the filter parameter setting fails";
-          return true;
+          return fail("The filter switch setting is successful, but the filter parameter setting fails");
         }
       }
     } else if (filter_name == "SpatialAdvancedFilter") {
@@ -2061,9 +2053,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                         << "\nmagnitude:" << static_cast<int>(params.magnitude)
                         << "\nradius:" << params.radius);
       } else {
-        response.message =
-            "The filter switch setting is successful, but the filter parameter setting fails";
-        return true;
+        return fail("The filter switch setting is successful, but the filter parameter setting fails");
       }
     } else if (filter_name == "TemporalFilter") {
       auto temporal_filter = (*depth_filter_it)->as<ob::TemporalFilter>();
@@ -2074,10 +2064,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         ROS_INFO_STREAM("Set temporal filter value to " << request.filter_param[0] << " - "
                                                         << request.filter_param[1]);
       } else {
-        response.message =
-            "The filter switch setting is successful, but the filter parameter setting "
-            "fails";
-        return true;
+        return fail("The filter switch setting is successful, but the filter parameter setting fails");
       }
     } else if (filter_name == "SpatialFastFilter") {
       auto spatial_fast_filter = (*depth_filter_it)->as<ob::SpatialFastFilter>();
@@ -2088,9 +2075,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         spatial_fast_filter->setFilterParams(params);
         ROS_INFO_STREAM("Set SpatialFastFilter radius to " << static_cast<int>(params.radius));
       } else {
-        response.message =
-            "The filter switch setting is successful, but the filter parameter setting fails";
-        return true;
+        return fail("The filter switch setting is successful, but the filter parameter setting fails");
       }
     } else if (filter_name == "SpatialModerateFilter") {
       auto spatial_moderate_filter = (*depth_filter_it)->as<ob::SpatialModerateFilter>();
@@ -2106,9 +2091,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                         << "\nmagnitude:" << static_cast<int>(params.magnitude)
                         << "\nradius:" << static_cast<int>(params.radius));
       } else {
-        response.message =
-            "The filter switch setting is successful, but the filter parameter setting fails";
-        return true;
+        return fail("The filter switch setting is successful, but the filter parameter setting fails");
       }
     } else if (filter_name == "FalsePositiveFilter") {
       auto false_positive_filter = (*depth_filter_it)->as<ob::FalsePositiveFilter>();
@@ -2120,14 +2103,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
       auto lut_noise_filter = (*depth_filter_it)->as<ob::LutNoiseRemovalFilter>();
       lut_noise_filter->enable(request.filter_enable);
     } else {
-      ROS_INFO_STREAM(
-          filter_name << " Cannot be set\n"
-                      << "The filter_name value that can be set is "
-                         "DecimationFilter, HDRMerge, SequenceIdFilter, ThresholdFilter, "
-                         "NoiseRemovalFilter, HardwareNoiseRemoval, HardwareNoiseRemovalFilter, "
-                         "SpatialAdvancedFilter, TemporalFilter, "
-                         "SpatialFastFilter, SpatialModerateFilter, FalsePositiveFilter, "
-                         "MgcNoiseRemovalFilter, LutNoiseRemovalFilter");
+      return fail(filter_name + " cannot be set");
     }
 
     filter_status_[filter_name] = static_cast<bool>(request.filter_enable);
@@ -2137,16 +2113,23 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
       filter_status_pub_.publish(msg);
     }
 
-    return response.success = true;
+    response.success = true;
+    return true;
   } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = "Failed to set filter: " + orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM("Failed to set filter: " << orbbec_camera::formatObErrorWithStatus(e));
-    return response.success = false;
+    return false;
   } catch (const std::exception& e) {
+    response.success = false;
+    response.message = std::string("Failed to set filter: ") + e.what();
     ROS_ERROR_STREAM("Failed to set filter: " << e.what());
-    return response.success = false;
+    return false;
   } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
     ROS_ERROR_STREAM("unknown error");
-    return response.success = false;
+    return false;
   }
 }
 }  // namespace orbbec_camera
