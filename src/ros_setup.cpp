@@ -1911,14 +1911,17 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
           OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, OB_PERMISSION_READ_WRITE);
     }
 
-    auto depth_filter_it = depth_filter_list_.end();
-    depth_filter_it = std::find_if(
-        depth_filter_list_.begin(), depth_filter_list_.end(),
-        [&filter_name](const std::shared_ptr<ob::Filter>& filter) {
-          return filter && (filter->type() == filter_name || filter->getName() == filter_name);
-        });
+    std::unique_lock<std::mutex> depth_filter_lock(depth_filter_mutex_);
+    auto depth_filter_it =
+        std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
+                     [&filter_name](const std::shared_ptr<ob::Filter>& filter) {
+                       return filter && (filter->type() == filter_name ||
+                                         filter->getName() == filter_name);
+                     });
 
     if (is_noise_removal_filter || is_hardware_noise_removal_filter) {
+      // Property-based filters do not operate on depth_filter_list_.
+      depth_filter_lock.unlock();
       if (!is_supported_by_property) {
         return fail("Filter '" + filter_name + "' is not supported by this device");
       }
