@@ -198,6 +198,16 @@ class OBCameraNode {
 
   void setupPublishers();
 
+  void publishDepthFiltersStatus();
+
+  orbbec_camera::DepthFilterState buildDepthFilterState(const std::string &filter_name,
+                                                        bool enabled) const;
+
+  static std::string normalizeDepthFilterName(const std::string &filter_name);
+
+  static void appendDepthFilterParam(orbbec_camera::DepthFilterState &filter_state,
+                                     const std::string &name, const std::string &value);
+
   // Global publisher management methods
   static image_transport::Publisher getGlobalImagePublisher(
       const std::string &topic_name, const image_transport::SubscriberStatusCallback &connect_cb,
@@ -707,6 +717,7 @@ class OBCameraNode {
   int spatial_moderate_filter_radius_ = -1;
   std::string hole_filling_filter_mode_;
   ros::Publisher filter_status_pub_;
+  ros::Publisher depth_filters_status_pub_;
   nlohmann::json filter_status_;
   std::shared_ptr<diagnostic_updater::Updater> diagnostic_updater_ = nullptr;
   double diagnostics_frequency_ = 1.0;

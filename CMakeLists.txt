@@ -64,6 +64,7 @@ find_package(catkin REQUIRED
   message_generation
   roscpp
   sensor_msgs
+  std_msgs
   std_srvs
   tf2
   tf2_ros
@@ -116,7 +117,16 @@ if (USE_RK_HW_DECODER)
 endif ()
 
 # Message generation
-add_message_files(FILES DeviceInfo.msg Extrinsics.msg Metadata.msg IMUInfo.msg DeviceStatus.msg)
+add_message_files(FILES
+  DeviceInfo.msg
+  Extrinsics.msg
+  Metadata.msg
+  IMUInfo.msg
+  DeviceStatus.msg
+  DepthFilterParam.msg
+  DepthFilterState.msg
+  DepthFiltersStatus.msg
+)
 add_service_files(FILES ${SERVICE_FILES})
 generate_messages(DEPENDENCIES std_msgs sensor_msgs)
 
@@ -134,6 +144,7 @@ catkin_package(
   message_runtime
   roscpp
   sensor_msgs
+  std_msgs
   std_srvs
   tf2
   tf2_ros
