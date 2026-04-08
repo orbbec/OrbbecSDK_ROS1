@@ -47,6 +47,7 @@
 | Close Range High Accuracy |  可调更大视差搜索范围，Mini-Z减小<br> 其余表现与High Accuracy保持一致 |
 | Dual Color Streams |  支持左右彩色同时出流，无深度IR信息<br> 左右路输出效果一致 |
 | Custom |  自定义修改，例如后处理管道的新配置、深度AE功能的修改 |
+
 > 由于 `Dual Color Streams` 模式的参数配置与 `Default` 模式差异较大，我们提供了对应的 YAML 配置文件。
 请将 `config_file_path` 设置为 `gemini305_dual_color`，该配置文件位于 config 目录下。
 
