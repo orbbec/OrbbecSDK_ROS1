@@ -11,6 +11,8 @@
     <arg name="tf_publish_rate" default="0.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
+    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <!-- For more information, refer to https://www.orbbec.com/docs/g330-use-depth-presets/-->
     <arg name="device_preset" default="Custom"/>
@@ -105,6 +107,8 @@
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="device_preset" value="$(arg device_preset)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>

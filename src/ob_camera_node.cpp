@@ -25,6 +25,20 @@
 #include <malloc.h>
 #include <fstream>
 namespace orbbec_camera {
+namespace {
+int64_t getSystemNowUs() {
+  return std::chrono::duration_cast<std::chrono::microseconds>(
+             std::chrono::system_clock::now().time_since_epoch())
+      .count();
+}
+
+int64_t getSteadyNowUs() {
+  return std::chrono::duration_cast<std::chrono::microseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+      .count();
+}
+}  // namespace
+
 OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
                            std::shared_ptr<ob::Device> device)
     : nh_(nh),
@@ -221,6 +235,10 @@ void OBCameraNode::clean() {
   if (ir_camera_info_manager_) {
     ir_camera_info_manager_.reset();
   }
+  if (frame_timestamp_csv_logger_) {
+    frame_timestamp_csv_logger_->shutdown();
+    frame_timestamp_csv_logger_.reset();
+  }
 
   ROS_DEBUG_STREAM("OBCameraNode::clean() end (global image_transport persists)");
 }
@@ -228,6 +246,8 @@ void OBCameraNode::clean() {
 OBCameraNode::~OBCameraNode() noexcept { clean(); }
 void OBCameraNode::getParameters() {
   camera_name_ = nh_private_.param<std::string>("camera_name", "camera");
+  enable_frame_timestamp_csv_ = nh_private_.param<bool>("enable_frame_timestamp_csv", false);
+  frame_timestamp_csv_file_ = nh_private_.param<std::string>("frame_timestamp_csv_file", "");
   camera_link_frame_id_ = camera_name_ + "_link";
   for (const auto& stream_index : IMAGE_STREAMS) {
     frame_id_[stream_index] = camera_name_ + "_" + stream_name_[stream_index] + "_frame";
@@ -547,6 +567,27 @@ void OBCameraNode::getParameters() {
           });
       ROS_INFO_STREAM("Enabled timer sync with host every 60 seconds");
     }
+  }
+  setupFrameTimestampCsvLogger();
+}
+
+void OBCameraNode::setupFrameTimestampCsvLogger() {
+  if (!enable_frame_timestamp_csv_) {
+    return;
+  }
+  if (frame_timestamp_csv_logger_) {
+    return;
+  }
+  if (frame_timestamp_csv_file_.empty()) {
+    auto current_path = boost::filesystem::current_path().string();
+    frame_timestamp_csv_file_ = current_path + "/" + camera_name_ + "_frame_timestamp_stats.csv";
+  }
+  frame_timestamp_csv_logger_ =
+      std::make_unique<FrameTimestampCsvLogger>(enable_frame_timestamp_csv_,
+                                                frame_timestamp_csv_file_);
+  if (!frame_timestamp_csv_logger_->enabled()) {
+    enable_frame_timestamp_csv_ = false;
+    frame_timestamp_csv_logger_.reset();
   }
 }
 
@@ -1613,6 +1654,8 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   if (frame_set == nullptr) {
     return;
   }
+  const auto frame_set_arrival_system_us = getSystemNowUs();
+  const auto frame_set_arrival_steady_us = getSteadyNowUs();
   ROS_INFO_STREAM_ONCE("Received first frame set");
   try {
     // std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
@@ -1663,6 +1706,19 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
         ROS_ERROR_STREAM("Depth frame alignment failed");
         return;
       }
+    }
+
+    auto final_color_frame = frame_set->getFrame(OB_FRAME_COLOR);
+    auto final_depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+    if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled()) {
+      const bool track_color = enable_stream_[COLOR] && static_cast<bool>(final_color_frame);
+      const bool track_depth = enable_stream_[DEPTH] && static_cast<bool>(final_depth_frame);
+      const bool color_publish_expected = track_color;
+      const bool depth_publish_expected = track_depth;
+      frame_timestamp_csv_logger_->recordFrameSet(
+          final_color_frame, final_depth_frame, frame_set_arrival_system_us,
+          frame_set_arrival_steady_us, track_color, track_depth, color_publish_expected,
+          depth_publish_expected);
     }
 
     // Refresh frame from current frameset before logging to reflect post-filter/alignment output.
@@ -1868,6 +1924,12 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (frame == nullptr) {
     return;
   }
+  if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled() && !enable_pipeline_ &&
+      (stream_index == COLOR || stream_index == DEPTH)) {
+    frame_timestamp_csv_logger_->recordStandaloneFrameArrival(
+        stream_index, frame, getSystemNowUs(), getSteadyNowUs(), true);
+  }
+
   bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
   if (camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
     has_subscriber = true;
@@ -2023,6 +2085,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     fps_delay_status_color_->tick(frame_timestamp);
   } else if (stream_index == DEPTH) {
     fps_delay_status_depth_->tick(frame_timestamp);
+  }
+  if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled() &&
+      (stream_index == COLOR || stream_index == DEPTH)) {
+    frame_timestamp_csv_logger_->recordPreImagePublish(stream_index, frame, getSystemNowUs(),
+                                                       getSteadyNowUs());
   }
   if (!image_flip_[stream_index]) {
     image_publisher.publish(image_msg);

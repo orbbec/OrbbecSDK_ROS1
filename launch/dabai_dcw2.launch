@@ -1,6 +1,8 @@
 <launch>
   <!-- unique camera name-->
   <arg name="camera_name" default="camera" />
+  <arg name="enable_frame_timestamp_csv" default="false"/>
+  <arg name="frame_timestamp_csv_file" default=""/>
   <!-- Hardware depth registration -->
   <arg name="depth_registration" default="false" />
   <arg name="serial_number" default="" />
@@ -64,6 +66,8 @@
   <group ns="$(arg camera_name)">
     <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
       <param name="camera_name" value="$(arg camera_name)" />
+      <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+      <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
       <param name="depth_registration" value="$(arg depth_registration)" />
       <param name="serial_number" type="string" value="$(arg serial_number)" />
       <param name="usb_port" type="string" value="$(arg usb_port)" />
