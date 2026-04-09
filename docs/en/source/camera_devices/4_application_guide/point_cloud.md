@@ -1,4 +1,4 @@
-## nabling and Visualizing Point Cloud in ROS 1
+## Enabling and Visualizing Point Cloud in ROS 1
 
 This section demonstrates how to enable point cloud data output from the camera node and visualize it using RViz.
 
@@ -34,7 +34,7 @@ Here is what the depth point cloud might look like in RViz:
 To enable the colored point cloud feature, enter the following command:
 
 ```bash
-roslaunch orbbec_camera gemini_330_series.launch.py enable_colored_point_cloud:=true
+roslaunch orbbec_camera gemini_330_series.launch enable_colored_point_cloud:=true
 ```
 
 #### Visualizing Colored Point Cloud in RViz

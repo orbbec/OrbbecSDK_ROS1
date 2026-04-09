@@ -37,9 +37,9 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Project information -----------------------------------------------------
 
-project = 'OrbbecSDK V2 ROS2 Wrapper'
+project = 'OrbbecSDK V2 ROS Wrapper'
 # project = """
-# OrbbecSDK ROS2 documentation
+# OrbbecSDK ROS documentation
 # """
 copyright = '2025, ORBBEC INC. www.orbbec.com.'
 author = 'ORBBEC INC. www.orbbec.com.'

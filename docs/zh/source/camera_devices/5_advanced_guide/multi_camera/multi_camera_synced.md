@@ -17,7 +17,7 @@ rosrun orbbec_camera list_devices_node
 
 ### OrbbecSDK_ROS1多相机同步配置
 
-打开multi_camera_synced.launch.py，并如下所示配置相机设置：
+打开multi_camera_synced.launch，并如下所示配置相机设置：
 
 ```xml
 <launch>

@@ -1,6 +1,6 @@
 # Multi-Camera Synchronization Verification Node
 
-**File path:** [image_sync_example_node.cpp](https://github.com/orbbec/OrbbecSDK_ROS2/blob/v2-main/orbbec_camera/examples/multi_camera_time_sync/image_sync_example_node.cpp)
+**File path:** [image_sync_example_node.cpp](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/examples/multi_camera_time_sync/image_sync_example_node.cpp)
 
 This example node is designed for **synchronized capture and timestamp verification** across **four Orbbec cameras**.
 It can be used to validate frame alignment accuracy under the multi-camera **Primary / Secondary Synced** mode.
@@ -9,12 +9,12 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
 
 ## Usage Guide
 
-1. **Modify `multi_camera_synced.launch.py` as follows**
+1. **Modify `multi_camera_synced.launch` as follows**
 
-   - Add `launch_include` to support four cameras.
+   - Add include blocks to support four cameras.
 
    - Select the appropriate launch file based on your camera model.
-     For example, use `gemini_330_series.launch.py` for the Gemini 330 series.
+     For example, use `gemini_330_series.launch` for the Gemini 330 series.
 
    - Naming convention:
      `camera_name` should follow the format `camera_01`, `camera_02`, `camera_03`, ...
@@ -23,7 +23,7 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
 
    - Configure the USB ports using:
 
-     `ros2 run orbbec_camera list_devices_node`
+     `rosrun orbbec_camera list_devices_node`
 
      to view and bind the correct ports.
 
@@ -31,7 +31,7 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
      with one camera as **primary** and the others as **secondary_synced**.
 
    - **Startup sequence:**
-     The **Primary camera should always be launched last** to ensure the synchronization signal is established correctly.
+     Start secondary cameras first, and start the **Primary camera last** to ensure the synchronization signal is established correctly.
 
 ---
 
@@ -55,11 +55,11 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
 
    - Start the multi-camera synchronization launch file:
 
-     `ros2 launch orbbec_camera multi_camera_synced.launch.py`
+     `roslaunch orbbec_camera multi_camera_synced.launch`
 
    - In a new terminal, run the synchronization verification node:
 
-     `ros2 run orbbec_camera image_sync_example_node`
+     `rosrun orbbec_camera image_sync_example_node`
 
      This node outputs timestamp differences between multiple camera streams for synchronization validation.
 
@@ -67,99 +67,62 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
 
 4. **Reference Launch File**
 
+```xml
+<launch>
+  <arg name="device_num" default="4"/>
+
+  <arg name="camera1_name" default="camera_01"/>
+  <arg name="camera2_name" default="camera_02"/>
+  <arg name="camera3_name" default="camera_03"/>
+  <arg name="camera4_name" default="camera_04"/>
+
+  <arg name="camera1_usb_port" default="2-2.3"/>
+  <arg name="camera2_usb_port" default="2-1"/>
+  <arg name="camera3_usb_port" default="2-3"/>
+  <arg name="camera4_usb_port" default="2-4"/>
+
+  <arg name="primary_config" default="$(find orbbec_camera)/config/camera_params.yaml"/>
+  <arg name="secondary_config" default="$(find orbbec_camera)/config/camera_secondary_params.yaml"/>
+
+  <!-- secondary cameras -->
+  <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
+    <arg name="camera_name" value="$(arg camera2_name)"/>
+    <arg name="usb_port" value="$(arg camera2_usb_port)"/>
+    <arg name="device_num" value="$(arg device_num)"/>
+    <arg name="sync_mode" value="secondary_synced"/>
+    <arg name="config_file_path" value="$(arg secondary_config)"/>
+    <arg name="trigger_out_enabled" value="false"/>
+  </include>
+
+  <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
+    <arg name="camera_name" value="$(arg camera3_name)"/>
+    <arg name="usb_port" value="$(arg camera3_usb_port)"/>
+    <arg name="device_num" value="$(arg device_num)"/>
+    <arg name="sync_mode" value="secondary_synced"/>
+    <arg name="config_file_path" value="$(arg secondary_config)"/>
+    <arg name="trigger_out_enabled" value="false"/>
+  </include>
+
+  <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
+    <arg name="camera_name" value="$(arg camera4_name)"/>
+    <arg name="usb_port" value="$(arg camera4_usb_port)"/>
+    <arg name="device_num" value="$(arg device_num)"/>
+    <arg name="sync_mode" value="secondary_synced"/>
+    <arg name="config_file_path" value="$(arg secondary_config)"/>
+    <arg name="trigger_out_enabled" value="false"/>
+  </include>
+
+  <!-- primary camera -->
+  <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
+    <arg name="camera_name" value="$(arg camera1_name)"/>
+    <arg name="usb_port" value="$(arg camera1_usb_port)"/>
+    <arg name="device_num" value="$(arg device_num)"/>
+    <arg name="sync_mode" value="primary"/>
+    <arg name="config_file_path" value="$(arg primary_config)"/>
+    <arg name="trigger_out_enabled" value="true"/>
+  </include>
+</launch>
 ```
-import os
-from ament_index_python.packages import get_package_share_directory
-from launch import LaunchDescription
-from launch_ros.actions import Node
-from launch.actions import IncludeLaunchDescription, GroupAction, TimerAction
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node, LoadComposableNodes
-
-
-
-def generate_launch_description():
-    # Include launch files
-    package_dir = get_package_share_directory("orbbec_camera")
-    launch_file_dir = os.path.join(package_dir, "launch")
-    config_file_dir = os.path.join(package_dir, "config")
-    config_file_path = os.path.join(config_file_dir, "camera_params.yaml")
-    secondary_config_file_path = os.path.join(config_file_dir, "camera_secondary_params.yaml")
-
-    launch1_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_file_dir, "gemini_330_series.launch.py")
-        ),
-        launch_arguments={
-            "camera_name": "camera_01",
-            "usb_port": "2-2.3",
-            "device_num": "4",
-            "sync_mode": "primary",
-            "config_file_path": config_file_path,
-            "trigger_out_enabled": "true"
-        }.items(),
-    )
-
-    launch2_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_file_dir, "gemini_330_series.launch.py")
-        ),
-        launch_arguments={
-            "camera_name": "camera_02",
-            "usb_port": "2-1",
-            "device_num": "4",
-            "sync_mode": "secondary_synced",
-            "config_file_path": secondary_config_file_path,
-            "trigger_out_enabled": "false"
-        }.items(),
-    )
-
-    launch3_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_file_dir, "gemini_330_series.launch.py")
-        ),
-        launch_arguments={
-            "camera_name": "camera_03",
-            "usb_port": "2-3",
-            "device_num": "4",
-            "sync_mode": "secondary_synced",
-            "config_file_path": secondary_config_file_path,
-            "trigger_out_enabled": "false"
-        }.items(),
-    )
-
-    launch4_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_file_dir, "gemini_330_series.launch.py")
-        ),
-        launch_arguments={
-            "camera_name": "camera_04",
-            "usb_port": "2-4",
-            "device_num": "4",
-            "sync_mode": "secondary_synced",
-            "config_file_path": secondary_config_file_path,
-            "trigger_out_enabled": "false"
-        }.items(),
-    )
-
-
-
-    # Launch description
-    ld = LaunchDescription(
-        [
-
-            TimerAction(period=0.0, actions=[GroupAction([launch2_include])]),
-            TimerAction(period=2.0, actions=[GroupAction([launch3_include])]),
-            TimerAction(period=4.0, actions=[GroupAction([launch4_include])]),
-            TimerAction(period=6.0, actions=[GroupAction([launch1_include])]),
-            # The primary camera should be launched at last
-        ]
-    )
-
-    return ld
-```
-
-
 
 ---
 
@@ -171,7 +134,7 @@ def generate_launch_description():
 
    `echo 512 | sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb`
 
-2. **Configure Fast DDS**
+2. **Tune ROS1 Runtime Performance**
 
-   Optimize ROS2 node communication latency to reduce image transmission delay.
-   See [this section](../performance/fastdds_tuning.md) for detailed configuration instructions.**
+   Optimize CPU and USB usage to reduce transmission delay and instability.
+   See [this section](../performance/lower_cpu_usage.md) for detailed tuning instructions.

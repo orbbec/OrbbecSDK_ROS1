@@ -12,8 +12,8 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
     <tr style="background-color: #1f4e78; color: white; text-align: center;">
       <th>产品系列</th>
       <th>产品</th>
-      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/main" style="color: black; text-decoration: none;">main分支</a></th>
-      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS2/tree/v2-main" style="color: black; text-decoration: none;">v2-main分支</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/main" style="color: black; text-decoration: none;">main分支</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main" style="color: black; text-decoration: none;">v2-main分支</a></th>
     </tr>
   </thead>
   <tbody>
@@ -187,10 +187,10 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
 | Femto Mega              | [1.3.1](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-Firmware)              |                                               femto_mega.launch  |
 | Femto Mega I             | [2.0.4](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-I-Firmware)              |                                               femto_mega.launch  |
 | Astra 2                 | [2.8.20](https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Astra2_Release_2.8.20.zip)    |                                               astra2.launch    |
-| Gemini 345            | 1.7.12 | gemini345.launch.py |
-| Gemini 345Lg            | 1.7.12 | gemini345_lg.launch.py |
-| Pulsar SL450            | 2.2.4.5 | lidar.launch.py |
-| Pulsar ME450            | 1.0.0.6 | lidar.launch.py |
+| Gemini 345            | 1.7.12 | gemini345.launch |
+| Gemini 345Lg            | 1.7.12 | gemini345_lg.launch |
+| Pulsar SL450            | 2.2.4.5 | lidar.launch |
+| Pulsar ME450            | 1.0.0.6 | lidar.launch |
 
 所有启动文件本质上都是相似的，主要区别在于为同一系列中的不同型号设置的参数默认值。USB标准的差异（如USB 2.0与USB 3.0）可能需要调整这些参数。如果遇到启动失败，请仔细查阅规格说明书。特别注意启动文件中的分辨率设置以及其他参数，以确保兼容性和最佳性能。
 

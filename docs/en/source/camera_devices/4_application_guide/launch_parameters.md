@@ -17,7 +17,7 @@ The following are the launch parameters available:
 * **`device_preset`**
     * The default value is `Default`. You can use the following command to view the configurable mode
     ```bash
-    ros2 run orbbec_camera list_camera_profile_mode_node
+    rosrun orbbec_camera list_camera_profile_mode_node
     ```
 *   **`[color|depth|left_ir|right_ir|ir]_[width|height|fps|format]`**
     *   The resolution and frame rate of the sensor stream.
@@ -37,7 +37,7 @@ The following are the launch parameters available:
 *   **`ordered_pc`**
     *   Enable filtering of invalid point clouds.
 *   **`point_cloud_qos`, `[stream]_qos`, `[stream]_camera_info_qos`**
-    *   ROS 2 Message Quality of Service (QoS) settings. The possible values are `SYSTEM_DEFAULT`, `DEFAULT`, `PARAMETER_EVENTS`, `SERVICES_DEFAULT`, `PARAMETERS`, `SENSOR_DATA` and are case-insensitive. These correspond to `rmw_qos_profile_system_default`, `rmw_qos_profile_default`, `rmw_qos_profile_parameter_events`, `rmw_qos_profile_services_default`, `rmw_qos_profile_parameters`, and `SENSOR_DATA`, respectively.
+    *   These QoS parameters are not applicable in the ROS1 wrapper. In ROS1, topic behavior is mainly controlled by publisher/subscriber queue sizes.
 * **`color.image_raw.enable_pub_plugins`**
   * Enable Color image transport plugins. Default: `["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`.
   > **Supported Versions**: Wrapper version 2.6.3 and above.
@@ -179,7 +179,7 @@ The following are the launch parameters available:
   > **Supported Modules**: Gemini 305
   > **Supported Versions**: Wrapper version 2.7.2 and above.
 * **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
-  * Set the downsampling multiple. You can use `ros2 run orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
+  * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
   > **Supported Modules**: Gemini 305
   > **Supported Versions**: Wrapper version 2.7.2 and above.
 * **`enable_false_positive_filter`**

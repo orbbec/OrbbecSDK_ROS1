@@ -46,7 +46,7 @@ roslaunch orbbec_camera multi_net_camera.launch
 
 ## set_device_ip实用程序
 
-**`set_device_ip`**可执行文件允许您直接从ROS 2配置网络相机的IP设置，包括在DHCP和静态IP之间切换，以及设置子网掩码和网关。这对于快速分配或更新IP地址而无需修改启动文件很有用。
+**`set_device_ip`**可执行文件允许您直接从ROS1配置网络相机的IP设置，包括在DHCP和静态IP之间切换，以及设置子网掩码和网关。这对于快速分配或更新IP地址而无需修改启动文件很有用。
 
 > **注意：** 使用`set_device_ip`应用的IP设置是**永久的**，**不会重置**，即使设备断电或重启。
 

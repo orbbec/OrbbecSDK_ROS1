@@ -43,7 +43,7 @@ When the `interleave_ae_mode` parameter is set to `laser` and `interleave_frame_
 
 ## Run the launch
 
-Setting the interleave_ae parameter,`colcon build` again and run launch
+After setting the `interleave_ae` parameter, run `catkin_make` and then launch the node.
 
 ```bash
 roslaunch orbbec_camera gemini_330_series.launch

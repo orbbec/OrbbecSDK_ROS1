@@ -91,9 +91,9 @@ Following these timing control guidelines can significantly improve the stabilit
 
 ### The image does not reach the preset frame rate
 
-First you need to confirm whether the image does not reach the preset frame rate. There are several ways to view framerate in ROS 2, such as:
+First you need to confirm whether the image does not reach the preset frame rate. There are several ways to view framerate in ROS1, such as:
 
-* `ros2 topic hz`
+* `rostopic hz`
 * `rqt`
 * Custom tools (such as the `benchmark` tool provided by this ROS package)
 

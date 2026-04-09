@@ -20,11 +20,9 @@
 
 **示例**
 
-在ROS1中，可以测量丢帧率和丢包率，而在ROS2中，由于头部缺少`seq`字段，因此只计算发布者端的丢帧率。
+在 ROS1 中，由于消息头包含 `seq` 字段，可以同时统计丢帧率和丢包率。
 
 ![common_benchmark_ros1](../image/benchmark_images/common_benchmark_ros1.png "ROS1")
-
-![common_benchmark_ros2](../image/benchmark_images/common_benchmark_ros2.png "ROS2")
 
 ## 服务基准测试节点
 

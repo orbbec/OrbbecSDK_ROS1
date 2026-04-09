@@ -100,9 +100,9 @@ roslaunch orbbec_camera femto_bolt.launch serial_number:=CL8H741005J
 
 ### 图像未达到预设帧率
 
-首先需要确认图像是否确实未达到预设帧率。在 ROS 2 中可通过多种方式查看帧率，例如：
+首先需要确认图像是否确实未达到预设帧率。在 ROS1 中可通过多种方式查看帧率，例如：
 
-* `ros2 topic hz`
+* `rostopic hz`
 * `rqt`
 * 自定义工具（如本 ROS 包提供的 `benchmark` 工具）
 

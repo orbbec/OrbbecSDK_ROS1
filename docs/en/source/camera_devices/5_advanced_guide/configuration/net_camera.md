@@ -46,7 +46,7 @@ roslaunch orbbec_camera multi_net_camera.launch
 
 ## set_device_ip Utility
 
-The **`set_device_ip`** executable allows you to configure the IP settings of a network camera directly from ROS 2, including switching between DHCP and static IP, and setting subnet mask and gateway. This is useful for quickly assigning or updating IP addresses without modifying launch files.
+The **`set_device_ip`** executable allows you to configure the IP settings of a network camera directly from ROS1, including switching between DHCP and static IP, and setting subnet mask and gateway. This is useful for quickly assigning or updating IP addresses without modifying launch files.
 
 > **Note:** The IP settings applied with `set_device_ip` are **permanent** and **will not be reset** if the device is powered off or restarted.
 

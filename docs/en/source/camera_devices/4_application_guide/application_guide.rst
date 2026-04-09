@@ -1,7 +1,7 @@
 Application Guide
 ======================================================
 
-This chapter introduces application development with the SDK, including launch parameter configuration, ROS2 services, and topics usage.
+This chapter introduces application development with the SDK, including launch parameter configuration, ROS1 services, and topics usage.
 
 .. toctree::
     :maxdepth: 2

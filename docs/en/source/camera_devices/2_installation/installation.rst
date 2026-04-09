@@ -1,7 +1,7 @@
 Installation
 ======================================================
 
-This chapter explains how to install the Orbbec ROS2 Python SDK, including building from source, installing dependencies, and using registration scripts.
+This chapter explains how to install the Orbbec ROS1 SDK, including building from source, installing dependencies, and using registration scripts.
 
 .. toctree::
     :maxdepth: 2

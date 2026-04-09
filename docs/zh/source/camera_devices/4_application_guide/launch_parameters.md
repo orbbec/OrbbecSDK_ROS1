@@ -17,7 +17,7 @@
 *   **`device_preset`**
     *   默认值为 `Default`。可以使用下面命令查看可设置模式
     ```bash
-    ros2 run orbbec_camera list_camera_profile_mode_node
+    rosrun orbbec_camera list_camera_profile_mode_node
     ```
 *   **`[color|depth|left_ir|right_ir|ir]_[width|height|fps|format]`**
     *   传感器流的分辨率和帧率。
@@ -37,7 +37,7 @@
 *   **`ordered_pc`**
     *   启用无效点云过滤。
 *   **`point_cloud_qos`、`[stream]_qos`、`[stream]_camera_info_qos`**
-    *   ROS 2消息服务质量（QoS）设置。可能的值为 `SYSTEM_DEFAULT`、`DEFAULT`、`PARAMETER_EVENTS`、`SERVICES_DEFAULT`、`PARAMETERS`、`SENSOR_DATA`，不区分大小写。这些分别对应 `rmw_qos_profile_system_default`、`rmw_qos_profile_default`、`rmw_qos_profile_parameter_events`、`rmw_qos_profile_services_default`、`rmw_qos_profile_parameters` 和 `SENSOR_DATA`。
+    *   这些 QoS 参数在 ROS1 wrapper 中不适用。ROS1 中话题通信行为主要由发布者/订阅者队列长度控制。
 * **`color.image_raw.enable_pub_plugins`**
   * 启用彩色图像传输插件。默认值：`["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`。
   > **支持版本**： wrapper version 2.6.3 及以上。
@@ -179,7 +179,7 @@
   > **支持模组**：Gemini 305。
   > **支持版本**： wrapper version 2.7.2 及以上。
 * **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
-  * 设置下采样倍数。可用`ros2 run orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
+  * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
   > **支持模组**：Gemini 305。
   > **支持版本**： wrapper version 2.7.2 及以上。
 * **`enable_false_positive_filter`**

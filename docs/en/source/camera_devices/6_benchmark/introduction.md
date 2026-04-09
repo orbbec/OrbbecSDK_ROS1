@@ -20,11 +20,9 @@ This section introduces the benchmark tool, explaining its purpose, features, an
 
 **Example**
 
-In ROS1, both frame drop rate and packet loss rate can be measured, while in ROS2, the header lacks the `seq` field, so only the publisher-side frame drop rate is calculated.
+In ROS1, both frame drop rate and packet loss rate can be measured because the message header contains the `seq` field.
 
 ![common_benchmark_ros1](../image/benchmark_images/common_benchmark_ros1.png "ROS1")
-
-![common_benchmark_ros2](../image/benchmark_images/common_benchmark_ros2.png "ROS2")
 
 ## service benchmark node
 

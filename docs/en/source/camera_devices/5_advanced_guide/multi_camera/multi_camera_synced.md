@@ -17,7 +17,7 @@ rosrun orbbec_camera list_devices_node
 
 ### OrbbecSDK_ROS1 multi-camera synced configuration
 
-Open multi_camera_synced.launch.py, and configure the camera settings as shown below:
+Open multi_camera_synced.launch, and configure the camera settings as shown below:
 
 ```xml
 <launch>
