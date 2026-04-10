@@ -5,7 +5,7 @@
     <arg name="required" default="false"/>
     <arg name="output" default="screen"/>  <!-- [ screen | log ]-->
     <arg name="respawn" default="false"/>
-     <!-- Basic camera parameters -->
+    <!-- Basic camera parameters -->
     <arg name="camera_name" default="camera"/>
     <!-- open device delay time 100m-->
     <arg name="connection_delay" default="100"/>
@@ -16,6 +16,8 @@
     <arg name="tf_publish_rate" default="0.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="global"/>
+    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
@@ -154,12 +156,14 @@
         <param name="camera_name" value="$(arg camera_name)"/>
         <param name="connection_delay" value="$(arg connection_delay)"/>
         <param name="log_level" value="$(arg log_level)"/>
-            <param name="ros_log_level" value="$(arg ros_log_level)"/>
+        <param name="ros_log_level" value="$(arg ros_log_level)"/>
         <param name="log_file_name" value="$(arg log_file_name)"/>
         <param name="publish_tf" value="$(arg publish_tf)"/>
         <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
         <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
         <param name="time_domain" value="$(arg time_domain)"/>
+        <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+        <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
         <param name="uvc_backend" value="$(arg uvc_backend)"/>
         <param name="device_preset" value="$(arg device_preset)"/>
         <param name="color_preset" value="$(arg color_preset)"/>

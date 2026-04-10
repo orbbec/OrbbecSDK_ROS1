@@ -19,6 +19,7 @@
 #include "types.h"
 #include "utils.h"
 #include "ros_sensor.h"
+#include "frame_timestamp_csv_logger.h"
 #include "ros/ros.h"
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -141,6 +142,8 @@ class OBCameraNode {
   std::shared_ptr<ob::Frame> softwareDecodeColorFrame(const std::shared_ptr<ob::Frame> &frame);
 
   void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair &stream_index);
+
+  void setupFrameTimestampCsvLogger();
 
   void logFrameInfoOnce(const stream_index_pair &stream_index,
                         const std::shared_ptr<ob::VideoFrame> &video_frame);
@@ -777,6 +780,10 @@ class OBCameraNode {
 
   std::string frame_aggregate_mode_;
   bool is_cleaned_ = false;
+
+  bool enable_frame_timestamp_csv_ = false;
+  std::string frame_timestamp_csv_file_;
+  std::unique_ptr<FrameTimestampCsvLogger> frame_timestamp_csv_logger_{nullptr};
 
   std::unique_ptr<FpsDelayStatus> fps_delay_status_color_{nullptr};
   std::unique_ptr<FpsDelayStatus> fps_delay_status_depth_{nullptr};
