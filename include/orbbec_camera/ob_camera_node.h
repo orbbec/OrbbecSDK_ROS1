@@ -523,6 +523,7 @@ class OBCameraNode {
   bool depth_registration_ = false;
   bool enable_frame_sync_ = false;
   std::recursive_mutex device_lock_;
+  std::mutex depth_filter_mutex_;
   std::shared_ptr<camera_info_manager::CameraInfoManager> color_camera_info_manager_ = nullptr;
   std::shared_ptr<camera_info_manager::CameraInfoManager> ir_camera_info_manager_ = nullptr;
   std::vector<std::shared_ptr<ob::Filter>> depth_filter_list_;

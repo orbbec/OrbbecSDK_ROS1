@@ -1614,6 +1614,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::processDepthFrameFilter(
   if (frame == nullptr || frame->type() != OB_FRAME_DEPTH) {
     return nullptr;
   }
+  std::lock_guard<std::mutex> depth_filter_lock(depth_filter_mutex_);
   for (size_t i = 0; i < depth_filter_list_.size(); i++) {
     auto filter = depth_filter_list_[i];
     CHECK_NOTNULL(filter.get());
