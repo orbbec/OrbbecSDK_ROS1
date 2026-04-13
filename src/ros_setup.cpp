@@ -98,14 +98,21 @@ void OBCameraNode::publishDepthFiltersStatus() {
     return;
   }
 
-  auto find_depth_filter = [this](const std::string& filter_name) -> std::shared_ptr<ob::Filter> {
+  std::vector<std::shared_ptr<ob::Filter>> depth_filters_snapshot;
+  {
+    std::lock_guard<std::mutex> depth_filter_lock(depth_filter_mutex_);
+    depth_filters_snapshot = depth_filter_list_;
+  }
+
+  auto find_depth_filter =
+      [&depth_filters_snapshot, this](const std::string& filter_name) -> std::shared_ptr<ob::Filter> {
     const auto normalized_name = normalizeDepthFilterName(filter_name);
-    auto it = std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
+    auto it = std::find_if(depth_filters_snapshot.begin(), depth_filters_snapshot.end(),
                            [&normalized_name](const auto& filter) {
                              return normalizeDepthFilterName(filter->type()) == normalized_name ||
                                     normalizeDepthFilterName(filter->getName()) == normalized_name;
                            });
-    if (it == depth_filter_list_.end()) {
+    if (it == depth_filters_snapshot.end()) {
       return nullptr;
     }
     return *it;
@@ -254,14 +261,14 @@ void OBCameraNode::publishDepthFiltersStatus() {
                                    OB_PERMISSION_READ_WRITE);
 
   std::vector<std::string> ordered_filter_names;
-  ordered_filter_names.reserve(depth_filter_list_.size() + 2);
+  ordered_filter_names.reserve(depth_filters_snapshot.size() + 2);
   auto append_unique_filter_name = [&ordered_filter_names](const std::string& filter_name) {
     if (std::find(ordered_filter_names.begin(), ordered_filter_names.end(), filter_name) ==
         ordered_filter_names.end()) {
       ordered_filter_names.push_back(filter_name);
     }
   };
-  for (const auto& filter : depth_filter_list_) {
+  for (const auto& filter : depth_filters_snapshot) {
     if (!filter) {
       continue;
     }
