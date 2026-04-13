@@ -243,17 +243,35 @@ void OBCameraNode::publishDepthFiltersStatus() {
   msg.header.stamp = ros::Time::now();
   msg.header.frame_id = camera_name_;
 
+  const bool noise_removal_filter_supported =
+      device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE) ||
+      device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE) ||
+      device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE);
+  const bool hardware_noise_removal_filter_supported =
+      device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                                   OB_PERMISSION_READ_WRITE) ||
+      device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                   OB_PERMISSION_READ_WRITE);
+
   std::vector<std::string> ordered_filter_names;
-  ordered_filter_names.reserve(depth_filter_list_.size());
+  ordered_filter_names.reserve(depth_filter_list_.size() + 2);
+  auto append_unique_filter_name = [&ordered_filter_names](const std::string& filter_name) {
+    if (std::find(ordered_filter_names.begin(), ordered_filter_names.end(), filter_name) ==
+        ordered_filter_names.end()) {
+      ordered_filter_names.push_back(filter_name);
+    }
+  };
   for (const auto& filter : depth_filter_list_) {
     if (!filter) {
       continue;
     }
-    const auto normalized_name = normalizeDepthFilterName(filter->type());
-    if (std::find(ordered_filter_names.begin(), ordered_filter_names.end(), normalized_name) ==
-        ordered_filter_names.end()) {
-      ordered_filter_names.push_back(normalized_name);
-    }
+    append_unique_filter_name(normalizeDepthFilterName(filter->type()));
+  }
+  if (noise_removal_filter_supported) {
+    append_unique_filter_name("NoiseRemovalFilter");
+  }
+  if (hardware_noise_removal_filter_supported) {
+    append_unique_filter_name("HardwareNoiseRemovalFilter");
   }
 
   msg.filters.reserve(ordered_filter_names.size());
@@ -264,6 +282,11 @@ void OBCameraNode::publishDepthFiltersStatus() {
   };
   for (const auto& filter_name : ordered_filter_names) {
     bool enabled = false;
+    if (filter_name == "NoiseRemovalFilter") {
+      enabled = enable_noise_removal_filter_;
+    } else if (filter_name == "HardwareNoiseRemovalFilter") {
+      enabled = enable_hardware_noise_removal_filter_;
+    }
     auto filter = find_depth_filter(filter_name);
     if (filter) {
       try {
