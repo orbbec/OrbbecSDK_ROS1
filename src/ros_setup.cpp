@@ -958,8 +958,8 @@ void OBCameraNode::setupDevices() {
     if (sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_noise_removal_filter_);
-      ROS_INFO_STREAM(
-          "enable_noise_removal_filter: " << (enable_noise_removal_filter_ ? "ON" : "OFF"));
+      ROS_INFO_STREAM("Set noise removal filter to "
+                      << (enable_noise_removal_filter_ ? "true" : "false"));
     }
     if (!depth_work_mode_.empty() &&
         device_->isPropertySupported(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, OB_PERMISSION_READ_WRITE)) {
@@ -1374,9 +1374,10 @@ void OBCameraNode::setupDevices() {
                                      OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                enable_hardware_noise_removal_filter_);
-      ROS_INFO_STREAM(
-          "Current hardware noise removal filter: "
-          << (device_->getBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL) ? "ON" : "OFF"));
+      ROS_INFO_STREAM("Set hardware noise removal filter to "
+                      << (device_->getBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL)
+                              ? "true"
+                              : "false"));
       if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
                                        OB_PERMISSION_READ_WRITE)) {
         if (hardware_noise_removal_filter_threshold_ != -1.0 &&
