@@ -58,6 +58,22 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
     appendDepthFilterParam(filter_state, "threshold",
                            toParamValue(hardware_noise_removal_filter_threshold_));
   } else if (filter) {
+    auto formatFilterConfigValue = [](const OBFilterConfigSchemaItem& config_schema, double value) {
+      switch (config_schema.type) {
+        case OB_FILTER_CONFIG_VALUE_TYPE_INT: {
+          return std::to_string(static_cast<long long>(value));
+        }
+        case OB_FILTER_CONFIG_VALUE_TYPE_BOOLEAN:
+          return value != 0.0 ? std::string("true") : std::string("false");
+        case OB_FILTER_CONFIG_VALUE_TYPE_FLOAT:
+        default: {
+          std::ostringstream ss;
+          ss << value;
+          return ss.str();
+        }
+      }
+    };
+
     try {
       auto config_schema_vec = filter->getConfigSchemaVec();
       for (const auto& config_schema : config_schema_vec) {
@@ -66,7 +82,8 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
         }
         try {
           auto value = filter->getConfigValue(config_schema.name);
-          appendDepthFilterParam(filter_state, config_schema.name, toParamValue(value));
+          appendDepthFilterParam(filter_state, config_schema.name,
+                                 formatFilterConfigValue(config_schema, value));
         } catch (const std::exception&) {
           // Skip unreadable param and keep exporting others.
         }
