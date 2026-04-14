@@ -185,7 +185,8 @@ void OBCameraNodeDriver::init() {
       ob::Context::setLoggerFileName(log_file_name);
       ROS_INFO_STREAM("SDK log file name set to: " << log_file_name);
     } catch (const ob::Error &e) {
-      ROS_WARN_STREAM("Failed to set SDK log file name: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_WARN_STREAM(
+          "Failed to set SDK log file name: " << orbbec_camera::formatObErrorWithStatus(e));
     }
   }
   ctx_ = std::make_shared<ob::Context>(config_path_.c_str());
@@ -240,13 +241,13 @@ void OBCameraNodeDriver::init() {
       });
   if (uvc_backend_ == "libuvc") {
     ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_LIBUVC);
-    ROS_INFO_STREAM("setUvcBackendType:" << uvc_backend_);
+    ROS_INFO_STREAM("Set UVC backend to " << uvc_backend_);
   } else if (uvc_backend_ == "v4l2") {
     ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_V4L2);
-    ROS_INFO_STREAM("setUvcBackendType:" << uvc_backend_);
+    ROS_INFO_STREAM("Set UVC backend to " << uvc_backend_);
   } else {
     ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_LIBUVC);
-    ROS_INFO_STREAM("setUvcBackendType:" << uvc_backend_);
+    ROS_WARN_STREAM("Unsupported uvc_backend '" << uvc_backend_ << "', using default libuvc");
   }
   ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
   check_connection_timer_ =
@@ -329,11 +330,15 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceBySerialNumber(
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
     const std::shared_ptr<ob::DeviceList> &list, const std::string &usb_port) {
   try {
-    ROS_INFO_STREAM("selectDeviceByUSBPort : Before device lock lock");
+    ROS_INFO_STREAM_THROTTLE(5.0, "Selecting device by USB port: " << usb_port);
     std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-    ROS_INFO_STREAM("selectDeviceByUSBPort : After device lock lock");
     auto device = list->getDeviceByUid(usb_port.c_str(), device_access_mode_);
-    ROS_INFO_STREAM("selectDeviceByUSBPort : After getDeviceByUid");
+    if (device) {
+      ROS_INFO_STREAM_THROTTLE(5.0, "getDeviceByUid device usb port " << usb_port << " done");
+    } else {
+      ROS_ERROR_STREAM_THROTTLE(5.0, "getDeviceByUid device usb port " << usb_port << " failed");
+      ROS_ERROR("Please use script to get usb port: rosrun orbbec_camera list_devices_node");
+    }
     return device;
   } catch (ob::Error &e) {
     ROS_ERROR_STREAM("Failed to get device info " << orbbec_camera::formatObErrorWithStatus(e));
@@ -348,9 +353,8 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByUSBPort(
 
 std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByNetIP(
     const std::shared_ptr<ob::DeviceList> &list, const std::string &net_ip) {
-  ROS_INFO_STREAM("Before lock: Select device net ip: " << net_ip);
+  ROS_DEBUG_STREAM_THROTTLE(5.0, "Selecting device by network IP: " << net_ip);
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-  ROS_INFO_STREAM("After lock: Select device net ip: " << net_ip);
   for (size_t i = 0; i < list->getCount(); i++) {
     try {
       if (std::string(list->getConnectionType(i)) != "Ethernet") {
@@ -359,19 +363,20 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByNetIP(
       if (list->getIpAddress(i) == nullptr) {
         continue;
       }
-      ROS_INFO_STREAM("FindDeviceByNetIP device net ip " << list->getIpAddress(i));
+      ROS_DEBUG_STREAM_THROTTLE(5.0, "FindDeviceByNetIP device net ip " << list->getIpAddress(i));
       if (std::string(list->getIpAddress(i)) == net_ip) {
-        ROS_INFO_STREAM("getDeviceByNetIP device net ip " << net_ip << " done");
+        ROS_INFO_STREAM_THROTTLE(5.0, "getDeviceByNetIP device net ip " << net_ip << " done");
         return list->getDevice(i, device_access_mode_);
       }
     } catch (ob::Error &e) {
-      ROS_INFO_STREAM("Failed to get device info " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM_THROTTLE(
+          5.0, "Failed to get device info " << orbbec_camera::formatObErrorWithStatus(e));
       continue;
     } catch (std::exception &e) {
-      ROS_INFO_STREAM("Failed to get device info " << e.what());
+      ROS_ERROR_STREAM_THROTTLE(5.0, "Failed to get device info " << e.what());
       continue;
     } catch (...) {
-      ROS_INFO_STREAM("Failed to get device info");
+      ROS_ERROR_STREAM_THROTTLE(5.0, "Failed to get device info");
       continue;
     }
   }
@@ -507,7 +512,8 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     }
   } catch (const ob::Error &e) {
     // Some devices don't support ISP firmware version query
-    ROS_DEBUG_STREAM("Current device not support ISP firmware version query: " << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_DEBUG_STREAM("Current device not support ISP firmware version query: "
+                     << orbbec_camera::formatObErrorWithStatus(e));
   }
   ROS_INFO_STREAM("Current node pid: " << getpid());
   if (device_info_->pid() == FEMTO_BOLT_PID) {
@@ -524,19 +530,18 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
   {
     std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
     if (reset_device_) {
-      ROS_INFO_STREAM("deviceConnectCallback : device reset in progress, waiting...");
+      ROS_INFO_STREAM("Device reset in progress, waiting before connecting");
       reset_device_cv_.wait(reset_lock, [this]() { return !reset_device_ || !is_alive_; });
       if (!is_alive_) {
         return;
       }
-      ROS_INFO_STREAM("deviceConnectCallback : device reset completed, continuing connection");
+      ROS_INFO_STREAM("Device reset completed, continuing connection");
     }
   }
   if (device_connected_) {
     ROS_INFO_STREAM("deviceConnectCallback : device already connected, return");
     return;
   }
-  ROS_INFO_STREAM("deviceConnectCallback : deviceConnectCallback start");
   if (list->deviceCount() == 0) {
     ROS_WARN("No device found");
     return;
@@ -544,9 +549,9 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
   bool start_device_failed = false;
   try {
     std::this_thread::sleep_for(std::chrono::milliseconds(connection_delay_));
-    ROS_DEBUG_STREAM("deviceConnectCallback : Before process lock lock");
+    ROS_DEBUG_STREAM("deviceConnectCallback: waiting for process lock");
     pthread_mutex_lock(orb_device_lock_);
-    ROS_DEBUG_STREAM("deviceConnectCallback : After process lock lock");
+    ROS_DEBUG_STREAM("deviceConnectCallback: acquired process lock");
     std::shared_ptr<int> lock_guard(nullptr,
                                     [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
 
@@ -583,7 +588,7 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
         ROS_WARN("No matching device found in device list");
       }
       device_connected_ = false;
-      ROS_WARN_STREAM("deviceConnectCallback : start device failed, return");
+      ROS_WARN_STREAM("deviceConnectCallback: start device failed");
       return;
     }
     initializeDevice(device);
@@ -854,7 +859,8 @@ void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
         }
       }
     } catch (ob::Error &e) {
-      ROS_ERROR_STREAM("Failed to update Preset Firmware " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM("Failed to update Preset Firmware "
+                       << orbbec_camera::formatObErrorWithStatus(e));
     } catch (std::exception &e) {
       ROS_ERROR_STREAM("Failed to update Preset Firmware " << e.what());
     } catch (...) {

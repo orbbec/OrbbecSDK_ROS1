@@ -582,9 +582,8 @@ void OBCameraNode::setupFrameTimestampCsvLogger() {
     auto current_path = boost::filesystem::current_path().string();
     frame_timestamp_csv_file_ = current_path + "/" + camera_name_ + "_frame_timestamp_stats.csv";
   }
-  frame_timestamp_csv_logger_ =
-      std::make_unique<FrameTimestampCsvLogger>(enable_frame_timestamp_csv_,
-                                                frame_timestamp_csv_file_);
+  frame_timestamp_csv_logger_ = std::make_unique<FrameTimestampCsvLogger>(
+      enable_frame_timestamp_csv_, frame_timestamp_csv_file_);
   if (!frame_timestamp_csv_logger_->enabled()) {
     enable_frame_timestamp_csv_ = false;
     frame_timestamp_csv_logger_.reset();
@@ -607,7 +606,7 @@ void OBCameraNode::init_interleave_mode() {
     device_->loadFrameInterleave("Laser On-Off");
     init_interleave_laser_param();
   } else {
-    ROS_INFO_STREAM("Setting interleave mode to nothing");
+    ROS_DEBUG_STREAM("Setting interleave mode to nothing");
   }
   // enable interleave frame
   if ((interleave_ae_mode_ == "hdr") || (interleave_ae_mode_ == "laser")) {
@@ -905,7 +904,8 @@ void OBCameraNode::stopIMU() {
     try {
       imuPipeline_->stop();
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to stop imu pipeline: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM(
+          "Failed to stop imu pipeline: " << orbbec_camera::formatObErrorWithStatus(e));
     }
   } else {
     for (const auto& stream_index : HID_STREAMS) {
@@ -1850,7 +1850,7 @@ void OBCameraNode::onNewColorFrameCallback() {
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(0));
   }
 
-  ROS_INFO_STREAM("Color frame thread exit!");
+  ROS_DEBUG_STREAM("Color frame thread exited");
 }
 
 void OBCameraNode::onNewLeftColorFrameCallback() {
@@ -1872,7 +1872,7 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_LEFT), IMAGE_STREAMS.at(1));
   }
 
-  ROS_INFO_STREAM("Left Color frame thread exit!");
+  ROS_DEBUG_STREAM("Left color frame thread exited");
 }
 
 void OBCameraNode::onNewRightColorFrameCallback() {
@@ -1894,7 +1894,7 @@ void OBCameraNode::onNewRightColorFrameCallback() {
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), IMAGE_STREAMS.at(2));
   }
 
-  ROS_INFO_STREAM("Right Color frame thread exit!");
+  ROS_DEBUG_STREAM("Right color frame thread exited");
 }
 
 std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
@@ -1927,8 +1927,8 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   }
   if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled() && !enable_pipeline_ &&
       (stream_index == COLOR || stream_index == DEPTH)) {
-    frame_timestamp_csv_logger_->recordStandaloneFrameArrival(
-        stream_index, frame, getSystemNowUs(), getSteadyNowUs(), true);
+    frame_timestamp_csv_logger_->recordStandaloneFrameArrival(stream_index, frame, getSystemNowUs(),
+                                                              getSteadyNowUs(), true);
   }
 
   bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
@@ -2039,7 +2039,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
       frame->format() != OB_FORMAT_Y16 && !rgb_is_decoded_ &&
       image_publishers_[COLOR].getNumSubscribers() > 0) {
-    ROS_ERROR_STREAM("frame is not decoded");
+    ROS_ERROR("color frame is not decoded");
     return;
   }
   if (frame->getType() == OB_FRAME_COLOR_LEFT && !rgb_left_is_decoded_) {
@@ -2196,7 +2196,7 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
   ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " subscribed");
   if (enable_pipeline_) {
     if (pipeline_started_) {
-      ROS_INFO_STREAM("pipe line already started");
+      ROS_DEBUG_STREAM("pipeline already started");
       return;
     }
     try {
@@ -2248,7 +2248,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     if (!pipeline_started_) {
-      ROS_INFO_STREAM("imageUnsubscribedCallback pipe line not start");
+      ROS_DEBUG_STREAM("pipeline not started or not exist, skip stop pipeline");
       return;
     }
     bool all_stream_no_subscriber = true;
@@ -2460,8 +2460,8 @@ void OBCameraNode::calcAndPublishStaticTransform() {
     try {
       ex = stream_profile->getExtrinsicTo(base_stream_profile);
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to get " << stream_name_[stream_index]
-                                        << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM("Failed to get " << stream_name_[stream_index] << " extrinsic: "
+                                        << orbbec_camera::formatObErrorWithStatus(e));
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
 
@@ -2537,7 +2537,8 @@ void OBCameraNode::publishStaticTransforms() {
     try {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[COLOR]);
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM("Failed to get "
+                       << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
     depth_to_other_extrinsics_[COLOR] = ex;
@@ -2550,7 +2551,8 @@ void OBCameraNode::publishStaticTransforms() {
     try {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[INFRA0]);
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM("Failed to get "
+                       << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
     depth_to_other_extrinsics_[INFRA0] = ex;
@@ -2563,7 +2565,8 @@ void OBCameraNode::publishStaticTransforms() {
     try {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[INFRA1]);
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM("Failed to get "
+                       << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
     depth_to_other_extrinsics_[INFRA1] = ex;
@@ -2576,7 +2579,8 @@ void OBCameraNode::publishStaticTransforms() {
     try {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[INFRA2]);
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM("Failed to get "
+                       << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
     depth_to_other_extrinsics_[INFRA2] = ex;
@@ -2589,7 +2593,8 @@ void OBCameraNode::publishStaticTransforms() {
     try {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[ACCEL]);
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM("Failed to get "
+                       << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
     depth_to_other_extrinsics_[ACCEL] = ex;
@@ -2602,7 +2607,8 @@ void OBCameraNode::publishStaticTransforms() {
     try {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[GYRO]);
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to get " << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM("Failed to get "
+                       << frame_id << " extrinsic: " << orbbec_camera::formatObErrorWithStatus(e));
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
     depth_to_other_extrinsics_[GYRO] = ex;
