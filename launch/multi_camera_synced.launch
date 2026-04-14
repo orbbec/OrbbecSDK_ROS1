@@ -18,7 +18,6 @@
         <arg name="sync_mode" default="software_triggering"/>
         <arg name="trigger_out_enabled" default="true"/>
         <arg name="log_level" value="$(arg camera1_log_level)"/>
-    <arg name="ros_log_level" default="info"/>
         <arg name="log_file_name" value="$(arg camera1_log_file_name)"/>
     </include>
 
@@ -29,7 +28,6 @@
         <arg name="sync_mode" default="hardware_triggering"/>
         <arg name="trigger_out_enabled" default="false"/>
         <arg name="log_level" value="$(arg camera2_log_level)"/>
-    <arg name="ros_log_level" default="info"/>
         <arg name="log_file_name" value="$(arg camera2_log_file_name)"/>
     </include>
 </launch>
