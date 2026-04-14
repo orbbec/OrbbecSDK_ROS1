@@ -38,8 +38,9 @@ void OBCameraNode::appendDepthFilterParam(orbbec_camera::DepthFilterState& filte
   filter_state.params.push_back(param);
 }
 
-orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(const std::string& filter_name,
-                                                                    bool enabled) const {
+orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
+    const std::string& filter_name, bool enabled,
+    const std::shared_ptr<ob::Filter>& filter) const {
   const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
   orbbec_camera::DepthFilterState filter_state;
   filter_state.filter_name = normalized_filter_name;
@@ -50,44 +51,29 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(const std::s
     return ss.str();
   };
 
-  if (normalized_filter_name == "DecimationFilter") {
-    appendDepthFilterParam(filter_state, "decimate", toParamValue(decimation_filter_scale_range_));
-  } else if (normalized_filter_name == "HDRMerge") {
-    appendDepthFilterParam(filter_state, "exposure_1", toParamValue(hdr_merge_exposure_1_));
-    appendDepthFilterParam(filter_state, "gain_1", toParamValue(hdr_merge_gain_1_));
-    appendDepthFilterParam(filter_state, "exposure_2", toParamValue(hdr_merge_exposure_2_));
-    appendDepthFilterParam(filter_state, "gain_2", toParamValue(hdr_merge_gain_2_));
-  } else if (normalized_filter_name == "SequenceIdFilter") {
-    appendDepthFilterParam(filter_state, "sequenceid", toParamValue(sequence_id_filter_id_));
-  } else if (normalized_filter_name == "ThresholdFilter") {
-    appendDepthFilterParam(filter_state, "min", toParamValue(threshold_filter_min_));
-    appendDepthFilterParam(filter_state, "max", toParamValue(threshold_filter_max_));
-  } else if (normalized_filter_name == "NoiseRemovalFilter") {
+  if (normalized_filter_name == "NoiseRemovalFilter") {
     appendDepthFilterParam(filter_state, "min_diff", toParamValue(noise_removal_filter_min_diff_));
     appendDepthFilterParam(filter_state, "max_size", toParamValue(noise_removal_filter_max_size_));
   } else if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
     appendDepthFilterParam(filter_state, "threshold",
                            toParamValue(hardware_noise_removal_filter_threshold_));
-  } else if (normalized_filter_name == "SpatialAdvancedFilter") {
-    appendDepthFilterParam(filter_state, "alpha", toParamValue(spatial_filter_alpha_));
-    appendDepthFilterParam(filter_state, "disp_diff",
-                           toParamValue(spatial_filter_diff_threshold_));
-    appendDepthFilterParam(filter_state, "magnitude", toParamValue(spatial_filter_magnitude_));
-    appendDepthFilterParam(filter_state, "radius", toParamValue(spatial_filter_radius_));
-  } else if (normalized_filter_name == "TemporalFilter") {
-    appendDepthFilterParam(filter_state, "diff_scale",
-                           toParamValue(temporal_filter_diff_threshold_));
-    appendDepthFilterParam(filter_state, "weight", toParamValue(temporal_filter_weight_));
-  } else if (normalized_filter_name == "HoleFillingFilter") {
-    appendDepthFilterParam(filter_state, "hole_filling_mode", hole_filling_filter_mode_);
-  } else if (normalized_filter_name == "SpatialFastFilter") {
-    appendDepthFilterParam(filter_state, "radius", toParamValue(spatial_fast_filter_radius_));
-  } else if (normalized_filter_name == "SpatialModerateFilter") {
-    appendDepthFilterParam(filter_state, "disp_diff",
-                           toParamValue(spatial_moderate_filter_diff_threshold_));
-    appendDepthFilterParam(filter_state, "magnitude",
-                           toParamValue(spatial_moderate_filter_magnitude_));
-    appendDepthFilterParam(filter_state, "radius", toParamValue(spatial_moderate_filter_radius_));
+  } else if (filter) {
+    try {
+      auto config_schema_vec = filter->getConfigSchemaVec();
+      for (const auto& config_schema : config_schema_vec) {
+        if (config_schema.name == nullptr || config_schema.name[0] == '\0') {
+          continue;
+        }
+        try {
+          auto value = filter->getConfigValue(config_schema.name);
+          appendDepthFilterParam(filter_state, config_schema.name, toParamValue(value));
+        } catch (const std::exception&) {
+          // Skip unreadable param and keep exporting others.
+        }
+      }
+    } catch (const std::exception&) {
+      // Keep params empty when schema is unavailable.
+    }
   }
 
   return filter_state;
@@ -282,11 +268,6 @@ void OBCameraNode::publishDepthFiltersStatus() {
   }
 
   msg.filters.reserve(ordered_filter_names.size());
-  auto to_param_value = [](const auto& value) {
-    std::ostringstream ss;
-    ss << value;
-    return ss.str();
-  };
   for (const auto& filter_name : ordered_filter_names) {
     bool enabled = false;
     if (filter_name == "NoiseRemovalFilter") {
@@ -303,23 +284,7 @@ void OBCameraNode::publishDepthFiltersStatus() {
       }
     }
 
-    auto filter_state = buildDepthFilterState(filter_name, enabled);
-    if (filter && filter_state.params.empty()) {
-      // Fallback: if no explicit mapping exists for a filter, export SDK schema params.
-      try {
-        auto config_schema_vec = filter->getConfigSchemaVec();
-        for (const auto& config_schema : config_schema_vec) {
-          try {
-            auto value = filter->getConfigValue(config_schema.name);
-            appendDepthFilterParam(filter_state, config_schema.name, to_param_value(value));
-          } catch (const std::exception&) {
-            // Skip unreadable param and keep exporting others.
-          }
-        }
-      } catch (const std::exception&) {
-        // Keep params empty when schema is unavailable.
-      }
-    }
+    auto filter_state = buildDepthFilterState(filter_name, enabled, filter);
 
     msg.filters.push_back(filter_state);
   }
