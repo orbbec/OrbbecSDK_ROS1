@@ -70,8 +70,7 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(const std::s
                            toParamValue(hardware_noise_removal_filter_threshold_));
   } else if (normalized_filter_name == "SpatialAdvancedFilter") {
     appendDepthFilterParam(filter_state, "alpha", toParamValue(spatial_filter_alpha_));
-    appendDepthFilterParam(filter_state, "disp_diff",
-                           toParamValue(spatial_filter_diff_threshold_));
+    appendDepthFilterParam(filter_state, "disp_diff", toParamValue(spatial_filter_diff_threshold_));
     appendDepthFilterParam(filter_state, "magnitude", toParamValue(spatial_filter_magnitude_));
     appendDepthFilterParam(filter_state, "radius", toParamValue(spatial_filter_radius_));
   } else if (normalized_filter_name == "TemporalFilter") {
@@ -104,8 +103,8 @@ void OBCameraNode::publishDepthFiltersStatus() {
     depth_filters_snapshot = depth_filter_list_;
   }
 
-  auto find_depth_filter =
-      [&depth_filters_snapshot, this](const std::string& filter_name) -> std::shared_ptr<ob::Filter> {
+  auto find_depth_filter = [&depth_filters_snapshot,
+                            this](const std::string& filter_name) -> std::shared_ptr<ob::Filter> {
     const auto normalized_name = normalizeDepthFilterName(filter_name);
     auto it = std::find_if(depth_filters_snapshot.begin(), depth_filters_snapshot.end(),
                            [&normalized_name](const auto& filter) {
@@ -1930,10 +1929,14 @@ void OBCameraNode::forceCleanupGlobalResources() {
 }
 
 void OBCameraNode::setupCameraInfo() {
-  color_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
-      nh_rgb_, camera_name_ + "_" + stream_name_[COLOR], color_info_uri_);
-  ir_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
-      nh_ir_, camera_name_ + "_" + stream_name_[INFRA0], ir_info_uri_);
+  if (!color_info_uri_.empty()) {
+    color_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
+        nh_rgb_, camera_name_ + "_" + stream_name_[COLOR], color_info_uri_);
+  }
+  if (!ir_info_uri_.empty()) {
+    ir_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
+        nh_ir_, camera_name_ + "_" + stream_name_[INFRA0], ir_info_uri_);
+  }
   auto param = getCameraParam();
   if (param) {
     camera_infos_[DEPTH] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
