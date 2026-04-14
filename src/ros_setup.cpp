@@ -751,10 +751,10 @@ void OBCameraNode::setupDepthPostProcessFilter() {
 void OBCameraNode::setupDevices() {
   if (!device_preset_.empty()) {
     try {
-      ROS_INFO_STREAM("Available presets:");
+      ROS_DEBUG_STREAM("Available presets:");
       auto preset_list = device_->getAvailablePresetList();
       for (uint32_t i = 0; i < preset_list->getCount(); i++) {
-        ROS_INFO_STREAM("Preset " << i << ": " << preset_list->getName(i));
+        ROS_DEBUG_STREAM("Preset " << i << ": " << preset_list->getName(i));
       }
       device_->loadPreset(device_preset_.c_str());
       ROS_INFO_STREAM("Loaded device preset: " << device_->getCurrentPresetName());
@@ -1036,7 +1036,6 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
       auto sync_config = device_->getMultiDeviceSyncConfig();
-      ROS_INFO_STREAM("Current sync mode: " << sync_config.syncMode);
       std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(),
                      ::toupper);
       sync_mode_ = OBSyncModeFromString(sync_mode_str_);
@@ -1049,7 +1048,7 @@ void OBCameraNode::setupDevices() {
       sync_config.framesPerTrigger = frames_per_trigger_;
       device_->setMultiDeviceSyncConfig(sync_config);
       sync_config = device_->getMultiDeviceSyncConfig();
-      ROS_INFO_STREAM("Set sync mode: " << sync_config.syncMode);
+      ROS_INFO_STREAM("Current sync mode: " << sync_config.syncMode);
       if (sync_mode_ == OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING) {
         ROS_INFO_STREAM("Frames per trigger: " << sync_config.framesPerTrigger);
         sync_host_time_timer_ =
@@ -1980,7 +1979,7 @@ void OBCameraNode::setupPipelineConfig() {
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
-      ROS_INFO_STREAM("Enable " << stream_name_[stream_index] << " stream");
+      ROS_DEBUG_STREAM("Enable " << stream_name_[stream_index] << " stream");
       auto profile = stream_profile_[stream_index]->as<ob::VideoStreamProfile>();
 
       if (stream_index == COLOR && enable_stream_[COLOR] && align_filter_) {
@@ -2162,8 +2161,8 @@ void OBCameraNode::setDepthAutoExposureROI() {
                                sizeof(config));
     device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                &data_size);
-    ROS_INFO_STREAM("Current depth AE ROI: " << config.x0_left << ", " << config.y0_top << ", "
-                                             << config.x1_right << ", " << config.y1_bottom);
+    ROS_INFO_STREAM("Set depth AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
+                                           << config.x1_right << ", " << config.y1_bottom);
   }
   depth_roi_has_run = true;
 }
@@ -2206,8 +2205,8 @@ void OBCameraNode::setColorAutoExposureROI() {
                                sizeof(config));
     device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                &data_size);
-    ROS_INFO_STREAM("Current color AE ROI: " << config.x0_left << ", " << config.y0_top << ", "
-                                             << config.x1_right << ", " << config.y1_bottom);
+    ROS_INFO_STREAM("Set color AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
+                                           << config.x1_right << ", " << config.y1_bottom);
   }
   color_roi_has_run = true;
 }

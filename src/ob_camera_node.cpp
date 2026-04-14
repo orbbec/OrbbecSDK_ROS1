@@ -554,7 +554,7 @@ void OBCameraNode::getParameters() {
   ROS_INFO_STREAM("current time domain:" << time_domain_);
 
   enable_sync_host_time_ = nh_private_.param<bool>("enable_sync_host_time", true);
-  ROS_INFO_STREAM("enable_sync_host_time:" << enable_sync_host_time_ ? "true" : "false");
+  ROS_INFO_STREAM("enable_sync_host_time:" << (enable_sync_host_time_ ? "true" : "false"));
   if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid())) {
     device_->timerSyncWithHost();
     if (time_domain_ != "global") {
@@ -673,7 +673,7 @@ void OBCameraNode::startStreams() {
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
     if (enable_frame_sync_) {
-      ROS_INFO_STREAM("====Enable frame sync====");
+      ROS_INFO_STREAM_ONCE("Enable frame sync");
       pipeline_->enableFrameSync();
     } else {
       pipeline_->disableFrameSync();
@@ -698,16 +698,16 @@ void OBCameraNode::startStreams() {
       throw;
     }
     if (!colorFrameThread_ && enable_stream_[COLOR]) {
-      ROS_INFO_STREAM("Create color frame read thread.");
+      ROS_DEBUG_STREAM("Create color frame read thread.");
       colorFrameThread_ = std::make_shared<std::thread>([this]() { onNewColorFrameCallback(); });
     }
     if (!leftColorFrameThread_ && enable_stream_[COLOR_LEFT]) {
-      ROS_INFO_STREAM("Create left color frame read thread.");
+      ROS_DEBUG_STREAM("Create left color frame read thread.");
       leftColorFrameThread_ =
           std::make_shared<std::thread>([this]() { onNewLeftColorFrameCallback(); });
     }
     if (!rightColorFrameThread_ && enable_stream_[COLOR_RIGHT]) {
-      ROS_INFO_STREAM("Create right color frame read thread.");
+      ROS_DEBUG_STREAM("Create right color frame read thread.");
       rightColorFrameThread_ =
           std::make_shared<std::thread>([this]() { onNewRightColorFrameCallback(); });
     }
@@ -1657,7 +1657,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   }
   const auto frame_set_arrival_system_us = getSystemNowUs();
   const auto frame_set_arrival_steady_us = getSteadyNowUs();
-  ROS_INFO_STREAM_ONCE("Received first frame set");
+  ROS_DEBUG_STREAM_ONCE("Received first frame set");
   try {
     // std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
     auto depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
@@ -2193,7 +2193,7 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
     return;
   }
 
-  ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " subscribed");
+  ROS_DEBUG_STREAM("Image stream " << stream_name_[stream_index] << " subscribed");
   if (enable_pipeline_) {
     if (pipeline_started_) {
       ROS_DEBUG_STREAM("pipeline already started");
@@ -2218,7 +2218,7 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
 }
 
 void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair& stream_index) {
-  ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " subscribed");
+  ROS_DEBUG_STREAM("IMU stream " << stream_name_[stream_index] << " subscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     if (enable_sync_output_accel_gyro_) {
@@ -2244,7 +2244,7 @@ void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair&
 }
 
 void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_index) {
-  ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " unsubscribed");
+  ROS_DEBUG_STREAM("Image stream " << stream_name_[stream_index] << " unsubscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     if (!pipeline_started_) {
@@ -2315,12 +2315,12 @@ void OBCameraNode::imuUnsubscribedCallback(const stream_index_pair& stream_index
 }
 
 void OBCameraNode::pointCloudSubscribedCallback() {
-  ROS_INFO_STREAM("point cloud subscribed");
+  ROS_DEBUG_STREAM("point cloud subscribed");
   imageSubscribedCallback(DEPTH);
 }
 
 void OBCameraNode::pointCloudUnsubscribedCallback() {
-  ROS_INFO_STREAM("point cloud unsubscribed");
+  ROS_DEBUG_STREAM("point cloud unsubscribed");
   if (depth_cloud_pub_.getNumSubscribers() > 0) {
     return;
   }
@@ -2328,7 +2328,7 @@ void OBCameraNode::pointCloudUnsubscribedCallback() {
 }
 
 void OBCameraNode::coloredPointCloudSubscribedCallback() {
-  ROS_INFO_STREAM("rgb point cloud subscribed");
+  ROS_DEBUG_STREAM("rgb point cloud subscribed");
   imageSubscribedCallback(DEPTH);
   imageSubscribedCallback(COLOR);
 }

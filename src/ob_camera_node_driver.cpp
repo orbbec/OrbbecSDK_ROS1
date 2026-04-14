@@ -179,7 +179,6 @@ void OBCameraNodeDriver::init() {
   ob::Context::setLoggerToFile(ob_log_level, log_path.c_str());
   // Set ROS log level
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, rosLogSeverityFromString(log_level));
-  ROS_INFO_STREAM("ROS log level set to: " << log_level);
   if (!log_file_name.empty()) {
     try {
       ob::Context::setLoggerFileName(log_file_name);
@@ -385,6 +384,7 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByNetIP(
 }
 
 void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &device) {
+  auto start_time = std::chrono::high_resolution_clock::now();
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (device_) {
     ROS_WARN("device_ is not null, reset device_");
@@ -522,6 +522,10 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
       std::terminate();
     }
   }
+  auto end_time = std::chrono::high_resolution_clock::now();
+  auto time_cost =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+  ROS_INFO_STREAM("Initialize device cost: " << time_cost << " ms");
 }
 
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList> &list) {
