@@ -2254,6 +2254,9 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
       std::unique_lock<std::mutex> depth_filter_lock(depth_filter_mutex_);
       auto is_same_filter =
           [&normalized_request_filter_name](const std::shared_ptr<ob::Filter>& filter) {
+            if (!filter) {
+              return false;
+            }
             return normalizeDepthFilterName(filter->getName()) == normalized_request_filter_name ||
                    normalizeDepthFilterName(filter->type()) == normalized_request_filter_name;
           };
@@ -2265,31 +2268,15 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         return fail("Filter '" + normalized_request_filter_name +
                     "' is not supported by this device");
       }
-      std::size_t filter_insert_pos = std::distance(depth_filter_list_.begin(), first_match_it);
-
-      auto it = std::remove_if(depth_filter_list_.begin(), depth_filter_list_.end(),
-                               [&is_same_filter](const std::shared_ptr<ob::Filter>& filter) {
-                                 return is_same_filter(filter);
-                               });
-      depth_filter_list_.erase(it, depth_filter_list_.end());
-
-      auto add_or_replace_filter = [&filter_insert_pos,
-                                    this](const std::shared_ptr<ob::Filter>& filter) {
-        if (!filter) {
-          return;
-        }
-        if (filter_insert_pos <= depth_filter_list_.size()) {
-          depth_filter_list_.insert(
-              depth_filter_list_.begin() + static_cast<std::ptrdiff_t>(filter_insert_pos), filter);
-        } else {
-          depth_filter_list_.push_back(filter);
-        }
-      };
+      const auto& existing_filter = *first_match_it;
+      if (!existing_filter) {
+        return fail("Filter '" + normalized_request_filter_name +
+                    "' is not supported by this device");
+      }
 
       if (normalized_request_filter_name == "DecimationFilter") {
-        auto decimation_filter = std::make_shared<ob::DecimationFilter>();
+        auto decimation_filter = existing_filter->as<ob::DecimationFilter>();
         decimation_filter->enable(request.filter_enable);
-        add_or_replace_filter(decimation_filter);
         if (request.filter_param.size() > 0) {
           auto range = decimation_filter->getScaleRange();
           auto decimation_filter_scale = request.filter_param[0];
@@ -2312,9 +2299,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         }
         enable_decimation_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "HDRMerge") {
-        auto hdr_merge_filter = std::make_shared<ob::HdrMerge>();
+        auto hdr_merge_filter = existing_filter->as<ob::HdrMerge>();
         hdr_merge_filter->enable(request.filter_enable);
-        add_or_replace_filter(hdr_merge_filter);
         if (request.filter_param.size() > 3) {
           auto config = OBHdrConfig();
           config.enable = true;
@@ -2338,9 +2324,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         }
         enable_hdr_merge_ = request.filter_enable;
       } else if (normalized_request_filter_name == "SequenceIdFilter") {
-        auto sequenced_filter = std::make_shared<ob::SequenceIdFilter>();
+        auto sequenced_filter = existing_filter->as<ob::SequenceIdFilter>();
         sequenced_filter->enable(request.filter_enable);
-        add_or_replace_filter(sequenced_filter);
         if (request.filter_param.size() > 0) {
           sequenced_filter->selectSequenceId(request.filter_param[0]);
           ROS_INFO_STREAM("Set sequenced filter selectSequenceId value to "
@@ -2352,9 +2337,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         }
         enable_sequenced_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "ThresholdFilter") {
-        auto threshold_filter = std::make_shared<ob::ThresholdFilter>();
+        auto threshold_filter = existing_filter->as<ob::ThresholdFilter>();
         threshold_filter->enable(request.filter_enable);
-        add_or_replace_filter(threshold_filter);
         if (request.filter_param.size() > 1) {
           auto threshold_filter_min = request.filter_param[0];
           auto threshold_filter_max = request.filter_param[1];
@@ -2369,9 +2353,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         }
         enable_threshold_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "SpatialAdvancedFilter") {
-        auto spatial_filter = std::make_shared<ob::SpatialAdvancedFilter>();
+        auto spatial_filter = existing_filter->as<ob::SpatialAdvancedFilter>();
         spatial_filter->enable(request.filter_enable);
-        add_or_replace_filter(spatial_filter);
         if (request.filter_param.size() > 3) {
           OBSpatialAdvancedFilterParams params{};
           params.alpha = request.filter_param[0];
@@ -2393,9 +2376,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         }
         enable_spatial_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "TemporalFilter") {
-        auto temporal_filter = std::make_shared<ob::TemporalFilter>();
+        auto temporal_filter = existing_filter->as<ob::TemporalFilter>();
         temporal_filter->enable(request.filter_enable);
-        add_or_replace_filter(temporal_filter);
         if (request.filter_param.size() > 1) {
           temporal_filter->setDiffScale(request.filter_param[0]);
           temporal_filter->setWeight(request.filter_param[1]);
@@ -2409,9 +2391,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         }
         enable_temporal_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "SpatialFastFilter") {
-        auto spatial_fast_filter = std::make_shared<ob::SpatialFastFilter>();
+        auto spatial_fast_filter = existing_filter->as<ob::SpatialFastFilter>();
         spatial_fast_filter->enable(request.filter_enable);
-        add_or_replace_filter(spatial_fast_filter);
         if (request.filter_param.size() > 0) {
           OBSpatialFastFilterParams params{};
           params.radius = request.filter_param[0];
@@ -2424,9 +2405,8 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         }
         enable_spatial_fast_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "SpatialModerateFilter") {
-        auto spatial_moderate_filter = std::make_shared<ob::SpatialModerateFilter>();
+        auto spatial_moderate_filter = existing_filter->as<ob::SpatialModerateFilter>();
         spatial_moderate_filter->enable(request.filter_enable);
-        add_or_replace_filter(spatial_moderate_filter);
         if (request.filter_param.size() > 2) {
           OBSpatialModerateFilterParams params{};
           params.disp_diff = request.filter_param[0];
@@ -2446,19 +2426,16 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         }
         enable_spatial_moderate_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "FalsePositiveFilter") {
-        auto false_positive_filter = std::make_shared<ob::FalsePositiveFilter>();
+        auto false_positive_filter = existing_filter->as<ob::FalsePositiveFilter>();
         false_positive_filter->enable(request.filter_enable);
-        add_or_replace_filter(false_positive_filter);
         enable_false_positive_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "MgcNoiseRemovalFilter") {
-        auto mgc_noise_filter = std::make_shared<ob::MgcNoiseRemovalFilter>();
+        auto mgc_noise_filter = existing_filter->as<ob::MgcNoiseRemovalFilter>();
         mgc_noise_filter->enable(request.filter_enable);
-        add_or_replace_filter(mgc_noise_filter);
         enable_mgc_noise_removal_filter_ = request.filter_enable;
       } else if (normalized_request_filter_name == "LutNoiseRemovalFilter") {
-        auto lut_noise_filter = std::make_shared<ob::LutNoiseRemovalFilter>();
+        auto lut_noise_filter = existing_filter->as<ob::LutNoiseRemovalFilter>();
         lut_noise_filter->enable(request.filter_enable);
-        add_or_replace_filter(lut_noise_filter);
         enable_lut_noise_removal_filter_ = request.filter_enable;
       } else {
         return fail(normalized_request_filter_name + " cannot be set");
