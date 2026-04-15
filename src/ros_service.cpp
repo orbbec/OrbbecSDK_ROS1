@@ -22,11 +22,13 @@ namespace {
 bool isGemini330SeriesForDisparity(uint32_t pid) {
   return pid == GEMINI_335_PID || pid == GEMINI_336_PID || pid == GEMINI_330_PID ||
          pid == GEMINI_335L_PID || pid == GEMINI_336L_PID || pid == GEMINI_330L_PID ||
-         pid == GEMINI_335LG_PID || pid == GEMINI_335LE_PID;
+         pid == GEMINI_335LG_PID || pid == GEMINI_335LE_PID || pid == GEMINI_338_PID ||
+         pid == GEMINI_338L_PID || pid == GEMINI_338LE_PID || pid == GEMINI_338LG_PID ||
+         pid == GEMINI_331L_PID;
 }
 
 bool isSupportedDisparityResolutionForPid(uint32_t pid, int width, int height) {
-  if (pid == GEMINI_335LE_PID) {
+  if (pid == GEMINI_335LE_PID || pid == GEMINI_338LE_PID) {
     return (width == 1280 && height == 800) || (width == 640 && height == 400) ||
            (width == 424 && height == 266) || (width == 320 && height == 200);
   }
@@ -36,11 +38,11 @@ bool isSupportedDisparityResolutionForPid(uint32_t pid, int width, int height) {
 }
 
 std::string getDisparityResolutionHintByPid(uint32_t pid) {
-  if (pid == GEMINI_335LE_PID) {
-    return "Supported resolutions for Gemini 335Le: 1280x800/640x400/424x266/320x200";
+  if (pid == GEMINI_335LE_PID || pid == GEMINI_338LE_PID) {
+    return "Supported resolutions for the current device: 1280x800/640x400/424x266/320x200";
   }
 
-  return "Supported resolutions for Gemini 335/336/330/335L/336L/335Lg/330L: "
+  return "Supported resolutions for the current device: "
          "1280x800/1280x720/640x400/424x266";
 }
 
@@ -706,7 +708,8 @@ bool OBCameraNode::getAutoWhiteBalanceCallback(GetInt32Request& request,
   try {
     response.data = sensor->getAutoWhiteBalance();
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get auto white balance: " << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_ERROR_STREAM(
+        "Failed to get auto white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -729,7 +732,8 @@ bool OBCameraNode::setAutoWhiteBalanceCallback(SetInt32Request& request,
     result = sensor->getAutoWhiteBalance();
     ROS_INFO_STREAM("After set auto white balance: " << result);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set auto white balance: " << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_ERROR_STREAM(
+        "Failed to set auto white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -861,7 +865,8 @@ bool OBCameraNode::getPtpConfigCallback(GetBoolRequest& request, GetBoolResponse
   try {
     response.data = device_->getBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get config sync status: " << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_ERROR_STREAM(
+        "Failed to get config sync status: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -1096,7 +1101,8 @@ bool OBCameraNode::getLrmMeasureDistanceCallback(GetInt32Request& request,
   try {
     response.data = device_->getIntProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get ldp measure distance: " << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_ERROR_STREAM(
+        "Failed to get ldp measure distance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -1187,7 +1193,8 @@ bool OBCameraNode::resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& reque
       sensor->setWhiteBalance(data);
       return true;
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to set white balance: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM(
+          "Failed to set white balance: " << orbbec_camera::formatObErrorWithStatus(e));
       return false;
     }
   } else {
@@ -1222,8 +1229,8 @@ bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
   } catch (const ob::Error& e) {
     std::stringstream ss;
     ss << "Failed to switch IR data source channel: " << e.getMessage();
-    ROS_ERROR_STREAM("Failed to switch IR data source channel: "
-                     << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_ERROR_STREAM(
+        "Failed to switch IR data source channel: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
   }
@@ -1244,8 +1251,8 @@ bool OBCameraNode::setWriteCustomerData(SetStringRequest& request, SetStringResp
   } catch (const ob::Error& e) {
     std::stringstream ss;
     ss << "Failed to set write customer data: " << e.getMessage();
-    ROS_ERROR_STREAM("Failed to set write customer data: "
-                     << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_ERROR_STREAM(
+        "Failed to set write customer data: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
   }
@@ -1304,7 +1311,8 @@ bool OBCameraNode::setPointCloudDecimationCallback(SetInt32Request& request,
     response.success = true;
     return true;
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set point cloud decimation: " << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_ERROR_STREAM(
+        "Failed to set point cloud decimation: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     response.message = e.getMessage();
     return false;
@@ -1446,12 +1454,12 @@ bool OBCameraNode::setDisparitySearchOffsetCallback(SetInt32Request& request,
   }
 }
 
-void OBCameraNode::setAEReferenceStreamCallback(const SetStringRequest& request, SetStringResponse& response) {
+void OBCameraNode::setAEReferenceStreamCallback(const SetStringRequest& request,
+                                                SetStringResponse& response) {
   try {
     if (device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE) &&
         (request.data == "depth" || request.data == "color")) {
-      device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT,
-                              request.data == "depth" ? 0 : 1);
+      device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT, request.data == "depth" ? 0 : 1);
       ae_reference_stream_ = request.data;
       response.success = true;
       response.message = "set AE reference stream success";
