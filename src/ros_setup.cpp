@@ -23,9 +23,49 @@
 
 namespace orbbec_camera {
 
+namespace {
+
+std::string getDepthFilterStatusName(const std::string& filter_name) {
+  if (filter_name == "SpatialAdvancedFilter") {
+    return "SpatialFilter";
+  }
+  if (filter_name == "DisparityTransform") {
+    return "DisparityToDepth";
+  }
+  return filter_name;
+}
+
+std::string getDepthFilterStatusParamName(const std::string& filter_name,
+                                          const std::string& param_name) {
+  if (filter_name == "SpatialAdvancedFilter" && param_name == "disp_diff") {
+    return "diff_threshold";
+  }
+  if (filter_name == "SpatialModerateFilter" && param_name == "disp_diff") {
+    return "diff_threshold";
+  }
+  if (filter_name == "TemporalFilter" && param_name == "diff_scale") {
+    return "diff_threshold";
+  }
+  if (filter_name == "DecimationFilter" && param_name == "decimate") {
+    return "scale";
+  }
+  return param_name;
+}
+
+bool shouldExposeDepthFilterParams(const std::string& filter_name) {
+  return filter_name != "MgcNoiseRemovalFilter" && filter_name != "LutNoiseRemovalFilter" &&
+         filter_name != "DisparityTransform" && filter_name != "FalsePositiveFilter" &&
+         filter_name != "EdgeNoiseRemovalFilter";
+}
+
+}  // namespace
+
 std::string OBCameraNode::normalizeDepthFilterName(const std::string& filter_name) {
   if (filter_name == "HardwareNoiseRemoval") {
     return "HardwareNoiseRemovalFilter";
+  }
+  if (filter_name == "SpatialFilter") {
+    return "SpatialAdvancedFilter";
   }
   return filter_name;
 }
@@ -42,7 +82,7 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
     const std::string& filter_name, bool enabled, const std::shared_ptr<ob::Filter>& filter) const {
   const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
   orbbec_camera::DepthFilterState filter_state;
-  filter_state.filter_name = normalized_filter_name;
+  filter_state.filter_name = getDepthFilterStatusName(normalized_filter_name);
   filter_state.enabled = enabled;
   auto toParamValue = [](const auto& value) {
     std::ostringstream ss;
@@ -56,7 +96,7 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
   } else if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
     appendDepthFilterParam(filter_state, "threshold",
                            toParamValue(hardware_noise_removal_filter_threshold_));
-  } else if (filter) {
+  } else if (filter && shouldExposeDepthFilterParams(normalized_filter_name)) {
     auto formatFilterConfigValue = [](const OBFilterConfigSchemaItem& config_schema, double value) {
       switch (config_schema.type) {
         case OB_FILTER_CONFIG_VALUE_TYPE_INT: {
@@ -81,7 +121,9 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
         }
         try {
           auto value = filter->getConfigValue(config_schema.name);
-          appendDepthFilterParam(filter_state, config_schema.name,
+          appendDepthFilterParam(filter_state,
+                                 getDepthFilterStatusParamName(normalized_filter_name,
+                                                               config_schema.name),
                                  formatFilterConfigValue(config_schema, value));
         } catch (const std::exception&) {
           // Skip unreadable param and keep exporting others.
@@ -645,7 +687,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         spatial_filter->setFilterParams(params);
       }
       auto current_params = spatial_filter->getFilterParams();
-      ROS_INFO_STREAM("Current SpatialAdvancedFilter params: "
+      ROS_INFO_STREAM("Current SpatialFilter params: "
                       << "alpha=" << current_params.alpha
                       << ", disp_diff=" << current_params.disp_diff
                       << ", magnitude=" << static_cast<int>(current_params.magnitude)
@@ -2398,7 +2440,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
           params.magnitude = request.filter_param[2];
           params.radius = request.filter_param[3];
           spatial_filter->setFilterParams(params);
-          ROS_INFO_STREAM("Set spatial filter params: "
+          ROS_INFO_STREAM("Set SpatialFilter params: "
                           << "\nalpha:" << params.alpha << "\ndisp_diff:" << params.disp_diff
                           << "\nmagnitude:" << static_cast<int>(params.magnitude)
                           << "\nradius:" << params.radius);
