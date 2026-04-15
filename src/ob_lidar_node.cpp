@@ -318,8 +318,8 @@ void OBLidarNode::setupProfiles() {
                                 << (stream_index == ACCEL ? accel_range_ : gyro_range_)
                                 << " sample rate " << imu_rate_);
     } catch (const ob::Error& e) {
-      ROS_INFO_STREAM("Failed to setup " << stream_name_[stream_index]
-                                         << " profile: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_INFO_STREAM("Failed to setup " << stream_name_[stream_index] << " profile: "
+                                         << orbbec_camera::formatObErrorWithStatus(e));
       enable_stream_[stream_index] = false;
       stream_profile_[stream_index] = nullptr;
     }
@@ -389,7 +389,7 @@ void OBLidarNode::setupPipelineConfig() {
   pipeline_config_ = std::make_shared<ob::Config>();
   for (const auto& stream_index : LIDAR_STREAMS) {
     if (enable_stream_[stream_index]) {
-      ROS_INFO_STREAM("Enable " << stream_name_[stream_index] << " stream");
+      ROS_DEBUG_STREAM("Enable " << stream_name_[stream_index] << " stream");
       auto profile = stream_profile_[stream_index]->as<ob::LiDARStreamProfile>();
 
       if (enable_stream_[stream_index]) {
@@ -1095,11 +1095,13 @@ void OBLidarNode::publishLidarToIMUExtrinsics() {
         ROS_DEBUG_STREAM("ACCEL and GYRO extrinsics are identical");
       }
     } catch (const ob::Error& e) {
-      ROS_WARN_STREAM("Could not get GYRO extrinsic for verification: " << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_WARN_STREAM("Could not get GYRO extrinsic for verification: "
+                      << orbbec_camera::formatObErrorWithStatus(e));
     }
 
   } catch (const ob::Error& e) {
-    ROS_WARN_STREAM("Failed to get ACCEL extrinsic, trying GYRO: " << orbbec_camera::formatObErrorWithStatus(e));
+    ROS_WARN_STREAM("Failed to get ACCEL extrinsic, trying GYRO: "
+                    << orbbec_camera::formatObErrorWithStatus(e));
     try {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[GYRO]);
       ROS_INFO_STREAM("Using GYRO extrinsic for IMU");

@@ -39,8 +39,7 @@ void OBCameraNode::appendDepthFilterParam(orbbec_camera::DepthFilterState& filte
 }
 
 orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
-    const std::string& filter_name, bool enabled,
-    const std::shared_ptr<ob::Filter>& filter) const {
+    const std::string& filter_name, bool enabled, const std::shared_ptr<ob::Filter>& filter) const {
   const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
   orbbec_camera::DepthFilterState filter_state;
   filter_state.filter_name = normalized_filter_name;
@@ -107,8 +106,8 @@ void OBCameraNode::publishDepthFiltersStatus() {
     depth_filters_snapshot = depth_filter_list_;
   }
 
-  auto find_depth_filter =
-      [&depth_filters_snapshot, this](const std::string& filter_name) -> std::shared_ptr<ob::Filter> {
+  auto find_depth_filter = [&depth_filters_snapshot,
+                            this](const std::string& filter_name) -> std::shared_ptr<ob::Filter> {
     const auto normalized_name = normalizeDepthFilterName(filter_name);
     auto it = std::find_if(depth_filters_snapshot.begin(), depth_filters_snapshot.end(),
                            [&normalized_name](const auto& filter) {
@@ -429,8 +428,6 @@ void OBCameraNode::setupColorPostProcessFilter() {
       auto range = decimation_filter->getScaleRange();
       if (color_decimation_filter_scale_ != -1 && color_decimation_filter_scale_ <= range.max &&
           color_decimation_filter_scale_ >= range.min) {
-        ROS_INFO_STREAM("Set color decimation filter scale value to "
-                        << color_decimation_filter_scale_);
         decimation_filter->setScaleValue(color_decimation_filter_scale_);
       }
       if (color_decimation_filter_scale_ != -1 && (color_decimation_filter_scale_ < range.min ||
@@ -438,6 +435,8 @@ void OBCameraNode::setupColorPostProcessFilter() {
         ROS_ERROR_STREAM("Color Decimation filter scale value is out of range "
                          << range.min << " - " << range.max);
       }
+      ROS_INFO_STREAM("Current color decimation filter scale value: "
+                      << static_cast<int>(decimation_filter->getScaleValue()));
     }
   }
   for (size_t i = 0; i < left_color_filter_list_.size(); i++) {
@@ -458,8 +457,6 @@ void OBCameraNode::setupColorPostProcessFilter() {
       if (left_color_decimation_filter_scale_ != -1 &&
           left_color_decimation_filter_scale_ <= range.max &&
           left_color_decimation_filter_scale_ >= range.min) {
-        ROS_INFO_STREAM("Set left color decimation filter scale value to "
-                        << left_color_decimation_filter_scale_);
         decimation_filter->setScaleValue(left_color_decimation_filter_scale_);
       }
       if (left_color_decimation_filter_scale_ != -1 &&
@@ -468,6 +465,8 @@ void OBCameraNode::setupColorPostProcessFilter() {
         ROS_ERROR_STREAM("Left Color Decimation filter scale value is out of range "
                          << range.min << " - " << range.max);
       }
+      ROS_INFO_STREAM("Current left color decimation filter scale value: "
+                      << static_cast<int>(decimation_filter->getScaleValue()));
     }
   }
 
@@ -489,8 +488,6 @@ void OBCameraNode::setupColorPostProcessFilter() {
       if (right_color_decimation_filter_scale_ != -1 &&
           right_color_decimation_filter_scale_ <= range.max &&
           right_color_decimation_filter_scale_ >= range.min) {
-        ROS_INFO_STREAM("Set right color decimation filter scale value to "
-                        << right_color_decimation_filter_scale_);
         decimation_filter->setScaleValue(right_color_decimation_filter_scale_);
       }
       if (right_color_decimation_filter_scale_ != -1 &&
@@ -499,6 +496,8 @@ void OBCameraNode::setupColorPostProcessFilter() {
         ROS_ERROR_STREAM("Right Color Decimation filter scale value is out of range "
                          << range.min << " - " << range.max);
       }
+      ROS_INFO_STREAM("Current right color decimation filter scale value: "
+                      << static_cast<int>(decimation_filter->getScaleValue()));
     }
   }
 }
@@ -533,8 +532,9 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
         auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
         if (left_ir_sequence_id_filter_id_ != -1) {
           sequenced_filter->selectSequenceId(left_ir_sequence_id_filter_id_);
-          ROS_INFO_STREAM("Set left ir SequenceIdFilter ID to " << left_ir_sequence_id_filter_id_);
         }
+        ROS_INFO_STREAM(
+            "Current left ir SequenceIdFilter ID: " << sequenced_filter->getSelectSequenceId());
       }
     }
   }
@@ -571,9 +571,9 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
         auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
         if (right_ir_sequence_id_filter_id_ != -1) {
           sequenced_filter->selectSequenceId(right_ir_sequence_id_filter_id_);
-          ROS_INFO_STREAM("Set right ir SequenceIdFilter ID to "
-                          << right_ir_sequence_id_filter_id_);
         }
+        ROS_INFO_STREAM(
+            "Current right ir SequenceIdFilter ID: " << sequenced_filter->getSelectSequenceId());
       }
     }
   }
@@ -614,7 +614,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
     ROS_DEBUG_STREAM("Setting " << filter_name << "......");
     if (filter_params.find(filter_name) != filter_params.end()) {
       std::string value = filter_params[filter_name] ? "true" : "false";
-      ROS_INFO_STREAM("set " << filter_name << " to " << value);
+      ROS_INFO_STREAM("Set depth filter " << filter_name << " to " << value);
       filter->enable(filter_params[filter_name]);
       filter_status_[filter_name] = static_cast<bool>(filter_params[filter_name]);
     }
@@ -623,11 +623,16 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       if (decimation_filter_scale_range_ != -1) {
         decimation_filter->setScaleValue(decimation_filter_scale_range_);
       }
+      ROS_INFO_STREAM("Current decimation filter scale value: "
+                      << static_cast<int>(decimation_filter->getScaleValue()));
     } else if (filter_name == "ThresholdFilter" && enable_threshold_filter_) {
       auto threshold_filter = filter->as<ob::ThresholdFilter>();
       if (threshold_filter_min_ != -1 && threshold_filter_max_ != -1) {
         threshold_filter->setValueRange(threshold_filter_min_, threshold_filter_max_);
       }
+      ROS_INFO_STREAM("Current threshold filter value range: "
+                      << static_cast<int>(threshold_filter->getConfigValue("min")) << " - "
+                      << static_cast<int>(threshold_filter->getConfigValue("max")));
     } else if (filter_name == "SpatialAdvancedFilter" && enable_spatial_filter_) {
       auto spatial_filter = filter->as<ob::SpatialAdvancedFilter>();
       OBSpatialAdvancedFilterParams params{};
@@ -639,22 +644,35 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         params.disp_diff = spatial_filter_diff_threshold_;
         spatial_filter->setFilterParams(params);
       }
+      auto current_params = spatial_filter->getFilterParams();
+      ROS_INFO_STREAM("Current SpatialAdvancedFilter params: "
+                      << "alpha=" << current_params.alpha
+                      << ", disp_diff=" << current_params.disp_diff
+                      << ", magnitude=" << static_cast<int>(current_params.magnitude)
+                      << ", radius=" << current_params.radius);
     } else if (filter_name == "TemporalFilter" && enable_temporal_filter_) {
       auto temporal_filter = filter->as<ob::TemporalFilter>();
       if (temporal_filter_diff_threshold_ != -1 && temporal_filter_weight_ != -1) {
         temporal_filter->setDiffScale(temporal_filter_diff_threshold_);
         temporal_filter->setWeight(temporal_filter_weight_);
       }
+      ROS_INFO_STREAM(
+          "Current TemporalFilter params: "
+          << "diff_scale=" << static_cast<float>(temporal_filter->getConfigValue("diff_scale"))
+          << ", weight=" << static_cast<float>(temporal_filter->getConfigValue("weight")));
     } else if (filter_name == "HoleFillingFilter" && enable_hole_filling_filter_ &&
                !hole_filling_filter_mode_.empty()) {
       auto hole_filling_filter = filter->as<ob::HoleFillingFilter>();
       OBHoleFillingMode hole_filling_mode = holeFillingModeFromString(hole_filling_filter_mode_);
       hole_filling_filter->setFilterMode(hole_filling_mode);
+      ROS_INFO_STREAM("Current HoleFillingFilter mode: "
+                      << static_cast<int>(hole_filling_filter->getFilterMode()));
     } else if (filter_name == "SequenceIdFilter" && enable_sequenced_filter_) {
       auto sequenced_filter = filter->as<ob::SequenceIdFilter>();
       if (sequence_id_filter_id_ != -1) {
         sequenced_filter->selectSequenceId(sequence_id_filter_id_);
       }
+      ROS_INFO_STREAM("Current SequenceIdFilter ID: " << sequenced_filter->getSelectSequenceId());
     } else if (filter_name == "HDRMerge" && enable_hdr_merge_) {
       auto hdr_merge_filter = filter->as<ob::HdrMerge>();
       OBHdrConfig hdr_config{};
@@ -665,23 +683,28 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         hdr_config.gain_1 = hdr_merge_gain_1_;
         hdr_config.gain_2 = hdr_merge_gain_2_;
         hdr_config.enable = true;
-        ROS_INFO_STREAM("set HDRMerge exposure_1 to " << hdr_merge_exposure_1_);
-        ROS_INFO_STREAM("set HDRMerge exposure_2 to " << hdr_merge_exposure_2_);
-        ROS_INFO_STREAM("set HDRMerge gain_1 to " << hdr_merge_gain_1_);
-        ROS_INFO_STREAM("set HDRMerge gain_2 to " << hdr_merge_gain_2_);
         device_->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG,
                                    reinterpret_cast<const uint8_t*>(&hdr_config),
                                    sizeof(OBHdrConfig));
       }
       hdr_merge_filter->enable(true);
+      uint32_t hdr_config_size = sizeof(hdr_config);
+      device_->getStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG,
+                                 reinterpret_cast<uint8_t*>(&hdr_config), &hdr_config_size);
+      ROS_INFO_STREAM("Current HDRMerge params: "
+                      << "exposure_1=" << hdr_config.exposure_1 << ", gain_1=" << hdr_config.gain_1
+                      << ", exposure_2=" << hdr_config.exposure_2
+                      << ", gain_2=" << hdr_config.gain_2);
     } else if (filter_name == "SpatialFastFilter" && enable_spatial_fast_filter_) {
       auto spatial_fast_filter = filter->as<ob::SpatialFastFilter>();
       OBSpatialFastFilterParams params{};
       if (spatial_fast_filter_radius_ != -1) {
         params.radius = spatial_fast_filter_radius_;
         spatial_fast_filter->setFilterParams(params);
-        ROS_INFO_STREAM("Set SpatialFastFilter radius: " << spatial_fast_filter_radius_);
       }
+      auto current_params = spatial_fast_filter->getFilterParams();
+      ROS_INFO_STREAM(
+          "Current SpatialFastFilter radius: " << static_cast<int>(current_params.radius));
     } else if (filter_name == "SpatialModerateFilter" && enable_spatial_moderate_filter_) {
       auto spatial_moderate_filter = filter->as<ob::SpatialModerateFilter>();
       OBSpatialModerateFilterParams params{};
@@ -691,11 +714,12 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         params.radius = spatial_moderate_filter_radius_;
         params.disp_diff = spatial_moderate_filter_diff_threshold_;
         spatial_moderate_filter->setFilterParams(params);
-        ROS_INFO_STREAM("Set SpatialModerateFilter - magnitude: "
-                        << spatial_moderate_filter_magnitude_
-                        << ", radius: " << spatial_moderate_filter_radius_
-                        << ", diff_threshold: " << spatial_moderate_filter_diff_threshold_);
       }
+      auto current_params = spatial_moderate_filter->getFilterParams();
+      ROS_INFO_STREAM("Current SpatialModerateFilter params: "
+                      << "disp_diff=" << current_params.disp_diff
+                      << ", magnitude=" << static_cast<int>(current_params.magnitude)
+                      << ", radius=" << static_cast<int>(current_params.radius));
     } else {
       ROS_DEBUG_STREAM("Skip setting " << filter_name);
     }
@@ -709,10 +733,10 @@ void OBCameraNode::setupDepthPostProcessFilter() {
 void OBCameraNode::setupDevices() {
   if (!device_preset_.empty()) {
     try {
-      ROS_INFO_STREAM("Available presets:");
+      ROS_DEBUG_STREAM("Available presets:");
       auto preset_list = device_->getAvailablePresetList();
       for (uint32_t i = 0; i < preset_list->getCount(); i++) {
-        ROS_INFO_STREAM("Preset " << i << ": " << preset_list->getName(i));
+        ROS_DEBUG_STREAM("Preset " << i << ": " << preset_list->getName(i));
       }
       device_->loadPreset(device_preset_.c_str());
       ROS_INFO_STREAM("Loaded device preset: " << device_->getCurrentPresetName());
@@ -892,41 +916,32 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
     }
-    if (sensors_.find(DEPTH) != sensors_.end() &&
+    if (enable_noise_removal_filter_ && sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
       auto default_noise_removal_filter_min_diff =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-      ROS_INFO_STREAM(
-          "default_noise_removal_filter_min_diff: " << default_noise_removal_filter_min_diff);
       if (noise_removal_filter_min_diff_ != -1 &&
           default_noise_removal_filter_min_diff != noise_removal_filter_min_diff_) {
         device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, noise_removal_filter_min_diff_);
-        auto new_noise_removal_filter_min_diff =
-            device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-        ROS_INFO_STREAM(
-            "after set noise_removal_filter_min_diff: " << new_noise_removal_filter_min_diff);
       }
+      ROS_INFO_STREAM("Current noise_removal_filter_min_diff: "
+                      << device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT));
     }
-    if (sensors_.find(DEPTH) != sensors_.end() &&
+    if (enable_noise_removal_filter_ && sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
       auto default_noise_removal_filter_max_size =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-      ROS_INFO_STREAM(
-          "default_noise_removal_filter_max_size: " << default_noise_removal_filter_max_size);
       if (noise_removal_filter_max_size_ != -1 &&
           default_noise_removal_filter_max_size != noise_removal_filter_max_size_) {
-        device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, noise_removal_filter_max_size_);
-        auto new_noise_removal_filter_max_size =
-            device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-        ROS_INFO_STREAM(
-            "after set noise_removal_filter_max_size: " << new_noise_removal_filter_max_size);
       }
+      ROS_INFO_STREAM("Current noise_removal_filter_max_size: "
+                      << device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT));
     }
     if (sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_noise_removal_filter_);
-      ROS_INFO_STREAM("enable_noise_removal_filter:" << enable_noise_removal_filter_ ? "ON"
-                                                                                     : "OFF");
+      ROS_INFO_STREAM("Set noise removal filter to "
+                      << (enable_noise_removal_filter_ ? "true" : "false"));
     }
     if (!depth_work_mode_.empty() &&
         device_->isPropertySupported(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, OB_PERMISSION_READ_WRITE)) {
@@ -1003,7 +1018,6 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
       auto sync_config = device_->getMultiDeviceSyncConfig();
-      ROS_INFO_STREAM("Current sync mode: " << sync_config.syncMode);
       std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(),
                      ::toupper);
       sync_mode_ = OBSyncModeFromString(sync_mode_str_);
@@ -1016,7 +1030,7 @@ void OBCameraNode::setupDevices() {
       sync_config.framesPerTrigger = frames_per_trigger_;
       device_->setMultiDeviceSyncConfig(sync_config);
       sync_config = device_->getMultiDeviceSyncConfig();
-      ROS_INFO_STREAM("Set sync mode: " << sync_config.syncMode);
+      ROS_INFO_STREAM("Current sync mode: " << sync_config.syncMode);
       if (sync_mode_ == OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING) {
         ROS_INFO_STREAM("Frames per trigger: " << sync_config.framesPerTrigger);
         sync_host_time_timer_ =
@@ -1342,9 +1356,10 @@ void OBCameraNode::setupDevices() {
                                      OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                enable_hardware_noise_removal_filter_);
-      ROS_INFO_STREAM(
-          "Current hardware noise removal filter: "
-          << (device_->getBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL) ? "ON" : "OFF"));
+      ROS_INFO_STREAM("Set hardware noise removal filter to "
+                      << (device_->getBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL)
+                              ? "true"
+                              : "false"));
       if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
                                        OB_PERMISSION_READ_WRITE)) {
         if (hardware_noise_removal_filter_threshold_ != -1.0 &&
@@ -1912,10 +1927,14 @@ void OBCameraNode::forceCleanupGlobalResources() {
 }
 
 void OBCameraNode::setupCameraInfo() {
-  color_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
-      nh_rgb_, camera_name_ + "_" + stream_name_[COLOR], color_info_uri_);
-  ir_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
-      nh_ir_, camera_name_ + "_" + stream_name_[INFRA0], ir_info_uri_);
+  if (!color_info_uri_.empty()) {
+    color_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
+        nh_rgb_, camera_name_ + "_" + stream_name_[COLOR], color_info_uri_);
+  }
+  if (!ir_info_uri_.empty()) {
+    ir_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
+        nh_ir_, camera_name_ + "_" + stream_name_[INFRA0], ir_info_uri_);
+  }
   auto param = getCameraParam();
   if (param) {
     camera_infos_[DEPTH] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
@@ -1943,7 +1962,7 @@ void OBCameraNode::setupPipelineConfig() {
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
-      ROS_INFO_STREAM("Enable " << stream_name_[stream_index] << " stream");
+      ROS_DEBUG_STREAM("Enable " << stream_name_[stream_index] << " stream");
       auto profile = stream_profile_[stream_index]->as<ob::VideoStreamProfile>();
 
       if (stream_index == COLOR && enable_stream_[COLOR] && align_filter_) {
@@ -2125,8 +2144,8 @@ void OBCameraNode::setDepthAutoExposureROI() {
                                sizeof(config));
     device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                &data_size);
-    ROS_INFO_STREAM("Current depth AE ROI: " << config.x0_left << ", " << config.y0_top << ", "
-                                             << config.x1_right << ", " << config.y1_bottom);
+    ROS_INFO_STREAM("Set depth AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
+                                           << config.x1_right << ", " << config.y1_bottom);
   }
   depth_roi_has_run = true;
 }
@@ -2169,8 +2188,8 @@ void OBCameraNode::setColorAutoExposureROI() {
                                sizeof(config));
     device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                &data_size);
-    ROS_INFO_STREAM("Current color AE ROI: " << config.x0_left << ", " << config.y0_top << ", "
-                                             << config.x1_right << ", " << config.y1_bottom);
+    ROS_INFO_STREAM("Set color AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
+                                           << config.x1_right << ", " << config.y1_bottom);
   }
   color_roi_has_run = true;
 }
