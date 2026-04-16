@@ -121,10 +121,10 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
         }
         try {
           auto value = filter->getConfigValue(config_schema.name);
-          appendDepthFilterParam(filter_state,
-                                 getDepthFilterStatusParamName(normalized_filter_name,
-                                                               config_schema.name),
-                                 formatFilterConfigValue(config_schema, value));
+          appendDepthFilterParam(
+              filter_state,
+              getDepthFilterStatusParamName(normalized_filter_name, config_schema.name),
+              formatFilterConfigValue(config_schema, value));
         } catch (const std::exception&) {
           // Skip unreadable param and keep exporting others.
         }
@@ -863,8 +863,8 @@ void OBCameraNode::setupDevices() {
     auto stream_index = item.first;
     auto enable = item.second;
     if (enable && sensors_.find(stream_index) == sensors_.end()) {
-      ROS_WARN_STREAM(stream_name_[stream_index]
-                      << " sensor not supported by current device, skipping");
+      ROS_DEBUG_STREAM(stream_name_[stream_index]
+                       << " sensor not supported by current device, skipping");
       enable_stream_[stream_index] = false;
     }
     if (enable) {
@@ -1129,19 +1129,9 @@ void OBCameraNode::setupDevices() {
       } else if (color_powerline_freq_ == "auto") {
         device_->setIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 3);
       }
-      auto current_freq = device_->getIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT);
-      std::string freq_str;
-      if (current_freq == 0)
-        freq_str = "disable";
-      else if (current_freq == 1)
-        freq_str = "50hz";
-      else if (current_freq == 2)
-        freq_str = "60hz";
-      else if (current_freq == 3)
-        freq_str = "auto";
-      else
-        freq_str = "unknown";
-      ROS_INFO_STREAM("Current color powerline freq: " << freq_str);
+      const auto current_freq = device_->getIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT);
+      ROS_INFO_STREAM(
+          "Current color powerline freq: " << colorPowerLineFrequencyToString(current_freq));
     }
     if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
@@ -1344,8 +1334,10 @@ void OBCameraNode::setupDevices() {
       auto default_precision_level = device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT);
       if (default_precision_level != depth_precision_level_) {
         device_->setIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT, depth_precision_level_);
-        ROS_INFO_STREAM("Current depth precision: "
-                        << device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT));
+        const auto current_depth_precision =
+            device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT);
+        ROS_INFO_STREAM(
+            "Current depth precision: " << depthPrecisionLevelToString(current_depth_precision));
       }
     } else if (!depth_precision_str_.empty() &&
                device_->isPropertySupported(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT,
@@ -1382,17 +1374,8 @@ void OBCameraNode::setupDevices() {
       } else {
         ROS_ERROR_STREAM("disparity range mode does not support this setting");
       }
-      auto current_mode = device_->getIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT);
-      std::string mode_str;
-      if (current_mode == 0)
-        mode_str = "64";
-      else if (current_mode == 1)
-        mode_str = "128";
-      else if (current_mode == 2)
-        mode_str = "256";
-      else
-        mode_str = "unknown";
-      ROS_INFO_STREAM("Current disparity range mode: " << mode_str);
+      const auto current_mode = device_->getIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT);
+      ROS_INFO_STREAM("Current disparity range mode: " << disparityRangeModeToString(current_mode));
     }
     if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                      OB_PERMISSION_WRITE)) {
@@ -1423,9 +1406,8 @@ void OBCameraNode::setupDevices() {
       } else {
         ROS_ERROR_STREAM("exposure range mode does not support this setting");
       }
-      auto current_mode = device_->getIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT);
-      ROS_INFO_STREAM(
-          "Current exposure range mode: " << (current_mode == 1 ? "ultimate" : "regular"));
+      const auto current_mode = device_->getIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT);
+      ROS_INFO_STREAM("Current exposure range mode: " << exposureRangeModeToString(current_mode));
     }
     if (!load_config_json_file_path_.empty()) {
       std::ifstream load_config_file(load_config_json_file_path_);
@@ -1471,17 +1453,9 @@ void OBCameraNode::setupDevices() {
       } else {
         ROS_ERROR_STREAM("Intra camera sync reference does not support this setting");
       }
-      auto current_ref = device_->getIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT);
-      std::string ref_str;
-      if (current_ref == 0)
-        ref_str = "Start";
-      else if (current_ref == 1)
-        ref_str = "Middle";
-      else if (current_ref == 2)
-        ref_str = "End";
-      else
-        ref_str = "unknown";
-      ROS_INFO_STREAM("Current intra camera sync reference: " << ref_str);
+      const auto current_ref = device_->getIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT);
+      ROS_INFO_STREAM(
+          "Current intra camera sync reference: " << intraCameraSyncReferenceToString(current_ref));
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << orbbec_camera::formatObErrorWithStatus(e));

@@ -157,6 +157,10 @@ OBHoleFillingMode holeFillingModeFromString(const std::string &hole_filling_mode
 
 float depthPrecisionFromString(const std::string &depth_precision_level_str);
 
+std::string colorPowerLineFrequencyToString(int value);
+
+std::string depthPrecisionLevelToString(int value);
+
 std::ostream &operator<<(std::ostream &os, const OBFormat &rhs);
 
 std::string OBSensorTypeToString(const OBSensorType &type);
@@ -164,6 +168,12 @@ std::string OBSensorTypeToString(const OBSensorType &type);
 OBStreamType obStreamTypeFromString(const std::string &stream_type);
 
 std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs);
+
+std::string disparityRangeModeToString(int value);
+
+std::string exposureRangeModeToString(int value);
+
+std::string intraCameraSyncReferenceToString(int value);
 
 std::string getDistortionModels(OBCameraDistortion distortion);
 
