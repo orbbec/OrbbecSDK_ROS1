@@ -32,6 +32,11 @@ namespace orbbec_camera {
 backward::SignalHandling sh;
 
 namespace {
+std::string getLogDirectoryForCamera(const std::string &camera_name) {
+  std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : "";
+  return (boost::filesystem::path(home_dir) / ".ros" / "Log" / camera_name).string();
+}
+
 ros::console::levels::Level rosLogSeverityFromString(const std::string &log_level) {
   if (log_level == "debug") {
     return ros::console::levels::Debug;
@@ -55,7 +60,7 @@ void signalHandler(int signum) {
   if (signum == SIGINT || signum == SIGTERM) {
     ros::shutdown();
   } else {
-    std::string log_dir = "Log/";
+    boost::filesystem::path log_dir = getLogDirectoryForCamera(g_camera_name);
 
     // get current time
     std::time_t now = std::time(nullptr);
@@ -67,15 +72,14 @@ void signalHandler(int signum) {
 
     // generate log file name
     std::string log_file_name = g_camera_name + "_crash_stack_trace_" + time_stream.str() + ".log";
-    std::string log_file_path = log_dir + log_file_name;
+    boost::filesystem::path log_file_path = log_dir / log_file_name;
 
     if (!boost::filesystem::exists(log_dir)) {
       boost::filesystem::create_directories(log_dir);
     }
-    auto abs_path = boost::filesystem::absolute(log_dir);
-    std::cout << "Log crash stack trace to " << abs_path.string() << "/" << log_file_name
-              << std::endl;
-    std::ofstream log_file(log_file_path, std::ios::app);
+
+    std::cout << "Log crash stack trace to " << log_file_path.string() << std::endl;
+    std::ofstream log_file(log_file_path.string(), std::ios::app);
 
     if (log_file.is_open()) {
       log_file << "Received signal: " << signum << std::endl;
@@ -173,9 +177,7 @@ void OBCameraNodeDriver::init() {
   auto ob_log_level = obLogSeverityFromString(log_level);
   auto log_file_name = nh_private_.param<std::string>("log_file_name", "");
   ob::Context::setLoggerToConsole(ob_log_level);
-  // Change to use .ros/Log directory with camera name
-  std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : "";
-  std::string log_path = home_dir + "/.ros/Log/" + g_camera_name;
+  std::string log_path = getLogDirectoryForCamera(g_camera_name);
   ob::Context::setLoggerToFile(ob_log_level, log_path.c_str());
   // Set ROS log level
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, rosLogSeverityFromString(log_level));
