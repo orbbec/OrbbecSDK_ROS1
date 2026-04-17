@@ -32,6 +32,7 @@
     <arg name="color_ae_max_gain" default="-1"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
+    <arg name="color_denoising_level" default="-1"/>
 
     <!-- Depth camera parameters -->
     <arg name="depth_width" default="0"/>
@@ -153,6 +154,7 @@
             <param name="color_ae_max_gain" value="$(arg color_ae_max_gain)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
+            <param name="color_denoising_level" value="$(arg color_denoising_level)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>

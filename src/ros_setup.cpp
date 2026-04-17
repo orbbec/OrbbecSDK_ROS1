@@ -1111,7 +1111,7 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Current color backlight compensation: "
                       << device_->getIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT));
     }
-    if (isGemini335PID(pid) && color_denoising_level_ != -1 &&
+    if (color_denoising_level_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_DENOISING_LEVEL_INT, OB_PERMISSION_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_DENOISING_LEVEL_INT, color_denoising_level_);
       ROS_INFO_STREAM("Current color denoising level: "
