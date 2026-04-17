@@ -59,7 +59,6 @@
     <arg name="color_mirror" default="false"/>
     <arg name="enable_color_auto_exposure_priority" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
-    <!-- Only supported on Gemini 330 series, firmware version >= 1.7.13 -->
     <arg name="color_anti_flicker" default="false"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>

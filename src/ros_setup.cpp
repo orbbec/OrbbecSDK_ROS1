@@ -1090,8 +1090,7 @@ void OBCameraNode::setupDevices() {
           "Current color auto exposure priority: "
           << (device_->getIntProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT) ? "ON" : "OFF"));
     }
-    if (isGemini335PID(pid) &&
-        device_->isPropertySupported(OB_PROP_COLOR_ANTI_FLICKER_BOOL, OB_PERMISSION_WRITE)) {
+    if (device_->isPropertySupported(OB_PROP_COLOR_ANTI_FLICKER_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_ANTI_FLICKER_BOOL, color_anti_flicker_);
       ROS_INFO_STREAM(
           "Current color anti flicker: "

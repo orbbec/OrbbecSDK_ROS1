@@ -36,8 +36,8 @@
     <arg name="config_file_path" default=""/>
     <arg name="load_config_json_file_path" default=""/>
     <arg name="export_config_json_file_path" default=""/>
-    <arg name="ae_mode" default="depthbased"/> <!-- depthbased, colorbased, empty string means use default -->
-    <arg name="enable_sports_mode" default="false"/>
+    <arg name="ae_reference_stream" default="depth"/> <!-- depth or color -->
+    <arg name="ae_strategy" default="motion"/> <!-- default or motion -->
     <!-- Network device settings: default enumerate_net_device is set to true, which will automatically enumerate network devices -->
     <!-- If you do not want to automatically enumerate network devices, -->
     <!-- you can set enumerate_net_device to true, ip_address to the device's IP address, and port to the default value of 8090 -->
@@ -79,6 +79,7 @@
     <arg name="color_contrast" default="-1"/>
     <arg name="color_hue" default="-1"/>
     <arg name="color_backlight_compensation" default="-1"/> <!--range: 0 - 6, default: 3-->
+    <arg name="color_anti_flicker" default="false"/>
     <arg name="color_powerline_freq" default=""/><!-- disable ,50hz ,60hz ,auto -->
     <arg name="enable_color_decimation_filter" default="false"/>
     <arg name="color_decimation_filter_scale" default="-1"/>
@@ -294,8 +295,8 @@
             <param name="config_file_path" value="$(arg config_file_path)"/>
             <param name="load_config_json_file_path" value="$(arg load_config_json_file_path)"/>
             <param name="export_config_json_file_path" value="$(arg export_config_json_file_path)"/>
-            <param name="ae_mode" value="$(arg ae_mode)"/>
-            <param name="enable_sports_mode" value="$(arg enable_sports_mode)"/>
+            <param name="ae_reference_stream" value="$(arg ae_reference_stream)"/>
+            <param name="ae_strategy" value="$(arg ae_strategy)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="ir_brightness" value="$(arg ir_brightness)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
@@ -325,6 +326,7 @@
             <param name="color_hue" value="$(arg color_hue)"/>
             <param name="color_backlight_compensation" value="$(arg color_backlight_compensation)"/>
             <param name="color_powerline_freq" value="$(arg color_powerline_freq)"/>
+            <param name="color_anti_flicker" value="$(arg color_anti_flicker)"/>
             <param name="enable_color_decimation_filter" value="$(arg enable_color_decimation_filter)"/>
             <param name="color_decimation_filter_scale" value="$(arg color_decimation_filter_scale)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
