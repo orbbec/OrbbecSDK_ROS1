@@ -16,6 +16,7 @@
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="disparity_to_depth_mode" default="SW"/><!-- HW, SW, disable -->
+    <arg name="config_file_path" default=""/>
     <arg name="ir_info_uri" default=""/>
     <arg name="color_info_uri" default=""/>
 
@@ -70,7 +71,7 @@
     <!-- Unbinned Sparse Default -->
     <!-- Binned Sparse Default -->
     <!-- Obstacle Avoidance -->
-    <arg name="depth_work_mode" default=""/>
+    <arg name="depth_work_mode" default="Unbinned Dense Default"/>
 
     <!-- filter switch -->
     <arg name="enable_decimation_filter" default="false"/>
@@ -138,6 +139,7 @@
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="disparity_to_depth_mode" value="$(arg disparity_to_depth_mode)"/>
+            <param name="config_file_path" value="$(arg config_file_path)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
             <param name="ir_info_uri" value="$(arg ir_info_uri)"/>
@@ -223,5 +225,9 @@
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
+    </group>
+    <!-- Load config yaml file -->
+    <group if="$(eval config_file_path != '')">
+        <rosparam ns="$(arg camera_name)/$(arg camera_name)" file="$(arg config_file_path)" command="load" />
     </group>
 </launch>
