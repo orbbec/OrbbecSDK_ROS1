@@ -1,0 +1,18 @@
+# Gemini 2L dual IR mode overrides.
+# Usage:
+# roslaunch orbbec_camera gemini2L.launch config_file_path:=path/to/gemini2L_dual_ir.yaml
+
+depth_work_mode: In-scene Calibration
+enable_ir: false
+
+enable_left_ir: true
+left_ir_width: 1280
+left_ir_height: 800
+left_ir_fps: 30
+left_ir_format: Y8
+
+enable_right_ir: true
+right_ir_width: 1280
+right_ir_height: 800
+right_ir_fps: 30
+right_ir_format: Y8

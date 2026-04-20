@@ -450,7 +450,7 @@ void OBCameraNode::setupColorPostProcessFilter() {
 
   if (color_filter_list_.empty() && left_color_filter_list_.empty() &&
       right_color_filter_list_.empty()) {
-    ROS_WARN("Failed to get any color sensor filter list");
+    ROS_DEBUG("Failed to get any color sensor filter list");
     return;
   }
   for (size_t i = 0; i < color_filter_list_.size(); i++) {
@@ -624,6 +624,9 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
 void OBCameraNode::setupDepthPostProcessFilter() {
   if (device_preset_ == "Dual Color Streams") {
     ROS_DEBUG_STREAM("Dual Color Streams preset, skip depth filter setup");
+    return;
+  }
+  if (!enable_stream_[DEPTH]) {
     return;
   }
   auto device_info = device_->getDeviceInfo();
