@@ -288,12 +288,30 @@ void FrameTimestampCsvLogger::populateArrivalData(StreamState &state, TrackedStr
   state.has_frame = true;
   state.publish_expected = publish_expected;
   state.frame_index = frame->index();
+  if (frame->hasMetadata(OB_FRAME_METADATA_TYPE_FRAME_NUMBER)) {
+    state.metadata_frame_number =
+        static_cast<int64_t>(frame->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER));
+  } else {
+    state.metadata_frame_number.reset();
+  }
+  if (frame->hasMetadata(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP)) {
+    state.sensor_ts_us =
+        static_cast<int64_t>(frame->getMetadataValue(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP));
+  } else {
+    state.sensor_ts_us.reset();
+  }
   state.device_ts_us = static_cast<int64_t>(frame->timeStampUs());
   state.global_ts_us = static_cast<int64_t>(frame->globalTimeStampUs());
   state.sdk_system_ts_us = static_cast<int64_t>(frame->systemTimeStampUs());
   state.arrival_system_us = arrival_system_us;
   state.arrival_steady_us = arrival_steady_us;
   state.device_ts_delta_us = updateDelta(previous.device_ts_us, state.device_ts_us);
+  if (state.sensor_ts_us.has_value()) {
+    state.sensor_ts_delta_us = updateDelta(previous.sensor_ts_us, state.sensor_ts_us.value());
+  } else {
+    state.sensor_ts_delta_us.reset();
+    previous.sensor_ts_us.reset();
+  }
   state.global_ts_delta_us = updateDelta(previous.global_ts_us, state.global_ts_us);
   state.sdk_system_ts_delta_us = updateDelta(previous.sdk_system_ts_us, state.sdk_system_ts_us);
   state.arrival_system_delta_us =
@@ -379,31 +397,36 @@ std::string FrameTimestampCsvLogger::serializeRow(const PendingRow &row) const {
 }
 
 std::string FrameTimestampCsvLogger::serializeStreamColumns(const StreamState &state) const {
-  std::vector<std::string> fields(19, "");
+  std::vector<std::string> fields(22, "");
   if (state.has_frame) {
     fields[0] = std::to_string(state.frame_index);
-    fields[1] = formatSecondsColumn(state.device_ts_us);
-    fields[2] = formatOptionalIntColumn(state.device_ts_delta_us);
-    fields[3] = formatSecondsColumn(state.global_ts_us);
-    fields[4] = formatOptionalIntColumn(state.global_ts_delta_us);
-    fields[5] = formatSecondsColumn(state.sdk_system_ts_us);
-    fields[6] = formatOptionalIntColumn(state.sdk_system_ts_delta_us);
-    fields[7] = formatSecondsColumn(state.arrival_system_us);
-    fields[8] = formatOptionalIntColumn(state.arrival_system_delta_us);
-    fields[9] = formatSecondsColumn(state.arrival_steady_us);
-    fields[10] = formatOptionalIntColumn(state.arrival_steady_delta_us);
+    fields[1] = formatOptionalIntColumn(state.metadata_frame_number);
+    if (state.sensor_ts_us.has_value()) {
+      fields[2] = formatSecondsColumn(state.sensor_ts_us.value());
+    }
+    fields[3] = formatOptionalIntColumn(state.sensor_ts_delta_us);
+    fields[4] = formatSecondsColumn(state.device_ts_us);
+    fields[5] = formatOptionalIntColumn(state.device_ts_delta_us);
+    fields[6] = formatSecondsColumn(state.global_ts_us);
+    fields[7] = formatOptionalIntColumn(state.global_ts_delta_us);
+    fields[8] = formatSecondsColumn(state.sdk_system_ts_us);
+    fields[9] = formatOptionalIntColumn(state.sdk_system_ts_delta_us);
+    fields[10] = formatSecondsColumn(state.arrival_system_us);
+    fields[11] = formatOptionalIntColumn(state.arrival_system_delta_us);
+    fields[12] = formatSecondsColumn(state.arrival_steady_us);
+    fields[13] = formatOptionalIntColumn(state.arrival_steady_delta_us);
     if (state.publish_system_us.has_value()) {
-      fields[11] = formatSecondsColumn(state.publish_system_us.value());
+      fields[14] = formatSecondsColumn(state.publish_system_us.value());
     }
-    fields[12] = formatOptionalIntColumn(state.publish_system_delta_us);
+    fields[15] = formatOptionalIntColumn(state.publish_system_delta_us);
     if (state.publish_steady_us.has_value()) {
-      fields[13] = formatSecondsColumn(state.publish_steady_us.value());
+      fields[16] = formatSecondsColumn(state.publish_steady_us.value());
     }
-    fields[14] = formatOptionalIntColumn(state.publish_steady_delta_us);
-    fields[15] = formatOptionalIntColumn(state.arrival_to_publish_system_us);
-    fields[16] = formatOptionalIntColumn(state.arrival_to_publish_steady_us);
-    fields[17] = formatOptionalIntColumn(state.sdk_delay_from_global_us);
-    fields[18] = formatOptionalIntColumn(state.sdk_delay_from_system_us);
+    fields[17] = formatOptionalIntColumn(state.publish_steady_delta_us);
+    fields[18] = formatOptionalIntColumn(state.arrival_to_publish_system_us);
+    fields[19] = formatOptionalIntColumn(state.arrival_to_publish_steady_us);
+    fields[20] = formatOptionalIntColumn(state.sdk_delay_from_global_us);
+    fields[21] = formatOptionalIntColumn(state.sdk_delay_from_system_us);
   }
 
   std::ostringstream ss;
@@ -433,7 +456,10 @@ std::string FrameTimestampCsvLogger::formatOptionalIntColumn(const std::optional
 std::string FrameTimestampCsvLogger::csvHeader() {
   std::ostringstream ss;
   for (const auto *prefix : {"color", "depth"}) {
-    ss << prefix << "_frame_index,";
+    ss << prefix << "_sdk_frame_index,";
+    ss << prefix << "_hardware_frame_number,";
+    ss << prefix << "_sensor_ts_sec,";
+    ss << prefix << "_sensor_ts_delta_us,";
     ss << prefix << "_device_ts_sec,";
     ss << prefix << "_device_ts_delta_us,";
     ss << prefix << "_global_ts_sec,";
