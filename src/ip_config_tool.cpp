@@ -28,7 +28,7 @@ struct CliArgs {
   bool dhcp = false;
   bool dhcp_option_set = false;
   std::string force_ip_mac;
-  std::string old_ip = "192.168.1.10";
+  std::string current_ip = "192.168.1.10";
   int port = 8090;
   std::string new_ip = "192.168.1.200";
   std::string mask = "255.255.255.0";
@@ -94,7 +94,8 @@ void printHelp() {
       << "  force_ip                   Force IP by MAC address.\n\n"
       << "Parameters:\n"
       << "  --enable_dhcp <bool>       DHCP flag for dhcp/force-ip (default: false).\n"
-      << "  --old_ip <ip>              Current device IP for dhcp/set-ip (default: 192.168.1.10).\n"
+      << "  --current_ip <ip>              Current device IP for dhcp/set-ip (default: "
+         "192.168.1.10).\n"
       << "  --port <port>              Device port for dhcp/set-ip (default: 8090).\n"
       << "  --new_ip <ip>              Static IP for set-ip/force-ip (default: 192.168.1.200).\n"
       << "  --mask <ip>                Subnet mask for set-ip/force-ip (default: 255.255.255.0).\n"
@@ -105,10 +106,10 @@ void printHelp() {
       << "\n"
       << "  [DHCP]\n"
       << "    Enable: rosrun orbbec_camera ip_config_tool dhcp \\\n"
-      << "             --old_ip 192.168.1.10 --enable_dhcp true\n"
+      << "             --current_ip 192.168.1.10 --enable_dhcp true\n"
       << "  [Set IP]\n"
       << "    Static:  rosrun orbbec_camera ip_config_tool set_ip \\\n"
-      << "             --old_ip 192.168.1.10 \\\n"
+      << "             --current_ip 192.168.1.10 \\\n"
       << "             --new_ip 192.168.1.200 --mask 255.255.255.0 --gateway 192.168.1.1\n"
       << "\n"
       << "  [Force IP]\n"
@@ -178,16 +179,16 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
       continue;
     }
 
-    if (current.rfind("--old_ip=", 0) == 0) {
-      args.old_ip = current.substr(std::strlen("--old_ip="));
+    if (current.rfind("--current_ip=", 0) == 0) {
+      args.current_ip = current.substr(std::strlen("--current_ip="));
       continue;
     }
-    if (current == "--old_ip") {
+    if (current == "--current_ip") {
       if (++i >= argc) {
-        error = "--old_ip requires a value";
+        error = "--current_ip requires a value";
         return false;
       }
-      args.old_ip = argv[i];
+      args.current_ip = argv[i];
       continue;
     }
 
@@ -317,8 +318,9 @@ int main(int argc, char **argv) {
     auto context = std::make_shared<ob::Context>();
 
     if (args.operation == CliArgs::Operation::DHCP) {
-      ROS_INFO("Connecting to device %s:%d ...", args.old_ip.c_str(), args.port);
-      auto device = context->createNetDevice(args.old_ip.c_str(), static_cast<uint16_t>(args.port));
+      ROS_INFO("Connecting to device %s:%d ...", args.current_ip.c_str(), args.port);
+      auto device =
+          context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
 
       bool v2_supported =
           device->isPropertySupported(OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2, OB_PERMISSION_READ_WRITE);
@@ -336,8 +338,8 @@ int main(int argc, char **argv) {
               (ip_config_v2.flags & ~OB_NET_IP_FLAG_PERSISTENT) | OB_NET_IP_FLAG_DHCP);
         } else {
           // Disable DHCP - only set PERSISTENT flag, keep existing static IP settings
-          ip_config_v2.flags = static_cast<uint16_t>(
-              (ip_config_v2.flags & ~OB_NET_IP_FLAG_DHCP) | OB_NET_IP_FLAG_PERSISTENT);
+          ip_config_v2.flags = static_cast<uint16_t>((ip_config_v2.flags & ~OB_NET_IP_FLAG_DHCP) |
+                                                     OB_NET_IP_FLAG_PERSISTENT);
         }
 
         ROS_INFO("Applying dhcp configuration with V2 property (1088)...");
@@ -347,19 +349,20 @@ int main(int argc, char **argv) {
         ROS_INFO("DHCP configuration applied successfully (V2).");
         ROS_INFO("DHCP target state: %s", args.dhcp ? "enabled" : "disabled");
       } else {
-        uint8_t old_ip_bytes[4] = {0};
-        if (args.dhcp && !parseIpString(args.old_ip, old_ip_bytes)) {
-          ROS_ERROR("Invalid old_ip format: %s", args.old_ip.c_str());
+        uint8_t current_ip_bytes[4] = {0};
+        if (args.dhcp && !parseIpString(args.current_ip, current_ip_bytes)) {
+          ROS_ERROR("Invalid current_ip format: %s", args.current_ip.c_str());
           return 1;
         }
 
         OBNetIpConfig ip_config{};
         ip_config.dhcp = args.dhcp ? 1 : 0;
         if (args.dhcp) {
-          std::memcpy(ip_config.address, old_ip_bytes, sizeof(old_ip_bytes));
+          std::memcpy(ip_config.address, current_ip_bytes, sizeof(current_ip_bytes));
         }
 
-        ROS_WARN("Device does not support IP config V2 (1088), fallback to legacy property (1041).");
+        ROS_WARN(
+            "Device does not support IP config V2 (1088), fallback to legacy property (1041).");
         ROS_INFO("Applying dhcp configuration...");
         device->setStructuredData(OB_STRUCT_DEVICE_IP_ADDR_CONFIG,
                                   reinterpret_cast<const uint8_t *>(&ip_config), sizeof(ip_config));
@@ -369,8 +372,9 @@ int main(int argc, char **argv) {
     }
 
     if (args.operation == CliArgs::Operation::SET_IP) {
-      ROS_INFO("Connecting to device %s:%d ...", args.old_ip.c_str(), args.port);
-      auto device = context->createNetDevice(args.old_ip.c_str(), static_cast<uint16_t>(args.port));
+      ROS_INFO("Connecting to device %s:%d ...", args.current_ip.c_str(), args.port);
+      auto device =
+          context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
 
       bool v2_supported =
           device->isPropertySupported(OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2, OB_PERMISSION_READ_WRITE);
@@ -393,7 +397,8 @@ int main(int argc, char **argv) {
         }
 
         OBNetIpConfigV2 ip_config_v2{};
-        // Preserve current addressing mode flags (DHCP/PERSISTENT/LLA), only update static IP values.
+        // Preserve current addressing mode flags (DHCP/PERSISTENT/LLA), only update static IP
+        // values.
         uint32_t data_size = sizeof(ip_config_v2);
         device->getStructuredData(OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2,
                                   reinterpret_cast<uint8_t *>(&ip_config_v2), &data_size);
@@ -421,8 +426,8 @@ int main(int argc, char **argv) {
         OBNetIpConfig ip_config{};
         // Preserve current DHCP mode on legacy property as well.
         uint32_t data_size = sizeof(ip_config);
-        device->getStructuredData(OB_STRUCT_DEVICE_IP_ADDR_CONFIG, reinterpret_cast<uint8_t *>(&ip_config),
-                                  &data_size);
+        device->getStructuredData(OB_STRUCT_DEVICE_IP_ADDR_CONFIG,
+                                  reinterpret_cast<uint8_t *>(&ip_config), &data_size);
         uint8_t address[4] = {0};
         uint8_t mask[4] = {0};
         uint8_t gateway[4] = {0};
@@ -442,7 +447,8 @@ int main(int argc, char **argv) {
         std::memcpy(ip_config.mask, mask, sizeof(mask));
         std::memcpy(ip_config.gateway, gateway, sizeof(gateway));
 
-        ROS_WARN("Device does not support IP config V2 (1088), fallback to legacy property (1041).");
+        ROS_WARN(
+            "Device does not support IP config V2 (1088), fallback to legacy property (1041).");
 
         ROS_INFO("Applying set-ip configuration...");
         device->setStructuredData(OB_STRUCT_DEVICE_IP_ADDR_CONFIG,
@@ -450,8 +456,8 @@ int main(int argc, char **argv) {
 
         ROS_INFO("Set-ip configuration applied successfully.");
         ROS_INFO("Set-ip target mode: unchanged (dhcp=%u).", ip_config.dhcp);
-        ROS_INFO("Set-ip target static IP: %d.%d.%d.%d", ip_config.address[0],
-                 ip_config.address[1], ip_config.address[2], ip_config.address[3]);
+        ROS_INFO("Set-ip target static IP: %d.%d.%d.%d", ip_config.address[0], ip_config.address[1],
+                 ip_config.address[2], ip_config.address[3]);
         ROS_INFO("Set-ip target mask: %d.%d.%d.%d", ip_config.mask[0], ip_config.mask[1],
                  ip_config.mask[2], ip_config.mask[3]);
         ROS_INFO("Set-ip target gateway: %d.%d.%d.%d", ip_config.gateway[0], ip_config.gateway[1],
