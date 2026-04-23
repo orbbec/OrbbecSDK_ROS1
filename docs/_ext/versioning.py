@@ -22,25 +22,42 @@ def get_content_root(conf_file: str) -> Path:
     return Path(conf_file).resolve().parent
 
 
-def get_templates_paths(content_root: Path) -> list[str]:
+def get_conf_root(conf_file: str) -> Path:
+    return Path(conf_file).resolve().parent
+
+
+def _unique_paths(paths: list[Path]) -> list[str]:
+    unique: list[str] = []
+    seen: set[str] = set()
+    for path in paths:
+        resolved = str(path.resolve())
+        if resolved in seen or not path.exists():
+            continue
+        seen.add(resolved)
+        unique.append(str(path))
+    return unique
+
+
+def get_templates_paths(conf_root: Path) -> list[str]:
     candidates = [
-        content_root / "_templates",
-        content_root / "source" / "_templates",
+        conf_root / "_templates",
+        conf_root / "source" / "_templates",
     ]
-    return [str(path) for path in candidates if path.exists()]
+    return _unique_paths(candidates)
 
 
-def get_static_paths(content_root: Path) -> list[str]:
+def get_static_paths(conf_root: Path, content_root: Path) -> list[str]:
     candidates = [
         content_root / "source" / "_static",
+        conf_root / "source" / "_static",
         content_root / "source" / "image",
     ]
-    return [str(path) for path in candidates if path.exists()]
+    return _unique_paths(candidates)
 
 
 def get_extra_paths(content_root: Path) -> list[str]:
     candidate = content_root / "source" / "image"
-    return [str(candidate)] if candidate.exists() else []
+    return _unique_paths([candidate])
 
 
 def get_asset_path(content_root: Path, relative_path: str, fallback: str) -> str:
