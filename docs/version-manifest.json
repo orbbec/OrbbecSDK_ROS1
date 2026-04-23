@@ -10,9 +10,9 @@
       "is_latest": true
     },
     {
-      "slug": "v2.7.2",
-      "label": "v2.7.2",
-      "ref": "refs/tags/v2.7.2",
+      "slug": "v2.6.3",
+      "label": "v2.6.3",
+      "ref": "docs/v2.6.3",
       "published": true,
       "is_latest": false
     }
