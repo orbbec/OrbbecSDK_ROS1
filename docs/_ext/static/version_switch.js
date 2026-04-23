@@ -26,7 +26,9 @@
     var language = segments[langIndex];
     var isVersioned = langIndex >= 2 && segments[langIndex - 2] === "versions";
     var versionSlug = isVersioned ? segments[langIndex - 1] : config.latest_slug;
-    var baseSegments = isVersioned ? segments.slice(0, langIndex - 2) : segments.slice(0, langIndex - 1);
+    // Keep the project-pages prefix (for example /<repo>/...) when the
+    // current page is served from the latest alias path /<repo>/<lang>/...
+    var baseSegments = isVersioned ? segments.slice(0, langIndex - 2) : segments.slice(0, langIndex);
     var relativeSegments = segments.slice(langIndex + 1);
 
     if (!relativeSegments.length) {
