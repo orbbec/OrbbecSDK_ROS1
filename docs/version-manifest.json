@@ -1,0 +1,20 @@
+{
+  "default_language": "en",
+  "latest_slug": "v2.7.6",
+  "versions": [
+    {
+      "slug": "v2.7.6",
+      "label": "v2.7.6 (Latest)",
+      "ref": "Document",
+      "published": true,
+      "is_latest": true
+    },
+    {
+      "slug": "v2.7.2",
+      "label": "v2.7.2",
+      "ref": "refs/tags/v2.7.2",
+      "published": true,
+      "is_latest": false
+    }
+  ]
+}
