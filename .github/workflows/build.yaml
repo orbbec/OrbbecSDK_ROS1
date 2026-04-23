@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - docs/format_optimization
+      - docs/version_optimization
       - Document
       - main
   workflow_dispatch:
