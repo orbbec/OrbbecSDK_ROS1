@@ -345,25 +345,25 @@ rosservice call /camera/set_ptp_config true
 * `/camera/set_filter`
 
 ```bash
-# filter_name is the filter name, filter_enable is whether to enable the filter switch, and filter_param is the filter parameter
+# filter_name is the filter name, filter_enable indicates whether the filter is enabled or disabled, and filter_param represents the filter parameters.
 
-# Set DecimationFilter
+# Set DecimationFilter: [scale]
 rosservice call /camera/set_filter '{filter_name: DecimationFilter, filter_enable: false, filter_param: [5]}'
 
-# Set SpatialAdvancedFilter
+# Set SpatialAdvancedFilter: [alpha, disp_diff, magnitude, radius]
 rosservice call /camera/set_filter '{filter_name: SpatialAdvancedFilter, filter_enable: true, filter_param: [0.5,160,1,8]}'
 
-# Set SequenceIdFilter
+# Set SequenceIdFilter: [sequence_id]
 rosservice call /camera/set_filter '{filter_name: SequenceIdFilter, filter_enable: true, filter_param: [1]}'
 
-# Set ThresholdFilter
+# Set ThresholdFilter: [min, max]
 rosservice call /camera/set_filter '{filter_name: ThresholdFilter, filter_enable: true, filter_param: [0,15999]}'
 
-# Set NoiseRemovalFilter
+# Set NoiseRemovalFilter: [min_diff, max_size]
 rosservice call /camera/set_filter '{filter_name: NoiseRemovalFilter, filter_enable: true, filter_param: [256,80]}'
 
-# Set HardwareNoiseRemoval
-rosservice call /camera/set_filter '{filter_name: HardwareNoiseRemoval, filter_enable: true, filter_param: []}'
+# Set HardwareNoiseRemoval: [threshold]
+rosservice call /camera/set_filter '{filter_name: HardwareNoiseRemoval, filter_enable: true, filter_param: [0.2]}'
 
 # Set SpatialFastFilter: [radius]
 rosservice call /camera/set_filter '{filter_name: SpatialFastFilter, filter_enable: true, filter_param: [4]}'

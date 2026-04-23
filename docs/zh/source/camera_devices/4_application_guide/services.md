@@ -346,30 +346,30 @@ rosservice call /camera/set_ptp_config true
 * `/camera/set_filter`
 
 ```bash
-# filter_name 为滤波器名称，filter_enable 表示是否开启滤波器开关，filter_param 为滤波器参数
+# filter_name 为滤波器名称，filter_enable 表示是否开启滤波器开关，filter_param 表示滤波参数
 
-# 设置 DecimationFilter
+# 设置 DecimationFilter: [scale]
 rosservice call /camera/set_filter '{filter_name: DecimationFilter, filter_enable: false, filter_param: [5]}'
 
-# 设置 SpatialAdvancedFilter
+# 设置 SpatialAdvancedFilter: [alpha, disp_diff, magnitude, radius]
 rosservice call /camera/set_filter '{filter_name: SpatialAdvancedFilter, filter_enable: true, filter_param: [0.5,160,1,8]}'
 
-# 设置 SequenceIdFilter
+# 设置 SequenceIdFilter: [sequence_id]
 rosservice call /camera/set_filter '{filter_name: SequenceIdFilter, filter_enable: true, filter_param: [1]}'
 
-# 设置 ThresholdFilter
+# 设置 ThresholdFilter: [min, max]
 rosservice call /camera/set_filter '{filter_name: ThresholdFilter, filter_enable: true, filter_param: [0,15999]}'
 
-# 设置 NoiseRemovalFilter
+# 设置 NoiseRemovalFilter: [min_diff, max_size]
 rosservice call /camera/set_filter '{filter_name: NoiseRemovalFilter, filter_enable: true, filter_param: [256,80]}'
 
-# 设置 HardwareNoiseRemoval
-rosservice call /camera/set_filter '{filter_name: HardwareNoiseRemoval, filter_enable: true, filter_param: []}'
+# 设置 HardwareNoiseRemoval: [threshold]
+rosservice call /camera/set_filter '{filter_name: HardwareNoiseRemoval, filter_enable: true, filter_param: [0.2]}'
 
 # 设置 SpatialFastFilter：[radius]
 rosservice call /camera/set_filter '{filter_name: SpatialFastFilter, filter_enable: true, filter_param: [4]}'
 
-# 设置 SpatialModerateFilter：[disp_diff, magnitude, radius]
+# 设置 SpatialModerateFilter: [disp_diff, magnitude, radius]
 rosservice call /camera/set_filter '{filter_name: SpatialModerateFilter, filter_enable: true, filter_param: [160,1,3]}'
 ```
 
