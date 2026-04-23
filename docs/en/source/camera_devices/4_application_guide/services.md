@@ -1,4 +1,4 @@
-# All available services for camera control
+# Available services
 
 The service names intuitively reflect their purposes. It's crucial to understand that services related to setting or getting parameters—denoted as `set_*` and `get_*`—become available only when the respective `enable_*` parameters are activated. For instance, enabling features such as left infrared (IR) with `enable_left_ir`, right IR with `enable_right_ir`, depth sensing with `enable_depth`, or color processing with `enable_color` (refer to [Launch Parameters](./launch_parameters.md)) is a prerequisite for their corresponding services to be operational. This configuration ensures that services are accessible only when their specific stream is enabled in the launch file's stream argument.
 
