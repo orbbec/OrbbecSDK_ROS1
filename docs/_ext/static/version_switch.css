@@ -19,10 +19,10 @@
     gap: 0.45rem;
     min-width: 192px;
     padding: 0.9rem 1rem;
-    border: 1px solid rgba(63, 63, 70, 0.24);
+    border: 1px solid rgba(82, 82, 91, 0.28);
     border-radius: 14px;
-    background: rgba(245, 245, 245, 0.96);
-    box-shadow: 0 18px 38px rgba(63, 63, 70, 0.16);
+    background: rgba(228, 228, 231, 0.96);
+    box-shadow: 0 18px 38px rgba(63, 63, 70, 0.18);
     backdrop-filter: blur(14px);
 }
 
@@ -55,17 +55,17 @@
     width: 100%;
     min-height: 2.4rem;
     padding: 0 0.85rem;
-    border: 1px solid #d4d4d8;
+    border: 1px solid #bcbcc4;
     border-radius: 10px;
-    background: #e4e4e7;
+    background: #d4d4d8;
     color: #27272a;
     font-size: 0.95rem;
     font-weight: 600;
 }
 
 .docs-version-switch__select:focus {
-    outline: 2px solid rgba(113, 113, 122, 0.22);
-    border-color: #71717a;
+    outline: 2px solid rgba(82, 82, 91, 0.24);
+    border-color: #52525b;
 }
 
 @media (max-width: 768px) {

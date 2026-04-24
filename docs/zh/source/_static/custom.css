@@ -5,12 +5,12 @@
     align-items: center !important;
     gap: 0.45rem !important;
     margin: 0 !important;
-    background: rgba(245,245,245,0.95) !important;
-    border: 1px solid #d4d4d8 !important;
+    background: rgba(228,228,231,0.95) !important;
+    border: 1px solid #bcbcc4 !important;
     border-radius: 10px !important;
     padding: 8px 12px !important;
     font-size: 0.9em !important;
-    box-shadow: 0 8px 22px rgba(63, 63, 70, 0.14) !important;
+    box-shadow: 0 8px 22px rgba(63, 63, 70, 0.18) !important;
     backdrop-filter: blur(5px) !important;
     transition: all 0.3s ease !important;
 }
