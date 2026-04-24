@@ -21,13 +21,23 @@ def inject_language_switch(app, doctree, docname):
         f'<a class="lang-current" href="#">{current_label}</a>'
         '</div>'
         '<script>(function(){'
+        "function getDockHost(){"
+        "  if(window.matchMedia && window.matchMedia('(max-width: 768px)').matches){"
+        "    return document.body;"
+        "  }"
+        "  return document.querySelector('.wy-nav-side') || document.body;"
+        "}"
         "function ensureDock(){"
         "  var dock=document.querySelector('[data-docs-switch-dock]');"
-        "  if(dock) return dock;"
-        "  dock=document.createElement('div');"
-        "  dock.className='docs-floating-switches';"
-        "  dock.setAttribute('data-docs-switch-dock','');"
-        "  document.body.appendChild(dock);"
+        "  var host=getDockHost();"
+        "  if(!dock){"
+        "    dock=document.createElement('div');"
+        "    dock.className='docs-floating-switches';"
+        "    dock.setAttribute('data-docs-switch-dock','');"
+        "  }"
+        "  if(dock.parentNode!==host){"
+        "    host.appendChild(dock);"
+        "  }"
         "  return dock;"
         "}"
         "function mountSwitch(){"
@@ -44,6 +54,7 @@ def inject_language_switch(app, doctree, docname):
         "}"
         "if(document.body){ mountSwitch(); }"
         "else { document.addEventListener('DOMContentLoaded', mountSwitch, {once:true}); }"
+        "window.addEventListener('resize', mountSwitch, {passive:true});"
         '})();</script>'
     )
     doctree.insert(0, nodes.raw('', html, format='html'))

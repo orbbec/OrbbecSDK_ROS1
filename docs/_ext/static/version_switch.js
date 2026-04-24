@@ -1,14 +1,26 @@
 (function () {
-  function ensureDock() {
-    var dock = document.querySelector("[data-docs-switch-dock]");
-    if (dock) {
-      return dock;
+  function getDockHost() {
+    if (window.matchMedia && window.matchMedia("(max-width: 768px)").matches) {
+      return document.body;
     }
 
-    dock = document.createElement("div");
-    dock.className = "docs-floating-switches";
-    dock.setAttribute("data-docs-switch-dock", "");
-    document.body.appendChild(dock);
+    return document.querySelector(".wy-nav-side") || document.body;
+  }
+
+  function ensureDock() {
+    var dock = document.querySelector("[data-docs-switch-dock]");
+    var host = getDockHost();
+
+    if (!dock) {
+      dock = document.createElement("div");
+      dock.className = "docs-floating-switches";
+      dock.setAttribute("data-docs-switch-dock", "");
+    }
+
+    if (dock.parentNode !== host) {
+      host.appendChild(dock);
+    }
+
     return dock;
   }
 
@@ -117,7 +129,12 @@
       return;
     }
 
-    ensureDock().appendChild(widget);
+    function mountWidget() {
+      ensureDock().appendChild(widget);
+    }
+
+    mountWidget();
+    window.addEventListener("resize", mountWidget, { passive: true });
 
     var locationInfo = parseLocation(config);
     if (!locationInfo) {
