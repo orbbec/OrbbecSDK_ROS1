@@ -5,12 +5,12 @@
     align-items: center !important;
     gap: 0.45rem !important;
     margin: 0 !important;
-    background: rgba(255,255,255,0.95) !important;
-    border: 1px solid #ddd !important;
+    background: rgba(245,245,245,0.95) !important;
+    border: 1px solid #d4d4d8 !important;
     border-radius: 10px !important;
     padding: 8px 12px !important;
     font-size: 0.9em !important;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14) !important;
+    box-shadow: 0 8px 22px rgba(63, 63, 70, 0.14) !important;
     backdrop-filter: blur(5px) !important;
     transition: all 0.3s ease !important;
 }
@@ -26,15 +26,15 @@
 }
 
 .lang-switch .lang-other {
-    color: #0078d4 !important;
+    color: #52525b !important;
 }
 
 .lang-switch .lang-other:hover {
-    color: #106ebe !important;
+    color: #27272a !important;
 }
 
 .lang-switch .lang-current {
-    color: #333 !important;
+    color: #18181b !important;
     font-weight: bold !important;
 }
 
