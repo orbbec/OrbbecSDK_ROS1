@@ -12,14 +12,14 @@
     {
       "slug": "v2.7.6",
       "label": "v2.7.6",
-      "ref": "docs/v2.7.6",
+      "ref": "refs/tags/docs/v2.7.6",
       "published": true,
       "is_latest": false
     },
     {
       "slug": "v2.6.3",
       "label": "v2.6.3",
-      "ref": "docs/v2.6.3",
+      "ref": "refs/tags/docs/v2.6.3",
       "published": true,
       "is_latest": false
     }
