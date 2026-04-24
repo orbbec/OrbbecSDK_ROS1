@@ -1,4 +1,17 @@
 (function () {
+  function ensureDock() {
+    var dock = document.querySelector("[data-docs-switch-dock]");
+    if (dock) {
+      return dock;
+    }
+
+    dock = document.createElement("div");
+    dock.className = "docs-floating-switches";
+    dock.setAttribute("data-docs-switch-dock", "");
+    document.body.appendChild(dock);
+    return dock;
+  }
+
   function parseConfig() {
     var element = document.getElementById("docs-version-data");
     if (!element) {
@@ -103,6 +116,8 @@
     if (!config || !widget || !select || !config.versions || !config.versions.length) {
       return;
     }
+
+    ensureDock().appendChild(widget);
 
     var locationInfo = parseLocation(config);
     if (!locationInfo) {
