@@ -6,6 +6,7 @@ This repository contains the documentation for OrbbecSDK V2 ROS1 Wrapper in both
 
 - **English Version**: `docs/en/` - Full English documentation
 - **中文版本**: `docs/zh/` - 完整中文文档
+- **Published Versions**: `docs/version-manifest.json` - Version list for GitHub Pages
 
 ## Quick Start
 
@@ -23,11 +24,18 @@ pip install -r requirements.txt
 make clean && make html
 ```
 
+### For Full Versioned Site Build:
+```bash
+pip install -r docs/en/requirements.txt -r docs/zh/requirements.txt jieba
+python docs/build_versions.py
+```
+
 ## View Documentation
 
 After building, open the following files in your browser:
 - English: `docs/en/_build/html/index.html`
 - Chinese: `docs/zh/_build/html/index.html`
+- Full GitHub Pages site: `site/index.html`
 
 ## Project Structure
 

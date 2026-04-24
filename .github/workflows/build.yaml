@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - docs/format_optimization
+      - docs/version_optimization
       - Document
       - main
   workflow_dispatch:
@@ -24,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,17 +43,7 @@ jobs:
 
       - name: Build multilingual HTML
         run: |
-          # Build English
-          sphinx-build -b html docs/en docs/en/_build/html
-          # Build Chinese
-          sphinx-build -b html docs/zh docs/zh/_build/html
-          # Merge outputs to unified publish directory
-          mkdir -p site/en site/zh
-          cp -r docs/en/_build/html/. site/en/
-          cp -r docs/zh/_build/html/. site/zh/
-          # Root redirect to English (可根据需要改成 zh)
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=en/index.html"></head><body>Redirecting...</body></html>' > site/index.html
-          touch site/.nojekyll
+          python docs/build_versions.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

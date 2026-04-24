@@ -1,0 +1,27 @@
+{
+  "default_language": "en",
+  "latest_slug": "Latest",
+  "versions": [
+    {
+      "slug": "Latest",
+      "label": "Latest",
+      "ref": "Document",
+      "published": true,
+      "is_latest": true
+    },
+    {
+      "slug": "v2.7.6",
+      "label": "v2.7.6",
+      "ref": "refs/tags/docs/v2.7.6",
+      "published": true,
+      "is_latest": false
+    },
+    {
+      "slug": "v2.6.3",
+      "label": "v2.6.3",
+      "ref": "refs/tags/docs/v2.6.3",
+      "published": true,
+      "is_latest": false
+    }
+  ]
+}

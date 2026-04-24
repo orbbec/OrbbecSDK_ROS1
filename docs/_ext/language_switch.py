@@ -15,22 +15,46 @@ def inject_language_switch(app, doctree, docname):
     other_label = '中文' if is_en else 'English'
     current_label = 'English' if is_en else '中文'
 
-    # JS now detects /en/ or /zh/ segment and swaps only the first occurrence
     html = (
-        '<div class="lang-switch" style="margin:0 0 1em 0; font-size:0.9em;">'
+        '<div class="lang-switch docs-floating-switches__item">'
         f'<a class="lang-other" href="#">{other_label}</a> | '
         f'<a class="lang-current" href="#">{current_label}</a>'
         '</div>'
         '<script>(function(){'
+        "function getDockHost(){"
+        "  if(window.matchMedia && window.matchMedia('(max-width: 768px)').matches){"
+        "    return document.body;"
+        "  }"
+        "  return document.querySelector('.wy-nav-side') || document.body;"
+        "}"
+        "function ensureDock(){"
+        "  var dock=document.querySelector('[data-docs-switch-dock]');"
+        "  var host=getDockHost();"
+        "  if(!dock){"
+        "    dock=document.createElement('div');"
+        "    dock.className='docs-floating-switches';"
+        "    dock.setAttribute('data-docs-switch-dock','');"
+        "  }"
+        "  if(dock.parentNode!==host){"
+        "    host.appendChild(dock);"
+        "  }"
+        "  return dock;"
+        "}"
+        "function mountSwitch(){"
         "var p=window.location.pathname;"
         "var isEn=p.indexOf('/en/')!==-1 && p.indexOf('/zh/')===-1;"
         "if(p.indexOf('/zh/')!==-1) isEn=false;"
         "var other = isEn ? p.replace(/\\/en\\//, '/zh/') : p.replace(/\\/zh\\//, '/en/');"
         "var current=p;"
         "var sw=document.querySelector('.lang-switch'); if(!sw) return;"
+        "ensureDock().appendChild(sw);"
         "var o=sw.querySelector('.lang-other'); var c=sw.querySelector('.lang-current');"
         "if(isEn){ o.textContent='中文'; c.textContent='English'; } else { o.textContent='English'; c.textContent='中文'; }"
         "o.setAttribute('href', other); c.setAttribute('href', current);"
+        "}"
+        "if(document.body){ mountSwitch(); }"
+        "else { document.addEventListener('DOMContentLoaded', mountSwitch, {once:true}); }"
+        "window.addEventListener('resize', mountSwitch, {passive:true});"
         '})();</script>'
     )
     doctree.insert(0, nodes.raw('', html, format='html'))
