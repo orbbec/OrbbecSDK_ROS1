@@ -53,7 +53,7 @@
     <!-- Color camera parameters -->
     <arg name="color_width" default="848"/>
     <arg name="color_height" default="530"/>
-    <arg name="color_fps" default="10"/>
+    <arg name="color_fps" default="30"/>
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="YUYV"/>
     <!-- color rotation degree : 0, 90, 180, 270 -->
@@ -89,7 +89,7 @@
     <arg name="depth_width" default="848"/>
     <arg name="depth_height" default="530"/>
     <arg name="depth_decimation_factor" default="1"/>
-    <arg name="depth_fps" default="10"/>
+    <arg name="depth_fps" default="30"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="Y16"/>
     <arg name="depth_registration" default="false"/>
@@ -108,7 +108,7 @@
     <arg name="left_ir_width" default="848"/>
     <arg name="left_ir_height" default="530"/>
     <arg name="left_ir_decimation_factor" default="1"/>
-    <arg name="left_ir_fps" default="10"/>
+    <arg name="left_ir_fps" default="30"/>
     <arg name="enable_left_ir" default="false"/>
     <arg name="left_ir_format" default="Y8"/>
     <!-- left ir rotation degree : 0, 90, 180, 270 -->
@@ -123,7 +123,7 @@
     <arg name="right_ir_width" default="848"/>
     <arg name="right_ir_height" default="530"/>
     <arg name="right_ir_decimation_factor" default="1"/>
-    <arg name="right_ir_fps" default="10"/>
+    <arg name="right_ir_fps" default="30"/>
     <arg name="enable_right_ir" default="false"/>
     <arg name="right_ir_format" default="Y8"/>
     <arg name="right_ir_rotation" default="-1"/>
