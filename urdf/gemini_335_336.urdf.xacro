@@ -24,7 +24,7 @@ Stephen Brawner (brawner@gmail.com)
             </material>
         </visual>
         <collision>
-            <origin xyz="0 0 0" rpy="0 0 0" />
+            <origin xyz="-0.01587 -0.025 -0.0125" rpy="0 0 0" />
             <geometry>
                 <mesh filename="${mesh_path}camera_link.STL" />
             </geometry>
