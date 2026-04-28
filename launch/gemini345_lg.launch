@@ -13,7 +13,7 @@
     <arg name="enable_frame_timestamp_csv" default="false"/>
     <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
-    <arg name="enable_sync_host_time" default="true"/>
+    <arg name="enable_sync_host_time" default="false"/>
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
     <arg name="device_preset" default="Standard default"/>

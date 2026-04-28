@@ -13,7 +13,7 @@
     <arg name="enable_frame_timestamp_csv" default="false"/>
     <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
-    <arg name="enable_sync_host_time" default="true"/>
+    <arg name="enable_sync_host_time" default="false"/>
     <arg name="device_preset" default="AMR Perception"/>
     <arg name="preset_resolution_config" default="1280, 800, 1, 1"/>
     <arg name="diagnostics_frequency" default="1.0"/>
