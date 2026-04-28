@@ -1,26 +1,26 @@
 # 网络相机
 
-> 本节描述如何在OrbbecSDK_ROS中使用网络相机。目前仅支持Femto_Mega和Gemini 335Le设备，其他网络设备将在不久的将来得到支持。
+> 本节介绍如何在 OrbbecSDK_ROS 中使用网络相机。目前仅支持 Femto Mega、Gemini 335Le 和 Gemini 435Le 设备，其他网络设备将在不久的将来得到支持。
 
-您可以在[示例](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples)中找到示例使用代码。
+您可以在 [example](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples) 中找到示例使用代码。
 
-## Femto Mega
+## Femto Mega & Gemini 435Le & Gemini 335Le
 
 **参数介绍**
 
-网络设备设置：默认`enumerate_net_device`设置为true，这将自动枚举网络设备。
+网络设备设置：`enumerate_net_device` 设置为 true，将自动枚举网络设备。
 
-如果您不想自动枚举网络设备，可以将`enumerate_net_device`设置为false，将`ip_address`设置为设备的IP地址，将`port`设置为默认值8090。
+如果您不想自动枚举网络设备，可以将 `enumerate_net_device` 设置为 false，将 `net_device_ip` 设置为设备的 IP 地址，并将 `net_device_port` 设置为默认值 8090。
 
-* `enumerate_net_device` : 启用自动枚举网络设备。
-* `ip_address` : 设置网络设备的IP地址。
-* `port` : 设置网络设备的端口。通常，您可以将其设置为8090。
+* `enumerate_net_device`：启用自动枚举网络设备。
+* `net_device_ip`：设置网络设备的 IP 地址。
+* `net_device_port`：设置网络设备的端口。通常可以设置为 8090。
 
 **单个网络相机**
 
-如果您需要运行Gemini 435Le/Gemini 335Le，只需在运行命令中将femto_mega.launch替换为gemini435_le.launch/gemini335_le.launch。
+如果您需要运行 Gemini 435Le/Gemini 335Le，只需在运行命令中将 `femto_mega.launch` 替换为 `gemini435_le.launch` 或 `gemini_330_series.launch`。
 
-以femto_mega.launch为例：
+以 `femto_mega.launch` 为例：
 
 **自动枚举网络设备：**
 
@@ -28,64 +28,104 @@
 roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
 ```
 
-**指定IP地址启动设备：**
+**指定 IP 地址启动设备：**
 
-注意：`ip_address`需要更改为设备的IP地址，这里是192.168.1.10
+注意：`net_device_ip` 需要更改为设备的 IP 地址，这里是 192.168.1.10。
 
 ```bash
-roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=false ip_address:=192.168.1.10 port:=8090
+roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=false net_device_ip:=192.168.1.10 net_device_port:=8090
 ```
 
-**多网络相机**
+**多个网络相机**
 
-以multi_net_camera.launch为例：
+以 `multi_net_camera.launch` 为例：
 
 ```bash
 roslaunch orbbec_camera multi_net_camera.launch
 ```
 
-## set_device_ip实用程序
+可以使用 `list_devices_node` 查看当前连接设备。v2.8.x 之后，该工具会额外输出固件版本、网口设备本地网卡名和 IP 来源类型（`NONE`、`LLA`、`DHCP`、`PERSISTENT`）。
 
-**`set_device_ip`**可执行文件允许您直接从ROS1配置网络相机的IP设置，包括在DHCP和静态IP之间切换，以及设置子网掩码和网关。这对于快速分配或更新IP地址而无需修改启动文件很有用。
+## ip_config_tool 工具
 
-> **注意：** 使用`set_device_ip`应用的IP设置是**永久的**，**不会重置**，即使设备断电或重启。
+**`ip_config_tool`** 可执行文件允许您直接从 ROS1 配置网络相机的 IP 设置，包括 DHCP、静态 IP、Force IP 和 DHCP 分配 IP 超时时间。这对于快速分配或更新 IP 地址而无需修改启动文件非常有用。
 
-**使用示例**
+> **注意：** 通过 `dhcp` 或 `set_ip` 应用的配置会写入设备。`force_ip` 是临时强制 IP，设备断电或重启后需要重新应用。
+> **兼容说明**：`set_device_ip` 已由 `ip_config_tool` 替代。旧参数 `old_ip` 已更名为 `current_ip`。
+
+**示例用法**
+
+查看帮助：
 
 ```bash
-rosrun orbbec_camera set_device_ip \
-_old_ip:=192.168.1.10 \
-_dhcp:=false \
-_new_ip:=192.168.1.11 \
-_mask:=255.255.255.0 \
-_gateway:=192.168.1.1
+rosrun orbbec_camera ip_config_tool --help
+```
+
+开启 DHCP：
+
+```bash
+rosrun orbbec_camera ip_config_tool dhcp \
+--current_ip 192.168.1.10 \
+--enable_dhcp true
+```
+
+关闭 DHCP 并设置静态 IP：
+
+```bash
+rosrun orbbec_camera ip_config_tool set_ip \
+--current_ip 192.168.1.10 \
+--new_ip 192.168.1.11 \
+--mask 255.255.255.0 \
+--gateway 192.168.1.1
+```
+
+通过 MAC 地址 Force IP：
+
+```bash
+rosrun orbbec_camera ip_config_tool force_ip \
+--force_ip_mac 54:14:FD:06:07:DA \
+--new_ip 192.168.1.50 \
+--mask 255.255.255.0 \
+--gateway 192.168.1.1
+```
+
+设置 DHCP 分配 IP 超时时间：
+
+```bash
+rosrun orbbec_camera ip_config_tool set_dhcp_timeout \
+--current_ip 192.168.1.10 \
+--timeout 10
 ```
 
 **参数**
 
-- **`old_ip`** – 设备的当前IP地址。
-- **`dhcp`** – 设置为`true`使用DHCP或`false`使用静态IP。
-- **`new_ip`** – 禁用DHCP时分配的静态IP地址。
-- **`mask`** – 新IP的子网掩码。
-- **`gateway`** – 新IP的网关地址。
+- **`current_ip`** - 设备的当前 IP 地址。
+- **`enable_dhcp`** - 在 `dhcp` 或 `force_ip` 子命令中设置是否启用 DHCP。
+- **`new_ip`** - 要分配的静态 IP 地址。
+- **`mask`** - 新 IP 的子网掩码。
+- **`gateway`** - 新 IP 的网关地址。
+- **`force_ip_mac`** - Force IP 目标设备 MAC 地址。
+- **`timeout`** / **`dhcp_assign_ip_timeout`** - DHCP 分配 IP 超时时间，单位为秒。
 
-## 强制IP功能
+> **版本说明**：`LLA` 开关仅 Gemini 335Le 固件 `1.7.05` 及以上、Gemini 435Le 固件 `1.3.17` 及以上支持。
 
-**强制IP**功能允许您为网络相机分配**静态IP地址**，覆盖DHCP设置。当连接多个网络相机时，这很有用，您需要每个设备都有固定的IP以实现可靠的通信。
+## 强制 IP 功能
 
-> **注意：** 强制IP配置**如果设备断电或重启将会重置**。您需要在重启后重新应用设置。
+**强制 IP** 功能允许您为网络相机分配**静态 IP 地址**，覆盖 DHCP 设置。当连接多个网络相机时，这非常有用，您需要每个设备具有固定的 IP 以实现可靠的通信。
+
+> **注意：** 如果设备断电或重启，强制 IP 配置**将被重置**。您需要在重启后重新应用设置。
 
 **参数**
 
-- **`force_ip_enable`** – 启用强制IP功能。**默认：** `false`
-- **`force_ip_mac`** – 连接多个相机时的目标设备MAC地址（例如，`"54:14:FD:06:07:DA"`）。您可以使用`list_devices_node`找到每个设备的MAC。**默认：** `""`
-- **`force_ip_address`** – 要分配的静态IP地址。**默认：** `192.168.1.10`
-- **`force_ip_subnet_mask`** – 静态IP的子网掩码。**默认：** `255.255.255.0`
-- **`force_ip_gateway`** – 静态IP的网关地址。**默认：** `192.168.1.1`
+- **`force_ip_enable`** - 启用强制 IP 功能。**默认值：** `false`
+- **`force_ip_mac`** - 连接多个相机时的目标设备 MAC 地址（例如 `"54:14:FD:06:07:DA"`）。您可以使用 `list_devices_node` 查找每个设备的 MAC。**默认值：** `""`
+- **`force_ip_address`** - 要分配的静态 IP 地址。**默认值：** `192.168.1.10`
+- **`force_ip_subnet_mask`** - 静态 IP 的子网掩码。**默认值：** `255.255.255.0`
+- **`force_ip_gateway`** - 静态 IP 的网关地址。**默认值：** `192.168.1.1`
 
-**使用示例**
+**示例用法**
 
-- **为特定设备启用强制IP：**
+- **为特定设备启用强制 IP：**
 
 ```bash
 roslaunch orbbec_camera gemini_330_series.launch \
@@ -98,4 +138,4 @@ net_device_ip:=192.168.1.50 \
 net_device_port:=8090
 ```
 
-> 提示：在启用强制IP之前，确保相机已连接且其MAC地址正确。使用`list_devices_node`检查所有已连接相机的MAC地址。
+> 提示：在启用 Force IP 之前，请确认相机已连接且 MAC 地址正确。可使用 `list_devices_node` 查看所有已连接相机的 MAC 地址。

@@ -24,6 +24,18 @@ rosrun orbbec_camera common_benchmark_node.py \
   * `--run_time`：监控持续时间。支持时间字符串格式：`10s`（秒）、`5m`（分钟）、`1h`（小时）、`2d`（天）。默认值：`10s`。
   * `--csv_file`：CSV 输出文件路径。未指定时使用工作空间目录并命名为 `camera_monitor_log.csv`。
 
+## 帧时间戳 CSV 记录
+
+开启 `enable_frame_timestamp_csv` 后，相机节点会记录彩色和深度帧的时间戳数据到 CSV 文件，用于分析帧同步、发布延迟和时间戳异常。
+
+```bash
+roslaunch orbbec_camera gemini_330_series.launch \
+enable_frame_timestamp_csv:=true \
+frame_timestamp_csv_file:=/tmp/frame_timestamp.csv
+```
+
+CSV 中包含 SDK frame index、hardware frame number、sensor timestamp、device/global/system timestamp、arrival timestamp、publish timestamp、相邻帧 delta 以及 SDK delay 等字段。
+
 ## 使用服务基准测试节点（service_benchmark_node）
 
 ### ROS1 C++

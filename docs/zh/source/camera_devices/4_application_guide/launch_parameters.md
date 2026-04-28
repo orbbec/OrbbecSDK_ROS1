@@ -40,19 +40,14 @@
     *   这些 QoS 参数在 ROS1 wrapper 中不适用。ROS1 中话题通信行为主要由发布者/订阅者队列长度控制。
 * **`color.image_raw.enable_pub_plugins`**
   * 启用彩色图像传输插件。默认值：`["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`。
-  > **支持版本**： wrapper version 2.6.3 及以上。
 * **`depth.image_raw.enable_pub_plugins`**
   * 启用深度图像传输插件。默认值：`["image_transport/compressedDepth", "image_transport/raw"]`。
-  > **支持版本**： wrapper version 2.6.3 及以上。
 * **`left_ir.image_raw.enable_pub_plugins`**
   * 启用左红外图像传输插件。默认值：`["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`。
-  > **支持版本**： wrapper version 2.6.3 及以上。
 * **`right_ir.image_raw.enable_pub_plugins`**
   * 启用右红外图像传输插件。默认值：`["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`。
-  > **支持版本**： wrapper version 2.6.3 及以上。
 * **`point_cloud_decimation_filter_factor`**
   * 点云下采样因子。范围：`1–8`，`1`表示不下采样，数值越大下采样倍数越大。
-  > **支持版本**： wrapper version 2.6.3 及以上。
 
 ### 传感器控制
 
@@ -71,18 +66,24 @@
     *   设置彩色白平衡。
 *   **`color_ae_max_exposure`**
     *   设置彩色自动曝光的最大曝光值。
+*   **`color_ae_max_gain`**
+    *   设置彩色自动曝光的最大增益。Gemini 2 固件 `1.5.04` 及以上、Gemini 2L 固件 `1.5.09` 及以上支持。**范围：** `16–112`。
 *   **`color_brightness`**、**`color_sharpness`**、**`color_gamma`**、**`color_saturation`**、**`color_contrast`**、**`color_hue`**
     *   设置彩色亮度、锐度、伽马、饱和度、对比度和色调。
 *   **`color_backlight_compensation`**
     *   启用彩色相机的背光补偿功能。**范围**：`0–6`，**默认值**：`3`。
 *   **`color_powerline_freq`**
     *   设置电源线频率。可能的值为 `disable`、`50hz`、`60hz`、`auto`。
+*   **`color_preset`**
+    *   设置 Gemini 330 系列设备的彩色 preset。可选值：`Default`、`Warm Biased AWB`。
+*   **`color_anti_flicker`**
+    *   启用彩色防闪烁功能。Gemini 330 系列固件 `1.7.13` 及以上、Gemini 305 系列固件 `1.0.54` 及以上支持。
 *   **`enable_color_decimation_filter`** / **`color_decimation_filter_scale`**
     *   启用彩色抽取滤波器并设置其比例。
 *   **`color_ae_roi_[left|right|top|bottom]`**
     *   设置彩色自动曝光ROI。
 *   **`color_denoising_level`**
-    *   启用Gemini 330系列设备的ISP降噪功能。**范围：** `0–8`，**默认值：** `0`（自动）。
+    *   启用 ISP 彩色降噪功能。**范围：** `0–8`，`0` 表示自动。支持 Gemini 2 固件 `1.5.04` 及以上、Gemini 2L 固件 `1.5.09` 及以上；该功能需要开启彩色自动曝光并依赖新固件支持。
 
 
 #### 深度流
@@ -143,19 +144,14 @@
   * 设置网络设备的IP地址和端口（通常为 `8090`）。
 * **`force_ip_enable`**
   * 启用强制IP功能。**默认值：** `false`
-  > **支持版本**： wrapper version 2.5.4 及以上。
 * **`force_ip_mac`**
   * 连接多个相机时的目标设备MAC地址（例如，`"54:14:FD:06:07:DA"`）。您可以使用 `list_devices_node` 查找每个设备的MAC。**默认值：** `""`
-  > **支持版本**： wrapper version 2.5.4 及以上。
 * **`force_ip_address`**
   * 要分配的静态IP地址。**默认值：** `192.168.1.10`
-  > **支持版本**： wrapper version 2.5.4 及以上。
 * **`force_ip_subnet_mask`**
   * 静态IP的子网掩码。**默认值：** `255.255.255.0`
-  > **支持版本**： wrapper version 2.5.4 及以上。
 * **`force_ip_gateway`**
   * 静态IP的网关地址。**默认值：** `192.168.1.1`
-  > **支持版本**： wrapper version 2.5.4 及以上。
 
 > 用于 [网络相机](../5_advanced_guide/configuration/net_camera.md)。
 
@@ -165,27 +161,21 @@
 * **`enable_ptp_config`**
   * 启用PTP时间同步。仅适用于Gemini 335Le。需要 `enable_sync_host_time` 设置为 `false`。
   > **支持模组**：Gemini 335Le。
-  > **支持版本**： wrapper version 2.3.4 及以上。
 * **`preset_resolution_config`**
   * 摄像头设备的预设分辨率配置。格式: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". 留空禁用。
   > **支持模组**：Gemini 435Le。
-  > **支持版本**： wrapper version 2.6.3 及以上。
-* **`ae_mode`**
-  * `colorbased`：自动曝光基于彩色流。`depthbased`：自动曝光基于深度流。**默认值：** `depthbased`
+* **`ae_reference_stream`**
+  * 设置 Gemini 305 系列设备的 AE 参考流。可选值：`color`、`depth`。
   > **支持模组**：Gemini 305。
-  > **支持版本**： wrapper version 2.7.2 及以上。
-* **`enalbe_sports_mode`**
-  * 是否开启运动模式。**默认值：** `false`
+* **`ae_strategy`**
+  * 设置 Gemini 305 系列设备的 AE 策略。可选值：`default`、`motion`。
   > **支持模组**：Gemini 305。
-  > **支持版本**： wrapper version 2.7.2 及以上。
 * **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
   * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
   > **支持模组**：Gemini 305。
-  > **支持版本**： wrapper version 2.7.2 及以上。
 * **`enable_false_positive_filter`**
   * 启用鬼影滤波。可减少重影噪声。
   > **支持模组**： DaBaiA/DaBaiAL/Gemini345/Gemini345Lg.
-  > **支持版本**： wrapper version 2.7.6 及以上；firmware version 1.9.03 及以上。
 
 #### 视差
 *   **`disparity_to_depth_mode`**
@@ -215,13 +205,12 @@
   *   `DEPTH`：将彩色对齐到深度。
 - **`intra_camera_sync_reference`**
   - 设置相机内同步的参考点。适用于Gemini 330系列设备，当 `sync_mode` 设置为**软件**或**硬件触发**模式时。**选项：** `Start`、`Middle`、`End`。设置为空时，长基线设备默认End，短基线设备默认Middle。
-  > **支持版本**： wrapper version 2.6.3 及以上。
 
 ### 基础与通用参数
 
 #### 固件与后端
 *   **`upgrade_firmware`**
-    *   输入参数为固件路径。
+    *   输入参数为固件路径。新版本建议使用独立工具 `firmware_update_tool` 进行固件升级。
 *   **`preset_firmware_path`**
     *   输入参数为预设固件路径。如果输入多个路径，每个路径需要用 `,` 分隔，最多可输入3个固件路径。
 *   **`uvc_backend`**
@@ -249,24 +238,28 @@
 * **`time_sync_period`**
   * 相机时间与主机系统同步的间隔（秒）。
   > **注意**：仅当 **`enable_sync_host_time = true`** 且 **`time_domain = device`** 时需要设置此参数。
-  > **支持版本**： wrapper version 2.6.3 及以上。
+*   **`enable_frame_timestamp_csv`**
+    *   启用帧时间戳统计 CSV 记录。
+*   **`frame_timestamp_csv_file`**
+    *   帧时间戳统计 CSV 输出路径。为空时写入默认 ROS 日志路径。
 *   **`enable_frame_sync`**
     *   启用帧同步。
 
 #### 日志与诊断
 *   **`log_level`**
-    *   SDK日志级别。默认为 `info`。可选值：`debug`、`info`、`warn`、`error`、`fatal`。
+    *   SDK日志级别。默认只输出设备当前状态，更多调试日志可通过 `debug` 开启。可选值：`debug`、`info`、`warn`、`error`、`fatal`。
 * **`log_file_name`**
-  * 保存的SDK日志文件名。当`log_level`为`debug`时生效。
-  > **支持版本**： wrapper version 2.6.3 及以上。
+  * 保存的SDK日志文件名。当`log_level`为`debug`时生效。SDK 日志和崩溃文件统一保存在 `~/.ros/Log`，ROS 日志仍保存在 `~/.ros/log`。
 *   **`diagnostic_period`**
     *   诊断周期（秒）。
 *   **`enable_heartbeat`**
     *   启用心跳功能。默认为 `false`。如果为 `true`，相机节点将向固件发送心跳信号。
+*   **`enable_firmware_log`**
+    *   启用固件日志抓取。该开关与 `enable_heartbeat` 解耦。
 
 #### 其他
 *   **`config_file_path`**
-    *   YAML配置文件的路径。默认为 `""`。如果未指定，将使用启动文件中的默认参数。
+    *   YAML配置文件的路径。默认为 `""`。如果未指定，将使用启动文件中的默认参数。设置为 `gemini2L_dual_ir.yaml` 可启用 Gemini 2L 双 IR 模式。
 *   **`frame_aggregate_mode`**
     *   设置帧聚合输出模式。可选值：`full_frame`、`color_frame`、`ANY`、`disable`。
 *   **`enable_d2c_viewer`**
@@ -311,6 +304,10 @@
     *   启用深度空间快速滤波器。使用 `spatial_fast_filter_radius` 设置。
 *   **`enable_spatial_moderate_filter`**
     *   启用深度空间中等滤波器。使用 `spatial_moderate_filter_diff_threshold` 等设置。
+*   **`enable_mgc_noise_removal_filter`**
+    *   启用 MGC 降噪滤波器。适配 Astra Mini (S) Pro、DaBai Pro Max、DaBai DCW2 等 OpenNI 设备。
+*   **`enable_lut_noise_removal_filter`**
+    *   启用 LUT 降噪滤波器。适配 Astra Mini (S) Pro、DaBai Pro Max、DaBai DCW2 等 OpenNI 设备。
 
 ---
 

@@ -1,28 +1,28 @@
-# Net_camera
+# Net Camera
 
-> This section describes how to use Net camera in OrbbecSDK_ROS.Currently, only Femto_Mega and Gemini 335Le devices are supported, and other Net devices will be supported in the near future.
+> This section describes how to use Net camera in OrbbecSDK_ROS. Currently, only Femto Mega, Gemini 335Le and Gemini 435Le devices are supported, and other Net devices will be supported in the near future.
 
 You can find example usage code in the [example](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples).
 
-## Femto Mega
+## Femto Mega & Gemini 435Le & Gemini 335Le
 
 **Parameter Introduction**
 
-Network device settings: default `enumerate_net_device` is set to true, which will automatically enumerate network devices.
+Network device settings: `enumerate_net_device` is set to true, which will automatically enumerate network devices.
 
-If you do not want to automatically enumerate network devices,you can set `enumerate_net_device` to false, `ip_address` to the device's IP address, and `port` to the default value of 8090.
+If you do not want to automatically enumerate network devices, you can set `enumerate_net_device` to false, `net_device_ip` to the device's IP address, and `net_device_port` to the default value of 8090.
 
-* `enumerate_net_device` : Enable automatically enumerate network devices.
-* `ip_address` : Setting net device's IP address.
-* `port` : Setting net device's port.Usually, you can set it to 8090.
+* `enumerate_net_device`: Enable automatically enumerate network devices.
+* `net_device_ip`: Set net device's IP address.
+* `net_device_port`: Set net device's port. Usually, you can set it to 8090.
 
 **Single Net camera**
 
-If you need to run Gemini 435Le/Gemini 335Le, you only need to replace femto_mega.launch in the run command with gemini435_le.launch/gemini335_le.launch.
+If you need to run Gemini 435Le/Gemini 335Le, replace `femto_mega.launch` in the run command with `gemini435_le.launch` or `gemini_330_series.launch`.
 
-For femto_mega.launchas an example:
+For `femto_mega.launch` as an example:
 
-**automatically enumerate network devices:**
+**Automatically enumerate network devices:**
 
 ```bash
 roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
@@ -30,44 +30,84 @@ roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
 
 **Specify IP address to start the device:**
 
-Note:`ip_address` needs to be changed to the IP address of the device, here it is 192.168.1.10
+Note: `net_device_ip` needs to be changed to the IP address of the device, here it is 192.168.1.10.
 
 ```bash
-roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=false ip_address:=192.168.1.10 port:=8090
+roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=false net_device_ip:=192.168.1.10 net_device_port:=8090
 ```
 
 **Multi Net camera**
 
-For multi_net_camera.launchas an example:
+For `multi_net_camera.launch` as an example:
 
 ```bash
 roslaunch orbbec_camera multi_net_camera.launch
 ```
 
-## set_device_ip Utility
+Use `list_devices_node` to inspect connected devices. Since v2.8.x, this tool also prints firmware version, local network interface name for Ethernet devices, and IP source type (`NONE`, `LLA`, `DHCP`, `PERSISTENT`).
 
-The **`set_device_ip`** executable allows you to configure the IP settings of a network camera directly from ROS1, including switching between DHCP and static IP, and setting subnet mask and gateway. This is useful for quickly assigning or updating IP addresses without modifying launch files.
+## ip_config_tool Utility
 
-> **Note:** The IP settings applied with `set_device_ip` are **permanent** and **will not be reset** if the device is powered off or restarted.
+The **`ip_config_tool`** executable allows you to configure network camera IP settings directly from ROS1, including DHCP, static IP, Force IP, and DHCP address assignment timeout. This is useful for quickly assigning or updating IP addresses without modifying launch files.
+
+> **Note:** Configuration applied with `dhcp` or `set_ip` is written to the device. `force_ip` is temporary and must be applied again after the device is powered off or restarted.
+> **Compatibility:** `set_device_ip` has been replaced by `ip_config_tool`. The old `old_ip` argument has been renamed to `current_ip`.
 
 **Example Usage**
 
+Show help:
+
 ```bash
-rosrun orbbec_camera set_device_ip \
-_old_ip:=192.168.1.10 \
-_dhcp:=false \
-_new_ip:=192.168.1.11 \
-_mask:=255.255.255.0 \
-_gateway:=192.168.1.1
+rosrun orbbec_camera ip_config_tool --help
+```
+
+Enable DHCP:
+
+```bash
+rosrun orbbec_camera ip_config_tool dhcp \
+--current_ip 192.168.1.10 \
+--enable_dhcp true
+```
+
+Disable DHCP and set a static IP:
+
+```bash
+rosrun orbbec_camera ip_config_tool set_ip \
+--current_ip 192.168.1.10 \
+--new_ip 192.168.1.11 \
+--mask 255.255.255.0 \
+--gateway 192.168.1.1
+```
+
+Force IP by MAC address:
+
+```bash
+rosrun orbbec_camera ip_config_tool force_ip \
+--force_ip_mac 54:14:FD:06:07:DA \
+--new_ip 192.168.1.50 \
+--mask 255.255.255.0 \
+--gateway 192.168.1.1
+```
+
+Set DHCP address assignment timeout:
+
+```bash
+rosrun orbbec_camera ip_config_tool set_dhcp_timeout \
+--current_ip 192.168.1.10 \
+--timeout 10
 ```
 
 **Parameters**
 
-- **`old_ip`** – Current IP address of the device.
-- **`dhcp`** – Set to `true` to use DHCP or `false` for static IP.
-- **`new_ip`** – Static IP address to assign when DHCP is disabled.
-- **`mask`** – Subnet mask for the new IP.
-- **`gateway`** – Gateway address for the new IP.
+- **`current_ip`** - Current IP address of the device.
+- **`enable_dhcp`** - Enable or disable DHCP for the `dhcp` or `force_ip` subcommand.
+- **`new_ip`** - Static IP address to assign.
+- **`mask`** - Subnet mask for the new IP.
+- **`gateway`** - Gateway address for the new IP.
+- **`force_ip_mac`** - Target MAC address for Force IP.
+- **`timeout`** / **`dhcp_assign_ip_timeout`** - DHCP address assignment timeout in seconds.
+
+> **Version notes:** The `LLA` switch was supported only by Gemini 335Le firmware `1.7.05` and above and Gemini 435Le firmware `1.3.17` and above.
 
 ## Force IP Function
 
@@ -77,11 +117,11 @@ The **Force IP** feature allows you to assign a **static IP address** to a netwo
 
 **Parameters**
 
-- **`force_ip_enable`** – Enable the Force IP function. **Default:** `false`
-- **`force_ip_mac`** – Target device MAC address when multiple cameras are connected (e.g., `"54:14:FD:06:07:DA"`). You can use the `list_devices_node` to find the MAC of each device. **Default:** `""`
-- **`force_ip_address`** – Static IP address to assign . **Default:** `192.168.1.10`
-- **`force_ip_subnet_mask`** – Subnet mask for the static IP. **Default:** `255.255.255.0`
-- **`force_ip_gateway`** – Gateway address for the static IP. **Default:** `192.168.1.1`
+- **`force_ip_enable`** - Enable the Force IP function. **Default:** `false`
+- **`force_ip_mac`** - Target device MAC address when multiple cameras are connected (e.g., `"54:14:FD:06:07:DA"`). You can use the `list_devices_node` to find the MAC of each device. **Default:** `""`
+- **`force_ip_address`** - Static IP address to assign. **Default:** `192.168.1.10`
+- **`force_ip_subnet_mask`** - Subnet mask for the static IP. **Default:** `255.255.255.0`
+- **`force_ip_gateway`** - Gateway address for the static IP. **Default:** `192.168.1.1`
 
 **Example Usage**
 

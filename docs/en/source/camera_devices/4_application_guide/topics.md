@@ -12,21 +12,29 @@ These topics provide the raw image data and corresponding calibration informatio
     *   Raw image data from the color stream.
 *   `/camera/color/camera_info`
     *   Camera calibration data and metadata for the color stream.
+*   `/camera/color/metadata`
+    *   Low-level metadata from Color stream firmware.
 
 *   `/camera/depth/image_raw`
     *   Raw image data from the depth stream.
 *   `/camera/depth/camera_info`
     *   Camera calibration data and metadata for the depth stream.
+*   `/camera/depth/metadata`
+    *   Low-level metadata from Depth stream firmware.
 
 *   `/camera/left_ir/image_raw`
     *   Raw image data from the left infrared (IR) stream.
 *   `/camera/left_ir/camera_info`
     *   Camera calibration data and metadata for the left IR stream.
+*   `/camera/left_ir/metadata`
+    *   Low-level metadata from Left IR stream firmware.
 
 *   `/camera/right_ir/image_raw`
     *   Raw image data from the right infrared (IR) stream.
 *   `/camera/right_ir/camera_info`
     *   Camera calibration data and metadata for the right IR stream.
+*   `/camera/right_ir/metadata`
+    *   Low-level metadata from Right IR stream firmware.
 
 ### Point Cloud Topics
 
@@ -42,3 +50,6 @@ These topics provide the raw image data and corresponding calibration informatio
 
 *   `/diagnostics`
     *   Publishes diagnostic information about the camera node. Currently, this includes the device temperature.
+
+*   `/camera/depth_filters/status`
+    *   Publishes the current enable state and parameters of depth filters, and updates when filter state changes.
