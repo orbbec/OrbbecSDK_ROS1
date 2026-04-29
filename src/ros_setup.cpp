@@ -1427,7 +1427,7 @@ void OBCameraNode::setupDevices() {
       std::ifstream load_config_file(load_config_json_file_path_);
       if (load_config_file.good()) {
         device_->loadPresetFromJsonFile(load_config_json_file_path_.c_str());
-        ROS_INFO_STREAM("Loading config json file path : " << load_config_json_file_path_);
+        ROS_INFO_STREAM("Loaded config json file path : " << load_config_json_file_path_);
       } else {
         ROS_WARN_STREAM(
             "Skip loading config json file, file not found: " << load_config_json_file_path_);
