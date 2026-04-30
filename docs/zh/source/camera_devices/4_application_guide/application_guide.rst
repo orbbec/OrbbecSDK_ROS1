@@ -7,8 +7,8 @@
     :maxdepth: 2
 
     launch_parameters.md
-    runtime_modifiable_parameters.md
     services.md
     topics.md
+    runtime_modifiable_parameters.md
     coordinate_and_tf.md
     point_cloud.md
