@@ -24,18 +24,6 @@ rosrun orbbec_camera common_benchmark_node.py \
   * **--run_time**: Duration for monitoring, specified as time strings like `"10s"`, `"5m"`, `"1h"`, `"2d"`. Default is 10 seconds.
   *  **--csv_file**: Path to the output CSV file. By default, it is saved in the workspace directory with the name "camera_monitor_log.csv".
 
-## Frame Timestamp CSV Logging
-
-When `enable_frame_timestamp_csv` is enabled, the camera node records Color and Depth frame timestamp data to a CSV file. This is useful for frame synchronization, publish latency, and timestamp debugging.
-
-```bash
-roslaunch orbbec_camera gemini_330_series.launch \
-enable_frame_timestamp_csv:=true \
-frame_timestamp_csv_file:=/tmp/frame_timestamp.csv
-```
-
-The CSV includes SDK frame index, hardware frame number, sensor timestamp, device/global/system timestamp, arrival timestamp, publish timestamp, inter-frame delta values, and SDK delay fields.
-
 ## Using service benchmark node
 
 ### ROS1 C++

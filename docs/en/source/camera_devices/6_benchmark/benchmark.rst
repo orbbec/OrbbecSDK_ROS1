@@ -8,3 +8,4 @@ This chapter introduces how to use the benchmark tool to test the performance of
 
     introduction.md
     benchmark_usage.md
+    othertools.md

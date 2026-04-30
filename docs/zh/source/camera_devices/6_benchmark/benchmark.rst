@@ -8,3 +8,4 @@
 
     introduction.md
     benchmark_usage.md
+    othertools.md
