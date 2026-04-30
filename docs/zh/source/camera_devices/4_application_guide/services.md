@@ -341,6 +341,34 @@ rosservice call /camera/get_ptp_config
 rosservice call /camera/set_ptp_config true
 ```
 
+## 视差配置
+
+* `/camera/set_disparity_range_mode`
+
+```bash
+rosservice call /camera/set_disparity_range_mode 1
+```
+
+* `/camera/set_disparity_search_offset`
+
+```bash
+rosservice call /camera/set_disparity_search_offset 0
+```
+
+## AE 配置
+
+* `/camera/set_ae_reference_stream`
+
+```bash
+rosservice call /camera/set_ae_reference_stream color
+```
+
+* `/camera/set_ae_strategy`
+
+```bash
+rosservice call /camera/set_ae_strategy motion
+```
+
 ## 深度滤波器配置（Depth Filter Configuration）
 
 * `/camera/set_filter`

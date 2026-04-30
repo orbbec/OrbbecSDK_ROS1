@@ -38,6 +38,8 @@ This document lists available presets, features, and recommended scenarios by pr
 | Binned Sparse Default | Small dead zone, low power consumption, high frame rate |
 | Unbinned Sparse Default | Balance quality and power consumption, improve low-reflection and semi-outdoor effects |
 
+To switch Gemini 2L to dual IR mode, set `config_file_path` to `gemini2L_dual_ir.yaml`. The configuration file is located in the `config` directory.
+
 ## Gemini 305
 
 | Defaults | Features |

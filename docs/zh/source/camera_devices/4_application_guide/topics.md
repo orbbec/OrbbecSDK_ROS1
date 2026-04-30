@@ -12,21 +12,29 @@
     *   来自彩色流的原始图像数据。
 *   `/camera/color/camera_info`
     *   彩色流的相机标定数据和元数据。
+*   `/camera/color/metadata`
+    *   来自彩色流固件的底层元数据。
 
 *   `/camera/depth/image_raw`
     *   来自深度流的原始图像数据。
 *   `/camera/depth/camera_info`
     *   深度流的相机标定数据和元数据。
+*   `/camera/depth/metadata`
+    *   来自深度流固件的底层元数据。
 
 *   `/camera/left_ir/image_raw`
     *   来自左红外（IR）流的原始图像数据。
 *   `/camera/left_ir/camera_info`
     *   左红外流的相机标定数据和元数据。
+*   `/camera/left_ir/metadata`
+    *   来自左红外流固件的底层元数据。
 
 *   `/camera/right_ir/image_raw`
     *   来自右红外（IR）流的原始图像数据。
 *   `/camera/right_ir/camera_info`
     *   右红外流的相机标定数据和元数据。
+*   `/camera/right_ir/metadata`
+    *   来自右红外流固件的底层元数据。
 
 ### 点云话题
 
@@ -42,3 +50,6 @@
 
 *   `/diagnostics`
     *   发布关于相机节点的诊断信息。目前包括设备温度。
+
+*   `/camera/depth_filters/status`
+    *   发布当前深度滤波器的使能状态和参数，并在滤波状态变化后更新。

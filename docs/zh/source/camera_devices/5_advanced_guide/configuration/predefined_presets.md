@@ -38,6 +38,8 @@
 | Binned Sparse Default |  小盲区、低功耗、高帧率 |
 | Unbinned Sparse Default |  平衡质量和功耗，提升低反和半室外效果 |
 
+如需将 Gemini 2L 切换为双 IR 模式，请将 `config_file_path` 设置为 `gemini2L_dual_ir.yaml`。该配置文件位于 `config` 目录下。
+
 ## Gemini 305
 
 | 预设 | 特点 |
@@ -49,7 +51,7 @@
 | Custom |  自定义修改，例如后处理管道的新配置、深度AE功能的修改 |
 
 > 由于 `Dual Color Streams` 模式的参数配置与 `Default` 模式差异较大，我们提供了对应的 YAML 配置文件。
-请将 `config_file_path` 设置为 `gemini305_dual_color`，该配置文件位于 config 目录下。
+请将 `config_file_path` 设置为 `gemini305_dual_color.yaml`，该配置文件位于 config 目录下。
 
 ## 扩展预设
 
@@ -64,5 +66,4 @@
 | 预设 | 特点 | 推荐使用场景 |
 | --- | --- | --- |
 | G336X AMR Default |  优化其在阳光照射和重复纹理的仓库场景中具有可靠的深度性能<br> 推荐深度分辨率：1280x800 / 640x400 / 424x266 |  仓库AMRs |
-
 

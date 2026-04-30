@@ -340,6 +340,34 @@ rosservice call /camera/get_ptp_config
 rosservice call /camera/set_ptp_config true
 ```
 
+## Disparity Configuration
+
+* `/camera/set_disparity_range_mode`
+
+```bash
+rosservice call /camera/set_disparity_range_mode 1
+```
+
+* `/camera/set_disparity_search_offset`
+
+```bash
+rosservice call /camera/set_disparity_search_offset 0
+```
+
+## AE Configuration
+
+* `/camera/set_ae_reference_stream`
+
+```bash
+rosservice call /camera/set_ae_reference_stream color
+```
+
+* `/camera/set_ae_strategy`
+
+```bash
+rosservice call /camera/set_ae_strategy motion
+```
+
 ## Depth Filter Configuration
 
 * `/camera/set_filter`
