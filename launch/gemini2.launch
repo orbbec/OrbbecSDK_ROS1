@@ -10,6 +10,8 @@
     <arg name="tf_publish_rate" default="0.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
+    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="sync_mode" default="standalone"/>
@@ -31,8 +33,10 @@
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="0"/>
     <arg name="enable_color_auto_exposure" default="true"/>
+    <arg name="color_ae_max_gain" default="-1"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
+    <arg name="color_denoising_level" default="-1"/>
 
     <!-- Depth camera parameters -->
     <arg name="depth_width" default="0"/>
@@ -123,6 +127,7 @@
     <arg name="laser_energy_level" default="-1"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
+    <arg name="enable_firmware_log" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
 
     <group ns="$(arg camera_name)">
@@ -136,6 +141,8 @@
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
@@ -156,8 +163,10 @@
             <param name="color_ae_roi_top" value="$(arg color_ae_roi_top)"/>
             <param name="color_ae_roi_bottom" value="$(arg color_ae_roi_bottom)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="color_ae_max_gain" value="$(arg color_ae_max_gain)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
+            <param name="color_denoising_level" value="$(arg color_denoising_level)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
@@ -229,6 +238,7 @@
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
+            <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>

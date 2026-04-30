@@ -10,6 +10,8 @@
     <arg name="tf_publish_rate" default="0.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
+    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
@@ -29,6 +31,8 @@
     <!-- color rotation degree : 0, 90, 180, 270 -->
     <arg name="color_rotation" default="0"/>
     <arg name="enable_color_auto_exposure" default="true"/>
+    <!-- Only supported on Gemini 330 series, firmware version >= 1.7.13 -->
+    <arg name="color_anti_flicker" default="false"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
 
@@ -83,6 +87,8 @@
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_hole_filling_filter" default="false"/>
+    <arg name="enable_mgc_noise_removal_filter" default="false"/>
+    <arg name="enable_lut_noise_removal_filter" default="false"/>
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
     <arg name="threshold_filter_min" default="-1"/>
@@ -119,6 +125,7 @@
     <arg name="laser_energy_level" default="-1"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
+    <arg name="enable_firmware_log" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
 
     <group ns="$(arg camera_name)">
@@ -132,6 +139,8 @@
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="device_preset" value="$(arg device_preset)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
@@ -148,6 +157,7 @@
             <param name="enable_color" value="$(arg enable_color)"/>
             <param name="color_format" value="$(arg color_format)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="color_anti_flicker" value="$(arg color_anti_flicker)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
 
@@ -164,7 +174,7 @@
             <param name="left_ir_fps" value="$(arg left_ir_fps)"/>
             <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
             <param name="left_ir_format" value="$(arg left_ir_format)"/>
-             <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
+            <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
 
             <param name="right_ir_width" value="$(arg right_ir_width)"/>
             <param name="right_ir_height" value="$(arg right_ir_height)"/>
@@ -189,6 +199,8 @@
             <param name="enable_spatial_filter" value="$(arg enable_spatial_filter)"/>
             <param name="enable_temporal_filter" value="$(arg enable_temporal_filter)"/>
             <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
+            <param name="enable_mgc_noise_removal_filter" value="$(arg enable_mgc_noise_removal_filter)"/>
+            <param name="enable_lut_noise_removal_filter" value="$(arg enable_lut_noise_removal_filter)"/>
             <param name="sequence_id_filter_id" value="$(arg sequence_id_filter_id)"/>
             <param name="threshold_filter_max" value="$(arg threshold_filter_max)"/>
             <param name="threshold_filter_min" value="$(arg threshold_filter_min)"/>
@@ -223,6 +235,7 @@
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
+            <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>

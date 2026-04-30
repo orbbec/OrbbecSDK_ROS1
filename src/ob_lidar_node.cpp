@@ -75,7 +75,7 @@ void OBLidarNode::stopStreams() {
   try {
     pipeline_->stop();
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to stop pipeline: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to stop pipeline: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (...) {
     ROS_ERROR_STREAM("Failed to stop pipeline");
   }
@@ -166,8 +166,9 @@ void OBLidarNode::setupDevices() {
     }
   }
   if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
-    ROS_INFO_STREAM("Setting heartbeat to " << (enable_heartbeat_ ? "ON" : "OFF"));
     device_->setIntProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);
+    ROS_INFO_STREAM(
+        "Current heartbeat: " << (device_->getBoolProperty(OB_PROP_HEARTBEAT_BOOL) ? "ON" : "OFF"));
   }
   if (!echo_mode_.empty() &&
       device_->isPropertySupported(OB_PROP_LIDAR_SPECIFIC_MODE_INT, OB_PERMISSION_READ_WRITE)) {
@@ -176,7 +177,7 @@ void OBLidarNode::setupDevices() {
     } else if (echo_mode_ == "First Echo") {
       device_->setIntProperty(OB_PROP_LIDAR_SPECIFIC_MODE_INT, 1);
     }
-    ROS_INFO_STREAM("Setting echo mode to "
+    ROS_INFO_STREAM("Current echo mode: "
                     << (device_->getIntProperty(OB_PROP_LIDAR_SPECIFIC_MODE_INT) ? "First Echo"
                                                                                  : "Last Echo"));
   }
@@ -189,7 +190,7 @@ void OBLidarNode::setupDevices() {
                 range.min, range.max);
     } else {
       device_->setIntProperty(OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT, repetitive_scan_mode_);
-      ROS_INFO_STREAM("Setting repetitive scan mode to "
+      ROS_INFO_STREAM("Current repetitive scan mode: "
                       << device_->getIntProperty(OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT));
     }
   }
@@ -202,8 +203,8 @@ void OBLidarNode::setupDevices() {
     } else {
       device_->setIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT, filter_level_);
       device_->setIntProperty(OB_PROP_LIDAR_APPLY_CONFIGS_INT, 1);
-      ROS_INFO_STREAM("Setting filter level to "
-                      << device_->getIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT));
+      ROS_INFO_STREAM(
+          "Current filter level: " << device_->getIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT));
     }
   }
 
@@ -215,8 +216,8 @@ void OBLidarNode::setupDevices() {
                 range.max);
     } else {
       device_->setFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT, vertical_fov_);
-      ROS_INFO_STREAM("Setting vertical fov to "
-                      << device_->getFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT));
+      ROS_INFO_STREAM(
+          "Current vertical fov: " << device_->getFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT));
     }
   }
 }
@@ -317,8 +318,8 @@ void OBLidarNode::setupProfiles() {
                                 << (stream_index == ACCEL ? accel_range_ : gyro_range_)
                                 << " sample rate " << imu_rate_);
     } catch (const ob::Error& e) {
-      ROS_INFO_STREAM("Failed to setup " << stream_name_[stream_index]
-                                         << " profile: " << e.getMessage());
+      ROS_INFO_STREAM("Failed to setup " << stream_name_[stream_index] << " profile: "
+                                         << orbbec_camera::formatObErrorWithStatus(e));
       enable_stream_[stream_index] = false;
       stream_profile_[stream_index] = nullptr;
     }
@@ -364,7 +365,7 @@ void OBLidarNode::startStreams() {
       onNewFrameSetCallback(frame_set);
     });
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to start pipeline: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to start pipeline: " << orbbec_camera::formatObErrorWithStatus(e));
     setupPipelineConfig();
     pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
       onNewFrameSetCallback(frame_set);
@@ -388,7 +389,7 @@ void OBLidarNode::setupPipelineConfig() {
   pipeline_config_ = std::make_shared<ob::Config>();
   for (const auto& stream_index : LIDAR_STREAMS) {
     if (enable_stream_[stream_index]) {
-      ROS_INFO_STREAM("Enable " << stream_name_[stream_index] << " stream");
+      ROS_DEBUG_STREAM("Enable " << stream_name_[stream_index] << " stream");
       auto profile = stream_profile_[stream_index]->as<ob::LiDARStreamProfile>();
 
       if (enable_stream_[stream_index]) {
@@ -454,7 +455,7 @@ void OBLidarNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set)
       }
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("onNewFrameSetCallback error: " << e.getMessage());
+    ROS_ERROR_STREAM("onNewFrameSetCallback error: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("onNewFrameSetCallback error: " << e.what());
   } catch (...) {
@@ -860,7 +861,7 @@ void OBLidarNode::startIMU() {
     // publishLidarToIMUExtrinsics();
 
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to start IMU stream: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to start IMU stream: " << orbbec_camera::formatObErrorWithStatus(e));
     imu_sync_output_start_ = false;
   }
 }
@@ -872,7 +873,7 @@ void OBLidarNode::stopIMU() {
       imu_sync_output_start_ = false;
       ROS_INFO_STREAM("Stopped IMU stream");
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to stop IMU stream: " << e.getMessage());
+      ROS_ERROR_STREAM("Failed to stop IMU stream: " << orbbec_camera::formatObErrorWithStatus(e));
     }
   }
 }
@@ -1094,11 +1095,13 @@ void OBLidarNode::publishLidarToIMUExtrinsics() {
         ROS_DEBUG_STREAM("ACCEL and GYRO extrinsics are identical");
       }
     } catch (const ob::Error& e) {
-      ROS_WARN_STREAM("Could not get GYRO extrinsic for verification: " << e.getMessage());
+      ROS_WARN_STREAM("Could not get GYRO extrinsic for verification: "
+                      << orbbec_camera::formatObErrorWithStatus(e));
     }
 
   } catch (const ob::Error& e) {
-    ROS_WARN_STREAM("Failed to get ACCEL extrinsic, trying GYRO: " << e.getMessage());
+    ROS_WARN_STREAM("Failed to get ACCEL extrinsic, trying GYRO: "
+                    << orbbec_camera::formatObErrorWithStatus(e));
     try {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[GYRO]);
       ROS_INFO_STREAM("Using GYRO extrinsic for IMU");

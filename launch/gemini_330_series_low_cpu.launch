@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="device_type" default="camera"/>
     <!-- Basic camera parameters -->
     <arg name="camera_name" default="camera"/>
     <!-- open device delay time 100m-->
@@ -10,8 +11,10 @@
     <arg name="tf_publish_rate" default="0.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="global"/><!-- "device", "global", "system" -->
+    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
-    <arg name="enable_sync_host_time" default="true"/>
+    <arg name="enable_sync_host_time" default="false"/>
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
     <arg name="device_preset" default="Default"/>
@@ -38,6 +41,7 @@
     <!-- If you do not want to automatically enumerate network devices, -->
     <!-- you can set enumerate_net_device to true, ip_address to the device's IP address, and port to the default value of 8090 -->
     <arg name="enumerate_net_device" default="true"/>
+    <arg name="device_access_mode" default="default"/><!-- default, EA, CA or MR -->
     <arg name="ip_address" default=""/>
     <arg name="port" default="0"/>
     <arg name="exposure_range_mode" default="default"/><!-- default, ultimate or regular -->
@@ -57,6 +61,7 @@
     <arg name="color_mirror" default="false"/>
     <arg name="enable_color_auto_exposure_priority" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
+    <arg name="color_anti_flicker" default="false"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
     <arg name="color_exposure" default="-1"/>
     <arg name="color_ae_roi_left" default="-1"/>
@@ -197,6 +202,7 @@
     <arg name="laser_energy_level" default="-1"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
+    <arg name="enable_firmware_log" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
     <arg name="frame_aggregate_mode" default="ANY"/><!-- full_frame,color_frame,ANY or disable -->
 
@@ -240,9 +246,11 @@
     <arg name="force_ip_address" default="192.168.1.10"/> <!-- Static IP address to assign -->
     <arg name="force_ip_subnet_mask" default="255.255.255.0"/> <!-- Subnet mask for the static IP -->
     <arg name="force_ip_gateway" default="192.168.1.1"/> <!-- Gateway address for the static IP -->
+    <arg name="intra_camera_sync_reference" default=""/> <!-- #Start, Middle or End -->
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
+            <param name="device_type" value="$(arg device_type)"/>
             <!-- Use the parameters defined above -->
             <param name="camera_name" value="$(arg camera_name)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
@@ -252,6 +260,8 @@
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="enable_sync_host_time" value="$(arg enable_sync_host_time)"/>
             <param name="device_preset" value="$(arg device_preset)"/>
@@ -264,6 +274,7 @@
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="disparity_to_depth_mode" value="$(arg disparity_to_depth_mode)"/>
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
+            <param name="device_access_mode" value="$(arg device_access_mode)"/>
             <param name="ip_address" value="$(arg ip_address)"/>
             <param name="port" value="$(arg port)"/>
             <param name="exposure_range_mode" value="$(arg exposure_range_mode)"/>
@@ -292,6 +303,7 @@
             <param name="enable_color" value="$(arg enable_color)"/>
             <param name="color_format" value="$(arg color_format)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="color_anti_flicker" value="$(arg color_anti_flicker)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>
             <param name="color_ae_roi_left" value="$(arg color_ae_roi_left)"/>
             <param name="color_ae_roi_right" value="$(arg color_ae_roi_right)"/>
@@ -418,6 +430,7 @@
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
+            <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
             <param name="frame_aggregate_mode" value="$(arg frame_aggregate_mode)"/>
 
@@ -459,6 +472,7 @@
             <param name="force_ip_address" value="$(arg force_ip_address)"/>
             <param name="force_ip_subnet_mask" value="$(arg force_ip_subnet_mask)"/>
             <param name="force_ip_gateway" value="$(arg force_ip_gateway)"/>
+            <param name="intra_camera_sync_reference" value="$(arg intra_camera_sync_reference)"/>
 
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>

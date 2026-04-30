@@ -1,6 +1,8 @@
 <launch>
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
+    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="output" default="screen"/>
     <!-- Hardware depth registration -->
     <arg name="depth_registration" default="false"/>
@@ -74,10 +76,14 @@
     <arg name="temporal_filter_weight" default="-1.0"/>
     <arg name="enable_hole_filling_filter" default="false"/>
     <arg name="hole_filling_filter_mode" default=""/>
+    <arg name="enable_mgc_noise_removal_filter" default="false"/>
+    <arg name="enable_lut_noise_removal_filter" default="false"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="$(arg output)">
             <param name="camera_name" value="$(arg camera_name)"/>
+            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="serial_number" type="string" value="$(arg serial_number)"/>
             <param name="usb_port" type="string" value="$(arg usb_port)"/>
@@ -149,6 +155,8 @@
             <param name="temporal_filter_weight" value="$(arg temporal_filter_weight)"/>
             <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
             <param name="hole_filling_filter_mode" value="$(arg hole_filling_filter_mode)"/>
+            <param name="enable_mgc_noise_removal_filter" value="$(arg enable_mgc_noise_removal_filter)"/>
+            <param name="enable_lut_noise_removal_filter" value="$(arg enable_lut_noise_removal_filter)"/>
 
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>

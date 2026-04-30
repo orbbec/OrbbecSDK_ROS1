@@ -121,13 +121,40 @@ public:
      * @param[in] config The new IP configuration.
      * @return bool true if the configuration command was processed successfully, false otherwise.
      *
-     * @note This applies to all GigE Vision devices
+     * @note This applies to all GVCP devices
      */
     bool forceIp(const char *macAddress, const OBNetIpConfig &config) {
         ob_error *error = nullptr;
         auto      res   = ob_force_ip_config(macAddress, config, &error);
         Error::handle(&error);
         return res;
+    }
+
+    /**
+     * @brief Set the GVCP port scheme used for network device discovery and control.
+     *
+     * @param[in] scheme Target GVCP port scheme.
+     *                   Thrown exception if the specified scheme is invalid or unsupported.
+     *
+     * @note This change affects only the current session and is not persisted.
+     * @note Switching to a different scheme will force disconnection of all currently connected network devices.
+     */
+    void setGvcpPortScheme(OBGvcpPortScheme scheme) {
+        ob_error *error = nullptr;
+        ob_set_gvcp_port_scheme(impl_, scheme, &error);
+        Error::handle(&error);
+    }
+
+    /**
+     * @brief Get the current GVCP port scheme.
+     *
+     * @return Current GVCP port scheme.
+     */
+    OBGvcpPortScheme getGvcpPortScheme() const {
+        ob_error *error  = nullptr;
+        auto      scheme = ob_get_gvcp_port_scheme(impl_, &error);
+        Error::handle(&error);
+        return scheme;
     }
 
     /**

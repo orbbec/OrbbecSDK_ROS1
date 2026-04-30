@@ -1,17 +1,81 @@
 #include <orbbec_camera/ob_camera_node.h>
-#include <memory>
 #include <iostream>
+#include <memory>
+#include <string>
 
 using namespace orbbec_camera;
 
-std::shared_ptr<ob::Device> initializeDevice(std::shared_ptr<ob::Pipeline> pipeline) {
-  auto device = pipeline->getDevice();
-  if (!device) {
+namespace {
+
+struct CommandLineOptions {
+  bool show_help = false;
+  std::string serial_number;
+};
+
+void printUsage(const char* program_name) {
+  (void)program_name;
+  std::cout
+      << "Usage:\n"
+      << "rosrun orbbec_camera list_camera_profile_mode_node\\\n"
+      << "      [--serial_number SN]\n\n"
+      << "Parameters:\n"
+      << "  --serial_number SN  Select a specific camera by serial number.\n"
+      << "  -h, --help          Show this help message.\n";
+}
+
+CommandLineOptions parseCommandLine(int argc, char** argv) {
+  CommandLineOptions options;
+  for (int i = 1; i < argc; ++i) {
+    const std::string arg(argv[i]);
+    if (arg == "-h" || arg == "--help") {
+      options.show_help = true;
+      continue;
+    }
+
+    if (arg == "--serial_number") {
+      if (i + 1 >= argc) {
+        throw std::runtime_error(arg + " requires a value");
+      }
+      options.serial_number = argv[++i];
+      continue;
+    }
+
+    const std::string prefix = "--serial_number=";
+    if (arg.rfind(prefix, 0) == 0) {
+      options.serial_number = arg.substr(prefix.size());
+      if (options.serial_number.empty()) {
+        throw std::runtime_error("--serial_number requires a value");
+      }
+      continue;
+    }
+
+    // Ignore ROS remapping arguments and other unknown flags to preserve compatibility.
+    if (arg.find(":=") != std::string::npos || arg.rfind("__", 0) == 0 || arg.rfind("_", 0) == 0) {
+      continue;
+    }
+
+    throw std::runtime_error("Unknown argument: " + arg);
+  }
+
+  return options;
+}
+
+std::shared_ptr<ob::Device> initializeDevice(const std::string& serial_number) {
+  auto context = std::make_shared<ob::Context>();
+  auto device_list = context->queryDeviceList();
+  if (!device_list || device_list->deviceCount() == 0) {
     std::cout << "No device found" << std::endl;
     return nullptr;
   }
-  return device;
+
+  if (!serial_number.empty()) {
+    return device_list->getDeviceBySN(serial_number.c_str(), OB_DEVICE_DEFAULT_ACCESS);
+  }
+
+  return device_list->getDevice(0, OB_DEVICE_DEFAULT_ACCESS);
 }
+
+}  // namespace
 
 void listSensorProfiles(const std::shared_ptr<ob::Device>& device) {
   auto sensor_list = device->getSensorList();
@@ -23,8 +87,8 @@ void listSensorProfiles(const std::shared_ptr<ob::Device>& device) {
       auto origin_profile = profile_list->getProfile(j);
       if ((sensor->getType() == OB_SENSOR_DEPTH || sensor->getType() == OB_SENSOR_IR_LEFT ||
            sensor->getType() == OB_SENSOR_IR_RIGHT) &&
-          pid == GEMINI_305_PID) {
-        // Gemini 305
+          isGemini305SeriesPID(pid)) {
+        // Gemini 305 series
         auto profile = origin_profile->as<ob::VideoStreamProfile>();
         std::cout << sensor->type() << " profile: " << profile->getWidth() << "x"
                   << profile->getHeight() << " " << profile->getFps() << "fps " << sensor->type()
@@ -81,11 +145,17 @@ void printPreset(const std::shared_ptr<ob::Device>& device) {
     std::cout << "Preset list[" << i << "]: " << name << std::endl;
   }
 }
-int main() {
+
+int main(int argc, char** argv) {
   try {
+    const auto options = parseCommandLine(argc, argv);
+    if (options.show_help) {
+      printUsage(argv[0]);
+      return 0;
+    }
+
     ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_NONE);
-    auto pipeline = std::make_shared<ob::Pipeline>();
-    auto device = initializeDevice(pipeline);
+    auto device = initializeDevice(options.serial_number);
     if (!device) {
       return -1;  // Device initialization failed
     }
@@ -93,7 +163,7 @@ int main() {
     printDeviceProperties(device);
     printPreset(device);
   } catch (ob::Error& e) {
-    ROS_ERROR_STREAM("list_camera_profile_mode: " << e.getMessage());
+    ROS_ERROR_STREAM("list_camera_profile_mode: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("list_camera_profile_mode: " << e.what());
   } catch (...) {

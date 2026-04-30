@@ -1,6 +1,8 @@
 <launch>
   <!-- unique camera name-->
   <arg name="camera_name" default="camera" />
+  <arg name="enable_frame_timestamp_csv" default="false"/>
+  <arg name="frame_timestamp_csv_file" default=""/>
   <!-- Hardware depth registration -->
   <arg name="depth_registration" default="false" />
   <arg name="serial_number" default="" />
@@ -53,6 +55,8 @@
   <arg name="log_level" default="none" />
   <arg name="enable_pipeline" default="true" />
   <arg name="enable_soft_filter" default="true" />
+  <arg name="enable_mgc_noise_removal_filter" default="false" />
+  <arg name="enable_lut_noise_removal_filter" default="false" />
   <!-- Configure the path for depth filter file, for example: /config/depthfilter/Openni_device.json -->
   <arg name="depth_filter_config" default="" />
   <arg name="laser_energy_level" default="-1" />
@@ -61,6 +65,8 @@
   <group ns="$(arg camera_name)">
     <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
       <param name="camera_name" value="$(arg camera_name)" />
+      <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+      <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
       <param name="depth_registration" value="$(arg depth_registration)" />
       <param name="serial_number" type="string" value="$(arg serial_number)" />
       <param name="usb_port" type="string" value="$(arg usb_port)" />
@@ -112,6 +118,8 @@
       <param name="enable_pipeline" value="$(arg enable_pipeline)" />
       <param name="device_num" value="$(arg device_num)" />
       <param name="enable_soft_filter" value="$(arg enable_soft_filter)" />
+      <param name="enable_mgc_noise_removal_filter" value="$(arg enable_mgc_noise_removal_filter)" />
+      <param name="enable_lut_noise_removal_filter" value="$(arg enable_lut_noise_removal_filter)" />
       <param name="depth_filter_config" value="$(arg depth_filter_config)" />
       <param name="laser_energy_level" value="$(arg laser_energy_level)" />
       <param name="enable_ldp" value="$(arg enable_ldp)" />

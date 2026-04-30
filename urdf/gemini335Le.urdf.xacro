@@ -38,7 +38,7 @@ Stephen Brawner (brawner@gmail.com)
     </visual>
     <collision>
       <origin
-        xyz="0 0 0"
+        xyz="-0.034005 -0.0475 -0.014048"
         rpy="0 0 0" />
       <geometry>
         <mesh

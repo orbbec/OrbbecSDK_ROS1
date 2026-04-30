@@ -23,6 +23,9 @@
 #include <boost/optional.hpp>
 #include <eigen3/Eigen/Dense>
 #include "orbbec_camera/DeviceInfo.h"
+#include "orbbec_camera/DepthFilterParam.h"
+#include "orbbec_camera/DepthFilterState.h"
+#include "orbbec_camera/DepthFiltersStatus.h"
 #include "orbbec_camera/Extrinsics.h"
 #include "orbbec_camera/Metadata.h"
 #include "orbbec_camera/GetDeviceInfo.h"

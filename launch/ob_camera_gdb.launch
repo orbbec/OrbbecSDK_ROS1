@@ -10,6 +10,8 @@
     <arg name="tf_publish_rate" default="0.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
+    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
@@ -119,6 +121,7 @@
     <arg name="laser_energy_level" default="-1"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
+    <arg name="enable_firmware_log" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
 
     <group ns="$(arg camera_name)">
@@ -132,6 +135,8 @@
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="device_preset" value="$(arg device_preset)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
@@ -164,7 +169,7 @@
             <param name="left_ir_fps" value="$(arg left_ir_fps)"/>
             <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
             <param name="left_ir_format" value="$(arg left_ir_format)"/>
-             <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
+            <param name="left_ir_rotation" value="$(arg left_ir_rotation)"/>
 
             <param name="right_ir_width" value="$(arg right_ir_width)"/>
             <param name="right_ir_height" value="$(arg right_ir_height)"/>
@@ -223,6 +228,7 @@
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
+            <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>

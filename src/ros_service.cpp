@@ -17,11 +17,49 @@
 
 namespace orbbec_camera {
 
+namespace {
+
+bool isGemini330SeriesForDisparity(uint32_t pid) {
+  return pid == GEMINI_335_PID || pid == GEMINI_336_PID || pid == GEMINI_330_PID ||
+         pid == GEMINI_335L_PID || pid == GEMINI_336L_PID || pid == GEMINI_330L_PID ||
+         pid == GEMINI_335LG_PID || pid == GEMINI_335LE_PID || pid == GEMINI_338_PID ||
+         pid == GEMINI_338L_PID || pid == GEMINI_338LE_PID || pid == GEMINI_338LG_PID ||
+         pid == GEMINI_331L_PID;
+}
+
+bool isSupportedDisparityResolutionForPid(uint32_t pid, int width, int height) {
+  if (pid == GEMINI_335LE_PID || pid == GEMINI_338LE_PID) {
+    return (width == 1280 && height == 800) || (width == 640 && height == 400) ||
+           (width == 424 && height == 266) || (width == 320 && height == 200);
+  }
+
+  return (width == 1280 && height == 800) || (width == 1280 && height == 720) ||
+         (width == 640 && height == 400) || (width == 424 && height == 266);
+}
+
+std::string getDisparityResolutionHintByPid(uint32_t pid) {
+  if (pid == GEMINI_335LE_PID || pid == GEMINI_338LE_PID) {
+    return "Supported resolutions for the current device: 1280x800/640x400/424x266/320x200";
+  }
+
+  return "Supported resolutions for the current device: "
+         "1280x800/1280x720/640x400/424x266";
+}
+
+bool setDisparityServiceFailure(SetInt32Response& response, const std::string& message) {
+  response.success = false;
+  response.message = message;
+  ROS_INFO_STREAM(message);
+  return true;
+}
+
+}  // namespace
+
 void OBCameraNode::setupCameraCtrlServices() {
   using std_srvs::SetBool;
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (!enable_stream_[stream_index]) {
-      ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " is disabled.");
+      ROS_DEBUG_STREAM("Stream " << stream_name_[stream_index] << " is disabled.");
       continue;
     }
     auto stream_name = stream_name_[stream_index];
@@ -40,8 +78,8 @@ void OBCameraNode::setupCameraCtrlServices() {
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_ae_roi";
     set_ae_roi_srv_[stream_index] = nh_.advertiseService<SetArraysRequest, SetArraysResponse>(
         service_name, [this, stream_index](SetArraysRequest& request, SetArraysResponse& response) {
-          response.success = this->setAeRoiCallback(request, response, stream_index);
-          return response.success;
+          this->setAeRoiCallback(request, response, stream_index);
+          return true;
         });
     service_name = "/" + camera_name_ + "/" + "reset_" + stream_name + "_exposure";
     reset_exposure_srv_[stream_index] =
@@ -284,17 +322,27 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getPointCloudDecimationCallback(request, response);
         return response.success;
       });
-  set_ae_mode_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
-      "/" + camera_name_ + "/" + "set_ae_mode",
+  set_disparity_range_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+      "/" + camera_name_ + "/" + "set_disparity_range_mode",
+      [this](SetInt32Request& request, SetInt32Response& response) {
+        return this->setDisparityRangeModeCallback(request, response);
+      });
+  set_disparity_search_offset_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+      "/" + camera_name_ + "/" + "set_disparity_search_offset",
+      [this](SetInt32Request& request, SetInt32Response& response) {
+        return this->setDisparitySearchOffsetCallback(request, response);
+      });
+  set_ae_reference_stream_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
+      "/" + camera_name_ + "/" + "set_ae_reference_stream",
       [this](const SetStringRequest& request, SetStringResponse& response) {
-        this->setAEModeCallback(request, response);
+        this->setAEReferenceStreamCallback(request, response);
         return true;
       });
 
-  set_sports_mode_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_sports_mode",
-      [this](const std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        this->setSportsModeCallback(request, response);
+  set_ae_strategy_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
+      "/" + camera_name_ + "/" + "set_ae_strategy",
+      [this](const SetStringRequest& request, SetStringResponse& response) {
+        this->setAEStrategyCallback(request, response);
         return true;
       });
 }
@@ -335,7 +383,7 @@ bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
         break;
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set mirror mode: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set mirror mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return response.success;
   }
@@ -380,7 +428,7 @@ bool OBCameraNode::setFlipCallback(std_srvs::SetBoolRequest& request,
         break;
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set flip mode: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set flip mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return response.success;
   }
@@ -431,7 +479,7 @@ bool OBCameraNode::setRotationCallback(SetInt32Request& request, SetInt32Respons
         break;
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set rotation mode: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set rotation mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -450,7 +498,7 @@ bool OBCameraNode::getExposureCallback(GetInt32Request& request, GetInt32Respons
   try {
     response.data = sensor->getExposure();
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get exposure: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get exposure: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -475,7 +523,7 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
     }
     sensor->setExposure(request.data);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set exposure: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set exposure: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -485,6 +533,20 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
 bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse& response,
                                     const stream_index_pair& stream_index) {
   auto stream = stream_index.first;
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) &&
+      (stream != OB_STREAM_COLOR && ae_reference_stream_ == "color")) {
+    response.success = false;
+    response.message = "AE Reference Stream is color, other sensors setting is not supported";
+    ROS_ERROR_STREAM(response.message);
+    return true;
+  }
+  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) &&
+      (stream != OB_STREAM_DEPTH && ae_reference_stream_ == "depth")) {
+    response.success = false;
+    response.message = "AE Reference Stream is depth, other sensors setting is not supported";
+    ROS_ERROR_STREAM(response.message);
+    return true;
+  }
   auto config = OBRegionOfInterest();
   uint32_t data_size = sizeof(config);
   try {
@@ -564,18 +626,26 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
         response.success = false;
         response.message = "NOT a video stream";
-        return response.success = false;
+        return true;
     }
-    return response.success = true;
+    response.success = true;
+    response.message = "set AE ROI success";
+    return true;
   } catch (const ob::Error& e) {
-    return response.success = false;
     response.message = e.getMessage();
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << orbbec_camera::formatObErrorWithStatus(e));
+    return true;
   } catch (const std::exception& e) {
-    return response.success = false;
     response.message = e.what();
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << response.message);
+    return true;
   } catch (...) {
-    return response.success = false;
     response.message = "unknown error";
+    response.success = false;
+    ROS_ERROR_STREAM("Failed to set AE ROI: " << response.message);
+    return true;
   }
 }
 
@@ -591,7 +661,7 @@ bool OBCameraNode::getGainCallback(GetInt32Request& request, GetInt32Response& r
   try {
     response.data = sensor->getGain();
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get gain: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get gain: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -619,7 +689,7 @@ bool OBCameraNode::setGainCallback(SetInt32Request& request, SetInt32Response& r
     auto gain = sensor->getGain();
     ROS_INFO_STREAM("After set gain: " << gain);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set gain: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set gain: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -638,7 +708,8 @@ bool OBCameraNode::getAutoWhiteBalanceCallback(GetInt32Request& request,
   try {
     response.data = sensor->getAutoWhiteBalance();
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get auto white balance: " << e.getMessage());
+    ROS_ERROR_STREAM(
+        "Failed to get auto white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -661,7 +732,8 @@ bool OBCameraNode::setAutoWhiteBalanceCallback(SetInt32Request& request,
     result = sensor->getAutoWhiteBalance();
     ROS_INFO_STREAM("After set auto white balance: " << result);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set auto white balance: " << e.getMessage());
+    ROS_ERROR_STREAM(
+        "Failed to set auto white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -679,7 +751,7 @@ bool OBCameraNode::getWhiteBalanceCallback(GetInt32Request& request, GetInt32Res
   try {
     response.data = sensor->getWhiteBalance();
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get white balance: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -709,7 +781,7 @@ bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Res
     }
     sensor->setWhiteBalance(request.data);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set white balance: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -728,7 +800,7 @@ bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
   try {
     sensor->setAutoExposure(request.data);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set auto exposure: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set auto exposure: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -747,7 +819,7 @@ bool OBCameraNode::getAutoExposureCallback(GetBoolRequest& request, GetBoolRespo
   try {
     response.data = sensor->getAutoExposure();
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get auto exposure: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get auto exposure: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -766,7 +838,7 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
       device_->setBoolProperty(OB_PROP_LASER_BOOL, data);
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set laser: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set laser: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
     return false;
   }
@@ -780,7 +852,7 @@ bool OBCameraNode::setPtpConfigCallback(std_srvs::SetBoolRequest& request,
   try {
     device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, request.data);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("set ptp config failed: " << e.getMessage());
+    ROS_ERROR_STREAM("set ptp config failed: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
     return false;
   }
@@ -793,7 +865,8 @@ bool OBCameraNode::getPtpConfigCallback(GetBoolRequest& request, GetBoolResponse
   try {
     response.data = device_->getBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get config sync status: " << e.getMessage());
+    ROS_ERROR_STREAM(
+        "Failed to get config sync status: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -821,7 +894,7 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
       }
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set LDP: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to set LDP: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
     return false;
   }
@@ -834,7 +907,7 @@ bool OBCameraNode::getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse
   try {
     response.data = device_->getBoolProperty(OB_PROP_LDP_STATUS_BOOL);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get LDP status: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get LDP status: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -848,7 +921,7 @@ bool OBCameraNode::setFanWorkModeCallback(std_srvs::SetBoolRequest& request,
   try {
     device_->setBoolProperty(OB_PROP_FAN_WORK_MODE_INT, request.data);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("set fan failed: " << e.getMessage());
+    ROS_ERROR_STREAM("set fan failed: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
     return false;
   }
@@ -861,7 +934,7 @@ bool OBCameraNode::setFloodCallback(std_srvs::SetBoolRequest& request,
   try {
     device_->setBoolProperty(OB_PROP_FLOOD_BOOL, request.data);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("set flood failed: " << e.getMessage());
+    ROS_ERROR_STREAM("set flood failed: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
     return false;
   }
@@ -992,7 +1065,7 @@ bool OBCameraNode::getCameraParamsCallback(orbbec_camera::GetCameraParamsRequest
     }
 
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get camera params: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get camera params: " << orbbec_camera::formatObErrorWithStatus(e));
     return false;
   }
   return true;
@@ -1005,7 +1078,7 @@ bool OBCameraNode::getSerialNumberCallback(GetStringRequest& request, GetStringR
     auto device_info = device_->getDeviceInfo();
     response.data = device_info->serialNumber();
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get serial number: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get serial number: " << orbbec_camera::formatObErrorWithStatus(e));
     return false;
   }
   response.success = true;
@@ -1028,7 +1101,8 @@ bool OBCameraNode::getLrmMeasureDistanceCallback(GetInt32Request& request,
   try {
     response.data = device_->getIntProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT);
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get ldp measure distance: " << e.getMessage());
+    ROS_ERROR_STREAM(
+        "Failed to get ldp measure distance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -1049,7 +1123,7 @@ bool OBCameraNode::getCameraInfoCallback(GetCameraInfoRequest& request,
     auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
     response.info = camera_info;
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get camera info: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get camera info: " << orbbec_camera::formatObErrorWithStatus(e));
     return false;
   }
   return true;
@@ -1073,7 +1147,7 @@ bool OBCameraNode::resetCameraGainCallback(std_srvs::EmptyRequest& request,
       sensor->setGain(data);
       return true;
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to set gain: " << e.getMessage());
+      ROS_ERROR_STREAM("Failed to set gain: " << orbbec_camera::formatObErrorWithStatus(e));
       return false;
     }
   } else {
@@ -1094,7 +1168,7 @@ bool OBCameraNode::resetCameraExposureCallback(std_srvs::EmptyRequest& request,
       sensor->setExposure(data);
       return true;
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to set exposure: " << e.getMessage());
+      ROS_ERROR_STREAM("Failed to set exposure: " << orbbec_camera::formatObErrorWithStatus(e));
       return false;
     }
   } else {
@@ -1119,7 +1193,8 @@ bool OBCameraNode::resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& reque
       sensor->setWhiteBalance(data);
       return true;
     } catch (const ob::Error& e) {
-      ROS_ERROR_STREAM("Failed to set white balance: " << e.getMessage());
+      ROS_ERROR_STREAM(
+          "Failed to set white balance: " << orbbec_camera::formatObErrorWithStatus(e));
       return false;
     }
   } else {
@@ -1135,7 +1210,7 @@ bool OBCameraNode::switchIRModeCallback(SetInt32Request& request, SetInt32Respon
   } catch (const ob::Error& e) {
     std::stringstream ss;
     ss << "Failed to switch IR mode: " << e.getMessage();
-    ROS_ERROR_STREAM(ss.str());
+    ROS_ERROR_STREAM("Failed to switch IR mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
   }
@@ -1154,7 +1229,8 @@ bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
   } catch (const ob::Error& e) {
     std::stringstream ss;
     ss << "Failed to switch IR data source channel: " << e.getMessage();
-    ROS_ERROR_STREAM(ss.str());
+    ROS_ERROR_STREAM(
+        "Failed to switch IR data source channel: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
   }
@@ -1175,7 +1251,8 @@ bool OBCameraNode::setWriteCustomerData(SetStringRequest& request, SetStringResp
   } catch (const ob::Error& e) {
     std::stringstream ss;
     ss << "Failed to set write customer data: " << e.getMessage();
-    ROS_ERROR_STREAM(ss.str());
+    ROS_ERROR_STREAM(
+        "Failed to set write customer data: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
   }
@@ -1196,7 +1273,7 @@ bool OBCameraNode::setReadCustomerData(GetStringRequest& request, GetStringRespo
   } catch (const ob::Error& e) {
     std::stringstream ss;
     ss << "Failed to read customer data: " << e.getMessage();
-    ROS_ERROR_STREAM(ss.str());
+    ROS_ERROR_STREAM("Failed to read customer data: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
   }
@@ -1212,7 +1289,7 @@ bool OBCameraNode::getLaserStatusCallback(GetBoolRequest& request, GetBoolRespon
       response.data = device_->getBoolProperty(OB_PROP_LASER_BOOL) ? true : false;
     }
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to get laser status: " << e.getMessage());
+    ROS_ERROR_STREAM("Failed to get laser status: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
   }
@@ -1234,7 +1311,8 @@ bool OBCameraNode::setPointCloudDecimationCallback(SetInt32Request& request,
     response.success = true;
     return true;
   } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM("Failed to set point cloud decimation: " << e.getMessage());
+    ROS_ERROR_STREAM(
+        "Failed to set point cloud decimation: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     response.message = e.getMessage();
     return false;
@@ -1262,18 +1340,132 @@ bool OBCameraNode::getPointCloudDecimationCallback(GetInt32Request& request,
   }
 }
 
-void OBCameraNode::setAEModeCallback(const SetStringRequest& request, SetStringResponse& response) {
+bool OBCameraNode::setDisparityRangeModeCallback(SetInt32Request& request,
+                                                 SetInt32Response& response) {
+  try {
+    if (!device_->isPropertySupported(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, OB_PERMISSION_WRITE)) {
+      return setDisparityServiceFailure(response,
+                                        "Current device does not support disparity range mode");
+    }
+
+    const bool allow_set = isGemini435LePID(device_info_->pid()) ||
+                           (enable_stream_.count(DEPTH) > 0 && enable_stream_.at(DEPTH));
+    if (!allow_set) {
+      return setDisparityServiceFailure(
+          response, "Disparity range mode can only be set when depth stream is enabled");
+    }
+
+    const int depth_width = width_.count(DEPTH) > 0 ? width_.at(DEPTH) : 0;
+    const int depth_height = height_.count(DEPTH) > 0 ? height_.at(DEPTH) : 0;
+    if (isGemini330SeriesForDisparity(device_info_->pid()) &&
+        !isSupportedDisparityResolutionForPid(device_info_->pid(), depth_width, depth_height)) {
+      return setDisparityServiceFailure(
+          response, "Current depth resolution " + std::to_string(depth_width) + "x" +
+                        std::to_string(depth_height) + " is not supported. " +
+                        getDisparityResolutionHintByPid(device_info_->pid()));
+    }
+
+    auto range = device_->getIntPropertyRange(OB_PROP_DISP_SEARCH_RANGE_MODE_INT);
+    const int requested_mode_value = request.data;
+    int hw_mode_index = -1;
+    if (requested_mode_value == 64) {
+      hw_mode_index = 0;
+    } else if (requested_mode_value == 128) {
+      hw_mode_index = 1;
+    } else if (requested_mode_value == 256) {
+      hw_mode_index = 2;
+    }
+
+    if (hw_mode_index < range.min || hw_mode_index > range.max) {
+      std::string supported_mode;
+      for (int i = range.min; i <= range.max; ++i) {
+        supported_mode += (i == 0)   ? "64"
+                          : (i == 1) ? "/128"
+                          : (i == 2) ? "/256"
+                                     : "/" + std::to_string(i);
+      }
+      return setDisparityServiceFailure(
+          response, "Invalid disparity range mode. Allowed values:" + supported_mode);
+    }
+
+    device_->setIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, hw_mode_index);
+    auto current_mode_index = device_->getIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT);
+    auto current_mode_value = (current_mode_index == 0)   ? 64
+                              : (current_mode_index == 1) ? 128
+                              : (current_mode_index == 2) ? 256
+                                                          : current_mode_index;
+    response.success = true;
+    response.message = "disparity_range_mode updated to " + std::to_string(current_mode_value);
+    ROS_INFO_STREAM(response.message);
+    return true;
+  } catch (const ob::Error& e) {
+    return setDisparityServiceFailure(response, e.getMessage());
+  } catch (const std::exception& e) {
+    return setDisparityServiceFailure(response, e.what());
+  } catch (...) {
+    return setDisparityServiceFailure(response, "unknown error");
+  }
+}
+
+bool OBCameraNode::setDisparitySearchOffsetCallback(SetInt32Request& request,
+                                                    SetInt32Response& response) {
+  try {
+    if (!device_->isPropertySupported(OB_PROP_DISP_SEARCH_OFFSET_INT, OB_PERMISSION_WRITE)) {
+      return setDisparityServiceFailure(response,
+                                        "Current device does not support disparity search offset");
+    }
+
+    const bool allow_set = isGemini435LePID(device_info_->pid()) ||
+                           (enable_stream_.count(DEPTH) > 0 && enable_stream_.at(DEPTH));
+    if (!allow_set) {
+      return setDisparityServiceFailure(
+          response, "Disparity search offset can only be set when depth stream is enabled");
+    }
+
+    const int depth_width = width_.count(DEPTH) > 0 ? width_.at(DEPTH) : 0;
+    const int depth_height = height_.count(DEPTH) > 0 ? height_.at(DEPTH) : 0;
+    if (isGemini330SeriesForDisparity(device_info_->pid()) &&
+        !isSupportedDisparityResolutionForPid(device_info_->pid(), depth_width, depth_height)) {
+      return setDisparityServiceFailure(
+          response, "Current depth resolution " + std::to_string(depth_width) + "x" +
+                        std::to_string(depth_height) + " is not supported. " +
+                        getDisparityResolutionHintByPid(device_info_->pid()));
+    }
+
+    auto range = device_->getIntPropertyRange(OB_PROP_DISP_SEARCH_OFFSET_INT);
+    if (request.data < range.min || request.data > range.max) {
+      return setDisparityServiceFailure(
+          response, "Invalid disparity search offset. Allowed values:" + std::to_string(range.min) +
+                        " to " + std::to_string(range.max));
+    }
+
+    device_->setIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, request.data);
+    auto current_offset = device_->getIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT);
+    ROS_INFO_STREAM("Set disparity_search_offset to " << current_offset);
+    response.success = true;
+    response.message = "disparity_search_offset updated to " + std::to_string(current_offset);
+    return true;
+  } catch (const ob::Error& e) {
+    return setDisparityServiceFailure(response, e.getMessage());
+  } catch (const std::exception& e) {
+    return setDisparityServiceFailure(response, e.what());
+  } catch (...) {
+    return setDisparityServiceFailure(response, "unknown error");
+  }
+}
+
+void OBCameraNode::setAEReferenceStreamCallback(const SetStringRequest& request,
+                                                SetStringResponse& response) {
   try {
     if (device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE) &&
-        (request.data == "depthbased" || request.data == "colorbased")) {
-      device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT,
-                              request.data == "depthbased" ? 0 : 1);
-      ae_mode_ = request.data;
+        (request.data == "depth" || request.data == "color")) {
+      device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT, request.data == "depth" ? 0 : 1);
+      ae_reference_stream_ = request.data;
       response.success = true;
-      response.message = "set AE mode success";
+      response.message = "set AE reference stream success";
     } else {
       response.success = false;
-      response.message = "set AE mode failed";
+      response.message = "set AE reference stream failed";
     }
   } catch (...) {
     response.success = false;
@@ -1281,16 +1473,18 @@ void OBCameraNode::setAEModeCallback(const SetStringRequest& request, SetStringR
   }
 }
 
-void OBCameraNode::setSportsModeCallback(const std_srvs::SetBoolRequest& request,
-                                         std_srvs::SetBoolResponse& response) {
+void OBCameraNode::setAEStrategyCallback(const SetStringRequest& request,
+                                         SetStringResponse& response) {
   try {
-    if (device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
-      device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, request.data ? 1 : 0);
+    if (device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE) &&
+        (request.data == "default" || request.data == "motion")) {
+      device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, request.data == "motion" ? 1 : 0);
+      ae_strategy_ = request.data;
       response.success = true;
-      response.message = "set sports mode success";
+      response.message = "set AE strategy success";
     } else {
       response.success = false;
-      response.message = "set sports mode failed";
+      response.message = "set AE strategy failed";
     }
   } catch (...) {
     response.success = false;

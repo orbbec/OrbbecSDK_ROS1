@@ -16,6 +16,10 @@
 
 #pragma once
 
+#include <cstdlib>
+#include <iostream>
+#include <sstream>
+
 #include "sensor_msgs/CameraInfo.h"
 #include "sensor_msgs/distortion_models.h"
 #include "libobsensor/ObSensor.hpp"
@@ -30,6 +34,16 @@ namespace orbbec_camera {
 inline void LogFatal(const char *file, int line, const std::string &message) {
   std::cerr << "Check failed at " << file << ":" << line << ": " << message << std::endl;
   std::abort();
+}
+
+inline const char *getObErrorMessage(const ob::Error &e) {
+  return e.getMessage() ? e.getMessage() : "Unknown OB error";
+}
+
+inline std::string formatObErrorWithStatus(const ob::Error &e) {
+  std::ostringstream os;
+  os << getObErrorMessage(e) << " status:" << static_cast<int>(e.getStatus());
+  return os.str();
 }
 }  // namespace orbbec_camera
 
@@ -143,6 +157,10 @@ OBHoleFillingMode holeFillingModeFromString(const std::string &hole_filling_mode
 
 float depthPrecisionFromString(const std::string &depth_precision_level_str);
 
+std::string colorPowerLineFrequencyToString(int value);
+
+std::string depthPrecisionLevelToString(int value);
+
 std::ostream &operator<<(std::ostream &os, const OBFormat &rhs);
 
 std::string OBSensorTypeToString(const OBSensorType &type);
@@ -150,6 +168,12 @@ std::string OBSensorTypeToString(const OBSensorType &type);
 OBStreamType obStreamTypeFromString(const std::string &stream_type);
 
 std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs);
+
+std::string disparityRangeModeToString(int value);
+
+std::string exposureRangeModeToString(int value);
+
+std::string intraCameraSyncReferenceToString(int value);
 
 std::string getDistortionModels(OBCameraDistortion distortion);
 

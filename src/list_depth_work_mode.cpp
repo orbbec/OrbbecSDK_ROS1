@@ -37,7 +37,7 @@ int main() {
       std::cout << std::endl;
     }
   } catch (ob::Error &e) {
-    ROS_ERROR_STREAM("list_depth_work_mode: " << e.getMessage());
+    ROS_ERROR_STREAM("list_depth_work_mode: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception &e) {
     ROS_ERROR_STREAM("list_depth_work_mode: " << e.what());
   } catch (...) {

@@ -28,7 +28,7 @@ OBFormat OBFormatFromString(const std::string &format) {
   std::string fixed_format;
   std::transform(format.begin(), format.end(), std::back_inserter(fixed_format),
                  [](const char ch) { return std::isalpha(ch) ? toupper(ch) : ch; });
-  std::cout << "OBFormatFromString: " << fixed_format << std::endl;
+  ROS_DEBUG_STREAM("OBFormatFromString: " << fixed_format);
   if (fixed_format == "MJPG") {
     return OB_FORMAT_MJPG;
   } else if (fixed_format == "YUYV") {
@@ -820,6 +820,38 @@ float depthPrecisionFromString(const std::string &depth_precision_level_str) {
   return std::stof(depth_precision_level_str_num);
 }
 
+std::string colorPowerLineFrequencyToString(int value) {
+  switch (value) {
+    case 0:
+      return "disable";
+    case 1:
+      return "50hz";
+    case 2:
+      return "60hz";
+    case 3:
+      return "auto";
+    default:
+      return "unknown";
+  }
+}
+
+std::string depthPrecisionLevelToString(int value) {
+  switch (static_cast<OB_DEPTH_PRECISION_LEVEL>(value)) {
+    case OB_PRECISION_1MM:
+      return "1mm";
+    case OB_PRECISION_0MM8:
+      return "0.8mm";
+    case OB_PRECISION_0MM4:
+      return "0.4mm";
+    case OB_PRECISION_0MM2:
+      return "0.2mm";
+    case OB_PRECISION_0MM1:
+      return "0.1mm";
+    default:
+      return "unknown";
+  }
+}
+
 std::ostream &operator<<(std::ostream &os, const OBFormat &rhs) {
   os << OBFormatToString(rhs);
   return os;
@@ -854,6 +886,43 @@ std::string OBSensorTypeToString(const OBSensorType &type) {
 std::ostream &operator<<(std::ostream &os, const OBSensorType &rhs) {
   os << OBSensorTypeToString(rhs);
   return os;
+}
+
+std::string disparityRangeModeToString(int value) {
+  switch (value) {
+    case 0:
+      return "64";
+    case 1:
+      return "128";
+    case 2:
+      return "256";
+    default:
+      return "unknown";
+  }
+}
+
+std::string exposureRangeModeToString(int value) {
+  switch (value) {
+    case 0:
+      return "regular";
+    case 1:
+      return "ultimate";
+    default:
+      return "unknown";
+  }
+}
+
+std::string intraCameraSyncReferenceToString(int value) {
+  switch (value) {
+    case 0:
+      return "Start";
+    case 1:
+      return "Middle";
+    case 2:
+      return "End";
+    default:
+      return "unknown";
+  }
 }
 
 OBStreamType obStreamTypeFromString(const std::string &stream_type) {

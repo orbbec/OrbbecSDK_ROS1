@@ -64,6 +64,7 @@ find_package(catkin REQUIRED
   message_generation
   roscpp
   sensor_msgs
+  std_msgs
   std_srvs
   tf2
   tf2_ros
@@ -116,7 +117,16 @@ if (USE_RK_HW_DECODER)
 endif ()
 
 # Message generation
-add_message_files(FILES DeviceInfo.msg Extrinsics.msg Metadata.msg IMUInfo.msg DeviceStatus.msg)
+add_message_files(FILES
+  DeviceInfo.msg
+  Extrinsics.msg
+  Metadata.msg
+  IMUInfo.msg
+  DeviceStatus.msg
+  DepthFilterParam.msg
+  DepthFilterState.msg
+  DepthFiltersStatus.msg
+)
 add_service_files(FILES ${SERVICE_FILES})
 generate_messages(DEPENDENCIES std_msgs sensor_msgs)
 
@@ -134,6 +144,7 @@ catkin_package(
   message_runtime
   roscpp
   sensor_msgs
+  std_msgs
   std_srvs
   tf2
   tf2_ros
@@ -169,6 +180,7 @@ set(SOURCE_FILES
   src/ob_camera_node.cpp
   src/ob_lidar_node.cpp
   src/ob_camera_node_driver.cpp
+  src/frame_timestamp_csv_logger.cpp
   src/ros_sensor.cpp
   src/ros_service.cpp
   src/utils.cpp
@@ -253,7 +265,9 @@ endmacro()
 add_orbbec_executable(list_devices_node src/list_devices_node.cpp)
 add_orbbec_executable(list_depth_work_mode_node src/list_depth_work_mode.cpp)
 add_orbbec_executable(list_camera_profile_mode_node src/list_camera_profile_mode.cpp)
-add_orbbec_executable(set_device_ip src/set_device_ip.cpp)
+add_orbbec_executable(ip_config_tool src/ip_config_tool.cpp)
+add_orbbec_executable(set_device_ip src/ip_config_tool.cpp)
+add_orbbec_executable(firmware_update_tool src/firmware_update_tool.cpp)
 add_orbbec_executable(orbbec_camera_node src/main.cpp)
 add_orbbec_executable(service_benchmark_node scripts/service_benchmark_node.cpp)
 add_orbbec_executable(image_sync_example_node examples/multi_camera_time_sync/image_sync_example_node.cpp)
@@ -270,6 +284,9 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${EXECUTABLES}
   list_devices_node
   list_depth_work_mode_node
   list_camera_profile_mode_node
+  ip_config_tool
+  set_device_ip
+  firmware_update_tool
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
