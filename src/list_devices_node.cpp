@@ -16,6 +16,9 @@
 #include <ros/ros.h>
 #include <orbbec_camera/types.h>
 #include <orbbec_camera/utils.h>
+#include <iomanip>
+#include <memory>
+#include <sstream>
 #include <string>
 #include <regex>
 #include <thread>
@@ -54,6 +57,30 @@ std::string ipSourceTypeToString(int type) {
   }
 }
 
+void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
+  try {
+    auto preset_list = device->getAvailablePresetList();
+    ROS_INFO_STREAM("Preset count: " << preset_list->getCount());
+    for (uint32_t i = 0; i < preset_list->getCount(); ++i) {
+      ROS_INFO_STREAM("  - " << preset_list->getName(i));
+    }
+
+    std::string key = "PresetVer";
+    if (device->isExtensionInfoExist(key)) {
+      std::string value = device->getExtensionInfo(key);
+      ROS_INFO_STREAM("Preset version: " << value);
+    } else {
+      ROS_INFO_STREAM("Preset version: not available");
+    }
+  } catch (ob::Error &e) {
+    ROS_WARN_STREAM("Failed to get preset info: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception &e) {
+    ROS_WARN_STREAM("Failed to get preset info: " << e.what());
+  } catch (...) {
+    ROS_WARN_STREAM("Failed to get preset info");
+  }
+}
+
 int main() {
   try {
     ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
@@ -67,33 +94,38 @@ int main() {
         std::string uid = list->uid(i);
         auto usb_port = parseUsbPort(uid);
         auto connection_type = list->getConnectionType(i);
+        auto firmware_version = device_info_->getFirmwareVersion();
         std::stringstream pid_hex;
         pid_hex << std::hex << std::setw(4) << std::setfill('0') << list->getPid(i);
-        ROS_INFO_STREAM("- Name: " << list->getName(i) << ", PID: 0x" << pid_hex.str()
-                                   << ", SN/ID: " << serial << ", Connection: " << connection_type);
+        ROS_INFO_STREAM("name: " << list->getName(i));
+        ROS_INFO_STREAM("pid: 0x" << pid_hex.str());
         ROS_INFO_STREAM("serial: " << serial);
-        ROS_INFO_STREAM("firmware version: " << device_info_->getFirmwareVersion());
-        ROS_INFO_STREAM("port id : " << usb_port);
-        ROS_INFO_STREAM("usb connect type: " << connection_type);
+        ROS_INFO_STREAM("connection: " << connection_type);
+        ROS_INFO_STREAM("firmware version: " << firmware_version);
+        ROS_INFO_STREAM("usb port: " << usb_port);
+        printPresetInfo(device_);
         std::cout << std::endl;
       } else {
         std::string serial = list->serialNumber(i);
         auto connection_type = list->getConnectionType(i);
         auto ip_address = list->getIpAddress(i);
         std::stringstream pid_hex;
+        auto firmware_version = device_info_->getFirmwareVersion();
         pid_hex << std::hex << std::setw(4) << std::setfill('0') << list->getPid(i);
-        ROS_INFO_STREAM("- Name: " << list->getName(i) << ", PID: 0x" << pid_hex.str()
-                                   << ", SN/ID: " << serial << ", Connection: " << connection_type);
+        ROS_INFO_STREAM("name: " << list->getName(i));
+        ROS_INFO_STREAM("pid: 0x" << pid_hex.str());
         ROS_INFO_STREAM("serial: " << serial);
-        ROS_INFO_STREAM("firmware version: " << device_info_->getFirmwareVersion());
+        ROS_INFO_STREAM("connection: " << connection_type);
+        ROS_INFO_STREAM("firmware version: " << firmware_version);
         ROS_INFO_STREAM("ip address: " << ip_address);
-        ROS_INFO_STREAM("usb connect type: " << connection_type);
-        ROS_INFO_STREAM("mac : " << list->getUid(i));
-        ROS_INFO_STREAM("subnet mask : " << list->getSubnetMask(i));
-        ROS_INFO_STREAM("gateway : " << list->getGateway(i));
-        ROS_INFO_STREAM("local net interface: " << list->getLocalNetInterfaceName(static_cast<uint32_t>(i)));
-        ROS_INFO_STREAM("ip source type: "
-                        << ipSourceTypeToString(static_cast<int>(list->getIpSourceType(static_cast<uint32_t>(i)))));
+        ROS_INFO_STREAM("MAC address: " << list->getUid(i));
+        ROS_INFO_STREAM("subnet mask: " << list->getSubnetMask(i));
+        ROS_INFO_STREAM("gateway: " << list->getGateway(i));
+        ROS_INFO_STREAM(
+            "local net interface: " << list->getLocalNetInterfaceName(static_cast<uint32_t>(i)));
+        ROS_INFO_STREAM("ip source type: " << ipSourceTypeToString(
+                            static_cast<int>(list->getIpSourceType(static_cast<uint32_t>(i)))));
+        printPresetInfo(device_);
         std::cout << std::endl;
       }
     }
