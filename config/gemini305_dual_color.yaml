@@ -132,7 +132,7 @@ depth_ae_roi_bottom: -1
 mean_intensity_set_point: -1
 enable_depth_scale: false
 enable_decimation_filter: false
-decimation_filter_scale: -1
+decimation_filter_scale_range: -1
 enable_hdr_merge: false
 hdr_merge_exposure_1: -1
 hdr_merge_gain_1: -1
