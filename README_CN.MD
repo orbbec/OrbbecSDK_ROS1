@@ -32,7 +32,7 @@
       <td>recommended for new designs</td>
     </tr>
     <tr>
-      <td>Gemini 305G</td>
+      <td>Gemini 305g</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
@@ -277,7 +277,7 @@ rosservice call /camera/get_sdk_version "{}"
 | **Products List** | **Recommended FW Version**                                                             |  Launch File                                          |
 | ----------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | Gemini 305              | [1.0.30](https://doc.orbbec.com/documentation/Gemini%20305%20Series%20Documentation/Firmware%20Release%20of%20Gemini%20305)                  | gemini305.launch             |
-| Gemini 305G             | [1.0.30](https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305) | gemini305_g.launch |
+| Gemini 305g             | [1.0.30](https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305) | gemini305_g.launch |
 | Astra Mini Pro           | [2.0.03](https://github.com/orbbec/OrbbecFirmware/releases/tag/Astra-Mini-Pro)             |                                               astra.launch   |
 | Astra Mini S Pro            | [2.0.03](https://github.com/orbbec/OrbbecFirmware/releases/tag/Astra-Mini-S-Pro)             |                                               astra.launch   |
 | Gemini 435Le            | [1.3.6](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware)             |                                               gemini435_le.launch   |
