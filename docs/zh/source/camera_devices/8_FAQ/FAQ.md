@@ -1,6 +1,6 @@
 ## 常见问题
 
-#**电源供应不足**：
+**电源供应不足**：
 
 - 确保每个相机连接到单独的集线器。
 - 使用有源集线器为每个相机提供充足的电源。
@@ -58,12 +58,26 @@ set(OpenCV_DIR "/path_to_your_opencv_dir")
 find_package(OpenCV REQUIRED)
 ```
 
-### 其他故障排除
+### 如何采集和保存日志
 
-- 如果您遇到其他问题，请将`log_level`参数设置为`debug`。这将在运行目录中生成SDK日志文件：`~/.ros/Log/OrbbecSDK.log.txt`。
-  请将此文件提供给支持团队以获得进一步帮助。
-- 如果需要固件日志，将`log_level` 参数设置为 `debug`的同时，将 `enable_heartbeat` 设置为 `true` 以激活此功能。
-- 若将`log_level` 参数设置为 `debug`的同时，又不想终端刷新太多日志，可以在`launch`中将`output="screen"`改为`output="log"`，日志会被保存在`~/.ros/log`目录下。
+#### SDK 日志
+
+- 将 launch 参数 `log_level` 设为 `debug` 运行后，会在 `~/.ros/Log/<camera_name>/` 目录下生成 SDK 日志文件。如果需要为本次测试指定一个更易识别的日志文件名，可以修改参数 `log_file_name`。
+- `log_file_name` 对应的实际文件路径通常为 `~/.ros/Log/<camera_name>/<log_file_name>`。
+- 如果节点异常崩溃，崩溃堆栈文件也会保存在对应相机目录下。
+- 如果需要固件日志，可在将 `log_level` 设置为 `debug` 的同时，将 `enable_heartbeat` 设置为 `true`。
+- 多相机场景下，SDK 日志按 `camera_name` 分目录保存，例如 `~/.ros/Log/ob_camera_01/camera_01.log`、`~/.ros/Log/ob_camera_02/camera_02.log`。
+- SDK 日志是追加写入的：多次启动会在同一个文件里不断累积日志。
+- 建议：在准备打包日志发给技术支持前，先删除旧的日志文件，然后重新复现问题并采集新的日志，这样日志更干净、定位更准确。
+
+#### ROS 日志
+
+- 如果不希望终端输出过多日志，可在 `launch` 中将 `output="screen"` 改为 `output="log"`，然后到 `~/.ros/log/<run_id>/` 查看对应 ROS1 日志。
+- `roslaunch-*.log` 记录整次 `roslaunch` 的启动流程和各节点拉起信息，通常包含所有相机。
+- `master.log` 是 ROS master 日志。
+- `rosout.log` 汇总所有节点输出，多相机场景下会包含多路相机日志，需要根据命名空间或节点名区分，例如 `/ob_camera_01/camera`、`/ob_camera_02/camera`。
+- 提交问题时，建议同时提供 `~/.ros/Log/` 下的 SDK 日志，以及同一时间段 `~/.ros/log/<run_id>/` 下的 ROS1 日志。
+
 
 ### 为什么有这么多启动文件？
 

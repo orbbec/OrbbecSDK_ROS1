@@ -1,11 +1,20 @@
 ## Frequently Asked Questions
 
-### Unexpected Crash
+**Insufficient Power Supply**:
 
-- If you encounter other problems, set the `log_level` parameter to `debug`. This will generate the SDK log file in the run directory: `~/.ros/Log/OrbbecSDK.log.txt`.
-  Please provide this file to the support team for further assistance.
-- If firmware logs are required, set the `log_level` parameter to `debug` and set `enable_heartbeat` to `true` to activate this feature.
-- If you set the `log_level` parameter to `debug` and do not want the terminal to refresh too many logs, you can change `output="screen"` to `output="log"` in `launch`, and the logs will be saved in the `~/.ros/log` directory.
+- Ensure that each camera is connected to a separate hub.
+- Use a powered hub to provide sufficient power to each camera.
+
+**High Resolution**:
+
+- Try lowering the resolution to resolve data stream issues.
+
+**Increase usbfs_memory_mb Value**:
+
+- Increase the `usbfs_memory_mb` value to 128MB (this is a reference value and can be adjusted based on your system's needs).
+  By running the following command: if the node crashes unexpectedly, it will generate a crash log in the current run directory: `~/.ros/Log/camera_crash_stack_trace_xx.log`. In addition, **regardless of whether the camera node crashes**, OrbbecSDK will always generate a log file: `~/.ros/Log/OrbbecSDK.log.txt`, which contains detailed records of SDK operations.
+
+Please send these log files to the support team or submit them in a GitHub issue for further assistance.
 
 ### No Data Stream from Multiple Cameras
 
@@ -50,11 +59,25 @@ set(OpenCV_DIR "/path_to_your_opencv_dir")
 find_package(OpenCV REQUIRED)
 ```
 
-### Additional Troubleshooting
+### How to Collect and Save Logs
 
-- If you encounter other issues, set the `log_level` parameter to `debug`. This will generate an SDK log file in the running directory: `~/.ros/Log/OrbbecSDK.log.txt`.
-  Please provide this file to the support team for further assistance.
-- If firmware logs are required, set `enable_heartbeat` to `true` to activate this feature.
+#### SDK Logs
+
+- Set the launch parameter `log_level` to `debug`. After running, the SDK will generate log files under `~/.ros/Log/<camera_name>/`. If you want a more recognizable file name for this test, you can set the parameter `log_file_name`.
+- The actual path corresponding to `log_file_name` is usually `~/.ros/Log/<camera_name>/<log_file_name>`.
+- If the node crashes unexpectedly, the crash stack trace file is also saved under the corresponding camera directory.
+- If firmware logs are required, set `log_level` to `debug` and set `enable_heartbeat` to `true`.
+- In multi-camera setups, SDK logs are stored in separate directories by `camera_name`, for example `~/.ros/Log/ob_camera_01/camera_01.log` and `~/.ros/Log/ob_camera_02/camera_02.log`.
+- SDK logs are appended to the same file: multiple launches will continue writing into the same file.
+- Recommendation: before packaging logs to send to technical support, delete old log files, then reproduce the issue and collect new logs. This keeps the logs cleaner and makes troubleshooting more accurate.
+
+#### ROS Logs
+
+- If you do not want too much terminal output, change `output="screen"` to `output="log"` in the launch file, then check the corresponding ROS1 logs under `~/.ros/log/<run_id>/`.
+- `roslaunch-*.log` records the full `roslaunch` startup flow and node launch information, and usually includes all cameras.
+- `master.log` is the ROS master log.
+- `rosout.log` aggregates output from all nodes. In multi-camera setups, logs from multiple cameras are mixed in the same file, so distinguish them by namespace or node name, for example `/ob_camera_01/camera` and `/ob_camera_02/camera`.
+- When submitting an issue, it is recommended to provide both the SDK logs under `~/.ros/Log/` and the ROS1 logs under `~/.ros/log/<run_id>/` for the same time period.
 
 ### Why Are There So Many Launch Files?
 

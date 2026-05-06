@@ -248,8 +248,9 @@
 #### 日志与诊断
 *   **`log_level`**
     *   SDK日志级别。默认只输出设备当前状态，更多调试日志可通过 `debug` 开启。可选值：`debug`、`info`、`warn`、`error`、`fatal`。
+    *   SDK 日志和崩溃文件保存在 `~/.ros/Log`；ROS1 运行日志保存在 `~/.ros/log/<run_id>`。
 * **`log_file_name`**
-  * 保存的SDK日志文件名。当`log_level`为`debug`时生效。SDK 日志和崩溃文件统一保存在 `~/.ros/Log`，ROS 日志仍保存在 `~/.ros/log`。
+  * 保存的SDK日志文件名。当`log_level`为`debug`时生效；实际路径通常为 `~/.ros/Log/<camera_name>/<log_file_name>`。多相机场景下，不同 `camera_name` 会分别写入各自目录。
 *   **`diagnostic_period`**
     *   诊断周期（秒）。
 *   **`enable_heartbeat`**
