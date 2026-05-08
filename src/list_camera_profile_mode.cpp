@@ -10,6 +10,7 @@ namespace {
 struct CommandLineOptions {
   bool show_help = false;
   std::string serial_number;
+  std::string sdk_log_level = "off";
 };
 
 void printUsage(const char* program_name) {
@@ -20,7 +21,14 @@ void printUsage(const char* program_name) {
       << "      [--serial_number SN]\n\n"
       << "Parameters:\n"
       << "  --serial_number SN  Select a specific camera by serial number.\n"
-      << "  -h, --help          Show this help message.\n";
+      << "  --enable_sdk_log    Enable SDK file log at debug level under ~/.ros/Log.\n"
+      << "  --sdk_log_level LEVEL\n"
+      << "                      SDK file log level: debug/info/warn/error/fatal/off "
+         "(default: off).\n"
+      << "  -h, --help          Show this help message.\n"
+      << "Examples:\n"
+      << "  rosrun orbbec_camera list_camera_profile_mode_node --enable_sdk_log "
+         "--sdk_log_level debug\n";
 }
 
 CommandLineOptions parseCommandLine(int argc, char** argv) {
@@ -49,12 +57,36 @@ CommandLineOptions parseCommandLine(int argc, char** argv) {
       continue;
     }
 
+    if (arg == "--enable_sdk_log") {
+      options.sdk_log_level = "debug";
+      continue;
+    }
+
+    const std::string sdk_log_prefix = "--sdk_log_level=";
+    if (arg.rfind(sdk_log_prefix, 0) == 0) {
+      options.sdk_log_level = arg.substr(sdk_log_prefix.size());
+      continue;
+    }
+    if (arg == "--sdk_log_level") {
+      if (i + 1 >= argc) {
+        throw std::runtime_error(arg + " requires a value");
+      }
+      options.sdk_log_level = argv[++i];
+      continue;
+    }
+
     // Ignore ROS remapping arguments and other unknown flags to preserve compatibility.
     if (arg.find(":=") != std::string::npos || arg.rfind("__", 0) == 0 || arg.rfind("_", 0) == 0) {
       continue;
     }
 
     throw std::runtime_error("Unknown argument: " + arg);
+  }
+
+  const auto log_severity = obLogSeverityFromString(options.sdk_log_level);
+  if (log_severity == OBLogSeverity::OB_LOG_SEVERITY_OFF && options.sdk_log_level != "off" &&
+      options.sdk_log_level != "none") {
+    throw std::runtime_error("--sdk_log_level expects one of: debug, info, warn, error, fatal, off");
   }
 
   return options;
@@ -154,7 +186,11 @@ int main(int argc, char** argv) {
       return 0;
     }
 
-    ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_NONE);
+    const auto sdk_log_path =
+        configureObSdkLoggerForTool("list_camera_profile_mode_node", options.sdk_log_level);
+    if (!sdk_log_path.empty()) {
+      std::cout << "SDK file log enabled: " << sdk_log_path << std::endl;
+    }
     auto device = initializeDevice(options.serial_number);
     if (!device) {
       return -1;  // Device initialization failed

@@ -43,6 +43,7 @@ struct CliArgs {
   std::string preset_path;
   int reconnect_timeout_sec = 120;
   int reconnect_poll_ms = 1000;
+  std::string sdk_log_level = "off";
   bool continue_on_error = false;
   bool used_deprecated_upgrade_firmware = false;
   bool used_deprecated_preset_firmware_path = false;
@@ -99,13 +100,21 @@ void printUsage(const char *program) {
       << "      [--serial_number SN[,SN2...]]\\\n"
       << "      [--firmware_path /path/to/firmware.bin]\\\n"
       << "      [--preset_path /path/a.bin,/path/b.bin]\\\n"
-      << "      [--continue_on_error]\n\n"
+      << "      [--continue_on_error]\\\n"
+      << "      [--enable_sdk_log] [--sdk_log_level debug]\n\n"
       << "Parameters:\n"
       << "  --serial_number SN[,SN2...]   Target serial number(s). Supports comma-separated "
          "values.\n"
       << "  --firmware_path PATH          Firmware image file path for firmware update.\n"
       << "  --preset_path PATH[,PATH2...] Preset file path(s), comma-separated.\n"
       << "  --continue_on_error           Continue with next target if one device update fails.\n"
+      << "  --enable_sdk_log              Enable SDK file log at debug level under ~/.ros/Log.\n"
+      << "  --sdk_log_level LEVEL         SDK file log level: debug/info/warn/error/fatal/off "
+         "(default: off).\n"
+      << "Examples:\n"
+      << "  rosrun orbbec_camera firmware_update_tool \\\n"
+      << "      --preset_path /path/to/preset.bin \\\n"
+      << "      --enable_sdk_log --sdk_log_level debug\n"
       << "Notes:\n"
       << "  1) At least one of --firmware_path / --preset_path must be provided.\n"
       << "  2) If multiple devices are connected, specify target by serial/usb/ip to avoid wrong "
@@ -289,6 +298,24 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
       continue;
     }
 
+    if (current == "--enable_sdk_log") {
+      args.sdk_log_level = "debug";
+      continue;
+    }
+
+    if (current.rfind("--sdk_log_level=", 0) == 0) {
+      args.sdk_log_level = current.substr(std::strlen("--sdk_log_level="));
+      continue;
+    }
+    if (current == "--sdk_log_level") {
+      if (++i >= argc) {
+        error = "--sdk_log_level requires a value";
+        return false;
+      }
+      args.sdk_log_level = argv[i];
+      continue;
+    }
+
     error = "Unknown argument: " + current;
     return false;
   }
@@ -317,6 +344,13 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
 
   if (args.firmware_path.empty() && args.preset_path.empty()) {
     error = "At least one action is required: --firmware_path or --preset_path";
+    return false;
+  }
+
+  const auto log_severity = orbbec_camera::obLogSeverityFromString(args.sdk_log_level);
+  if (log_severity == OBLogSeverity::OB_LOG_SEVERITY_OFF && args.sdk_log_level != "off" &&
+      args.sdk_log_level != "none") {
+    error = "--sdk_log_level expects one of: debug, info, warn, error, fatal, off";
     return false;
   }
 
@@ -653,7 +687,11 @@ int main(int argc, char **argv) {
   (void)nh;
 
   try {
-    ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
+    const auto sdk_log_path =
+        orbbec_camera::configureObSdkLoggerForTool("firmware_update_tool", args.sdk_log_level);
+    if (!sdk_log_path.empty()) {
+      ROS_INFO("SDK file log enabled: %s", sdk_log_path.c_str());
+    }
     auto ctx = std::make_shared<ob::Context>();
     std::vector<std::string> batch_targets = splitCsv(args.serial_number);
     if (batch_targets.empty()) {

@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include <string_view>
 
 #include "sensor_msgs/CameraInfo.h"
 #include "sensor_msgs/distortion_models.h"
@@ -98,6 +99,13 @@ T &CheckNotNull(T &ptr, const char *file, int line) {
 #define CHECK_NOTNULL(val) CheckNotNull(val, __FILE__, __LINE__)
 
 namespace orbbec_camera {
+OBLogSeverity obLogSeverityFromString(const std::string_view &log_level);
+
+std::string getRosLogDirectory();
+
+std::string configureObSdkLoggerForTool(const std::string &tool_name,
+                                        const std::string &log_level);
+
 OBFormat OBFormatFromString(const std::string &format);
 
 std::string OBFormatToString(const OBFormat &format);

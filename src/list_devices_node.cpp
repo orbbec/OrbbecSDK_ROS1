@@ -16,12 +16,74 @@
 #include <ros/ros.h>
 #include <orbbec_camera/types.h>
 #include <orbbec_camera/utils.h>
+#include <cstring>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <regex>
 #include <thread>
+
+namespace {
+struct CliArgs {
+  bool help = false;
+  std::string sdk_log_level = "off";
+};
+
+void printUsage() {
+  std::cout << "Usage:\n"
+            << "  rosrun orbbec_camera list_devices_node [options]\n\n"
+            << "Options:\n"
+            << "  --enable_sdk_log       Enable SDK file log at debug level under ~/.ros/Log.\n"
+            << "  --sdk_log_level LEVEL  SDK file log level: debug/info/warn/error/fatal/off "
+               "(default: off).\n\n"
+            << "Examples:\n"
+            << "  rosrun orbbec_camera list_devices_node --enable_sdk_log --sdk_log_level debug\n";
+}
+
+bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
+  for (int i = 1; i < argc; ++i) {
+    const std::string current = argv[i];
+    if (current == "-h" || current == "--help") {
+      args.help = true;
+      return true;
+    }
+    if (current.find(":=") != std::string::npos || current.rfind("__", 0) == 0 ||
+        current.rfind("_", 0) == 0) {
+      continue;
+    }
+    if (current == "--enable_sdk_log") {
+      args.sdk_log_level = "debug";
+      continue;
+    }
+    if (current.rfind("--sdk_log_level=", 0) == 0) {
+      args.sdk_log_level = current.substr(std::strlen("--sdk_log_level="));
+      continue;
+    }
+    if (current == "--sdk_log_level") {
+      if (++i >= argc) {
+        error = "--sdk_log_level requires a value";
+        return false;
+      }
+      args.sdk_log_level = argv[i];
+      continue;
+    }
+    error = "Unknown argument: " + current;
+    return false;
+  }
+
+  const auto log_severity = orbbec_camera::obLogSeverityFromString(args.sdk_log_level);
+  if (log_severity == OBLogSeverity::OB_LOG_SEVERITY_OFF && args.sdk_log_level != "off" &&
+      args.sdk_log_level != "none") {
+    error = "--sdk_log_level expects one of: debug, info, warn, error, fatal, off";
+    return false;
+  }
+
+  return true;
+}
+}  // namespace
+
 std::string parseUsbPort(const std::string &line) {
   std::string port_id;
   std::regex self_regex("(?:[^ ]+/usb[0-9]+[0-9./-]*/){0,1}([0-9.-]+)(:){0,1}[^ ]*",
@@ -81,9 +143,25 @@ void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
   }
 }
 
-int main() {
+int main(int argc, char **argv) {
+  CliArgs args;
+  std::string parse_error;
+  if (!parseArgs(argc, argv, args, parse_error)) {
+    std::cerr << "Argument error: " << parse_error << std::endl;
+    printUsage();
+    return 1;
+  }
+  if (args.help) {
+    printUsage();
+    return 0;
+  }
+
   try {
-    ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
+    const auto sdk_log_path =
+        orbbec_camera::configureObSdkLoggerForTool("list_devices_node", args.sdk_log_level);
+    if (!sdk_log_path.empty()) {
+      ROS_INFO("SDK file log enabled: %s", sdk_log_path.c_str());
+    }
     auto context = std::make_shared<ob::Context>();
     auto list = context->queryDeviceList();
     for (size_t i = 0; i < list->deviceCount(); i++) {

@@ -36,6 +36,7 @@ struct CliArgs {
   std::string new_ip = "192.168.1.200";
   std::string mask = "255.255.255.0";
   std::string gateway = "192.168.1.1";
+  std::string sdk_log_level = "off";
 };
 
 bool parseIpString(const std::string &ip_str, uint8_t ip[4]) {
@@ -92,6 +93,7 @@ void printHelp() {
       << "Usage:\n"
       << "  rosrun orbbec_camera ip_config_tool <dhcp|set_ip|force_ip|set_dhcp_timeout> "
          "[options]\n"
+      << "      [--enable_sdk_log] [--sdk_log_level debug]\n"
       << "Subcommands:\n"
       << "  dhcp                       Configure DHCP on device by current device address.\n"
       << "  set_ip                     Configure static IP on device by current device address.\n"
@@ -112,6 +114,9 @@ void printHelp() {
       << "  --timeout <sec>            DHCP timeout in seconds for set_dhcp_timeout.\n"
       << "  --dhcp_assign_ip_timeout <sec>\n"
       << "                             Alias of --timeout.\n\n"
+      << "  --enable_sdk_log           Enable SDK file log at debug level under ~/.ros/Log.\n"
+      << "  --sdk_log_level LEVEL      SDK file log level: debug/info/warn/error/fatal/off "
+         "(default: off).\n\n"
       << "Examples:\n"
       << "\n"
       << "  [DHCP]\n"
@@ -129,7 +134,11 @@ void printHelp() {
   std::cout << "\n"
             << "  [Set DHCP Timeout]\n"
             << "    Timeout: rosrun orbbec_camera ip_config_tool set_dhcp_timeout \\\n"
-            << "             --current_ip 192.168.1.10 --timeout 10\n";
+            << "             --current_ip 192.168.1.10 --timeout 10\n"
+            << "  [SDK Log]\n"
+            << "    Debug:   rosrun orbbec_camera ip_config_tool dhcp \\\n"
+            << "             --current_ip 192.168.1.10 --enable_dhcp true \\\n"
+            << "             --enable_sdk_log --sdk_log_level debug\n";
 }
 
 bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
@@ -317,6 +326,24 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
       continue;
     }
 
+    if (current == "--enable_sdk_log") {
+      args.sdk_log_level = "debug";
+      continue;
+    }
+
+    if (current.rfind("--sdk_log_level=", 0) == 0) {
+      args.sdk_log_level = current.substr(std::strlen("--sdk_log_level="));
+      continue;
+    }
+    if (current == "--sdk_log_level") {
+      if (++i >= argc) {
+        error = "--sdk_log_level requires a value";
+        return false;
+      }
+      args.sdk_log_level = argv[i];
+      continue;
+    }
+
     error = "Unknown argument: " + current;
     return false;
   }
@@ -355,6 +382,13 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
     return false;
   }
 
+  const auto log_severity = orbbec_camera::obLogSeverityFromString(args.sdk_log_level);
+  if (log_severity == OBLogSeverity::OB_LOG_SEVERITY_OFF && args.sdk_log_level != "off" &&
+      args.sdk_log_level != "none") {
+    error = "--sdk_log_level expects one of: debug, info, warn, error, fatal, off";
+    return false;
+  }
+
   return true;
 }
 
@@ -377,7 +411,11 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "ip_config_tool");
 
   try {
-    ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_OFF);
+    const auto sdk_log_path =
+        orbbec_camera::configureObSdkLoggerForTool("ip_config_tool", args.sdk_log_level);
+    if (!sdk_log_path.empty()) {
+      ROS_INFO("SDK file log enabled: %s", sdk_log_path.c_str());
+    }
     auto context = std::make_shared<ob::Context>();
 
     if (args.operation == CliArgs::Operation::DHCP) {
