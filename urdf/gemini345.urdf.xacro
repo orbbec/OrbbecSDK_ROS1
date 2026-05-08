@@ -460,7 +460,7 @@
     type="fixed">
     <origin
       xyz="-0.02534 0.0003126 -0.0022324"
-      rpy="-1.5707963267949 0 -1.5707963267949" />
+      rpy="0 0 0" />
     <parent
       link="camera_depth_frame" />
     <child
