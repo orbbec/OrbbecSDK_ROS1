@@ -101,20 +101,19 @@ void printUsage(const char *program) {
       << "      [--firmware_path /path/to/firmware.bin]\\\n"
       << "      [--preset_path /path/a.bin,/path/b.bin]\\\n"
       << "      [--continue_on_error]\\\n"
-      << "      [--enable_sdk_log] [--sdk_log_level debug]\n\n"
+      << "      [--sdk_log_level debug]\n\n"
       << "Parameters:\n"
       << "  --serial_number SN[,SN2...]   Target serial number(s). Supports comma-separated "
          "values.\n"
       << "  --firmware_path PATH          Firmware image file path for firmware update.\n"
       << "  --preset_path PATH[,PATH2...] Preset file path(s), comma-separated.\n"
       << "  --continue_on_error           Continue with next target if one device update fails.\n"
-      << "  --enable_sdk_log              Enable SDK file log at debug level under ~/.ros/Log.\n"
       << "  --sdk_log_level LEVEL         SDK file log level: debug/info/warn/error/fatal/off "
          "(default: off).\n"
       << "Examples:\n"
       << "  rosrun orbbec_camera firmware_update_tool \\\n"
       << "      --preset_path /path/to/preset.bin \\\n"
-      << "      --enable_sdk_log --sdk_log_level debug\n"
+      << "      --sdk_log_level debug\n"
       << "Notes:\n"
       << "  1) At least one of --firmware_path / --preset_path must be provided.\n"
       << "  2) If multiple devices are connected, specify target by serial/usb/ip to avoid wrong "
@@ -295,11 +294,6 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
 
     if (current == "--continue_on_error") {
       args.continue_on_error = true;
-      continue;
-    }
-
-    if (current == "--enable_sdk_log") {
-      args.sdk_log_level = "debug";
       continue;
     }
 

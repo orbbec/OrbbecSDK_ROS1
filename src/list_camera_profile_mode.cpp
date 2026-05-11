@@ -21,14 +21,12 @@ void printUsage(const char* program_name) {
       << "      [--serial_number SN]\n\n"
       << "Parameters:\n"
       << "  --serial_number SN  Select a specific camera by serial number.\n"
-      << "  --enable_sdk_log    Enable SDK file log at debug level under ~/.ros/Log.\n"
       << "  --sdk_log_level LEVEL\n"
       << "                      SDK file log level: debug/info/warn/error/fatal/off "
          "(default: off).\n"
       << "  -h, --help          Show this help message.\n"
       << "Examples:\n"
-      << "  rosrun orbbec_camera list_camera_profile_mode_node --enable_sdk_log "
-         "--sdk_log_level debug\n";
+      << "  rosrun orbbec_camera list_camera_profile_mode_node --sdk_log_level debug\n";
 }
 
 CommandLineOptions parseCommandLine(int argc, char** argv) {
@@ -54,11 +52,6 @@ CommandLineOptions parseCommandLine(int argc, char** argv) {
       if (options.serial_number.empty()) {
         throw std::runtime_error("--serial_number requires a value");
       }
-      continue;
-    }
-
-    if (arg == "--enable_sdk_log") {
-      options.sdk_log_level = "debug";
       continue;
     }
 
