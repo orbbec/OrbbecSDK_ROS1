@@ -107,6 +107,16 @@ std::shared_ptr<ob::Device> initializeDevice(const std::string& serial_number) {
   return device_list->getDevice(0, OB_DEVICE_DEFAULT_ACCESS);
 }
 
+void enableFirmwareLog(const std::shared_ptr<ob::Device>& device) {
+  try {
+    device->enableFirmwareLog(true);
+  } catch (const ob::Error& e) {
+    std::cerr << "Failed to enable firmware log: " << formatObErrorWithStatus(e) << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "Failed to enable firmware log: " << e.what() << std::endl;
+  }
+}
+
 }  // namespace
 
 void listSensorProfiles(const std::shared_ptr<ob::Device>& device) {
@@ -195,6 +205,7 @@ int main(int argc, char** argv) {
     if (!device) {
       return -1;  // Device initialization failed
     }
+    enableFirmwareLog(device);
     listSensorProfiles(device);
     printDeviceProperties(device);
     printPreset(device);

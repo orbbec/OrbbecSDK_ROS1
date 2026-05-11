@@ -482,16 +482,31 @@ std::shared_ptr<ob::Device> selectDeviceFromList(const std::shared_ptr<ob::Devic
   throw std::runtime_error("Multiple devices detected without explicit selector");
 }
 
+void enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
+  try {
+    device->enableFirmwareLog(true);
+  } catch (const ob::Error &e) {
+    ROS_WARN("Failed to enable firmware log: %s",
+             orbbec_camera::formatObErrorWithStatus(e).c_str());
+  } catch (const std::exception &e) {
+    ROS_WARN("Failed to enable firmware log: %s", e.what());
+  }
+}
+
 std::shared_ptr<ob::Device> connectDevice(const std::shared_ptr<ob::Context> &ctx,
                                           const CliArgs &args) {
+  std::shared_ptr<ob::Device> device;
   if (!args.device_ip.empty()) {
     ROS_INFO("Connecting network device %s:%d", args.device_ip.c_str(), args.device_port);
-    return ctx->createNetDevice(args.device_ip.c_str(), static_cast<uint16_t>(args.device_port),
-                                OB_DEVICE_DEFAULT_ACCESS);
+    device = ctx->createNetDevice(args.device_ip.c_str(), static_cast<uint16_t>(args.device_port),
+                                  OB_DEVICE_DEFAULT_ACCESS);
+  } else {
+    auto list = ctx->queryDeviceList();
+    device = selectDeviceFromList(list, args);
   }
 
-  auto list = ctx->queryDeviceList();
-  return selectDeviceFromList(list, args);
+  enableFirmwareLog(device);
+  return device;
 }
 
 std::shared_ptr<ob::Device> waitForReconnect(const std::shared_ptr<ob::Context> &ctx,

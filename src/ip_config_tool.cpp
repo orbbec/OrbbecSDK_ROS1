@@ -392,6 +392,17 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
   return true;
 }
 
+void enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
+  try {
+    device->enableFirmwareLog(true);
+  } catch (const ob::Error &e) {
+    ROS_WARN("Failed to enable firmware log: %s",
+             orbbec_camera::formatObErrorWithStatus(e).c_str());
+  } catch (const std::exception &e) {
+    ROS_WARN("Failed to enable firmware log: %s", e.what());
+  }
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
@@ -422,6 +433,7 @@ int main(int argc, char **argv) {
       ROS_INFO("Connecting to device %s:%d ...", args.current_ip.c_str(), args.port);
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
+      enableFirmwareLog(device);
 
       bool v2_supported =
           device->isPropertySupported(OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2, OB_PERMISSION_READ_WRITE);
@@ -476,6 +488,7 @@ int main(int argc, char **argv) {
       ROS_INFO("Connecting to device %s:%d ...", args.current_ip.c_str(), args.port);
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
+      enableFirmwareLog(device);
 
       bool v2_supported =
           device->isPropertySupported(OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2, OB_PERMISSION_READ_WRITE);
@@ -606,6 +619,7 @@ int main(int argc, char **argv) {
       ROS_INFO("Connecting to device %s:%d ...", args.current_ip.c_str(), args.port);
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
+      enableFirmwareLog(device);
 
       if (!device->isPropertySupported(OB_PROP_DHCP_ASSIGN_IP_TIMEOUT_INT, OB_PERMISSION_WRITE)) {
         ROS_ERROR("Current device or firmware does not support DHCP assign IP timeout");
