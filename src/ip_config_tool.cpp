@@ -15,6 +15,8 @@ using namespace ob;
 
 namespace {
 
+constexpr int kFirmwareLogDrainDelaySec = 3;
+
 struct CliArgs {
   enum class Operation {
     NONE,
@@ -93,7 +95,7 @@ void printHelp() {
       << "Usage:\n"
       << "  rosrun orbbec_camera ip_config_tool <dhcp|set_ip|force_ip|set_dhcp_timeout> "
          "[options]\n"
-      << "      [--enable_sdk_log] [--sdk_log_level debug]\n"
+      << "      [--sdk_log_level debug]\n"
       << "Subcommands:\n"
       << "  dhcp                       Configure DHCP on device by current device address.\n"
       << "  set_ip                     Configure static IP on device by current device address.\n"
@@ -114,7 +116,6 @@ void printHelp() {
       << "  --timeout <sec>            DHCP timeout in seconds for set_dhcp_timeout.\n"
       << "  --dhcp_assign_ip_timeout <sec>\n"
       << "                             Alias of --timeout.\n\n"
-      << "  --enable_sdk_log           Enable SDK file log at debug level under ~/.ros/Log.\n"
       << "  --sdk_log_level LEVEL      SDK file log level: debug/info/warn/error/fatal/off "
          "(default: off).\n\n"
       << "Examples:\n"
@@ -138,7 +139,7 @@ void printHelp() {
             << "  [SDK Log]\n"
             << "    Debug:   rosrun orbbec_camera ip_config_tool dhcp \\\n"
             << "             --current_ip 192.168.1.10 --enable_dhcp true \\\n"
-            << "             --enable_sdk_log --sdk_log_level debug\n";
+            << "             --sdk_log_level debug\n";
 }
 
 bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
@@ -326,11 +327,6 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
       continue;
     }
 
-    if (current == "--enable_sdk_log") {
-      args.sdk_log_level = "debug";
-      continue;
-    }
-
     if (current.rfind("--sdk_log_level=", 0) == 0) {
       args.sdk_log_level = current.substr(std::strlen("--sdk_log_level="));
       continue;
@@ -392,6 +388,29 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
   return true;
 }
 
+void waitForFirmwareLogDrain() {
+  ROS_INFO("Waiting %d seconds to keep firmware log alive...", kFirmwareLogDrainDelaySec);
+  std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
+}
+
+bool enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
+  try {
+    device->enableFirmwareLog(true);
+    ROS_INFO("Firmware log enabled.");
+    return true;
+  } catch (const ob::Error &e) {
+    ROS_WARN("Failed to enable firmware log: %s",
+             orbbec_camera::formatObErrorWithStatus(e).c_str());
+  } catch (const std::exception &e) {
+    ROS_WARN("Failed to enable firmware log: %s", e.what());
+  }
+  return false;
+}
+
+bool isSdkLogEnabled(const std::string &log_level) {
+  return orbbec_camera::obLogSeverityFromString(log_level) != OBLogSeverity::OB_LOG_SEVERITY_OFF;
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
@@ -409,6 +428,7 @@ int main(int argc, char **argv) {
   }
 
   ros::init(argc, argv, "ip_config_tool");
+  bool firmware_log_enabled = false;
 
   try {
     const auto sdk_log_path =
@@ -422,6 +442,9 @@ int main(int argc, char **argv) {
       ROS_INFO("Connecting to device %s:%d ...", args.current_ip.c_str(), args.port);
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
+      if (isSdkLogEnabled(args.sdk_log_level)) {
+        firmware_log_enabled = enableFirmwareLog(device);
+      }
 
       bool v2_supported =
           device->isPropertySupported(OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2, OB_PERMISSION_READ_WRITE);
@@ -476,6 +499,9 @@ int main(int argc, char **argv) {
       ROS_INFO("Connecting to device %s:%d ...", args.current_ip.c_str(), args.port);
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
+      if (isSdkLogEnabled(args.sdk_log_level)) {
+        firmware_log_enabled = enableFirmwareLog(device);
+      }
 
       bool v2_supported =
           device->isPropertySupported(OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2, OB_PERMISSION_READ_WRITE);
@@ -606,6 +632,9 @@ int main(int argc, char **argv) {
       ROS_INFO("Connecting to device %s:%d ...", args.current_ip.c_str(), args.port);
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
+      if (isSdkLogEnabled(args.sdk_log_level)) {
+        firmware_log_enabled = enableFirmwareLog(device);
+      }
 
       if (!device->isPropertySupported(OB_PROP_DHCP_ASSIGN_IP_TIMEOUT_INT, OB_PERMISSION_WRITE)) {
         ROS_ERROR("Current device or firmware does not support DHCP assign IP timeout");
@@ -635,5 +664,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if (firmware_log_enabled) {
+    waitForFirmwareLogDrain();
+  }
   return 0;
 }
