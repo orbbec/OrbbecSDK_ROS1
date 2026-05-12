@@ -141,12 +141,17 @@ void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
 void enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
   try {
     device->enableFirmwareLog(true);
+    ROS_INFO("Firmware log enabled.");
   } catch (const ob::Error &e) {
     ROS_WARN("Failed to enable firmware log: %s",
              orbbec_camera::formatObErrorWithStatus(e).c_str());
   } catch (const std::exception &e) {
     ROS_WARN("Failed to enable firmware log: %s", e.what());
   }
+}
+
+bool isSdkLogEnabled(const std::string &log_level) {
+  return orbbec_camera::obLogSeverityFromString(log_level) != OBLogSeverity::OB_LOG_SEVERITY_OFF;
 }
 
 int main(int argc, char **argv) {
@@ -172,7 +177,9 @@ int main(int argc, char **argv) {
     auto list = context->queryDeviceList();
     for (size_t i = 0; i < list->deviceCount(); i++) {
       auto device_ = list->getDevice(i);
-      enableFirmwareLog(device_);
+      if (isSdkLogEnabled(args.sdk_log_level)) {
+        enableFirmwareLog(device_);
+      }
       auto device_info_ = device_->getDeviceInfo();
       if (std::string(list->getConnectionType(i)) != "Ethernet") {
         std::string serial = list->serialNumber(i);

@@ -34,6 +34,17 @@
 
 namespace {
 
+constexpr int kFirmwareLogDrainDelaySec = 3;
+
+void waitForFirmwareLogDrain() {
+  ROS_INFO("Waiting %d seconds to keep firmware log alive...", kFirmwareLogDrainDelaySec);
+  std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
+}
+
+bool isSdkLogEnabled(const std::string &log_level) {
+  return orbbec_camera::obLogSeverityFromString(log_level) != OBLogSeverity::OB_LOG_SEVERITY_OFF;
+}
+
 struct CliArgs {
   std::string serial_number;
   std::string usb_port;
@@ -479,6 +490,7 @@ std::shared_ptr<ob::Device> selectDeviceFromList(const std::shared_ptr<ob::Devic
 void enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
   try {
     device->enableFirmwareLog(true);
+    ROS_INFO("Firmware log enabled.");
   } catch (const ob::Error &e) {
     ROS_WARN("Failed to enable firmware log: %s",
              orbbec_camera::formatObErrorWithStatus(e).c_str());
@@ -499,7 +511,9 @@ std::shared_ptr<ob::Device> connectDevice(const std::shared_ptr<ob::Context> &ct
     device = selectDeviceFromList(list, args);
   }
 
-  enableFirmwareLog(device);
+  if (isSdkLogEnabled(args.sdk_log_level)) {
+    enableFirmwareLog(device);
+  }
   return device;
 }
 
@@ -627,7 +641,8 @@ bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::
 }
 
 FirmwareUpdateResult updateFirmware(const std::shared_ptr<ob::Device> &device,
-                                    const std::string &firmware_path) {
+                                    const std::string &firmware_path,
+                                    bool firmware_log_enabled) {
   FirmwareUpdateResult result;
   if (firmware_path.empty()) {
     result.success = true;
@@ -670,6 +685,9 @@ FirmwareUpdateResult updateFirmware(const std::shared_ptr<ob::Device> &device,
     return result;
   }
 
+  if (firmware_log_enabled) {
+    waitForFirmwareLogDrain();
+  }
   ROS_INFO("Rebooting device after firmware update...");
   device->reboot();
   ROS_INFO("Device reboot command sent.");
@@ -744,7 +762,8 @@ int main(int argc, char **argv) {
         }
 
         if (!run_args.firmware_path.empty()) {
-          auto first_update = updateFirmware(device, run_args.firmware_path);
+          const bool firmware_log_enabled = isSdkLogEnabled(run_args.sdk_log_level);
+          auto first_update = updateFirmware(device, run_args.firmware_path, firmware_log_enabled);
           if (!first_update.success) {
             throw std::runtime_error(first_update.error_message.empty()
                                          ? "First firmware update failed"
@@ -759,7 +778,8 @@ int main(int argc, char **argv) {
             bool second_ok = false;
             while (std::chrono::steady_clock::now() < second_deadline) {
               try {
-                auto second_update = updateFirmware(device, run_args.firmware_path);
+                auto second_update =
+                    updateFirmware(device, run_args.firmware_path, firmware_log_enabled);
                 if (!second_update.success) {
                   if (!second_update.retryable) {
                     throw std::runtime_error(second_update.error_message.empty()
