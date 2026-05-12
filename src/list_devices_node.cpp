@@ -16,6 +16,7 @@
 #include <ros/ros.h>
 #include <orbbec_camera/types.h>
 #include <orbbec_camera/utils.h>
+#include <chrono>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -26,6 +27,9 @@
 #include <thread>
 
 namespace {
+
+constexpr int kFirmwareLogDrainDelaySec = 3;
+
 struct CliArgs {
   bool help = false;
   std::string sdk_log_level = "off";
@@ -138,16 +142,23 @@ void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
   }
 }
 
-void enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
+void waitForFirmwareLogDrain() {
+  ROS_INFO("Waiting %d seconds to keep firmware log alive...", kFirmwareLogDrainDelaySec);
+  std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
+}
+
+bool enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
   try {
     device->enableFirmwareLog(true);
     ROS_INFO("Firmware log enabled.");
+    return true;
   } catch (const ob::Error &e) {
     ROS_WARN("Failed to enable firmware log: %s",
              orbbec_camera::formatObErrorWithStatus(e).c_str());
   } catch (const std::exception &e) {
     ROS_WARN("Failed to enable firmware log: %s", e.what());
   }
+  return false;
 }
 
 bool isSdkLogEnabled(const std::string &log_level) {
@@ -175,10 +186,11 @@ int main(int argc, char **argv) {
     }
     auto context = std::make_shared<ob::Context>();
     auto list = context->queryDeviceList();
+    bool firmware_log_enabled = false;
     for (size_t i = 0; i < list->deviceCount(); i++) {
       auto device_ = list->getDevice(i);
       if (isSdkLogEnabled(args.sdk_log_level)) {
-        enableFirmwareLog(device_);
+        firmware_log_enabled = enableFirmwareLog(device_) || firmware_log_enabled;
       }
       auto device_info_ = device_->getDeviceInfo();
       if (std::string(list->getConnectionType(i)) != "Ethernet") {
@@ -220,6 +232,9 @@ int main(int argc, char **argv) {
         printPresetInfo(device_);
         std::cout << std::endl;
       }
+    }
+    if (firmware_log_enabled) {
+      waitForFirmwareLogDrain();
     }
   } catch (ob::Error &e) {
     ROS_ERROR_STREAM("list_device_node: " << orbbec_camera::formatObErrorWithStatus(e));

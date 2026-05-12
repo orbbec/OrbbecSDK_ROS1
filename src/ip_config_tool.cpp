@@ -15,6 +15,8 @@ using namespace ob;
 
 namespace {
 
+constexpr int kFirmwareLogDrainDelaySec = 3;
+
 struct CliArgs {
   enum class Operation {
     NONE,
@@ -386,16 +388,23 @@ bool parseArgs(int argc, char **argv, CliArgs &args, std::string &error) {
   return true;
 }
 
-void enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
+void waitForFirmwareLogDrain() {
+  ROS_INFO("Waiting %d seconds to keep firmware log alive...", kFirmwareLogDrainDelaySec);
+  std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
+}
+
+bool enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
   try {
     device->enableFirmwareLog(true);
     ROS_INFO("Firmware log enabled.");
+    return true;
   } catch (const ob::Error &e) {
     ROS_WARN("Failed to enable firmware log: %s",
              orbbec_camera::formatObErrorWithStatus(e).c_str());
   } catch (const std::exception &e) {
     ROS_WARN("Failed to enable firmware log: %s", e.what());
   }
+  return false;
 }
 
 bool isSdkLogEnabled(const std::string &log_level) {
@@ -419,6 +428,7 @@ int main(int argc, char **argv) {
   }
 
   ros::init(argc, argv, "ip_config_tool");
+  bool firmware_log_enabled = false;
 
   try {
     const auto sdk_log_path =
@@ -433,7 +443,7 @@ int main(int argc, char **argv) {
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
       if (isSdkLogEnabled(args.sdk_log_level)) {
-        enableFirmwareLog(device);
+        firmware_log_enabled = enableFirmwareLog(device);
       }
 
       bool v2_supported =
@@ -490,7 +500,7 @@ int main(int argc, char **argv) {
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
       if (isSdkLogEnabled(args.sdk_log_level)) {
-        enableFirmwareLog(device);
+        firmware_log_enabled = enableFirmwareLog(device);
       }
 
       bool v2_supported =
@@ -623,7 +633,7 @@ int main(int argc, char **argv) {
       auto device =
           context->createNetDevice(args.current_ip.c_str(), static_cast<uint16_t>(args.port));
       if (isSdkLogEnabled(args.sdk_log_level)) {
-        enableFirmwareLog(device);
+        firmware_log_enabled = enableFirmwareLog(device);
       }
 
       if (!device->isPropertySupported(OB_PROP_DHCP_ASSIGN_IP_TIMEOUT_INT, OB_PERMISSION_WRITE)) {
@@ -654,5 +664,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if (firmware_log_enabled) {
+    waitForFirmwareLogDrain();
+  }
   return 0;
 }

@@ -1,11 +1,15 @@
 #include <orbbec_camera/ob_camera_node.h>
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
 
 using namespace orbbec_camera;
 
 namespace {
+
+constexpr int kFirmwareLogDrainDelaySec = 3;
 
 struct CommandLineOptions {
   bool show_help = false;
@@ -100,15 +104,23 @@ std::shared_ptr<ob::Device> initializeDevice(const std::string& serial_number) {
   return device_list->getDevice(0, OB_DEVICE_DEFAULT_ACCESS);
 }
 
-void enableFirmwareLog(const std::shared_ptr<ob::Device>& device) {
+void waitForFirmwareLogDrain() {
+  std::cout << "Waiting " << kFirmwareLogDrainDelaySec
+            << " seconds to keep firmware log alive..." << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
+}
+
+bool enableFirmwareLog(const std::shared_ptr<ob::Device>& device) {
   try {
     device->enableFirmwareLog(true);
     std::cout << "Firmware log enabled." << std::endl;
+    return true;
   } catch (const ob::Error& e) {
     std::cerr << "Failed to enable firmware log: " << formatObErrorWithStatus(e) << std::endl;
   } catch (const std::exception& e) {
     std::cerr << "Failed to enable firmware log: " << e.what() << std::endl;
   }
+  return false;
 }
 
 bool isSdkLogEnabled(const std::string& log_level) {
@@ -203,12 +215,16 @@ int main(int argc, char** argv) {
     if (!device) {
       return -1;  // Device initialization failed
     }
+    bool firmware_log_enabled = false;
     if (isSdkLogEnabled(options.sdk_log_level)) {
-      enableFirmwareLog(device);
+      firmware_log_enabled = enableFirmwareLog(device);
     }
     listSensorProfiles(device);
     printDeviceProperties(device);
     printPreset(device);
+    if (firmware_log_enabled) {
+      waitForFirmwareLogDrain();
+    }
   } catch (ob::Error& e) {
     ROS_ERROR_STREAM("list_camera_profile_mode: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
