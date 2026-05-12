@@ -34,15 +34,11 @@
 
 namespace {
 
-constexpr int kFirmwareLogDrainDelaySec = 3;
+constexpr int kFirmwareLogDrainDelaySec = 5;
 
 void waitForFirmwareLogDrain() {
   ROS_INFO("Waiting %d seconds to keep firmware log alive...", kFirmwareLogDrainDelaySec);
   std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
-}
-
-bool isSdkLogEnabled(const std::string &log_level) {
-  return orbbec_camera::obLogSeverityFromString(log_level) != OBLogSeverity::OB_LOG_SEVERITY_OFF;
 }
 
 struct CliArgs {
@@ -487,16 +483,18 @@ std::shared_ptr<ob::Device> selectDeviceFromList(const std::shared_ptr<ob::Devic
   throw std::runtime_error("Multiple devices detected without explicit selector");
 }
 
-void enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
+bool enableFirmwareLog(const std::shared_ptr<ob::Device> &device) {
   try {
     device->enableFirmwareLog(true);
     ROS_INFO("Firmware log enabled.");
+    return true;
   } catch (const ob::Error &e) {
     ROS_WARN("Failed to enable firmware log: %s",
              orbbec_camera::formatObErrorWithStatus(e).c_str());
   } catch (const std::exception &e) {
     ROS_WARN("Failed to enable firmware log: %s", e.what());
   }
+  return false;
 }
 
 std::shared_ptr<ob::Device> connectDevice(const std::shared_ptr<ob::Context> &ctx,
@@ -511,9 +509,6 @@ std::shared_ptr<ob::Device> connectDevice(const std::shared_ptr<ob::Context> &ct
     device = selectDeviceFromList(list, args);
   }
 
-  if (isSdkLogEnabled(args.sdk_log_level)) {
-    enableFirmwareLog(device);
-  }
   return device;
 }
 
@@ -569,7 +564,7 @@ std::shared_ptr<ob::Device> waitForReconnectUntil(
 }
 
 bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::string &path_arg,
-                          std::string *error_message = nullptr) {
+                          bool firmware_log_enabled, std::string *error_message = nullptr) {
   auto set_error = [&](const std::string &message) {
     if (error_message != nullptr) {
       *error_message = message;
@@ -632,6 +627,9 @@ bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::
 
   if (final_state == STAT_DONE || final_state == STAT_DONE_WITH_DUPLICATES) {
     logCurrentPresetList(device, "after preset update");
+    if (firmware_log_enabled) {
+      waitForFirmwareLogDrain();
+    }
     ROS_INFO("Preset update succeeded.");
     return true;
   }
@@ -641,8 +639,7 @@ bool updatePresetFirmware(const std::shared_ptr<ob::Device> &device, const std::
 }
 
 FirmwareUpdateResult updateFirmware(const std::shared_ptr<ob::Device> &device,
-                                    const std::string &firmware_path,
-                                    bool firmware_log_enabled) {
+                                    const std::string &firmware_path, bool firmware_log_enabled) {
   FirmwareUpdateResult result;
   if (firmware_path.empty()) {
     result.success = true;
@@ -751,10 +748,12 @@ int main(int argc, char **argv) {
         auto device_info = device->getDeviceInfo();
         ROS_INFO("Selected device: %s, SN: %s, UID: %s", device_info->getName(),
                  device_info->getSerialNumber(), device_info->getUid());
+        bool firmware_log_enabled = enableFirmwareLog(device);
 
         if (!run_args.preset_path.empty()) {
           std::string preset_error;
-          const bool preset_ok = updatePresetFirmware(device, run_args.preset_path, &preset_error);
+          const bool preset_ok = updatePresetFirmware(device, run_args.preset_path,
+                                                      firmware_log_enabled, &preset_error);
           if (!preset_ok) {
             throw std::runtime_error(preset_error.empty() ? "Preset firmware update failed"
                                                           : preset_error);
@@ -762,7 +761,6 @@ int main(int argc, char **argv) {
         }
 
         if (!run_args.firmware_path.empty()) {
-          const bool firmware_log_enabled = isSdkLogEnabled(run_args.sdk_log_level);
           auto first_update = updateFirmware(device, run_args.firmware_path, firmware_log_enabled);
           if (!first_update.success) {
             throw std::runtime_error(first_update.error_message.empty()
@@ -775,6 +773,7 @@ int main(int argc, char **argv) {
             const auto second_deadline = std::chrono::steady_clock::now() +
                                          std::chrono::seconds(run_args.reconnect_timeout_sec);
             device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
+            firmware_log_enabled = enableFirmwareLog(device);
             bool second_ok = false;
             while (std::chrono::steady_clock::now() < second_deadline) {
               try {
@@ -793,11 +792,13 @@ int main(int argc, char **argv) {
                              second_update.error_message.c_str());
                   }
                   device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
+                  firmware_log_enabled = enableFirmwareLog(device);
                   continue;
                 }
                 if (second_update.need_reupdate) {
                   ROS_WARN("Second attempt still requires reupdate, waiting and retrying...");
                   device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
+                  firmware_log_enabled = enableFirmwareLog(device);
                   continue;
                 }
                 second_ok = true;
@@ -806,6 +807,7 @@ int main(int argc, char **argv) {
                 ROS_WARN("Second update transient error: %s, retrying...",
                          orbbec_camera::formatObErrorWithStatus(e).c_str());
                 device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
+                firmware_log_enabled = enableFirmwareLog(device);
               }
             }
             if (!second_ok) {
