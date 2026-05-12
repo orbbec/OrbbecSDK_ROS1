@@ -41,6 +41,10 @@ void waitForFirmwareLogDrain() {
   std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
 }
 
+bool isSdkLogEnabled(const std::string &log_level) {
+  return orbbec_camera::obLogSeverityFromString(log_level) != OBLogSeverity::OB_LOG_SEVERITY_OFF;
+}
+
 struct CliArgs {
   std::string serial_number;
   std::string usb_port;
@@ -748,7 +752,8 @@ int main(int argc, char **argv) {
         auto device_info = device->getDeviceInfo();
         ROS_INFO("Selected device: %s, SN: %s, UID: %s", device_info->getName(),
                  device_info->getSerialNumber(), device_info->getUid());
-        bool firmware_log_enabled = enableFirmwareLog(device);
+        const bool enable_firmware_log = isSdkLogEnabled(run_args.sdk_log_level);
+        bool firmware_log_enabled = enable_firmware_log && enableFirmwareLog(device);
 
         if (!run_args.preset_path.empty()) {
           std::string preset_error;
@@ -773,7 +778,7 @@ int main(int argc, char **argv) {
             const auto second_deadline = std::chrono::steady_clock::now() +
                                          std::chrono::seconds(run_args.reconnect_timeout_sec);
             device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
-            firmware_log_enabled = enableFirmwareLog(device);
+            firmware_log_enabled = enable_firmware_log && enableFirmwareLog(device);
             bool second_ok = false;
             while (std::chrono::steady_clock::now() < second_deadline) {
               try {
@@ -792,13 +797,13 @@ int main(int argc, char **argv) {
                              second_update.error_message.c_str());
                   }
                   device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
-                  firmware_log_enabled = enableFirmwareLog(device);
+                  firmware_log_enabled = enable_firmware_log && enableFirmwareLog(device);
                   continue;
                 }
                 if (second_update.need_reupdate) {
                   ROS_WARN("Second attempt still requires reupdate, waiting and retrying...");
                   device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
-                  firmware_log_enabled = enableFirmwareLog(device);
+                  firmware_log_enabled = enable_firmware_log && enableFirmwareLog(device);
                   continue;
                 }
                 second_ok = true;
@@ -807,7 +812,7 @@ int main(int argc, char **argv) {
                 ROS_WARN("Second update transient error: %s, retrying...",
                          orbbec_camera::formatObErrorWithStatus(e).c_str());
                 device = waitForReconnectUntil(ctx, run_args, true, second_deadline);
-                firmware_log_enabled = enableFirmwareLog(device);
+                firmware_log_enabled = enable_firmware_log && enableFirmwareLog(device);
               }
             }
             if (!second_ok) {
