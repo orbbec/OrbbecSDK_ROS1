@@ -205,6 +205,38 @@ To learn how to obtain and upgrade the latest firmware, [please click here](../3
 | Pulsar SL450            | 2.2.4.5 | lidar.launch |
 | Pulsar ME450            | 1.0.0.6 | lidar.launch |
 
+### URDF Model Support
+
+| Product | URDF |
+| --- | --- |
+| Gemini 305 | - |
+| Gemini 305g | - |
+| Gemini 345 | - |
+| Gemini 345Lg | - |
+| Gemini 435Le | - |
+| Gemini 335Le | gemini335Le.urdf.xacro |
+| Gemini 335 | gemini_335_336.urdf.xacro |
+| Gemini 336 | gemini_335_336.urdf.xacro |
+| Gemini 330 | - |
+| Gemini 335L | gemini335L_336L.urdf.xacro |
+| Gemini 336L | gemini335L_336L.urdf.xacro |
+| Gemini 330L | - |
+| Gemini 335Lg | gemini335Lg.urdf.xacro |
+| Gemini 2 | gemini2.urdf.xacro |
+| Gemini 2 L | gemini2L.urdf.xacro |
+| Gemini 2 XL | - |
+| Gemini 215 | - |
+| Gemini 210 | - |
+| Femto Bolt | femto_bolt.urdf.xacro |
+| Femto Mega | - |
+| Femto Mega I | - |
+| Astra 2 | astra2.urdf.xacro |
+| Astra+ | - |
+| Astra Pro Plus | - |
+| Astra Mini (S) Pro | - |
+| Pulsar ME450 | - |
+| Pulsar SL450 | - |
+
 All launch files are essentially similar, with the primary difference being the default values of the parameters set for different models within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch file, as well as other parameters, to ensure compatibility and optimal performance.
 
 

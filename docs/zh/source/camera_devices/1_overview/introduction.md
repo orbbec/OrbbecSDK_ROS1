@@ -205,6 +205,38 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
 | Pulsar SL450            | 2.2.4.5 | lidar.launch |
 | Pulsar ME450            | 1.0.0.6 | lidar.launch |
 
+### URDF模型支持情况
+
+| Product | URDF |
+| --- | --- |
+| Gemini 305 | - |
+| Gemini 305g | - |
+| Gemini 345 | - |
+| Gemini 345Lg | - |
+| Gemini 435Le | - |
+| Gemini 335Le | gemini335Le.urdf.xacro |
+| Gemini 335 | gemini_335_336.urdf.xacro |
+| Gemini 336 | gemini_335_336.urdf.xacro |
+| Gemini 330 | - |
+| Gemini 335L | gemini335L_336L.urdf.xacro |
+| Gemini 336L | gemini335L_336L.urdf.xacro |
+| Gemini 330L | - |
+| Gemini 335Lg | gemini335Lg.urdf.xacro |
+| Gemini 2 | gemini2.urdf.xacro |
+| Gemini 2 L | gemini2L.urdf.xacro |
+| Gemini 2 XL | - |
+| Gemini 215 | - |
+| Gemini 210 | - |
+| Femto Bolt | femto_bolt.urdf.xacro |
+| Femto Mega | - |
+| Femto Mega I | - |
+| Astra 2 | astra2.urdf.xacro |
+| Astra+ | - |
+| Astra Pro Plus | - |
+| Astra Mini (S) Pro | - |
+| Pulsar ME450 | - |
+| Pulsar SL450 | - |
+
 所有启动文件本质上都是相似的，主要区别在于为同一系列中的不同型号设置的参数默认值。USB标准的差异（如USB 2.0与USB 3.0）可能需要调整这些参数。如果遇到启动失败，请仔细查阅规格说明书。特别注意启动文件中的分辨率设置以及其他参数，以确保兼容性和最佳性能。
 
 
