@@ -219,7 +219,7 @@ table {
   width: 100%;
 }
 th, td {
-  border: 1px solid #ccc;
+  border: 1px solid #000000;
   padding: 8px;
   text-align: left;
   vertical-align: middle;
