@@ -710,9 +710,7 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  ros::init(argc, argv, "firmware_update_tool");
-  ros::NodeHandle nh("~");
-  (void)nh;
+  ros::init(argc, argv, "firmware_update_tool", ros::init_options::NoRosout);
 
   try {
     const auto sdk_log_path =
