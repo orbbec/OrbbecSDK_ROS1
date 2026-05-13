@@ -224,15 +224,12 @@ To learn how to obtain and upgrade the latest firmware, [please click here](../3
 | Gemini 335Lg | gemini335Lg.urdf.xacro |
 | Gemini 2 | gemini2.urdf.xacro |
 | Gemini 2 L | gemini2L.urdf.xacro |
-| Gemini 2 XL | - |
 | Gemini 215 | - |
 | Gemini 210 | - |
 | Femto Bolt | femto_bolt.urdf.xacro |
 | Femto Mega | - |
 | Femto Mega I | - |
 | Astra 2 | astra2.urdf.xacro |
-| Astra+ | - |
-| Astra Pro Plus | - |
 | Astra Mini (S) Pro | - |
 | Pulsar ME450 | - |
 | Pulsar SL450 | - |
