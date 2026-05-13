@@ -581,6 +581,7 @@
     border-collapse: collapse !important;
     border-spacing: 0 !important;
     border-radius: 10px !important;
+    box-shadow: 0 0 0 1px #d0d7de !important;
     overflow: hidden !important;
 }
 
