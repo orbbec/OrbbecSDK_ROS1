@@ -574,10 +574,12 @@
 .wy-nav-content .rst-content table.docutils,
 .wy-nav-content .rst-content table.docutils td,
 .wy-nav-content .rst-content table.docutils th {
-    border-color: #d0d7de !important;
+    border: 1px solid #d0d7de !important;
 }
 
 .wy-nav-content .rst-content table.docutils {
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
     border-radius: 10px !important;
     overflow: hidden !important;
 }
