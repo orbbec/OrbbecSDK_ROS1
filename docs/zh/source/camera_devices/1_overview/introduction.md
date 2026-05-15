@@ -12,30 +12,19 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
     <tr style="background-color: #1f4e78; color: black; text-align: center;">
       <th>产品系列</th>
       <th>产品</th>
-      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/main" style="color: black; text-decoration: none;">main分支</a></th>
-      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main" style="color: black; text-decoration: none;">v2-main分支</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/main" style="color: black; text-decoration: none;">Orbbec SDK v1.x</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main" style="color: black; text-decoration: none;">Orbbec SDK v2.x</a></th>
     </tr>
   </thead>
   <tbody>
-      <tr>
-      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 340</td>
-      <td>Gemini 345</td>
-      <td>not supported</td>
-      <td>recommended for new designs</td>
-    </tr>
     <tr>
-      <td>Gemini 345Lg</td>
-      <td>not supported</td>
-      <td>recommended for new designs</td>
-    </tr>
-      <tr>
-      <td style="text-align: center; font-weight: bold;">Gemini 435Le</td>
+      <td style="text-align: center; font-weight: bold;">Gemini 430</td>
       <td>Gemini 435Le</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
     <tr>
-      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 305</td>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td>
       <td>Gemini 305</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
@@ -47,11 +36,6 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
     </tr>
     <tr>
       <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
-      <td>Gemini 335Le</td>
-      <td>not supported</td>
-      <td>recommended for new designs</td>
-    </tr>
-    <tr>
       <td>Gemini 335</td>
       <td>full maintenance</td>
       <td>recommended for new designs</td>
@@ -87,6 +71,17 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
       <td>recommended for new designs</td>
     </tr>
     <tr>
+      <td>Gemini 335Le</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Gemini 340</td>
+      <td>Gemini 345Lg</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
       <td rowspan="5" style="text-align: center; font-weight: bold;">Gemini 2</td>
       <td>Gemini 2</td>
       <td>full maintenance</td>
@@ -100,7 +95,7 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
     <tr>
       <td>Gemini 2 XL</td>
       <td>recommended for new designs</td>
-      <td>to be supported</td>
+      <td>not supported</td>
     </tr>
     <tr>
       <td>Gemini 215</td>
@@ -145,8 +140,13 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
       <td>not supported</td>
     </tr>
     <tr>
-      <td style="text-align: center; font-weight: bold;">Astra Mini</td>
-      <td>Astra Mini (S) Pro</td>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Astra Mini</td>
+      <td>Astra Mini Pro</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Astra Mini S Pro</td>
       <td>full maintenance</td>
       <td>recommended for new designs</td>
     </tr>
@@ -195,7 +195,13 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
   </thead>
   <tbody>
     <tr>
-      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 305</td>
+      <td style="text-align: center; font-weight: bold;">Gemini 430</td>
+      <td>Gemini 435Le</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware">1.3.2</a></td>
+      <td>gemini435_le.launch</td>
+    </tr>
+    <tr>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td>
       <td>Gemini 305</td>
       <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.30</a></td>
       <td>gemini305.launch</td>
@@ -206,27 +212,23 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
       <td>gemini305_g.launch</td>
     </tr>
     <tr>
-      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 340</td>
-      <td>Gemini 345</td>
-      <td>1.7.12</td>
-      <td>gemini345.launch</td>
+      <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td>Gemini 335</td>
+      <td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td>
+      <td>gemini_330_series.launch</td>
     </tr>
+    <tr><td>Gemini 336</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td><td>gemini_330_series.launch</td></tr>
+    <tr><td>Gemini 330</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td><td>gemini_330_series.launch</td></tr>
+    <tr><td>Gemini 335L</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td><td>gemini_330_series.launch</td></tr>
+    <tr><td>Gemini 336L</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td><td>gemini_330_series.launch</td></tr>
+    <tr><td>Gemini 330L</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td><td>gemini_330_series.launch</td></tr>
+    <tr><td>Gemini 335Lg</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td><td>gemini_330_series.launch</td></tr>
+    <tr><td>Gemini 335Le</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td><td>gemini_330_series.launch</td></tr>
     <tr>
+      <td style="text-align: center; font-weight: bold;">Gemini 340</td>
       <td>Gemini 345Lg</td>
       <td>1.7.12</td>
       <td>gemini345_lg.launch</td>
-    </tr>
-    <tr>
-      <td style="text-align: center; font-weight: bold;">Gemini 435Le</td>
-      <td>Gemini 435Le</td>
-      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware">1.3.2</a></td>
-      <td>gemini435_le.launch</td>
-    </tr>
-    <tr>
-      <td style="text-align: center; font-weight: bold;">Gemini 330</td>
-      <td>Gemini 330 series</td>
-      <td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td>
-      <td>gemini_330_series.launch</td>
     </tr>
     <tr>
       <td rowspan="4" style="text-align: center; font-weight: bold;">Gemini 2</td>
@@ -307,19 +309,18 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
     </tr>
   </thead>
   <tbody>
-    <tr><td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 305</td><td>Gemini 305</td><td>-</td></tr>
+    <tr><td style="text-align: center; font-weight: bold;">Gemini 430</td><td>Gemini 435Le</td><td>-</td></tr>
+    <tr><td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td><td>Gemini 305</td><td>-</td></tr>
     <tr><td>Gemini 305g</td><td>-</td></tr>
-    <tr><td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 340</td><td>Gemini 345</td><td>-</td></tr>
-    <tr><td>Gemini 345Lg</td><td>-</td></tr>
-    <tr><td style="text-align: center; font-weight: bold;">Gemini 435Le</td><td>Gemini 435Le</td><td>-</td></tr>
-    <tr><td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td><td>Gemini 335Le</td><td>gemini_335_Le.urdf.xacro</td></tr>
-    <tr><td>Gemini 335</td><td>gemini_335_336.urdf.xacro</td></tr>
+    <tr><td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td><td>Gemini 335</td><td>gemini_335_336.urdf.xacro</td></tr>
     <tr><td>Gemini 336</td><td>gemini_335_336.urdf.xacro</td></tr>
     <tr><td>Gemini 330</td><td>-</td></tr>
     <tr><td>Gemini 335L</td><td>gemini_335_L_336_L.urdf.xacro</td></tr>
     <tr><td>Gemini 336L</td><td>gemini_335_L_336_L.urdf.xacro</td></tr>
     <tr><td>Gemini 330L</td><td>-</td></tr>
     <tr><td>Gemini 335Lg</td><td>gemini_335_Lg.urdf.xacro</td></tr>
+    <tr><td>Gemini 335Le</td><td>gemini_335_Le.urdf.xacro</td></tr>
+    <tr><td style="text-align: center; font-weight: bold;">Gemini 340</td><td>Gemini 345Lg</td><td>-</td></tr>
     <tr><td rowspan="4" style="text-align: center; font-weight: bold;">Gemini 2</td><td>Gemini 2</td><td>gemini_2.urdf.xacro</td></tr>
     <tr><td>Gemini 2 L</td><td>gemini_2_L.urdf.xacro</td></tr>
     <tr><td>Gemini 215</td><td>-</td></tr>
@@ -328,7 +329,8 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
     <tr><td>Femto Mega</td><td>-</td></tr>
     <tr><td>Femto Mega I</td><td>-</td></tr>
     <tr><td style="text-align: center; font-weight: bold;">Astra</td><td>Astra 2</td><td>astra2.urdf.xacro</td></tr>
-    <tr><td style="text-align: center; font-weight: bold;">Astra Mini</td><td>Astra Mini (S) Pro</td><td>-</td></tr>
+    <tr><td rowspan="2" style="text-align: center; font-weight: bold;">Astra Mini</td><td>Astra Mini Pro</td><td>-</td></tr>
+    <tr><td>Astra Mini S Pro</td><td>-</td></tr>
     <tr><td rowspan="2" style="text-align: center; font-weight: bold;">LiDAR</td><td>Pulsar ME450</td><td>-</td></tr>
     <tr><td>Pulsar SL450</td><td>-</td></tr>
   </tbody>
@@ -371,12 +373,12 @@ thead th {
   </thead>
   <tbody>
     <tr>
-      <td style="text-align: center;">Gemini 435Le</td>
+      <td style="text-align: center;">Gemini 430</td>
       <td>Gemini 435Le</td>
       <td><a href="https://new-orbbec3d-s3.s3.amazonaws.com/wp-content/uploads/2025/06/04011158/Orbbec-Gemini-435Le-Datasheet-V1.pdf">Orbbec Gemini 435Le数据手册</a></td>
     </tr>
     <tr>
-      <td style="text-align: center;">Gemini 305</td>
+      <td style="text-align: center;">Gemini 301</td>
       <td>Gemini 305</td>
       <td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Orbbec_Gemini%20305%20Datasheet%20V1.0_20260105.pdf">Orbbec Gemini 305数据手册</a></td>
     </tr>
