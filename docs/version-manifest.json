@@ -10,6 +10,13 @@
       "is_latest": true
     },
     {
+      "slug": "v2.8.6",
+      "label": "v2.8.6",
+      "ref": "refs/tags/docs/v2.8.6",
+      "published": true,
+      "is_latest": false
+    },
+    {
       "slug": "v2.7.6",
       "label": "v2.7.6",
       "ref": "refs/tags/docs/v2.7.6",
