@@ -328,7 +328,7 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
     <tr><td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td><td>Femto Bolt</td><td>femto_bolt.urdf.xacro</td></tr>
     <tr><td>Femto Mega</td><td>-</td></tr>
     <tr><td>Femto Mega I</td><td>-</td></tr>
-    <tr><td style="text-align: center; font-weight: bold;">Astra</td><td>Astra 2</td><td>astra2.urdf.xacro</td></tr>
+    <tr><td style="text-align: center; font-weight: bold;">Astra</td><td>Astra 2</td><td>astra_2.urdf.xacro</td></tr>
     <tr><td rowspan="2" style="text-align: center; font-weight: bold;">Astra Mini</td><td>Astra Mini Pro</td><td>-</td></tr>
     <tr><td>Astra Mini S Pro</td><td>-</td></tr>
     <tr><td rowspan="2" style="text-align: center; font-weight: bold;">LiDAR</td><td>Pulsar ME450</td><td>-</td></tr>
