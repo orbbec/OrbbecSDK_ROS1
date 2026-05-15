@@ -184,55 +184,155 @@ The following devices are supported by the OrbbecSDK ROS Wrapper.
 
 To learn how to obtain and upgrade the latest firmware, [please click here](../3_quickstarts/orbbecviewer.md).
 
-| **Products List** | **Recommended FW Version**                                                             |  Launch File                                          |
-| ----------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Astra Mini Pro           | [2.0.03](https://github.com/orbbec/OrbbecFirmware/releases/tag/Astra-Mini-Pro)             |                                               astra.launch   |
-| Astra Mini S Pro            | [2.0.03](https://github.com/orbbec/OrbbecFirmware/releases/tag/Astra-Mini-S-Pro)             |                                               astra.launch   |
-| Gemini 435Le            | [1.3.2](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware)             |                                               gemini435_le.launch   |
-| Gemini 330 series       | [1.6.00](https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip) | gemini_330_series.launch |
-| Gemini 305              | [1.0.30](https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305) | gemini305.launch |
-| Gemini 305g             | [1.0.30](https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305) | gemini305_g.launch |
-| Gemini 215              | [1.0.9](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini215-Firmware)               |                                               gemini210.launch   |
-| Gemini 210              | [1.0.9](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini210-Firmware)               |                                               gemini210.launch    |
-| Gemini 2                | [1.4.98](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini2-Firmware)                |                                               gemini2.launch     |
-| Gemini 2 L              | [1.5.2](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini2L-Firmware)                |                                               gemini2L.launch  |
-| Femto Bolt              | [1.1.2](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Bolt-Firmware)              |                               femto_bolt.launch |
-| Femto Mega              | [1.3.1](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-Firmware)              |                                               femto_mega.launch  |
-| Femto Mega I             | [2.0.4](https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-I-Firmware)              |                                               femto_mega.launch  |
-| Astra 2                 | [2.8.20](https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Astra2_Release_2.8.20.zip)    |                                               astra2.launch    |
-| Gemini 345            | 1.7.12 | gemini345.launch |
-| Gemini 345Lg            | 1.7.12 | gemini345_lg.launch |
-| Pulsar SL450            | 2.2.4.5 | lidar.launch |
-| Pulsar ME450            | 1.0.0.6 | lidar.launch |
+<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+  <thead>
+    <tr>
+      <th>Product Series</th>
+      <th>Products List</th>
+      <th>Recommended FW Version</th>
+      <th>Launch File</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 305</td>
+      <td>Gemini 305</td>
+      <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.30</a></td>
+      <td>gemini305.launch</td>
+    </tr>
+    <tr>
+      <td>Gemini 305g</td>
+      <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.30</a></td>
+      <td>gemini305_g.launch</td>
+    </tr>
+    <tr>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 340</td>
+      <td>Gemini 345</td>
+      <td>1.7.12</td>
+      <td>gemini345.launch</td>
+    </tr>
+    <tr>
+      <td>Gemini 345Lg</td>
+      <td>1.7.12</td>
+      <td>gemini345_lg.launch</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Gemini 435Le</td>
+      <td>Gemini 435Le</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware">1.3.2</a></td>
+      <td>gemini435_le.launch</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td>Gemini 330 series</td>
+      <td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.6.00.zip">1.6.00</a></td>
+      <td>gemini_330_series.launch</td>
+    </tr>
+    <tr>
+      <td rowspan="4" style="text-align: center; font-weight: bold;">Gemini 2</td>
+      <td>Gemini 2</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini2-Firmware">1.4.98</a></td>
+      <td>gemini2.launch</td>
+    </tr>
+    <tr>
+      <td>Gemini 2 L</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini2L-Firmware">1.5.2</a></td>
+      <td>gemini2L.launch</td>
+    </tr>
+    <tr>
+      <td>Gemini 215</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini215-Firmware">1.0.9</a></td>
+      <td>gemini210.launch</td>
+    </tr>
+    <tr>
+      <td>Gemini 210</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini210-Firmware">1.0.9</a></td>
+      <td>gemini210.launch</td>
+    </tr>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td>
+      <td>Femto Bolt</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Bolt-Firmware">1.1.2</a></td>
+      <td>femto_bolt.launch</td>
+    </tr>
+    <tr>
+      <td>Femto Mega</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-Firmware">1.3.1</a></td>
+      <td>femto_mega.launch</td>
+    </tr>
+    <tr>
+      <td>Femto Mega I</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Femto-Mega-I-Firmware">2.0.4</a></td>
+      <td>femto_mega.launch</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; font-weight: bold;">Astra</td>
+      <td>Astra 2</td>
+      <td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Astra2_Release_2.8.20.zip">2.8.20</a></td>
+      <td>astra2.launch</td>
+    </tr>
+    <tr>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Astra Mini</td>
+      <td>Astra Mini Pro</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Astra-Mini-Pro">2.0.03</a></td>
+      <td>astra.launch</td>
+    </tr>
+    <tr>
+      <td>Astra Mini S Pro</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Astra-Mini-S-Pro">2.0.03</a></td>
+      <td>astra.launch</td>
+    </tr>
+    <tr>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">LiDAR</td>
+      <td>Pulsar ME450</td>
+      <td>1.0.0.6</td>
+      <td>lidar.launch</td>
+    </tr>
+    <tr>
+      <td>Pulsar SL450</td>
+      <td>2.2.4.5</td>
+      <td>lidar.launch</td>
+    </tr>
+  </tbody>
+</table>
 
 ## URDF Model Support
 
-| Product | URDF |
-| --- | --- |
-| Gemini 305 | - |
-| Gemini 305g | - |
-| Gemini 345 | - |
-| Gemini 345Lg | - |
-| Gemini 435Le | - |
-| Gemini 335Le | gemini335Le.urdf.xacro |
-| Gemini 335 | gemini_335_336.urdf.xacro |
-| Gemini 336 | gemini_335_336.urdf.xacro |
-| Gemini 330 | - |
-| Gemini 335L | gemini335L_336L.urdf.xacro |
-| Gemini 336L | gemini335L_336L.urdf.xacro |
-| Gemini 330L | - |
-| Gemini 335Lg | gemini335Lg.urdf.xacro |
-| Gemini 2 | gemini2.urdf.xacro |
-| Gemini 2 L | gemini2L.urdf.xacro |
-| Gemini 215 | - |
-| Gemini 210 | - |
-| Femto Bolt | femto_bolt.urdf.xacro |
-| Femto Mega | - |
-| Femto Mega I | - |
-| Astra 2 | astra2.urdf.xacro |
-| Astra Mini (S) Pro | - |
-| Pulsar ME450 | - |
-| Pulsar SL450 | - |
+<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+  <thead>
+    <tr>
+      <th>Product Series</th>
+      <th>Product</th>
+      <th>URDF</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 305</td><td>Gemini 305</td><td>-</td></tr>
+    <tr><td>Gemini 305g</td><td>-</td></tr>
+    <tr><td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 340</td><td>Gemini 345</td><td>-</td></tr>
+    <tr><td>Gemini 345Lg</td><td>-</td></tr>
+    <tr><td style="text-align: center; font-weight: bold;">Gemini 435Le</td><td>Gemini 435Le</td><td>-</td></tr>
+    <tr><td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td><td>Gemini 335Le</td><td>gemini_335_Le.urdf.xacro</td></tr>
+    <tr><td>Gemini 335</td><td>gemini_335_336.urdf.xacro</td></tr>
+    <tr><td>Gemini 336</td><td>gemini_335_336.urdf.xacro</td></tr>
+    <tr><td>Gemini 330</td><td>-</td></tr>
+    <tr><td>Gemini 335L</td><td>gemini_335_L_336_L.urdf.xacro</td></tr>
+    <tr><td>Gemini 336L</td><td>gemini_335_L_336_L.urdf.xacro</td></tr>
+    <tr><td>Gemini 330L</td><td>-</td></tr>
+    <tr><td>Gemini 335Lg</td><td>gemini_335_Lg.urdf.xacro</td></tr>
+    <tr><td rowspan="4" style="text-align: center; font-weight: bold;">Gemini 2</td><td>Gemini 2</td><td>gemini_2.urdf.xacro</td></tr>
+    <tr><td>Gemini 2 L</td><td>gemini_2_L.urdf.xacro</td></tr>
+    <tr><td>Gemini 215</td><td>-</td></tr>
+    <tr><td>Gemini 210</td><td>-</td></tr>
+    <tr><td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td><td>Femto Bolt</td><td>femto_bolt.urdf.xacro</td></tr>
+    <tr><td>Femto Mega</td><td>-</td></tr>
+    <tr><td>Femto Mega I</td><td>-</td></tr>
+    <tr><td style="text-align: center; font-weight: bold;">Astra</td><td>Astra 2</td><td>astra2.urdf.xacro</td></tr>
+    <tr><td style="text-align: center; font-weight: bold;">Astra Mini</td><td>Astra Mini (S) Pro</td><td>-</td></tr>
+    <tr><td rowspan="2" style="text-align: center; font-weight: bold;">LiDAR</td><td>Pulsar ME450</td><td>-</td></tr>
+    <tr><td>Pulsar SL450</td><td>-</td></tr>
+  </tbody>
+</table>
 
 All launch files are essentially similar, with the primary difference being the default values of the parameters set for different models within the same series. Differences in USB standards, such as USB 2.0 versus USB 3.0, may require adjustments to these parameters. If you encounter a startup failure, please carefully review the specification manual. Pay special attention to the resolution settings in the launch file, as well as other parameters, to ensure compatibility and optimal performance.
 
