@@ -15,6 +15,11 @@
  *******************************************************************************/
 
 #include "orbbec_camera/utils.h"
+#include <chrono>
+#include <cstdlib>
+#include <iomanip>
+#include <sstream>
+#include <boost/filesystem.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include "sensor_msgs/PointCloud2.h"
 #include "sensor_msgs/PointCloud.h"
@@ -24,6 +29,62 @@
 #include "ros/ros.h"
 
 namespace orbbec_camera {
+OBLogSeverity obLogSeverityFromString(const std::string_view &log_level) {
+  if (log_level == "debug") {
+    return OBLogSeverity::OB_LOG_SEVERITY_DEBUG;
+  }
+  if (log_level == "info") {
+    return OBLogSeverity::OB_LOG_SEVERITY_INFO;
+  }
+  if (log_level == "warn" || log_level == "warning") {
+    return OBLogSeverity::OB_LOG_SEVERITY_WARN;
+  }
+  if (log_level == "error") {
+    return OBLogSeverity::OB_LOG_SEVERITY_ERROR;
+  }
+  if (log_level == "fatal") {
+    return OBLogSeverity::OB_LOG_SEVERITY_FATAL;
+  }
+  return OBLogSeverity::OB_LOG_SEVERITY_OFF;
+}
+
+std::string getRosLogDirectory() {
+  const char *home = std::getenv("HOME");
+  const boost::filesystem::path home_dir = home != nullptr ? home : "";
+  return (home_dir / ".ros" / "Log").string();
+}
+
+std::string configureObSdkLoggerForTool(const std::string &tool_name,
+                                        const std::string &log_level) {
+  const auto severity = obLogSeverityFromString(log_level);
+  ob::Context::setLoggerSeverity(severity);
+  ob::Context::setLoggerToConsole(OBLogSeverity::OB_LOG_SEVERITY_OFF);
+
+  if (severity == OBLogSeverity::OB_LOG_SEVERITY_OFF) {
+    ob::Context::setLoggerToFile(OBLogSeverity::OB_LOG_SEVERITY_OFF, "");
+    return "";
+  }
+
+  const boost::filesystem::path log_dir(getRosLogDirectory());
+  boost::filesystem::create_directories(log_dir);
+
+  const auto now = std::chrono::system_clock::now();
+  const std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+  std::tm tm{};
+#if defined(_WIN32)
+  localtime_s(&tm, &now_time);
+#else
+  localtime_r(&now_time, &tm);
+#endif
+
+  std::ostringstream file_name;
+  file_name << tool_name << "_sdk_" << std::put_time(&tm, "%Y%m%d_%H%M%S") << ".log";
+
+  ob::Context::setLoggerFileName(file_name.str());
+  ob::Context::setLoggerToFile(severity, log_dir.string().c_str());
+  return (log_dir / file_name.str()).string();
+}
+
 OBFormat OBFormatFromString(const std::string &format) {
   std::string fixed_format;
   std::transform(format.begin(), format.end(), std::back_inserter(fixed_format),

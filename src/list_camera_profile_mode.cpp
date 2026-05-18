@@ -1,15 +1,20 @@
 #include <orbbec_camera/ob_camera_node.h>
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
 
 using namespace orbbec_camera;
 
 namespace {
 
+constexpr int kFirmwareLogDrainDelaySec = 3;
+
 struct CommandLineOptions {
   bool show_help = false;
   std::string serial_number;
+  std::string sdk_log_level = "off";
 };
 
 void printUsage(const char* program_name) {
@@ -20,7 +25,12 @@ void printUsage(const char* program_name) {
       << "      [--serial_number SN]\n\n"
       << "Parameters:\n"
       << "  --serial_number SN  Select a specific camera by serial number.\n"
-      << "  -h, --help          Show this help message.\n";
+      << "  --sdk_log_level LEVEL\n"
+      << "                      SDK file log level: debug/info/warn/error/fatal/off "
+         "(default: off).\n"
+      << "  -h, --help          Show this help message.\n"
+      << "Examples:\n"
+      << "  rosrun orbbec_camera list_camera_profile_mode_node --sdk_log_level debug\n";
 }
 
 CommandLineOptions parseCommandLine(int argc, char** argv) {
@@ -49,12 +59,31 @@ CommandLineOptions parseCommandLine(int argc, char** argv) {
       continue;
     }
 
+    const std::string sdk_log_prefix = "--sdk_log_level=";
+    if (arg.rfind(sdk_log_prefix, 0) == 0) {
+      options.sdk_log_level = arg.substr(sdk_log_prefix.size());
+      continue;
+    }
+    if (arg == "--sdk_log_level") {
+      if (i + 1 >= argc) {
+        throw std::runtime_error(arg + " requires a value");
+      }
+      options.sdk_log_level = argv[++i];
+      continue;
+    }
+
     // Ignore ROS remapping arguments and other unknown flags to preserve compatibility.
     if (arg.find(":=") != std::string::npos || arg.rfind("__", 0) == 0 || arg.rfind("_", 0) == 0) {
       continue;
     }
 
     throw std::runtime_error("Unknown argument: " + arg);
+  }
+
+  const auto log_severity = obLogSeverityFromString(options.sdk_log_level);
+  if (log_severity == OBLogSeverity::OB_LOG_SEVERITY_OFF && options.sdk_log_level != "off" &&
+      options.sdk_log_level != "none") {
+    throw std::runtime_error("--sdk_log_level expects one of: debug, info, warn, error, fatal, off");
   }
 
   return options;
@@ -73,6 +102,29 @@ std::shared_ptr<ob::Device> initializeDevice(const std::string& serial_number) {
   }
 
   return device_list->getDevice(0, OB_DEVICE_DEFAULT_ACCESS);
+}
+
+void waitForFirmwareLogDrain() {
+  std::cout << "Waiting " << kFirmwareLogDrainDelaySec
+            << " seconds to keep firmware log alive..." << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
+}
+
+bool enableFirmwareLog(const std::shared_ptr<ob::Device>& device) {
+  try {
+    device->enableFirmwareLog(true);
+    std::cout << "Firmware log enabled." << std::endl;
+    return true;
+  } catch (const ob::Error& e) {
+    std::cerr << "Failed to enable firmware log: " << formatObErrorWithStatus(e) << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "Failed to enable firmware log: " << e.what() << std::endl;
+  }
+  return false;
+}
+
+bool isSdkLogEnabled(const std::string& log_level) {
+  return obLogSeverityFromString(log_level) != OBLogSeverity::OB_LOG_SEVERITY_OFF;
 }
 
 }  // namespace
@@ -154,14 +206,25 @@ int main(int argc, char** argv) {
       return 0;
     }
 
-    ob::Context::setLoggerSeverity(OBLogSeverity::OB_LOG_SEVERITY_NONE);
+    const auto sdk_log_path =
+        configureObSdkLoggerForTool("list_camera_profile_mode_node", options.sdk_log_level);
+    if (!sdk_log_path.empty()) {
+      std::cout << "SDK file log enabled: " << sdk_log_path << std::endl;
+    }
     auto device = initializeDevice(options.serial_number);
     if (!device) {
       return -1;  // Device initialization failed
     }
+    bool firmware_log_enabled = false;
+    if (isSdkLogEnabled(options.sdk_log_level)) {
+      firmware_log_enabled = enableFirmwareLog(device);
+    }
     listSensorProfiles(device);
     printDeviceProperties(device);
     printPreset(device);
+    if (firmware_log_enabled) {
+      waitForFirmwareLogDrain();
+    }
   } catch (ob::Error& e) {
     ROS_ERROR_STREAM("list_camera_profile_mode: " << orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
