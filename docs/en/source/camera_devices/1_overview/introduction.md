@@ -203,12 +203,12 @@ To learn how to obtain and upgrade the latest firmware, [please click here](../3
     <tr>
       <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td>
       <td>Gemini 305</td>
-      <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.30</a></td>
+      <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.70</a></td>
       <td>gemini305.launch</td>
     </tr>
     <tr>
       <td>Gemini 305g</td>
-      <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.30</a></td>
+      <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.70</a></td>
       <td>gemini305_g.launch</td>
     </tr>
     <tr>
@@ -227,7 +227,7 @@ To learn how to obtain and upgrade the latest firmware, [please click here](../3
     <tr>
       <td style="text-align: center; font-weight: bold;">Gemini 340</td>
       <td>Gemini 345Lg</td>
-      <td>1.7.12</td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini340-Firmware">1.9.03</a></td>
       <td>gemini345_lg.launch</td>
     </tr>
     <tr>
