@@ -933,7 +933,10 @@ void OBCameraNode::startStream(const stream_index_pair& stream_index) {
     return;
   }
   ROS_INFO_STREAM("Starting stream " << stream_name_[stream_index] << "...");
-  bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
+  const bool has_raw_image_subscriber = hasRawImageSubscriber(stream_index);
+  const bool has_compressed_image_subscriber = hasCompressedImageSubscriber(stream_index);
+  bool has_subscriber =
+      has_raw_image_subscriber || has_compressed_image_subscriber || save_images_[stream_index];
   if (!has_subscriber) {
     ROS_INFO_STREAM("No subscriber for stream " << stream_name_[stream_index] << ", skip it.");
     return;
@@ -1417,8 +1420,79 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
   imu_publishers_[stream_index].publish(imu_msg);
 }
 
+bool OBCameraNode::isColorFrameDecodeRequired(const std::shared_ptr<ob::Frame>& frame) const {
+  if (!frame) {
+    return false;
+  }
+  const auto format = frame->format();
+  return !(format == OB_FORMAT_RGB || format == OB_FORMAT_BGR || format == OB_FORMAT_RGB888 ||
+           format == OB_FORMAT_RGBA || format == OB_FORMAT_BGRA || format == OB_FORMAT_Y16 ||
+           format == OB_FORMAT_Y8);
+}
+
+bool OBCameraNode::hasRawImageSubscriber(const stream_index_pair& stream_index) const {
+  auto raw_it = raw_image_publishers_.find(stream_index);
+  if (raw_it != raw_image_publishers_.end()) {
+    return raw_it->second.getNumSubscribers() > 0;
+  }
+  auto it = image_publishers_.find(stream_index);
+  return it != image_publishers_.end() && it->second.getNumSubscribers() > 0;
+}
+
+bool OBCameraNode::hasCompressedImageSubscriber(const stream_index_pair& stream_index) const {
+  auto it = compressed_image_publishers_.find(stream_index);
+  return it != compressed_image_publishers_.end() && it->second.getNumSubscribers() > 0;
+}
+
+bool OBCameraNode::isMjpgColorStream(const stream_index_pair& stream_index) const {
+  if (stream_index != COLOR && stream_index != COLOR_LEFT && stream_index != COLOR_RIGHT) {
+    return false;
+  }
+  auto profile_it = stream_profile_.find(stream_index);
+  if (profile_it == stream_profile_.end() || !profile_it->second) {
+    auto format_it = format_.find(stream_index);
+    return format_it != format_.end() && format_it->second == OB_FORMAT_MJPG;
+  }
+  auto video_profile = profile_it->second->as<ob::VideoStreamProfile>();
+  return video_profile && video_profile->format() == OB_FORMAT_MJPG;
+}
+
+bool OBCameraNode::hasImagePublisher(const stream_index_pair& stream_index) const {
+  return image_publishers_.count(stream_index) > 0 || raw_image_publishers_.count(stream_index) > 0;
+}
+
+void OBCameraNode::publishCompressedColorImage(const std::shared_ptr<ob::Frame>& frame,
+                                               const stream_index_pair& stream_index,
+                                               const ros::Time& timestamp,
+                                               const std::string& frame_id) {
+  auto it = compressed_image_publishers_.find(stream_index);
+  if (it == compressed_image_publishers_.end() || it->second.getNumSubscribers() == 0) {
+    return;
+  }
+  if (!frame || frame->format() != OB_FORMAT_MJPG) {
+    return;
+  }
+
+  sensor_msgs::CompressedImage msg;
+  msg.header.stamp = timestamp;
+  msg.header.frame_id = frame_id;
+  msg.format = "jpeg";
+  const auto* data = static_cast<const uint8_t*>(frame->data());
+  msg.data.assign(data, data + frame->dataSize());
+  it->second.publish(msg);
+}
+
 bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& frame,
                                             uint8_t* dest) {
+  if (!frame) {
+    return false;
+  }
+  if (!isColorFrameDecodeRequired(frame)) {
+    return true;
+  }
+  if (!dest) {
+    return false;
+  }
   if (!rgb_buffer_ && !rgb_buffer_left_ && !rgb_buffer_right_) {
     return false;
   }
@@ -1437,25 +1511,15 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
       stream_index = COLOR;
       break;
   }
-  bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
-  if (enable_colored_point_cloud_ && depth_registered_cloud_pub_.getNumSubscribers() > 0) {
-    has_subscriber = true;
+  bool decode_required = hasRawImageSubscriber(stream_index) || save_images_[stream_index];
+  if (frame->getType() == OB_FRAME_COLOR && enable_colored_point_cloud_ &&
+      depth_registered_cloud_pub_.getNumSubscribers() > 0) {
+    decode_required = true;
   }
-  if (metadata_publishers_.count(stream_index) &&
-      metadata_publishers_[stream_index].getNumSubscribers() > 0) {
-    has_subscriber = true;
-  }
-  if (camera_info_publishers_.count(stream_index) &&
-      camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
-    has_subscriber = true;
-  }
-  if (!has_subscriber) {
+  if (!decode_required) {
     return false;
   }
   bool is_decoded = false;
-  if (!frame) {
-    return false;
-  }
   std::shared_ptr<JPEGDecoder> decoder;
   if (stream_index == COLOR_LEFT) {
     decoder = jpeg_decoder_left_;
@@ -1932,7 +1996,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
                                                               getSteadyNowUs(), true);
   }
 
-  bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
+  const bool has_raw_image_subscriber = hasRawImageSubscriber(stream_index);
+  const bool has_compressed_image_subscriber = hasCompressedImageSubscriber(stream_index);
+  const bool need_raw_image = has_raw_image_subscriber || save_images_[stream_index];
+  bool has_subscriber =
+      has_raw_image_subscriber || has_compressed_image_subscriber || save_images_[stream_index];
   if (camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
@@ -2029,42 +2097,39 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     publishMetadata(frame, stream_index, camera_info.header);
   }
 
-  CHECK(image_publishers_.count(stream_index));
-  if (!image_publishers_[stream_index].getNumSubscribers()) {
+  if ((stream_index == COLOR || stream_index == COLOR_LEFT || stream_index == COLOR_RIGHT) &&
+      frame->format() == OB_FORMAT_MJPG && has_compressed_image_subscriber) {
+    publishCompressedColorImage(frame, stream_index, timestamp, frame_id);
+  }
+
+  CHECK(hasImagePublisher(stream_index));
+  if (!need_raw_image) {
     return;
   }
   auto& image = images_[stream_index];
   if (image.empty() || image.cols != width || image.rows != height) {
     image.create(height, width, image_format_[stream_index]);
   }
-  if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
-      frame->format() != OB_FORMAT_Y16 && !rgb_is_decoded_ &&
-      image_publishers_[COLOR].getNumSubscribers() > 0) {
-    ROS_ERROR("color frame is not decoded");
-    return;
-  }
-  if (frame->getType() == OB_FRAME_COLOR_LEFT && !rgb_left_is_decoded_) {
-    ROS_ERROR_STREAM("left color frame is not decoded");
-    return;
-  }
-  if (frame->getType() == OB_FRAME_COLOR_RIGHT && !rgb_right_is_decoded_) {
-    ROS_ERROR_STREAM("right color frame is not decoded");
-    return;
-  }
-  if (frame->type() == OB_FRAME_COLOR && frame->format() != OB_FORMAT_Y8 &&
-      frame->format() != OB_FORMAT_Y16 && frame->format() != OB_FORMAT_BGRA &&
-      frame->format() != OB_FORMAT_RGBA && image_publishers_[COLOR].getNumSubscribers() > 0) {
-    memcpy(image.data, rgb_buffer_, width * height * 3);
-  } else if (frame->getType() == OB_FRAME_COLOR_LEFT && frame->format() != OB_FORMAT_Y8 &&
-             frame->format() != OB_FORMAT_Y16 && frame->format() != OB_FORMAT_BGRA &&
-             frame->format() != OB_FORMAT_RGBA &&
-             image_publishers_[COLOR_LEFT].getNumSubscribers() > 0) {
-    memcpy(image.data, rgb_buffer_left_, width * height * 3);
-  } else if (frame->getType() == OB_FRAME_COLOR_RIGHT && frame->format() != OB_FORMAT_Y8 &&
-             frame->format() != OB_FORMAT_Y16 && frame->format() != OB_FORMAT_BGRA &&
-             frame->format() != OB_FORMAT_RGBA &&
-             image_publishers_[COLOR_RIGHT].getNumSubscribers() > 0) {
-    memcpy(image.data, rgb_buffer_right_, width * height * 3);
+  if (isColorFrameDecodeRequired(frame)) {
+    if (frame->type() == OB_FRAME_COLOR && !rgb_is_decoded_) {
+      ROS_ERROR("color frame is not decoded");
+      return;
+    }
+    if (frame->getType() == OB_FRAME_COLOR_LEFT && !rgb_left_is_decoded_) {
+      ROS_ERROR_STREAM("left color frame is not decoded");
+      return;
+    }
+    if (frame->getType() == OB_FRAME_COLOR_RIGHT && !rgb_right_is_decoded_) {
+      ROS_ERROR_STREAM("right color frame is not decoded");
+      return;
+    }
+    if (frame->type() == OB_FRAME_COLOR) {
+      memcpy(image.data, rgb_buffer_, width * height * 3);
+    } else if (frame->getType() == OB_FRAME_COLOR_LEFT) {
+      memcpy(image.data, rgb_buffer_left_, width * height * 3);
+    } else if (frame->getType() == OB_FRAME_COLOR_RIGHT) {
+      memcpy(image.data, rgb_buffer_right_, width * height * 3);
+    }
   } else {
     memcpy(image.data, video_frame->data(), video_frame->dataSize());
   }
@@ -2073,7 +2138,6 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     auto depth_scale = video_frame->as<ob::DepthFrame>()->getValueScale();
     image = image * depth_scale;
   }
-  auto image_publisher = image_publishers_[stream_index];
   auto image_msg =
       cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], image).toImageMsg();
   CHECK_NOTNULL(image_msg.get());
@@ -2088,13 +2152,22 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   } else if (stream_index == DEPTH) {
     fps_delay_status_depth_->tick(frame_timestamp);
   }
-  if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled() &&
-      (stream_index == COLOR || stream_index == DEPTH)) {
+  if (has_raw_image_subscriber && frame_timestamp_csv_logger_ &&
+      frame_timestamp_csv_logger_->enabled() && (stream_index == COLOR || stream_index == DEPTH)) {
     frame_timestamp_csv_logger_->recordPreImagePublish(stream_index, frame, getSystemNowUs(),
                                                        getSteadyNowUs());
   }
+  saveImageToFile(stream_index, image, image_msg);
+  if (!has_raw_image_subscriber) {
+    return;
+  }
   if (!image_flip_[stream_index]) {
-    image_publisher.publish(image_msg);
+    auto raw_pub = raw_image_publishers_.find(stream_index);
+    if (raw_pub != raw_image_publishers_.end()) {
+      raw_pub->second.publish(image_msg);
+    } else {
+      image_publishers_[stream_index].publish(image_msg);
+    }
   } else {
     cv::Mat flipped_image;
     cv::flip(image, flipped_image, 1);
@@ -2105,9 +2178,13 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     flipped_image_msg->is_bigendian = false;
     flipped_image_msg->step = width * unit_step_size_[stream_index];
     flipped_image_msg->header.frame_id = frame_id;
-    image_publisher.publish(flipped_image_msg);
+    auto raw_pub = raw_image_publishers_.find(stream_index);
+    if (raw_pub != raw_image_publishers_.end()) {
+      raw_pub->second.publish(flipped_image_msg);
+    } else {
+      image_publishers_[stream_index].publish(flipped_image_msg);
+    }
   }
-  saveImageToFile(stream_index, image, image_msg);
 }
 
 void OBCameraNode::publishMetadata(const std::shared_ptr<ob::Frame>& frame,
@@ -2259,6 +2336,18 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
         break;
       }
     }
+    for (auto& item : raw_image_publishers_) {
+      if (item.second.getNumSubscribers() > 0) {
+        all_stream_no_subscriber = false;
+        break;
+      }
+    }
+    for (auto& item : compressed_image_publishers_) {
+      if (item.second.getNumSubscribers() > 0) {
+        all_stream_no_subscriber = false;
+        break;
+      }
+    }
     for (auto& item : camera_info_publishers_) {
       if (item.second.getNumSubscribers() > 0) {
         all_stream_no_subscriber = false;
@@ -2283,8 +2372,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " is not started.");
       return;
     }
-    auto subscriber_count = image_publishers_[stream_index].getNumSubscribers();
-    if (subscriber_count == 0) {
+    if (!hasRawImageSubscriber(stream_index) && !hasCompressedImageSubscriber(stream_index)) {
       stopStream(stream_index);
     }
   }

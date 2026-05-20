@@ -1758,10 +1758,17 @@ void OBCameraNode::setupPublishers() {
           this->imageUnsubscribedCallback(stream_index);
         };
 
-    // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
-    // subscriber detection
-    image_publishers_[stream_index] = getGlobalImagePublisher(
-        topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    if (isMjpgColorStream(stream_index)) {
+      raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
+          topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
+      compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
+          topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+    } else {
+      // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
+      // subscriber detection.
+      image_publishers_[stream_index] = getGlobalImagePublisher(
+          topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    }
 
     topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
@@ -1897,8 +1904,6 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
       global_nh_ = std::make_shared<ros::NodeHandle>();
     }
     global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
-    ROS_DEBUG_STREAM(
-        "Created persistent global image_transport instance to prevent plugin reloading");
   }
 
   // Always recreate publisher with callbacks to ensure rostopic hz detection works
