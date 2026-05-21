@@ -2115,6 +2115,9 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if ((stream_index == COLOR || stream_index == COLOR_LEFT || stream_index == COLOR_RIGHT) &&
       frame->format() == OB_FORMAT_MJPG && has_compressed_image_subscriber) {
     publishCompressedColorImage(frame, stream_index, timestamp, frame_id);
+    if (!has_raw_image_subscriber && stream_index == COLOR) {
+      fps_delay_status_color_->tick(frame_timestamp);
+    }
   }
 
   CHECK(hasImagePublisher(stream_index));
