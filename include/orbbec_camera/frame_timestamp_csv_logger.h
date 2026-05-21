@@ -58,6 +58,7 @@ class FrameTimestampCsvLogger {
     int64_t sdk_system_ts_us = 0;
     int64_t arrival_system_us = 0;
     int64_t arrival_steady_us = 0;
+    int64_t expected_interval_us = 0;
     std::optional<int64_t> publish_system_us;
     std::optional<int64_t> publish_steady_us;
 
@@ -84,6 +85,10 @@ class FrameTimestampCsvLogger {
 
   struct PreviousStreamTimestamps {
     std::optional<int64_t> device_ts_us;
+    std::optional<int64_t> publish_device_ts_us;
+    int64_t expected_interval_us = 0;
+    int64_t dropped_frames = 0;
+    int64_t publish_dropped_frames = 0;
     std::optional<int64_t> sensor_ts_us;
     std::optional<int64_t> global_ts_us;
     std::optional<int64_t> sdk_system_ts_us;
@@ -99,24 +104,22 @@ class FrameTimestampCsvLogger {
   void recordFrameSetInternal(const std::shared_ptr<ob::Frame> &color_frame,
                               const std::shared_ptr<ob::Frame> &depth_frame,
                               int64_t arrival_system_us, int64_t arrival_steady_us,
-                              bool track_color, bool track_depth,
-                              bool color_image_publish_expected,
+                              bool track_color, bool track_depth, bool color_image_publish_expected,
                               bool depth_image_publish_expected);
   void recordStandaloneFrameArrivalInternal(const stream_index_pair &stream_index,
                                             const std::shared_ptr<ob::Frame> &frame,
-                                            int64_t arrival_system_us,
-                                            int64_t arrival_steady_us,
+                                            int64_t arrival_system_us, int64_t arrival_steady_us,
                                             bool image_publish_expected);
   void recordPreImagePublishInternal(const stream_index_pair &stream_index,
                                      const std::shared_ptr<ob::Frame> &frame,
-                                     int64_t publish_system_us,
-                                     int64_t publish_steady_us);
+                                     int64_t publish_system_us, int64_t publish_steady_us);
 
   void populateArrivalData(StreamState &state, TrackedStream stream,
                            const std::shared_ptr<ob::Frame> &frame, int64_t arrival_system_us,
                            int64_t arrival_steady_us, bool publish_expected);
   void populatePublishData(StreamState &state, TrackedStream stream, int64_t publish_system_us,
                            int64_t publish_steady_us);
+  void reportDropLogFormatOnce();
 
   std::optional<int64_t> updateDelta(std::optional<int64_t> &previous, int64_t current);
 
@@ -139,6 +142,7 @@ class FrameTimestampCsvLogger {
   std::atomic_bool shutdown_requested_{false};
   bool writer_failed_ = false;
   bool queue_warning_active_ = false;
+  bool drop_log_format_reported_ = false;
   std::string csv_file_path_;
   std::ofstream csv_stream_;
   std::thread writer_thread_;
