@@ -145,6 +145,9 @@ class OBCameraNode {
 
   void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair &stream_index);
 
+  void onNewStandaloneFrameCallback(std::shared_ptr<ob::Frame> frame,
+                                    const stream_index_pair &stream_index);
+
   void setupFrameTimestampCsvLogger();
 
   void logFrameInfoOnce(const stream_index_pair &stream_index,

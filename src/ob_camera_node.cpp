@@ -1476,7 +1476,7 @@ void OBCameraNode::publishCompressedColorImage(const std::shared_ptr<ob::Frame>&
   sensor_msgs::CompressedImage msg;
   msg.header.stamp = timestamp;
   msg.header.frame_id = frame_id;
-  msg.format = "jpeg";
+  msg.format = encoding_[stream_index] + "; jpeg compressed " + encoding_[stream_index];
   const auto* data = static_cast<const uint8_t*>(frame->data());
   msg.data.assign(data, data + frame->dataSize());
   it->second.publish(msg);
@@ -1960,6 +1960,21 @@ void OBCameraNode::onNewRightColorFrameCallback() {
   }
 
   ROS_DEBUG_STREAM("Right color frame thread exited");
+}
+
+void OBCameraNode::onNewStandaloneFrameCallback(std::shared_ptr<ob::Frame> frame,
+                                                const stream_index_pair& stream_index) {
+  if (!frame) {
+    return;
+  }
+  if (stream_index == COLOR) {
+    rgb_is_decoded_ = decodeColorFrameToBuffer(frame, rgb_buffer_);
+  } else if (stream_index == COLOR_LEFT) {
+    rgb_left_is_decoded_ = decodeColorFrameToBuffer(frame, rgb_buffer_left_);
+  } else if (stream_index == COLOR_RIGHT) {
+    rgb_right_is_decoded_ = decodeColorFrameToBuffer(frame, rgb_buffer_right_);
+  }
+  onNewFrameCallback(frame, stream_index);
 }
 
 std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
