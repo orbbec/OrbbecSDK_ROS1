@@ -2176,29 +2176,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (!has_raw_image_subscriber) {
     return;
   }
-  if (!image_flip_[stream_index]) {
-    auto raw_pub = raw_image_publishers_.find(stream_index);
-    if (raw_pub != raw_image_publishers_.end()) {
-      raw_pub->second.publish(image_msg);
-    } else {
-      image_publishers_[stream_index].publish(image_msg);
-    }
+  auto raw_pub = raw_image_publishers_.find(stream_index);
+  if (raw_pub != raw_image_publishers_.end()) {
+    raw_pub->second.publish(image_msg);
   } else {
-    cv::Mat flipped_image;
-    cv::flip(image, flipped_image, 1);
-    auto flipped_image_msg =
-        cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], flipped_image).toImageMsg();
-    CHECK_NOTNULL(flipped_image_msg.get());
-    flipped_image_msg->header.stamp = timestamp;
-    flipped_image_msg->is_bigendian = false;
-    flipped_image_msg->step = width * unit_step_size_[stream_index];
-    flipped_image_msg->header.frame_id = frame_id;
-    auto raw_pub = raw_image_publishers_.find(stream_index);
-    if (raw_pub != raw_image_publishers_.end()) {
-      raw_pub->second.publish(flipped_image_msg);
-    } else {
-      image_publishers_[stream_index].publish(flipped_image_msg);
-    }
+    image_publishers_[stream_index].publish(image_msg);
   }
 }
 
