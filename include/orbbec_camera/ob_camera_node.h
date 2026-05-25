@@ -122,6 +122,8 @@ class OBCameraNode {
 
   void loadConfigJsonAndSyncSettings();
 
+  bool exportConfigJsonToFile(const std::string &file_path, std::string &message);
+
   void exportConfigJsonIfRequested();
 
   void captureInitialRosParameters();
@@ -375,6 +377,8 @@ class OBCameraNode {
 
   bool savePointCloudCallback(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
 
+  bool exportConfigJsonCallback(SetStringRequest &request, SetStringResponse &response);
+
   bool toggleSensor(const stream_index_pair &stream_index, bool enabled, std::string &msg);
 
   bool getCameraParamsCallback(orbbec_camera::GetCameraParamsRequest &request,
@@ -524,6 +528,7 @@ class OBCameraNode {
   ros::ServiceServer get_device_type_srv_;
   ros::ServiceServer save_point_cloud_srv_;
   ros::ServiceServer save_images_srv_;
+  ros::ServiceServer export_config_json_srv_;
   ros::ServiceServer switch_ir_mode_srv_;
   ros::ServiceServer switch_ir_data_source_channel_srv_;
   ros::ServiceServer get_lrm_measure_distance_srv_;

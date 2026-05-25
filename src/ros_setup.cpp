@@ -126,21 +126,37 @@ void OBCameraNode::loadConfigJsonAndSyncSettings() {
   }
 }
 
+bool OBCameraNode::exportConfigJsonToFile(const std::string& file_path, std::string& message) {
+  if (file_path.empty()) {
+    message = "Config json export file path is empty";
+    ROS_ERROR_STREAM(message);
+    return false;
+  }
+
+  try {
+    device_->exportSettingsAsPresetJsonFile(file_path.c_str());
+    message = "Exported config json file path: " + file_path;
+    ROS_INFO_STREAM(message);
+    return true;
+  } catch (const ob::Error& e) {
+    message = "Failed to export config json file: " + orbbec_camera::formatObErrorWithStatus(e);
+    ROS_ERROR_STREAM(message);
+  } catch (const std::exception& e) {
+    message = std::string("Failed to export config json file: ") + e.what();
+    ROS_ERROR_STREAM(message);
+  } catch (...) {
+    message = "Failed to export config json file";
+    ROS_ERROR_STREAM(message);
+  }
+  return false;
+}
+
 void OBCameraNode::exportConfigJsonIfRequested() {
   if (export_config_json_file_path_.empty()) {
     return;
   }
-  try {
-    device_->exportSettingsAsPresetJsonFile(export_config_json_file_path_.c_str());
-    ROS_INFO_STREAM("Exporting config json file path : " << export_config_json_file_path_);
-  } catch (const ob::Error& e) {
-    ROS_ERROR_STREAM(
-        "Failed to export config json file: " << orbbec_camera::formatObErrorWithStatus(e));
-  } catch (const std::exception& e) {
-    ROS_ERROR_STREAM("Failed to export config json file: " << e.what());
-  } catch (...) {
-    ROS_ERROR_STREAM("Failed to export config json file");
-  }
+  std::string message;
+  exportConfigJsonToFile(export_config_json_file_path_, message);
 }
 
 void OBCameraNode::syncConfigJsonDeviceSettings() {

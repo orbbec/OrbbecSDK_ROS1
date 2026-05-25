@@ -273,6 +273,11 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->saveImagesCallback(request, response);
       });
+  export_config_json_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+      "/" + camera_name_ + "/" + "export_config_json",
+      [this](SetStringRequest& request, SetStringResponse& response) {
+        return this->exportConfigJsonCallback(request, response);
+      });
   switch_ir_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "switch_ir_mode",
       [this](SetInt32Request& request, SetInt32Response& response) {
@@ -1031,6 +1036,12 @@ bool OBCameraNode::savePointCloudCallback(std_srvs::EmptyRequest& request,
   (void)response;
   save_point_cloud_ = true;
   save_colored_point_cloud_ = true;
+  return true;
+}
+
+bool OBCameraNode::exportConfigJsonCallback(SetStringRequest& request, SetStringResponse& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  response.success = exportConfigJsonToFile(request.data, response.message);
   return true;
 }
 
