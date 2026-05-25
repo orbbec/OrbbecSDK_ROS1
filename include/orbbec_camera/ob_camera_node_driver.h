@@ -76,6 +76,8 @@ class OBCameraNodeDriver {
 
   OBDeviceAccessMode stringToAccessMode(const std::string& mode_str);
   std::string accessModeToString(OBDeviceAccessMode mode);
+  OBClockType timestampClockTypeFromString(const std::string& clock_type_str);
+  std::string timestampClockTypeToString(OBClockType clock_type);
 
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -98,6 +100,7 @@ class OBCameraNodeDriver {
   std::recursive_mutex device_lock_;
   int device_num_ = 1;
   bool enumerate_net_device_ = false;
+  std::string timestamp_clock_type_str_;
   std::shared_ptr<std::thread> reset_device_thread_ = nullptr;
   std::condition_variable reset_device_cv_;
   std::atomic_bool reset_device_{false};
