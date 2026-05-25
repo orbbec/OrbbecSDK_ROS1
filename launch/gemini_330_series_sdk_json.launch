@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="device_type" default="camera"/>
+
+    <!-- Basic camera parameters -->
+    <arg name="camera_name" default="camera"/>
+    <arg name="connection_delay" default="100"/>
+    <arg name="log_level" default="none"/>
+    <arg name="log_file_name" default=""/>
+    <arg name="publish_tf" default="true"/>
+    <arg name="tf_publish_rate" default="0.0"/>
+    <arg name="enable_frame_sync" default="true"/>
+    <arg name="time_domain" default="global"/><!-- "device", "global", "system" -->
+    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="frame_timestamp_csv_file" default=""/>
+    <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
+    <arg name="enable_sync_host_time" default="false"/>
+    <arg name="diagnostics_frequency" default="1.0"/>
+
+    <!-- SDK JSON preset import/export -->
+    <arg name="load_config_json_file_path" default=""/>
+    <arg name="export_config_json_file_path" default=""/>
+
+    <!-- Device discovery and management -->
+    <arg name="enumerate_net_device" default="true"/>
+    <arg name="device_access_mode" default="default"/><!-- default, EA, CA or MR -->
+    <arg name="ip_address" default=""/>
+    <arg name="port" default="0"/>
+    <arg name="upgrade_firmware" default=""/>
+    <arg name="preset_firmware_path" default=""/>
+    <arg name="usb_port" default=""/>
+    <arg name="serial_number" default=""/>
+    <arg name="device_num" default="1"/>
+    <arg name="enable_hardware_reset" default="false"/>
+
+    <!-- Force IP parameters -->
+    <arg name="force_ip_enable" default="false"/>
+    <arg name="force_ip_mac" default=""/>
+    <arg name="force_ip_address" default="192.168.1.10"/>
+    <arg name="force_ip_subnet_mask" default="255.255.255.0"/>
+    <arg name="force_ip_gateway" default="192.168.1.1"/>
+
+    <!-- Camera info -->
+    <arg name="ir_info_uri" default=""/>
+    <arg name="color_info_uri" default=""/>
+
+    <!-- Color stream parameters -->
+    <arg name="color_width" default="0"/>
+    <arg name="color_height" default="0"/>
+    <arg name="color_fps" default="0"/>
+    <arg name="enable_color" default="true"/>
+    <arg name="color_format" default="ANY"/>
+
+    <!-- Depth stream parameters -->
+    <arg name="depth_width" default="0"/>
+    <arg name="depth_height" default="0"/>
+    <arg name="depth_fps" default="0"/>
+    <arg name="enable_depth" default="true"/>
+    <arg name="depth_format" default="ANY"/>
+    <arg name="depth_registration" default="false"/>
+
+    <!-- Left IR stream parameters -->
+    <arg name="left_ir_width" default="0"/>
+    <arg name="left_ir_height" default="0"/>
+    <arg name="left_ir_fps" default="0"/>
+    <arg name="enable_left_ir" default="false"/>
+    <arg name="left_ir_format" default="ANY"/>
+
+    <!-- Right IR stream parameters -->
+    <arg name="right_ir_width" default="0"/>
+    <arg name="right_ir_height" default="0"/>
+    <arg name="right_ir_fps" default="0"/>
+    <arg name="enable_right_ir" default="false"/>
+    <arg name="right_ir_format" default="ANY"/>
+
+    <!-- Point cloud parameters -->
+    <arg name="enable_point_cloud" default="true"/>
+    <arg name="enable_colored_point_cloud" default="false"/>
+    <arg name="point_cloud_decimation_filter_factor" default="1"/>
+    <arg name="ordered_pc" default="false"/>
+    <arg name="align_mode" default="SW"/>
+    <arg name="align_target_stream" default="COLOR"/><!-- COLOR or DEPTH -->
+
+    <!-- IMU parameters -->
+    <arg name="enable_sync_output_accel_gyro" default="false"/>
+    <arg name="enable_accel" default="false"/>
+    <arg name="enable_accel_data_correction" default="true"/>
+    <arg name="accel_rate" default="200hz"/>
+    <arg name="accel_range" default="4g"/>
+    <arg name="enable_gyro" default="false"/>
+    <arg name="enable_gyro_data_correction" default="true"/>
+    <arg name="gyro_rate" default="200hz"/>
+    <arg name="gyro_range" default="1000dps"/>
+    <arg name="linear_accel_cov" default="0.01"/>
+
+    <!-- ROS pipeline parameters -->
+    <arg name="enable_d2c_viewer" default="false"/>
+    <arg name="frame_aggregate_mode" default="ANY"/><!-- full_frame,color_frame,ANY or disable -->
+
+    <group ns="$(arg camera_name)">
+        <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
+            <param name="device_type" value="$(arg device_type)"/>
+            <param name="camera_name" value="$(arg camera_name)"/>
+            <param name="connection_delay" value="$(arg connection_delay)"/>
+            <param name="log_level" value="$(arg log_level)"/>
+            <param name="log_file_name" value="$(arg log_file_name)"/>
+            <param name="publish_tf" value="$(arg publish_tf)"/>
+            <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
+            <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
+            <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
+            <param name="uvc_backend" value="$(arg uvc_backend)"/>
+            <param name="enable_sync_host_time" value="$(arg enable_sync_host_time)"/>
+            <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
+            <param name="load_config_json_file_path" value="$(arg load_config_json_file_path)"/>
+            <param name="export_config_json_file_path" value="$(arg export_config_json_file_path)"/>
+
+            <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
+            <param name="device_access_mode" value="$(arg device_access_mode)"/>
+            <param name="ip_address" value="$(arg ip_address)"/>
+            <param name="port" value="$(arg port)"/>
+            <param name="upgrade_firmware" value="$(arg upgrade_firmware)"/>
+            <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
+            <param name="usb_port" value="$(arg usb_port)"/>
+            <param name="serial_number" value="$(arg serial_number)"/>
+            <param name="device_num" value="$(arg device_num)"/>
+            <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
+
+            <param name="force_ip_enable" value="$(arg force_ip_enable)"/>
+            <param name="force_ip_mac" value="$(arg force_ip_mac)"/>
+            <param name="force_ip_address" value="$(arg force_ip_address)"/>
+            <param name="force_ip_subnet_mask" value="$(arg force_ip_subnet_mask)"/>
+            <param name="force_ip_gateway" value="$(arg force_ip_gateway)"/>
+
+            <param name="ir_info_uri" value="$(arg ir_info_uri)"/>
+            <param name="color_info_uri" value="$(arg color_info_uri)"/>
+
+            <param name="color_width" value="$(arg color_width)"/>
+            <param name="color_height" value="$(arg color_height)"/>
+            <param name="color_fps" value="$(arg color_fps)"/>
+            <param name="enable_color" value="$(arg enable_color)"/>
+            <param name="color_format" value="$(arg color_format)"/>
+
+            <param name="depth_width" value="$(arg depth_width)"/>
+            <param name="depth_height" value="$(arg depth_height)"/>
+            <param name="depth_fps" value="$(arg depth_fps)"/>
+            <param name="enable_depth" value="$(arg enable_depth)"/>
+            <param name="depth_format" value="$(arg depth_format)"/>
+            <param name="depth_registration" value="$(arg depth_registration)"/>
+
+            <param name="left_ir_width" value="$(arg left_ir_width)"/>
+            <param name="left_ir_height" value="$(arg left_ir_height)"/>
+            <param name="left_ir_fps" value="$(arg left_ir_fps)"/>
+            <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
+            <param name="left_ir_format" value="$(arg left_ir_format)"/>
+
+            <param name="right_ir_width" value="$(arg right_ir_width)"/>
+            <param name="right_ir_height" value="$(arg right_ir_height)"/>
+            <param name="right_ir_fps" value="$(arg right_ir_fps)"/>
+            <param name="enable_right_ir" value="$(arg enable_right_ir)"/>
+            <param name="right_ir_format" value="$(arg right_ir_format)"/>
+
+            <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
+            <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
+            <param name="point_cloud_decimation_filter_factor" value="$(arg point_cloud_decimation_filter_factor)"/>
+            <param name="ordered_pc" value="$(arg ordered_pc)"/>
+            <param name="align_mode" value="$(arg align_mode)"/>
+            <param name="align_target_stream" value="$(arg align_target_stream)"/>
+
+            <param name="enable_sync_output_accel_gyro" value="$(arg enable_sync_output_accel_gyro)"/>
+            <param name="enable_accel" value="$(arg enable_accel)"/>
+            <param name="enable_accel_data_correction" value="$(arg enable_accel_data_correction)"/>
+            <param name="accel_rate" value="$(arg accel_rate)"/>
+            <param name="accel_range" value="$(arg accel_range)"/>
+            <param name="enable_gyro" value="$(arg enable_gyro)"/>
+            <param name="enable_gyro_data_correction" value="$(arg enable_gyro_data_correction)"/>
+            <param name="gyro_rate" value="$(arg gyro_rate)"/>
+            <param name="gyro_range" value="$(arg gyro_range)"/>
+            <param name="linear_accel_cov" value="$(arg linear_accel_cov)"/>
+
+            <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
+            <param name="frame_aggregate_mode" value="$(arg frame_aggregate_mode)"/>
+
+            <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
+        </node>
+    </group>
+</launch>

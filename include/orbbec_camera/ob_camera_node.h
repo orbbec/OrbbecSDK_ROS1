@@ -38,6 +38,7 @@
 #include <atomic>
 #include <mutex>
 #include <map>
+#include <set>
 #include <camera_info_manager/camera_info_manager.h>
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Empty.h>
@@ -118,6 +119,20 @@ class OBCameraNode {
   void setupConfig();
 
   void getParameters();
+
+  void loadConfigJsonAndSyncSettings();
+
+  void exportConfigJsonIfRequested();
+
+  void captureInitialRosParameters();
+
+  bool isConfigJsonLoaded() const;
+
+  bool isLaunchParamProvided(const std::string &param_name) const;
+
+  void syncConfigJsonDeviceSettings();
+
+  void syncConfigJsonFilterSettings();
 
   void setupDevices();
 
@@ -619,7 +634,7 @@ class OBCameraNode {
   bool enable_depth_filter_ = false;
 
   // Only for Gemini2 device
-  std::string disparity_to_depth_mode_ = "HW";
+  std::string disparity_to_depth_mode_;
   std::string depth_work_mode_;
   std::string preset_resolution_config_;
   OBMultiDeviceSyncMode sync_mode_ = OB_MULTI_DEVICE_SYNC_MODE_STANDALONE;
@@ -751,9 +766,11 @@ class OBCameraNode {
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;
   std::string time_domain_ = "global";
-  std::string exposure_range_mode_ = "default";
+  std::string exposure_range_mode_;
   std::string load_config_json_file_path_ = "";
   std::string export_config_json_file_path_ = "";
+  bool config_json_loaded_ = false;
+  std::set<std::string> initial_ros_params_;
   bool enable_sync_host_time_ = true;
   ros::Timer sync_host_time_timer_;
 
@@ -764,33 +781,33 @@ class OBCameraNode {
   int offset_index1_ = -1;
 
   // interleave AE
-  std::string interleave_ae_mode_ = "hdr";  // hdr or laser
+  std::string interleave_ae_mode_;  // hdr or laser
   bool interleave_frame_enable_ = false;
   bool interleave_skip_enable_ = false;
-  int interleave_skip_index_ = 1;
+  int interleave_skip_index_ = -1;
 
   // hdr and laser interleave params
-  int hdr_index1_laser_control_ = 1;
-  int hdr_index1_depth_exposure_ = 1;
-  int hdr_index1_depth_gain_ = 16;
-  int hdr_index1_ir_brightness_ = 30;
-  int hdr_index1_ir_ae_max_exposure_ = 30458;
-  int hdr_index0_laser_control_ = 1;
-  int hdr_index0_depth_exposure_ = 7500;
-  int hdr_index0_depth_gain_ = 16;
-  int hdr_index0_ir_brightness_ = 90;
-  int hdr_index0_ir_ae_max_exposure_ = 30458;
+  int hdr_index1_laser_control_ = -1;
+  int hdr_index1_depth_exposure_ = -1;
+  int hdr_index1_depth_gain_ = -1;
+  int hdr_index1_ir_brightness_ = -1;
+  int hdr_index1_ir_ae_max_exposure_ = -1;
+  int hdr_index0_laser_control_ = -1;
+  int hdr_index0_depth_exposure_ = -1;
+  int hdr_index0_depth_gain_ = -1;
+  int hdr_index0_ir_brightness_ = -1;
+  int hdr_index0_ir_ae_max_exposure_ = -1;
 
-  int laser_index1_laser_control_ = 0;
-  int laser_index1_depth_exposure_ = 3000;
-  int laser_index1_depth_gain_ = 16;
-  int laser_index1_ir_brightness_ = 60;
-  int laser_index1_ir_ae_max_exposure_ = 7000;
-  int laser_index0_laser_control_ = 1;
-  int laser_index0_depth_exposure_ = 3000;
-  int laser_index0_depth_gain_ = 16;
-  int laser_index0_ir_brightness_ = 60;
-  int laser_index0_ir_ae_max_exposure_ = 17000;
+  int laser_index1_laser_control_ = -1;
+  int laser_index1_depth_exposure_ = -1;
+  int laser_index1_depth_gain_ = -1;
+  int laser_index1_ir_brightness_ = -1;
+  int laser_index1_ir_ae_max_exposure_ = -1;
+  int laser_index0_laser_control_ = -1;
+  int laser_index0_depth_exposure_ = -1;
+  int laser_index0_depth_gain_ = -1;
+  int laser_index0_ir_brightness_ = -1;
+  int laser_index0_ir_ae_max_exposure_ = -1;
 
   std::string frame_aggregate_mode_;
   bool is_cleaned_ = false;
