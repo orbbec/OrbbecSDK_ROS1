@@ -579,10 +579,6 @@ void OBCameraNode::setupFrameTimestampCsvLogger() {
   if (frame_timestamp_csv_logger_) {
     return;
   }
-  if (frame_timestamp_csv_file_.empty()) {
-    auto current_path = boost::filesystem::current_path().string();
-    frame_timestamp_csv_file_ = current_path + "/" + camera_name_ + "_frame_timestamp_stats.csv";
-  }
   frame_timestamp_csv_logger_ = std::make_unique<FrameTimestampCsvLogger>(
       enable_frame_timestamp_csv_, frame_timestamp_csv_file_);
   if (!frame_timestamp_csv_logger_->enabled()) {
@@ -1656,8 +1652,22 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
   if (frame_set == nullptr) {
     return;
   }
-  const auto frame_set_arrival_system_us = getSystemNowUs();
-  const auto frame_set_arrival_steady_us = getSteadyNowUs();
+  if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled()) {
+    const auto frame_set_arrival_system_us = getSystemNowUs();
+    const auto frame_set_arrival_steady_us = getSteadyNowUs();
+    auto final_color_frame = frame_set->getFrame(OB_FRAME_COLOR);
+    auto final_depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+    const bool track_color = enable_stream_[COLOR] && static_cast<bool>(final_color_frame);
+    const bool track_depth = enable_stream_[DEPTH] && static_cast<bool>(final_depth_frame);
+    const bool color_publish_expected = track_color;
+    const bool depth_publish_expected = track_depth;
+
+    frame_timestamp_csv_logger_->recordFrameSet(
+        final_color_frame, final_depth_frame, frame_set_arrival_system_us,
+        frame_set_arrival_steady_us, track_color, track_depth, color_publish_expected,
+        depth_publish_expected);
+  }
+
   ROS_DEBUG_STREAM_ONCE("Received first frame set");
   try {
     // std::shared_ptr<ob::ColorFrame> color_frame = frame_set->colorFrame();
@@ -1708,19 +1718,6 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
         ROS_ERROR_STREAM("Depth frame alignment failed");
         return;
       }
-    }
-
-    auto final_color_frame = frame_set->getFrame(OB_FRAME_COLOR);
-    auto final_depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
-    if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled()) {
-      const bool track_color = enable_stream_[COLOR] && static_cast<bool>(final_color_frame);
-      const bool track_depth = enable_stream_[DEPTH] && static_cast<bool>(final_depth_frame);
-      const bool color_publish_expected = track_color;
-      const bool depth_publish_expected = track_depth;
-      frame_timestamp_csv_logger_->recordFrameSet(
-          final_color_frame, final_depth_frame, frame_set_arrival_system_us,
-          frame_set_arrival_steady_us, track_color, track_depth, color_publish_expected,
-          depth_publish_expected);
     }
 
     // Refresh frame from current frameset before logging to reflect post-filter/alignment output.
