@@ -399,6 +399,13 @@ rosservice call /camera/set_filter '{filter_name: SpatialFastFilter, filter_enab
 
 # 设置 SpatialModerateFilter: [disp_diff, magnitude, radius]
 rosservice call /camera/set_filter '{filter_name: SpatialModerateFilter, filter_enable: true, filter_param: [160,1,3]}'
+
+# 设置 FalsePositiveFilter: []
+rosservice call /camera/set_filter '{filter_name: FalsePositiveFilter, filter_enable: true, filter_param: []}'
+
+# 设置 MgcNoiseRemovalFilter / LutNoiseRemovalFilter: []
+rosservice call /camera/set_filter '{filter_name: MgcNoiseRemovalFilter, filter_enable: true, filter_param: []}'
+rosservice call /camera/set_filter '{filter_name: LutNoiseRemovalFilter, filter_enable: true, filter_param: []}'
 ```
 
 ## 数据采集与标定管理（Data Capture & Calibration Management）

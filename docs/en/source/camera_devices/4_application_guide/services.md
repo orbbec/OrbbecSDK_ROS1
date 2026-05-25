@@ -398,6 +398,13 @@ rosservice call /camera/set_filter '{filter_name: SpatialFastFilter, filter_enab
 
 # Set SpatialModerateFilter: [disp_diff, magnitude, radius]
 rosservice call /camera/set_filter '{filter_name: SpatialModerateFilter, filter_enable: true, filter_param: [160,1,3]}'
+
+# Set FalsePositiveFilter: []
+rosservice call /camera/set_filter '{filter_name: FalsePositiveFilter, filter_enable: true, filter_param: []}'
+
+# Set MgcNoiseRemovalFilter / LutNoiseRemovalFilter: []
+rosservice call /camera/set_filter '{filter_name: MgcNoiseRemovalFilter, filter_enable: true, filter_param: []}'
+rosservice call /camera/set_filter '{filter_name: LutNoiseRemovalFilter, filter_enable: true, filter_param: []}'
 ```
 
 ## Data Capture & Calibration Management
