@@ -54,8 +54,23 @@ std::string getDepthFilterStatusParamName(const std::string& filter_name,
 
 bool shouldExposeDepthFilterParams(const std::string& filter_name) {
   return filter_name != "MgcNoiseRemovalFilter" && filter_name != "LutNoiseRemovalFilter" &&
-         filter_name != "DisparityTransform" && filter_name != "FalsePositiveFilter" &&
-         filter_name != "EdgeNoiseRemovalFilter";
+         filter_name != "DisparityTransform" && filter_name != "EdgeNoiseRemovalFilter";
+}
+
+std::string formatFilterConfigValue(const OBFilterConfigSchemaItem& config_schema, double value) {
+  switch (config_schema.type) {
+    case OB_FILTER_CONFIG_VALUE_TYPE_INT: {
+      return std::to_string(static_cast<long long>(value));
+    }
+    case OB_FILTER_CONFIG_VALUE_TYPE_BOOLEAN:
+      return value != 0.0 ? std::string("true") : std::string("false");
+    case OB_FILTER_CONFIG_VALUE_TYPE_FLOAT:
+    default: {
+      std::ostringstream ss;
+      ss << value;
+      return ss.str();
+    }
+  }
 }
 
 }  // namespace
@@ -634,8 +649,26 @@ void OBCameraNode::syncConfigJsonFilterSettings(
       } catch (const std::exception&) {
       }
     }
-    sync_filter_enabled(filters, "FalsePositiveFilter", "enable_false_positive_filter",
-                        enable_false_positive_filter_);
+    if (auto filter =
+            sync_filter_enabled(filters, "FalsePositiveFilter", "enable_false_positive_filter",
+                                enable_false_positive_filter_)) {
+      try {
+        const auto config_schema_vec = filter->getConfigSchemaVec();
+        for (const auto& config_schema : config_schema_vec) {
+          if (config_schema.name == nullptr || config_schema.name[0] == '\0') {
+            continue;
+          }
+          try {
+            const auto value = filter->getConfigValue(config_schema.name);
+            ROS_INFO_STREAM("Config json readback false_positive_filter."
+                            << config_schema.name << ": "
+                            << formatFilterConfigValue(config_schema, value));
+          } catch (const std::exception&) {
+          }
+        }
+      } catch (const std::exception&) {
+      }
+    }
     sync_filter_enabled(filters, "DisparityTransform", "enable_disparity_to_depth",
                         enable_disparity_to_depth_);
   } else if (sensor_name == "color") {
@@ -691,22 +724,6 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
     appendDepthFilterParam(filter_state, "threshold",
                            toParamValue(hardware_noise_removal_filter_threshold_));
   } else if (filter && shouldExposeDepthFilterParams(normalized_filter_name)) {
-    auto formatFilterConfigValue = [](const OBFilterConfigSchemaItem& config_schema, double value) {
-      switch (config_schema.type) {
-        case OB_FILTER_CONFIG_VALUE_TYPE_INT: {
-          return std::to_string(static_cast<long long>(value));
-        }
-        case OB_FILTER_CONFIG_VALUE_TYPE_BOOLEAN:
-          return value != 0.0 ? std::string("true") : std::string("false");
-        case OB_FILTER_CONFIG_VALUE_TYPE_FLOAT:
-        default: {
-          std::ostringstream ss;
-          ss << value;
-          return ss.str();
-        }
-      }
-    };
-
     try {
       auto config_schema_vec = filter->getConfigSchemaVec();
       for (const auto& config_schema : config_schema_vec) {
