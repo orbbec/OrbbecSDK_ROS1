@@ -145,6 +145,11 @@ class OBCameraNode {
 
   void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair &stream_index);
 
+  void publishColorUndistortedFrame(const std::shared_ptr<ob::Frame> &frame,
+                                    const ros::Time &timestamp, const std::string &frame_id,
+                                    const sensor_msgs::CameraInfo &camera_info,
+                                    const OBCameraIntrinsic &intrinsic);
+
   void onNewStandaloneFrameCallback(std::shared_ptr<ob::Frame> frame,
                                     const stream_index_pair &stream_index);
 
@@ -768,6 +773,10 @@ class OBCameraNode {
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
   bool enable_firmware_log_ = false;
+  bool enable_color_undistortion_ = false;
+  std::shared_ptr<ob::UnDistortionFilter> color_undistortion_filter_;
+  image_transport::Publisher color_undistortion_publisher_;
+  ros::Publisher color_undistortion_camera_info_publisher_;
   bool has_first_color_frame_ = false;
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;

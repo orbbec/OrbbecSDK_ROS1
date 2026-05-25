@@ -453,6 +453,7 @@ void OBCameraNode::getParameters() {
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   enable_firmware_log_ = nh_private_.param<bool>("enable_firmware_log", false);
+  enable_color_undistortion_ = nh_private_.param<bool>("enable_color_undistortion", false);
   time_domain_ = nh_private_.param<std::string>("time_domain", "global");
   exposure_range_mode_ = nh_private_.param<std::string>("exposure_range_mode", "default");
   load_config_json_file_path_ = nh_private_.param<std::string>("load_config_json_file_path", "");
@@ -544,6 +545,7 @@ void OBCameraNode::getParameters() {
     depth_registration_ = false;
     enable_d2c_viewer_ = false;
     enable_depth_filter_ = false;
+    enable_color_undistortion_ = false;
   }
   if (isOpenNIDevice(pid)) {
     time_domain_ = "system";
@@ -1997,6 +1999,89 @@ std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
   return covert_frame;
 }
 
+void OBCameraNode::publishColorUndistortedFrame(const std::shared_ptr<ob::Frame>& frame,
+                                                const ros::Time& timestamp,
+                                                const std::string& frame_id,
+                                                const sensor_msgs::CameraInfo& camera_info,
+                                                const OBCameraIntrinsic& intrinsic) {
+  if (!frame || color_undistortion_publisher_.getTopic().empty()) {
+    return;
+  }
+  if (!color_undistortion_filter_) {
+    color_undistortion_filter_ = std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
+    color_undistortion_filter_->setInterpolationMode(1);
+    color_undistortion_filter_->enable(true);
+  }
+
+  std::shared_ptr<ob::Frame> undistorted_frame;
+  try {
+    undistorted_frame = color_undistortion_filter_->process(frame);
+  } catch (const ob::Error& e) {
+    ROS_ERROR_STREAM(
+        "UnDistortionFilter process failed: " << orbbec_camera::formatObErrorWithStatus(e));
+    return;
+  } catch (const std::exception& e) {
+    ROS_ERROR_STREAM("UnDistortionFilter process failed: " << e.what());
+    return;
+  } catch (...) {
+    ROS_ERROR_STREAM("UnDistortionFilter process failed: unknown error");
+    return;
+  }
+
+  if (!undistorted_frame || undistorted_frame->type() != OB_FRAME_COLOR) {
+    ROS_ERROR_STREAM("UnDistortionFilter returned invalid frame");
+    return;
+  }
+
+  auto undistorted_video_frame = undistorted_frame->as<ob::VideoFrame>();
+  const auto width = static_cast<uint32_t>(undistorted_video_frame->width());
+  const auto height = static_cast<uint32_t>(undistorted_video_frame->height());
+  const auto data_size = undistorted_video_frame->dataSize();
+  const auto step = width * unit_step_size_[COLOR];
+  const auto expected_size = static_cast<size_t>(step) * height;
+  if (data_size < expected_size) {
+    ROS_ERROR_STREAM("UnDistortionFilter output data is smaller than expected");
+    return;
+  }
+
+  sensor_msgs::ImagePtr undistorted_image_msg(new sensor_msgs::Image());
+  undistorted_image_msg->header.stamp = timestamp;
+  undistorted_image_msg->header.frame_id = frame_id;
+  undistorted_image_msg->height = height;
+  undistorted_image_msg->width = width;
+  undistorted_image_msg->encoding = encoding_[COLOR];
+  undistorted_image_msg->is_bigendian = false;
+  undistorted_image_msg->step = step;
+  undistorted_image_msg->data.resize(expected_size);
+  const auto* data = static_cast<const uint8_t*>(undistorted_video_frame->data());
+  std::copy(data, data + expected_size, undistorted_image_msg->data.begin());
+  color_undistortion_publisher_.publish(undistorted_image_msg);
+
+  if (color_undistortion_camera_info_publisher_) {
+    auto undistorted_camera_info = camera_info;
+    undistorted_camera_info.width = width;
+    undistorted_camera_info.height = height;
+    const auto distortion_coeff_count =
+        undistorted_camera_info.D.empty() ? 5 : undistorted_camera_info.D.size();
+    undistorted_camera_info.D.assign(distortion_coeff_count, 0.0);
+    undistorted_camera_info.distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
+    undistorted_camera_info.roi.do_rectify = false;
+    undistorted_camera_info.K.assign(0.0);
+    undistorted_camera_info.K.at(0) = intrinsic.fx;
+    undistorted_camera_info.K.at(4) = intrinsic.fy;
+    undistorted_camera_info.K.at(2) = intrinsic.cx;
+    undistorted_camera_info.K.at(5) = intrinsic.cy;
+    undistorted_camera_info.K.at(8) = 1.0;
+    undistorted_camera_info.P.assign(0.0);
+    undistorted_camera_info.P.at(0) = intrinsic.fx;
+    undistorted_camera_info.P.at(5) = intrinsic.fy;
+    undistorted_camera_info.P.at(2) = intrinsic.cx;
+    undistorted_camera_info.P.at(6) = intrinsic.cy;
+    undistorted_camera_info.P.at(10) = 1.0;
+    color_undistortion_camera_info_publisher_.publish(undistorted_camera_info);
+  }
+}
+
 void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
                                       const stream_index_pair& stream_index) {
   if (frame == nullptr) {
@@ -2010,9 +2095,14 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   const bool has_raw_image_subscriber = hasRawImageSubscriber(stream_index);
   const bool has_compressed_image_subscriber = hasCompressedImageSubscriber(stream_index);
+  const bool enable_undistortion_publish =
+      stream_index == COLOR && enable_color_undistortion_ &&
+      color_undistortion_publisher_.getTopic().size() > 0 &&
+      (color_undistortion_publisher_.getNumSubscribers() > 0 ||
+       color_undistortion_camera_info_publisher_.getNumSubscribers() > 0);
   const bool need_raw_image = has_raw_image_subscriber || save_images_[stream_index];
-  bool has_subscriber =
-      has_raw_image_subscriber || has_compressed_image_subscriber || save_images_[stream_index];
+  bool has_subscriber = has_raw_image_subscriber || has_compressed_image_subscriber ||
+                        enable_undistortion_publish || save_images_[stream_index];
   if (camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
@@ -2047,47 +2137,46 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   std::string frame_id = (depth_registration_ && stream_index == DEPTH)
                              ? depth_aligned_frame_id_[stream_index]
                              : optical_frame_id_[stream_index];
+
+  OBCameraIntrinsic intrinsic;
+  OBCameraDistortion distortion;
+  CHECK_NOTNULL(device_info_.get());
+  if (isGemini335PID(device_info_->pid())) {
+    auto stream_profile = frame->getStreamProfile();
+    CHECK_NOTNULL(stream_profile.get());
+    auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
+    CHECK_NOTNULL(video_stream_profile);
+    intrinsic = video_stream_profile->getIntrinsic();
+    distortion = video_stream_profile->getDistortion();
+  } else {
+    auto camera_params = pipeline_->getCameraParam();
+    intrinsic = stream_index == COLOR ? camera_params.rgbIntrinsic : camera_params.depthIntrinsic;
+    distortion =
+        stream_index == COLOR ? camera_params.rgbDistortion : camera_params.depthDistortion;
+    if (device_info_->pid() == DABAI_MAX_PID) {
+      // use color extrinsic
+      intrinsic = camera_params.rgbIntrinsic;
+      distortion = camera_params.rgbDistortion;
+    }
+  }
+
+  sensor_msgs::CameraInfo camera_info;
   if (color_camera_info_manager_ && color_camera_info_manager_->isCalibrated() &&
       stream_index == COLOR) {
-    auto camera_info_publisher = camera_info_publishers_[stream_index];
-    auto camera_info = color_camera_info_manager_->getCameraInfo();
+    camera_info = color_camera_info_manager_->getCameraInfo();
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
-    camera_info_publisher.publish(camera_info);
-    publishMetadata(frame, stream_index, camera_info.header);
+    camera_info.width = width;
+    camera_info.height = height;
   } else if (ir_camera_info_manager_ && ir_camera_info_manager_->isCalibrated() &&
              (stream_index == INFRA0 || stream_index == DEPTH)) {
-    auto camera_info_publisher = camera_info_publishers_[stream_index];
-    auto camera_info = ir_camera_info_manager_->getCameraInfo();
+    camera_info = ir_camera_info_manager_->getCameraInfo();
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
-    camera_info_publisher.publish(camera_info);
-    publishMetadata(frame, stream_index, camera_info.header);
+    camera_info.width = width;
+    camera_info.height = height;
   } else {
-    OBCameraIntrinsic intrinsic;
-    OBCameraDistortion distortion;
-    CHECK_NOTNULL(device_info_.get());
-    if (isGemini335PID(device_info_->pid())) {
-      auto stream_profile = frame->getStreamProfile();
-      CHECK_NOTNULL(stream_profile.get());
-      auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
-      CHECK_NOTNULL(video_stream_profile);
-      intrinsic = video_stream_profile->getIntrinsic();
-      distortion = video_stream_profile->getDistortion();
-    } else {
-      auto camera_params = pipeline_->getCameraParam();
-      intrinsic = stream_index == COLOR ? camera_params.rgbIntrinsic : camera_params.depthIntrinsic;
-      distortion =
-          stream_index == COLOR ? camera_params.rgbDistortion : camera_params.depthDistortion;
-      if (device_info_->pid() == DABAI_MAX_PID) {
-        // use color extrinsic
-        intrinsic = camera_params.rgbIntrinsic;
-        distortion = camera_params.rgbDistortion;
-      }
-    }
-    auto camera_info = convertToCameraInfo(intrinsic, distortion, width);
-    CHECK(camera_info_publishers_.count(stream_index) > 0);
-    auto camera_info_publisher = camera_info_publishers_[stream_index];
+    camera_info = convertToCameraInfo(intrinsic, distortion, width);
     camera_info.width = width;
     camera_info.height = height;
     camera_info.header.stamp = timestamp;
@@ -2105,9 +2194,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
       camera_info.P.at(3) = fx * ex.trans[0] / 1000.0 + 0.0;
       camera_info.P.at(7) = fy * ex.trans[1] / 1000.0 + 0.0;
     }
-    camera_info_publisher.publish(camera_info);
-    publishMetadata(frame, stream_index, camera_info.header);
   }
+
+  CHECK(camera_info_publishers_.count(stream_index) > 0);
+  camera_info_publishers_[stream_index].publish(camera_info);
+  publishMetadata(frame, stream_index, camera_info.header);
 
   if ((stream_index == COLOR || stream_index == COLOR_LEFT || stream_index == COLOR_RIGHT) &&
       frame->format() == OB_FORMAT_MJPG && has_compressed_image_subscriber) {
@@ -2115,6 +2206,10 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     if (!has_raw_image_subscriber && stream_index == COLOR) {
       fps_delay_status_color_->tick(frame_timestamp);
     }
+  }
+
+  if (enable_undistortion_publish) {
+    publishColorUndistortedFrame(frame, timestamp, frame_id, camera_info, intrinsic);
   }
 
   CHECK(hasImagePublisher(stream_index));
@@ -2351,6 +2446,10 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
         break;
       }
     }
+    if (color_undistortion_publisher_.getNumSubscribers() > 0 ||
+        color_undistortion_camera_info_publisher_.getNumSubscribers() > 0) {
+      all_stream_no_subscriber = false;
+    }
     if (enable_point_cloud_) {
       if (depth_cloud_pub_.getNumSubscribers() > 0) {
         all_stream_no_subscriber = false;
@@ -2369,7 +2468,12 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " is not started.");
       return;
     }
-    if (!hasRawImageSubscriber(stream_index) && !hasCompressedImageSubscriber(stream_index)) {
+    const bool has_color_undistortion_subscriber =
+        stream_index == COLOR &&
+        (color_undistortion_publisher_.getNumSubscribers() > 0 ||
+         color_undistortion_camera_info_publisher_.getNumSubscribers() > 0);
+    if (!hasRawImageSubscriber(stream_index) && !hasCompressedImageSubscriber(stream_index) &&
+        !has_color_undistortion_subscriber) {
       stopStream(stream_index);
     }
   }

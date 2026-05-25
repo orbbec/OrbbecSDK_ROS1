@@ -427,6 +427,13 @@ void OBCameraNode::selectBaseStream() {
   }
 }
 void OBCameraNode::setupColorPostProcessFilter() {
+  if (enable_color_undistortion_) {
+    color_undistortion_filter_ = std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
+    color_undistortion_filter_->setInterpolationMode(1);
+    color_undistortion_filter_->enable(true);
+    ROS_INFO_STREAM("Set color undistortion filter UnDistortionFilter to enabled");
+  }
+
   try {
     auto color_sensor = device_->getSensor(OB_SENSOR_COLOR);
     if (color_sensor) {
@@ -1779,6 +1786,14 @@ void OBCameraNode::setupPublishers() {
       metadata_publishers_[stream_index] =
           nh_.advertise<orbbec_camera::Metadata>("/" + camera_name_ + "/" + name + "/metadata", 1,
                                                  image_subscribed_cb, image_unsubscribed_cb);
+    }
+    if (stream_index == COLOR && enable_color_undistortion_) {
+      color_undistortion_camera_info_publisher_ = nh_.advertise<sensor_msgs::CameraInfo>(
+          "/" + camera_name_ + "/color/camera_info_undistorted", 1, image_subscribed_cb,
+          image_unsubscribed_cb);
+      color_undistortion_publisher_ =
+          getGlobalImagePublisher("/" + camera_name_ + "/color/image_undistorted",
+                                  image_transport_subscribed_cb, image_transport_unsubscribed_cb);
     }
   }
   if (enable_point_cloud_ && enable_stream_[DEPTH]) {
