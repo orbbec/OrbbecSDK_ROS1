@@ -132,7 +132,8 @@ class OBCameraNode {
 
   void syncConfigJsonDeviceSettings();
 
-  void syncConfigJsonFilterSettings();
+  void syncConfigJsonFilterSettings(const std::vector<std::shared_ptr<ob::Filter>> &filters,
+                                    const std::string &sensor_name);
 
   void setupDevices();
 
