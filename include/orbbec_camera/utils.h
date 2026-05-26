@@ -113,6 +113,8 @@ ros::Time fromUsToROSTime(uint64_t us);
 
 bool isOpenNIDevice(int pid);
 
+bool isHostTimeSyncSupported(int pid);
+
 OBMultiDeviceSyncMode OBSyncModeFromString(const std::string &mode);
 
 std::string OBSyncModeToString(const OBMultiDeviceSyncMode &mode);

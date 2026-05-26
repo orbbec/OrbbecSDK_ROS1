@@ -279,7 +279,7 @@ void OBCameraNode::getParameters() {
   ROS_INFO_STREAM("current time domain:" << time_domain_);
 
   enable_sync_host_time_ = nh_private_.param<bool>("enable_sync_host_time", true);
-  if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid())) {
+  if (enable_sync_host_time_ && isHostTimeSyncSupported(device_info_->pid())) {
     device_->timerSyncWithHost();
     ROS_INFO_STREAM("enable_sync_host_time:" << enable_sync_host_time_);
     if (time_domain_ == "device") {
