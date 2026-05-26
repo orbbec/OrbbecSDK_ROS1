@@ -387,6 +387,7 @@ bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
         return false;
         break;
     }
+    image_mirror_[stream_index] = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set mirror mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -432,6 +433,7 @@ bool OBCameraNode::setFlipCallback(std_srvs::SetBoolRequest& request,
         return false;
         break;
     }
+    image_flip_[stream_index] = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set flip mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -452,37 +454,31 @@ bool OBCameraNode::setRotationCallback(SetInt32Request& request, SetInt32Respons
     switch (stream) {
       case OB_STREAM_IR_RIGHT:
         device_->setIntProperty(OB_PROP_IR_RIGHT_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_IR_LEFT:
         device_->setIntProperty(OB_PROP_IR_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_IR:
         device_->setIntProperty(OB_PROP_IR_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_DEPTH:
         device_->setIntProperty(OB_PROP_DEPTH_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_COLOR:
         device_->setIntProperty(OB_PROP_COLOR_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_COLOR_LEFT:
         device_->setIntProperty(OB_PROP_COLOR_LEFT_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_COLOR_RIGHT:
         device_->setIntProperty(OB_PROP_COLOR_RIGHT_ROTATE_INT, request.data);
-        return true;
         break;
       default:
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
         return false;
         break;
     }
+    image_rotation_[stream_index] = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set rotation mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -527,6 +523,13 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
       return false;
     }
     sensor->setExposure(request.data);
+    if (stream_index == COLOR) {
+      color_exposure_ = request.data;
+    } else if (stream_index == DEPTH) {
+      depth_exposure_ = request.data;
+    } else if (stream_index == INFRA0 || stream_index == INFRA1 || stream_index == INFRA2) {
+      ir_exposure_ = request.data;
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set exposure: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -591,6 +594,10 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         ROS_INFO_STREAM("set depth AE ROI : "
                         << "[Left: " << config.x0_left << ", Right: " << config.x1_right
                         << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
+        depth_ae_roi_left_ = config.x0_left;
+        depth_ae_roi_right_ = config.x1_right;
+        depth_ae_roi_top_ = config.y0_top;
+        depth_ae_roi_bottom_ = config.y1_bottom;
         break;
       case OB_STREAM_COLOR:
       case OB_STREAM_COLOR_LEFT:
@@ -626,6 +633,10 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         ROS_INFO_STREAM("set color AE ROI : "
                         << "[Left: " << config.x0_left << ", Right: " << config.x1_right
                         << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
+        color_ae_roi_left_ = config.x0_left;
+        color_ae_roi_right_ = config.x1_right;
+        color_ae_roi_top_ = config.y0_top;
+        color_ae_roi_bottom_ = config.y1_bottom;
         break;
       default:
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
@@ -692,6 +703,13 @@ bool OBCameraNode::setGainCallback(SetInt32Request& request, SetInt32Response& r
     sensor->setGain(request.data);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     auto gain = sensor->getGain();
+    if (stream_index == COLOR) {
+      color_gain_ = gain;
+    } else if (stream_index == DEPTH) {
+      depth_gain_ = gain;
+    } else if (stream_index == INFRA0 || stream_index == INFRA1 || stream_index == INFRA2) {
+      ir_gain_ = gain;
+    }
     ROS_INFO_STREAM("After set gain: " << gain);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set gain: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -735,6 +753,7 @@ bool OBCameraNode::setAutoWhiteBalanceCallback(SetInt32Request& request,
     sensor->setAutoWhiteBalance(request.data);
     ROS_INFO_STREAM("Set auto white balance to: " << request.data);
     result = sensor->getAutoWhiteBalance();
+    enable_color_auto_white_balance_ = result;
     ROS_INFO_STREAM("After set auto white balance: " << result);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM(
@@ -785,6 +804,7 @@ bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Res
       return false;
     }
     sensor->setWhiteBalance(request.data);
+    color_white_balance_ = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -804,6 +824,12 @@ bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
   auto sensor = sensors_[stream_index];
   try {
     sensor->setAutoExposure(request.data);
+    if (stream_index == COLOR) {
+      enable_color_auto_exposure_ = request.data;
+    } else if (stream_index == DEPTH || stream_index == INFRA0 || stream_index == INFRA1 ||
+               stream_index == INFRA2) {
+      enable_ir_auto_exposure_ = request.data;
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set auto exposure: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -842,6 +868,7 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
     } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_LASER_BOOL, data);
     }
+    enable_laser_ = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set laser: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
@@ -856,6 +883,7 @@ bool OBCameraNode::setPtpConfigCallback(std_srvs::SetBoolRequest& request,
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, request.data);
+    enable_ptp_config_ = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("set ptp config failed: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
@@ -898,6 +926,7 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
         device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
       }
     }
+    enable_ldp_ = ldp_enable;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set LDP: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
@@ -1039,7 +1068,8 @@ bool OBCameraNode::savePointCloudCallback(std_srvs::EmptyRequest& request,
   return true;
 }
 
-bool OBCameraNode::exportConfigJsonCallback(SetStringRequest& request, SetStringResponse& response) {
+bool OBCameraNode::exportConfigJsonCallback(SetStringRequest& request,
+                                            SetStringResponse& response) {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   response.success = exportConfigJsonToFile(request.data, response.message);
   return true;
@@ -1156,6 +1186,14 @@ bool OBCameraNode::resetCameraGainCallback(std_srvs::EmptyRequest& request,
         return false;
       }
       sensor->setGain(data);
+      const auto gain = sensor->getGain();
+      if (stream_index == COLOR) {
+        color_gain_ = gain;
+      } else if (stream_index == DEPTH) {
+        depth_gain_ = gain;
+      } else if (stream_index == INFRA0 || stream_index == INFRA1 || stream_index == INFRA2) {
+        ir_gain_ = gain;
+      }
       return true;
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("Failed to set gain: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -1177,6 +1215,13 @@ bool OBCameraNode::resetCameraExposureCallback(std_srvs::EmptyRequest& request,
   if (sensor) {
     try {
       sensor->setExposure(data);
+      if (stream_index == COLOR) {
+        color_exposure_ = data;
+      } else if (stream_index == DEPTH) {
+        depth_exposure_ = data;
+      } else if (stream_index == INFRA0 || stream_index == INFRA1 || stream_index == INFRA2) {
+        ir_exposure_ = data;
+      }
       return true;
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("Failed to set exposure: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -1202,6 +1247,7 @@ bool OBCameraNode::resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& reque
         return false;
       }
       sensor->setWhiteBalance(data);
+      color_white_balance_ = data;
       return true;
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM(
@@ -1405,6 +1451,7 @@ bool OBCameraNode::setDisparityRangeModeCallback(SetInt32Request& request,
                               : (current_mode_index == 1) ? 128
                               : (current_mode_index == 2) ? 256
                                                           : current_mode_index;
+    disparity_range_mode_ = current_mode_value;
     response.success = true;
     response.message = "disparity_range_mode updated to " + std::to_string(current_mode_value);
     ROS_INFO_STREAM(response.message);
@@ -1452,6 +1499,7 @@ bool OBCameraNode::setDisparitySearchOffsetCallback(SetInt32Request& request,
 
     device_->setIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, request.data);
     auto current_offset = device_->getIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT);
+    disparity_search_offset_ = current_offset;
     ROS_INFO_STREAM("Set disparity_search_offset to " << current_offset);
     response.success = true;
     response.message = "disparity_search_offset updated to " + std::to_string(current_offset);
