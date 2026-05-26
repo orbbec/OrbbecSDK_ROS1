@@ -214,7 +214,7 @@ bool OBCameraNode::isLaunchParamProvided(const std::string& param_name) const {
          initial_ros_params_.find(nh_private_.resolveName(param_name)) != initial_ros_params_.end();
 }
 
-void OBCameraNode::loadConfigJsonAndSyncSettings() {
+void OBCameraNode::loadConfigJson() {
   if (load_config_json_file_path_.empty()) {
     return;
   }
@@ -230,8 +230,6 @@ void OBCameraNode::loadConfigJsonAndSyncSettings() {
     device_->loadPresetFromJsonFile(load_config_json_file_path_.c_str());
     config_json_loaded_ = true;
     ROS_INFO_STREAM("Config JSON loaded file=" << load_config_json_file_path_);
-
-    syncConfigJsonDeviceSettings();
   } catch (const ob::Error& e) {
     config_json_loaded_ = false;
     ROS_ERROR_STREAM("Config JSON load failed file=" << load_config_json_file_path_ << " error=\""
@@ -1198,9 +1196,6 @@ void OBCameraNode::setupColorPostProcessFilter() {
     ROS_DEBUG("Failed to get any color sensor filter list");
     return;
   }
-  if (isConfigJsonLoaded()) {
-    syncConfigJsonFilterSettings(color_filter_list_, "color");
-  }
   for (size_t i = 0; i < color_filter_list_.size(); i++) {
     auto filter = color_filter_list_[i];
     std::map<std::string, bool> filter_params = {
@@ -1309,9 +1304,6 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
       ROS_WARN_STREAM("Failed to get left ir sensor filter list");
       return;
     }
-    if (isConfigJsonLoaded()) {
-      syncConfigJsonFilterSettings(left_ir_filter_list_, "left_ir");
-    }
     for (size_t i = 0; i < left_ir_filter_list_.size(); i++) {
       auto filter = left_ir_filter_list_[i];
       std::map<std::string, bool> filter_params = {
@@ -1351,9 +1343,6 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
     if (right_ir_filter_list_.empty()) {
       ROS_WARN_STREAM("Failed to get right ir sensor filter list");
       return;
-    }
-    if (isConfigJsonLoaded()) {
-      syncConfigJsonFilterSettings(right_ir_filter_list_, "right_ir");
     }
     for (size_t i = 0; i < right_ir_filter_list_.size(); i++) {
       auto filter = right_ir_filter_list_[i];
@@ -1396,9 +1385,6 @@ void OBCameraNode::setupDepthPostProcessFilter() {
   if (depth_filter_list_.empty()) {
     ROS_WARN_STREAM("Failed to get depth sensor filter list");
     return;
-  }
-  if (isConfigJsonLoaded()) {
-    syncConfigJsonFilterSettings(depth_filter_list_, "depth");
   }
   auto depth_filter_enable_param = [](const std::string& filter_name) {
     if (filter_name == "DecimationFilter") {

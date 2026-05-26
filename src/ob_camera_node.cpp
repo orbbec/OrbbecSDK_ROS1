@@ -66,12 +66,17 @@ void OBCameraNode::init() {
   is_running_ = true;
   setupConfig();
   getParameters();
-  loadConfigJsonAndSyncSettings();
+  loadConfigJson();
   setupDevices();
   setupDepthPostProcessFilter();
   setupColorPostProcessFilter();
   setupRightIrPostProcessFilter();
   setupLeftIrPostProcessFilter();
+  syncConfigJsonDeviceSettings();
+  syncConfigJsonFilterSettings(depth_filter_list_, "depth");
+  syncConfigJsonFilterSettings(color_filter_list_, "color");
+  syncConfigJsonFilterSettings(left_ir_filter_list_, "left_ir");
+  syncConfigJsonFilterSettings(right_ir_filter_list_, "right_ir");
   selectBaseStream();
   setupProfiles();
   setupCameraInfo();

@@ -120,7 +120,7 @@ class OBCameraNode {
 
   void getParameters();
 
-  void loadConfigJsonAndSyncSettings();
+  void loadConfigJson();
 
   bool exportConfigJsonToFile(const std::string &file_path, std::string &message);
 
