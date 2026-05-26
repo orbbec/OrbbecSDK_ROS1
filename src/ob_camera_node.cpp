@@ -66,12 +66,17 @@ void OBCameraNode::init() {
   is_running_ = true;
   setupConfig();
   getParameters();
-  loadConfigJsonAndSyncSettings();
+  loadConfigJson();
   setupDevices();
   setupDepthPostProcessFilter();
   setupColorPostProcessFilter();
   setupRightIrPostProcessFilter();
   setupLeftIrPostProcessFilter();
+  syncConfigJsonDeviceSettings();
+  syncConfigJsonFilterSettings(depth_filter_list_, "depth");
+  syncConfigJsonFilterSettings(color_filter_list_, "color");
+  syncConfigJsonFilterSettings(left_ir_filter_list_, "left_ir");
+  syncConfigJsonFilterSettings(right_ir_filter_list_, "right_ir");
   selectBaseStream();
   setupProfiles();
   setupCameraInfo();
@@ -595,10 +600,6 @@ void OBCameraNode::setupFrameTimestampCsvLogger() {
 void OBCameraNode::init_interleave_mode() {
   static bool has_run = false;
   if (has_run) {
-    return;
-  }
-  if (isConfigJsonLoaded()) {
-    has_run = true;
     return;
   }
   if (!isLaunchParamProvided("interleave_frame_enable")) {

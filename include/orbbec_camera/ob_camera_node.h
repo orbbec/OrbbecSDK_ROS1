@@ -120,7 +120,7 @@ class OBCameraNode {
 
   void getParameters();
 
-  void loadConfigJsonAndSyncSettings();
+  void loadConfigJson();
 
   bool exportConfigJsonToFile(const std::string &file_path, std::string &message);
 
@@ -229,6 +229,12 @@ class OBCameraNode {
 
   static void appendDepthFilterParam(orbbec_camera::DepthFilterState &filter_state,
                                      const std::string &name, const std::string &value);
+
+  void updateDepthFilterEnabledCache(const std::string &filter_name, bool enabled);
+
+  bool applyNamedDepthFilterConfig(const std::string &filter_name, bool enabled,
+                                   const std::vector<orbbec_camera::DepthFilterParam> &params,
+                                   std::string &message);
 
   // Global publisher management methods
   static image_transport::Publisher getGlobalImagePublisher(
