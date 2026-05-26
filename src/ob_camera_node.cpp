@@ -2033,7 +2033,16 @@ void OBCameraNode::publishColorUndistortedFrame(const std::shared_ptr<ob::Frame>
     return;
   }
 
-  auto undistorted_video_frame = undistorted_frame->as<ob::VideoFrame>();
+  auto output_frame = undistorted_frame;
+  if (isColorFrameDecodeRequired(output_frame)) {
+    output_frame = softwareDecodeColorFrame(output_frame);
+    if (!output_frame) {
+      ROS_ERROR_STREAM("Decode UnDistortionFilter output frame failed");
+      return;
+    }
+  }
+
+  auto undistorted_video_frame = output_frame->as<ob::VideoFrame>();
   const auto width = static_cast<uint32_t>(undistorted_video_frame->width());
   const auto height = static_cast<uint32_t>(undistorted_video_frame->height());
   const auto data_size = undistorted_video_frame->dataSize();
