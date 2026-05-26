@@ -863,12 +863,17 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     int data = request.data ? 1 : 0;
+    bool cache_updated = false;
     if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
+      cache_updated = true;
     } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_LASER_BOOL, data);
+      cache_updated = true;
     }
-    enable_laser_ = request.data;
+    if (cache_updated) {
+      enable_laser_ = request.data;
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set laser: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
@@ -912,10 +917,12 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   bool ldp_enable = request.data;
   try {
+    bool cache_updated = false;
     if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
       auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
       device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, laser_enable);
+      cache_updated = true;
     } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
       if (!ldp_enable) {
         auto laser_enable = device_->getBoolProperty(OB_PROP_LASER_BOOL);
@@ -925,8 +932,11 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
       } else {
         device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
       }
+      cache_updated = true;
     }
-    enable_ldp_ = ldp_enable;
+    if (cache_updated) {
+      enable_ldp_ = ldp_enable;
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set LDP: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = e.getMessage();
