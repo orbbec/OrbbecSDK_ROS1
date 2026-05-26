@@ -295,10 +295,10 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
   auto log_readback = [](const std::string& scope, const std::string& name, const auto& value) {
     std::ostringstream ss;
     ss << std::boolalpha << value;
-    ROS_INFO_STREAM("Config JSON readback [" << scope << "] " << name << "=" << ss.str());
+    ROS_INFO_STREAM("Config final readback [" << scope << "] " << name << "=" << ss.str());
   };
   auto log_readback_fields = [](const std::string& scope, const std::string& fields) {
-    ROS_INFO_STREAM("Config JSON readback [" << scope << "] " << fields);
+    ROS_INFO_STREAM("Config final readback [" << scope << "] " << fields);
   };
   auto sync_bool = [&](const char* scope, const char* param_name, bool& member,
                        OBPropertyID property_id) {
@@ -309,8 +309,8 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
       member = device_->getBoolProperty(property_id);
       log_readback(scope, param_name, member);
     } catch (const std::exception& e) {
-      ROS_DEBUG_STREAM("Config JSON readback failed [" << scope << "] " << param_name << " error=\""
-                                                       << e.what() << "\"");
+      ROS_DEBUG_STREAM("Config final readback failed [" << scope << "] " << param_name
+                                                        << " error=\"" << e.what() << "\"");
     }
   };
   auto sync_int = [&](const char* scope, const char* param_name, int& member,
@@ -322,8 +322,8 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
       member = device_->getIntProperty(property_id);
       log_readback(scope, param_name, member);
     } catch (const std::exception& e) {
-      ROS_DEBUG_STREAM("Config JSON readback failed [" << scope << "] " << param_name << " error=\""
-                                                       << e.what() << "\"");
+      ROS_DEBUG_STREAM("Config final readback failed [" << scope << "] " << param_name
+                                                        << " error=\"" << e.what() << "\"");
     }
   };
   auto sync_float = [&](const char* scope, const char* param_name, float& member,
@@ -335,8 +335,8 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
       member = device_->getFloatProperty(property_id);
       log_readback(scope, param_name, member);
     } catch (const std::exception& e) {
-      ROS_DEBUG_STREAM("Config JSON readback failed [" << scope << "] " << param_name << " error=\""
-                                                       << e.what() << "\"");
+      ROS_DEBUG_STREAM("Config final readback failed [" << scope << "] " << param_name
+                                                        << " error=\"" << e.what() << "\"");
     }
   };
   auto sync_stream_orientation = [&](const char* param_prefix,
@@ -382,8 +382,8 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
       device_preset_ = device_->getCurrentPresetName();
       log_readback("depth", "device_preset", device_preset_);
     } catch (const std::exception& e) {
-      ROS_DEBUG_STREAM("Config JSON readback failed [depth] device_preset error=\"" << e.what()
-                                                                                    << "\"");
+      ROS_DEBUG_STREAM("Config final readback failed [depth] device_preset error=\"" << e.what()
+                                                                                     << "\"");
     }
   }
 
@@ -514,7 +514,7 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
           log_readback_fields("depth.interleave.params." + std::to_string(config_index),
                               fields.str());
         } catch (const std::exception& e) {
-          ROS_DEBUG_STREAM("Config JSON readback failed [depth.interleave.params."
+          ROS_DEBUG_STREAM("Config final readback failed [depth.interleave.params."
                            << config_index << "] error=\"" << e.what() << "\"");
         }
       };
@@ -665,10 +665,10 @@ void OBCameraNode::syncConfigJsonFilterSettings(
   auto log_readback = [](const std::string& scope, const std::string& name, const auto& value) {
     std::ostringstream ss;
     ss << std::boolalpha << value;
-    ROS_INFO_STREAM("Config JSON readback [" << scope << "] " << name << "=" << ss.str());
+    ROS_INFO_STREAM("Config final readback [" << scope << "] " << name << "=" << ss.str());
   };
   auto log_readback_fields = [](const std::string& scope, const std::string& fields) {
-    ROS_INFO_STREAM("Config JSON readback [" << scope << "] " << fields);
+    ROS_INFO_STREAM("Config final readback [" << scope << "] " << fields);
   };
   auto sync_filter_enabled = [&](const std::vector<std::shared_ptr<ob::Filter>>& filters,
                                  const std::string& filter_name, const std::string& param_name,
