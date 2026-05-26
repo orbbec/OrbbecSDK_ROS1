@@ -1064,8 +1064,7 @@ void OBCameraNode::setupColorPostProcessFilter() {
     ROS_DEBUG("Failed to get any color sensor filter list");
     return;
   }
-  const bool skip_color_filter_config = isConfigJsonLoaded();
-  if (skip_color_filter_config) {
+  if (isConfigJsonLoaded()) {
     syncConfigJsonFilterSettings(color_filter_list_, "color");
   }
   for (size_t i = 0; i < color_filter_list_.size(); i++) {
@@ -1075,9 +1074,6 @@ void OBCameraNode::setupColorPostProcessFilter() {
     };
     std::string filter_name = filter->type();
     ROS_DEBUG_STREAM("Setting color " << filter_name << "......");
-    if (skip_color_filter_config) {
-      continue;
-    }
     if (filter_params.find(filter_name) != filter_params.end() &&
         isLaunchParamProvided("enable_color_decimation_filter")) {
       std::string value = filter_params[filter_name] ? "true" : "false";
@@ -1179,8 +1175,7 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
       ROS_WARN_STREAM("Failed to get left ir sensor filter list");
       return;
     }
-    const bool skip_left_ir_filter_config = isConfigJsonLoaded();
-    if (skip_left_ir_filter_config) {
+    if (isConfigJsonLoaded()) {
       syncConfigJsonFilterSettings(left_ir_filter_list_, "left_ir");
     }
     for (size_t i = 0; i < left_ir_filter_list_.size(); i++) {
@@ -1190,9 +1185,6 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
       };
       std::string filter_name = filter->type();
       ROS_DEBUG_STREAM("Setting " << filter_name << "......");
-      if (skip_left_ir_filter_config) {
-        continue;
-      }
       if (filter_params.find(filter_name) != filter_params.end() &&
           isLaunchParamProvided("enable_left_ir_sequence_id_filter")) {
         std::string value = filter_params[filter_name] ? "true" : "false";
@@ -1226,8 +1218,7 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
       ROS_WARN_STREAM("Failed to get right ir sensor filter list");
       return;
     }
-    const bool skip_right_ir_filter_config = isConfigJsonLoaded();
-    if (skip_right_ir_filter_config) {
+    if (isConfigJsonLoaded()) {
       syncConfigJsonFilterSettings(right_ir_filter_list_, "right_ir");
     }
     for (size_t i = 0; i < right_ir_filter_list_.size(); i++) {
@@ -1237,9 +1228,6 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
       };
       std::string filter_name = filter->type();
       ROS_DEBUG_STREAM("Setting " << filter_name << "......");
-      if (skip_right_ir_filter_config) {
-        continue;
-      }
       if (filter_params.find(filter_name) != filter_params.end() &&
           isLaunchParamProvided("enable_right_ir_sequence_id_filter")) {
         std::string value = filter_params[filter_name] ? "true" : "false";
@@ -1275,8 +1263,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
     ROS_WARN_STREAM("Failed to get depth sensor filter list");
     return;
   }
-  const bool skip_depth_filter_config = isConfigJsonLoaded();
-  if (skip_depth_filter_config) {
+  if (isConfigJsonLoaded()) {
     syncConfigJsonFilterSettings(depth_filter_list_, "depth");
   }
   auto depth_filter_enable_param = [](const std::string& filter_name) {
@@ -1340,13 +1327,6 @@ void OBCameraNode::setupDepthPostProcessFilter() {
     };
     std::string filter_name = filter->type();
     ROS_DEBUG_STREAM("Setting " << filter_name << "......");
-    if (skip_depth_filter_config) {
-      try {
-        filter_status_[filter_name] = filter->isEnabled();
-      } catch (const std::exception&) {
-      }
-      continue;
-    }
     const auto enable_param_name = depth_filter_enable_param(filter_name);
     if (filter_params.find(filter_name) != filter_params.end() &&
         isLaunchParamProvided(enable_param_name)) {
@@ -1468,12 +1448,11 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       });
 }
 void OBCameraNode::setupDevices() {
-  const bool allow_launch_config = !isConfigJsonLoaded();
   auto should_apply_launch_config = [this](const std::string& param_name) {
-    return !isConfigJsonLoaded() && isLaunchParamProvided(param_name);
+    return isLaunchParamProvided(param_name);
   };
 
-  if (allow_launch_config && !device_preset_.empty()) {
+  if (!device_preset_.empty()) {
     try {
       ROS_DEBUG_STREAM("Available presets:");
       auto preset_list = device_->getAvailablePresetList();
@@ -1491,7 +1470,7 @@ void OBCameraNode::setupDevices() {
       ROS_ERROR_STREAM("Failed to load device preset");
     }
   }
-  if (allow_launch_config && !color_preset_.empty() &&
+  if (!color_preset_.empty() &&
       device_->isPropertySupported(OB_PROP_COLOR_PRESET_PRIORITY_INT, OB_PERMISSION_WRITE)) {
     std::string preset_key = color_preset_;
     std::transform(preset_key.begin(), preset_key.end(), preset_key.begin(), ::tolower);
@@ -1514,7 +1493,7 @@ void OBCameraNode::setupDevices() {
       }
     }
   }
-  if (allow_launch_config && !preset_resolution_config_.empty()) {
+  if (!preset_resolution_config_.empty()) {
     OBPresetResolutionConfig presetResolutionConfig;
     std::istringstream iss(preset_resolution_config_);
     std::string token;
@@ -1585,7 +1564,7 @@ void OBCameraNode::setupDevices() {
       } else if (stream_index == INFRA2) {
         rotationPropertyID = OB_PROP_IR_RIGHT_ROTATE_INT;
       }
-      if (allow_launch_config && image_rotation_[stream_index] != -1 &&
+      if (image_rotation_[stream_index] != -1 &&
           device_->isPropertySupported(rotationPropertyID, OB_PERMISSION_WRITE)) {
         device_->setIntProperty(rotationPropertyID, image_rotation_[stream_index]);
         ROS_INFO_STREAM("Current " << stream_name_[stream_index]
@@ -1661,8 +1640,8 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
     }
-    if (allow_launch_config && noise_removal_filter_min_diff_ != -1 &&
-        enable_noise_removal_filter_ && sensors_.find(DEPTH) != sensors_.end() &&
+    if (noise_removal_filter_min_diff_ != -1 && enable_noise_removal_filter_ &&
+        sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
       auto default_noise_removal_filter_min_diff =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
@@ -1672,8 +1651,8 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Current noise_removal_filter_min_diff: "
                       << device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT));
     }
-    if (allow_launch_config && noise_removal_filter_max_size_ != -1 &&
-        enable_noise_removal_filter_ && sensors_.find(DEPTH) != sensors_.end() &&
+    if (noise_removal_filter_max_size_ != -1 && enable_noise_removal_filter_ &&
+        sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
       auto default_noise_removal_filter_max_size =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
@@ -1690,7 +1669,7 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Set noise removal filter to "
                       << (enable_noise_removal_filter_ ? "true" : "false"));
     }
-    if (allow_launch_config && !depth_work_mode_.empty() &&
+    if (!depth_work_mode_.empty() &&
         device_->isPropertySupported(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, OB_PERMISSION_READ_WRITE)) {
       auto depthModeList = device_->getDepthWorkModeList();
       for (uint32_t i = 0; i < depthModeList->getCount(); i++) {
@@ -1699,7 +1678,7 @@ void OBCameraNode::setupDevices() {
       device_->switchDepthWorkMode(depth_work_mode_.c_str());
       ROS_INFO_STREAM("Set depth work mode: " << depth_work_mode_);
     }
-    if (allow_launch_config && laser_energy_level_ != -1 &&
+    if (laser_energy_level_ != -1 &&
         device_->isPropertySupported(OB_PROP_LASER_ENERGY_LEVEL_INT, OB_PERMISSION_READ_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_LASER_ENERGY_LEVEL_INT);
       if (laser_energy_level_ < range.min || laser_energy_level_ > range.max) {
@@ -1744,8 +1723,7 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
     }
-    if (allow_launch_config && !disparity_to_depth_mode_.empty() &&
-        sensors_.find(DEPTH) != sensors_.end() &&
+    if (!disparity_to_depth_mode_.empty() && sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE) &&
         device_->isPropertySupported(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
@@ -1766,7 +1744,7 @@ void OBCameraNode::setupDevices() {
                                                             << "', keeping default settings");
       }
     }
-    if (allow_launch_config && !sync_mode_str_.empty() &&
+    if (!sync_mode_str_.empty() &&
         device_->isPropertySupported(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
       auto sync_config = device_->getMultiDeviceSyncConfig();
@@ -1816,7 +1794,7 @@ void OBCameraNode::setupDevices() {
           "Current color auto white balance: "
           << (device_->getBoolProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL) ? "ON" : "OFF"));
     }
-    if (allow_launch_config && color_backlight_compensation_ != -1 &&
+    if (color_backlight_compensation_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
                                      OB_PERMISSION_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
@@ -1824,13 +1802,13 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Current color backlight compensation: "
                       << device_->getIntProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT));
     }
-    if (allow_launch_config && color_denoising_level_ != -1 &&
+    if (color_denoising_level_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_DENOISING_LEVEL_INT, OB_PERMISSION_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_DENOISING_LEVEL_INT, color_denoising_level_);
       ROS_INFO_STREAM("Current color denoising level: "
                       << device_->getIntProperty(OB_PROP_COLOR_DENOISING_LEVEL_INT));
     }
-    if (allow_launch_config && !color_powerline_freq_.empty() &&
+    if (!color_powerline_freq_.empty() &&
         device_->isPropertySupported(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, OB_PERMISSION_WRITE)) {
       if (color_powerline_freq_ == "disable") {
         device_->setIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 0);
@@ -1849,11 +1827,11 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     }
-    if (allow_launch_config && color_exposure_ != -1 &&
+    if (color_exposure_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_EXPOSURE_INT, color_exposure_);
     }
-    if (allow_launch_config && color_gain_ != -1 &&
+    if (color_gain_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_GAIN_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_GAIN_INT);
       if (color_gain_ < range.min || color_gain_ > range.max) {
@@ -1864,7 +1842,7 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("Current color gain: " << device_->getIntProperty(OB_PROP_COLOR_GAIN_INT));
       }
     }
-    if (allow_launch_config && color_brightness_ != -1 &&
+    if (color_brightness_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_BRIGHTNESS_INT);
       if (color_brightness_ < range.min || color_brightness_ > range.max) {
@@ -1876,7 +1854,7 @@ void OBCameraNode::setupDevices() {
             "Current color brightness: " << device_->getIntProperty(OB_PROP_COLOR_BRIGHTNESS_INT));
       }
     }
-    if (allow_launch_config && color_roi_brightness_ != -1 &&
+    if (color_roi_brightness_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_ROI_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_ROI_BRIGHTNESS_INT);
       if (color_roi_brightness_ < range.min || color_roi_brightness_ > range.max) {
@@ -1888,7 +1866,7 @@ void OBCameraNode::setupDevices() {
                         << device_->getIntProperty(OB_PROP_COLOR_ROI_BRIGHTNESS_INT));
       }
     }
-    if (allow_launch_config && color_sharpness_ != -1 &&
+    if (color_sharpness_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_SHARPNESS_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_SHARPNESS_INT);
       if (color_sharpness_ < range.min || color_sharpness_ > range.max) {
@@ -1900,7 +1878,7 @@ void OBCameraNode::setupDevices() {
             "Current color sharpness: " << device_->getIntProperty(OB_PROP_COLOR_SHARPNESS_INT));
       }
     }
-    if (allow_launch_config && color_gamma_ != -1 &&
+    if (color_gamma_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_GAMMA_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_GAMMA_INT);
       if (color_gamma_ < range.min || color_gamma_ > range.max) {
@@ -1912,7 +1890,7 @@ void OBCameraNode::setupDevices() {
             "Current color gamma: " << device_->getIntProperty(OB_PROP_COLOR_GAMMA_INT));
       }
     }
-    if (allow_launch_config && color_white_balance_ != -1 &&
+    if (color_white_balance_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_WHITE_BALANCE_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_WHITE_BALANCE_INT);
       if (color_white_balance_ < range.min || color_white_balance_ > range.max) {
@@ -1924,7 +1902,7 @@ void OBCameraNode::setupDevices() {
                         << device_->getIntProperty(OB_PROP_COLOR_WHITE_BALANCE_INT));
       }
     }
-    if (allow_launch_config && color_saturation_ != -1 &&
+    if (color_saturation_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_SATURATION_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_SATURATION_INT);
       if (color_saturation_ < range.min || color_saturation_ > range.max) {
@@ -1936,7 +1914,7 @@ void OBCameraNode::setupDevices() {
             "Current color saturation: " << device_->getIntProperty(OB_PROP_COLOR_SATURATION_INT));
       }
     }
-    if (allow_launch_config && color_contrast_ != -1 &&
+    if (color_contrast_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_CONTRAST_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_CONTRAST_INT);
       if (color_contrast_ < range.min || color_contrast_ > range.max) {
@@ -1948,7 +1926,7 @@ void OBCameraNode::setupDevices() {
             "Current color contrast: " << device_->getIntProperty(OB_PROP_COLOR_CONTRAST_INT));
       }
     }
-    if (allow_launch_config && color_hue_ != -1 &&
+    if (color_hue_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_HUE_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_HUE_INT);
       if (color_hue_ < range.min || color_hue_ > range.max) {
@@ -1959,7 +1937,7 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("Current color hue: " << device_->getIntProperty(OB_PROP_COLOR_HUE_INT));
       }
     }
-    if (allow_launch_config && color_ae_max_exposure_ != -1 &&
+    if (color_ae_max_exposure_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_AE_MAX_EXPOSURE_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_AE_MAX_EXPOSURE_INT);
       if (color_ae_max_exposure_ < range.min || color_ae_max_exposure_ > range.max) {
@@ -1971,7 +1949,7 @@ void OBCameraNode::setupDevices() {
                         << device_->getIntProperty(OB_PROP_COLOR_AE_MAX_EXPOSURE_INT));
       }
     }
-    if (allow_launch_config && color_ae_max_gain_ != -1 &&
+    if (color_ae_max_gain_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_AE_MAX_GAIN_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_COLOR_AE_MAX_GAIN_INT);
       if (color_ae_max_gain_ < range.min || color_ae_max_gain_ > range.max) {
@@ -1998,7 +1976,7 @@ void OBCameraNode::setupDevices() {
           "Current depth auto exposure priority: "
           << (device_->getIntProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT) ? "ON" : "OFF"));
     }
-    if (allow_launch_config && mean_intensity_set_point_ != -1 &&
+    if (mean_intensity_set_point_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_IR_BRIGHTNESS_INT);
       if (mean_intensity_set_point_ < range.min || mean_intensity_set_point_ > range.max) {
@@ -2014,15 +1992,15 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     }
-    if (allow_launch_config && ir_exposure_ != -1 &&
+    if (ir_exposure_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_IR_EXPOSURE_INT, ir_exposure_);
     }
-    if (allow_launch_config && ir_gain_ != -1 &&
+    if (ir_gain_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_GAIN_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_IR_GAIN_INT, ir_gain_);
     }
-    if (allow_launch_config && ir_brightness_ != -1 &&
+    if (ir_brightness_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_IR_BRIGHTNESS_INT);
       if (ir_brightness_ < range.min || ir_brightness_ > range.max) {
@@ -2034,7 +2012,7 @@ void OBCameraNode::setupDevices() {
             "Current IR brightness: " << device_->getIntProperty(OB_PROP_IR_BRIGHTNESS_INT));
       }
     }
-    if (allow_launch_config && ir_ae_max_exposure_ != -1 &&
+    if (ir_ae_max_exposure_ != -1 &&
         device_->isPropertySupported(OB_PROP_IR_AE_MAX_EXPOSURE_INT, OB_PERMISSION_WRITE)) {
       auto range = device_->getIntPropertyRange(OB_PROP_IR_AE_MAX_EXPOSURE_INT);
       if (ir_ae_max_exposure_ < range.min || ir_ae_max_exposure_ > range.max) {
@@ -2060,7 +2038,7 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Set PTP Config: " << (enable_ptp_config_ ? "ON" : "OFF"));
       device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, enable_ptp_config_);
     }
-    if (allow_launch_config && !depth_precision_str_.empty() &&
+    if (!depth_precision_str_.empty() &&
         device_->isPropertySupported(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PERMISSION_READ_WRITE)) {
       auto default_precision_level = device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT);
       if (default_precision_level != depth_precision_level_) {
@@ -2070,7 +2048,7 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM(
             "Current depth precision: " << depthPrecisionLevelToString(current_depth_precision));
       }
-    } else if (allow_launch_config && !depth_precision_str_.empty() &&
+    } else if (!depth_precision_str_.empty() &&
                device_->isPropertySupported(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT,
                                             OB_PERMISSION_READ_WRITE)) {
       auto depth_unit_flexible_adjustment = depthPrecisionFromString(depth_precision_str_);
@@ -2096,7 +2074,7 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_IR_LONG_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_IR_LONG_EXPOSURE_BOOL, enable_ir_long_exposure_);
     }
-    if (allow_launch_config && disparity_range_mode_ != -1 &&
+    if (disparity_range_mode_ != -1 &&
         device_->isPropertySupported(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, OB_PERMISSION_WRITE)) {
       if (disparity_range_mode_ == 64) {
         device_->setIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, 0);
@@ -2131,7 +2109,7 @@ void OBCameraNode::setupDevices() {
         }
       }
     }
-    if (allow_launch_config && !exposure_range_mode_.empty() && exposure_range_mode_ != "default" &&
+    if (!exposure_range_mode_.empty() && exposure_range_mode_ != "default" &&
         device_->isPropertySupported(OB_PROP_DEVICE_PERFORMANCE_MODE_INT, OB_PERMISSION_WRITE)) {
       if (exposure_range_mode_ == "ultimate") {
         device_->setIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT, 1);
@@ -2161,7 +2139,7 @@ void OBCameraNode::setupDevices() {
           "Current gyro data correction: "
           << (device_->getBoolProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL) ? "ON" : "OFF"));
     }
-    if (allow_launch_config && isGemini335PID(pid) && !intra_camera_sync_reference_.empty() &&
+    if (isGemini335PID(pid) && !intra_camera_sync_reference_.empty() &&
         (sync_mode_ == OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING ||
          sync_mode_ == OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING) &&
         device_->isPropertySupported(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT,
@@ -2184,12 +2162,12 @@ void OBCameraNode::setupDevices() {
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.what());
   }
-  if (allow_launch_config && !ae_strategy_.empty() &&
+  if (!ae_strategy_.empty() &&
       device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
     device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, ae_strategy_ == "motion" ? 1 : 0);
     ROS_INFO_STREAM("Current AE Strategy: " << ae_strategy_);
   }
-  if (allow_launch_config && (ae_reference_stream_ == "depth" || ae_reference_stream_ == "color") &&
+  if ((ae_reference_stream_ == "depth" || ae_reference_stream_ == "color") &&
       device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE)) {
     auto ae_reference = ae_reference_stream_ == "depth" ? 0 : 1;
     device_->setIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT, ae_reference);
@@ -2823,10 +2801,6 @@ void OBCameraNode::setDisparitySearchOffset() {
   if (has_run) {
     return;
   }
-  if (isConfigJsonLoaded()) {
-    has_run = true;
-    return;
-  }
   if ((disparity_search_offset_ < 0 || disparity_search_offset_ > 127) &&
       (offset_index0_ < 0 || offset_index0_ > 127 || offset_index1_ < 0 || offset_index1_ > 127)) {
     has_run = true;
@@ -2857,10 +2831,6 @@ void OBCameraNode::setDisparitySearchOffset() {
 void OBCameraNode::setDepthAutoExposureROI() {
   static bool depth_roi_has_run = false;
   if (depth_roi_has_run) {
-    return;
-  }
-  if (isConfigJsonLoaded()) {
-    depth_roi_has_run = true;
     return;
   }
   if (depth_ae_roi_left_ == -1 && depth_ae_roi_top_ == -1 && depth_ae_roi_right_ == -1 &&
@@ -2910,10 +2880,6 @@ void OBCameraNode::setDepthAutoExposureROI() {
 void OBCameraNode::setColorAutoExposureROI() {
   static bool color_roi_has_run = false;
   if (color_roi_has_run) {
-    return;
-  }
-  if (isConfigJsonLoaded()) {
-    color_roi_has_run = true;
     return;
   }
   if (color_ae_roi_left_ == -1 && color_ae_roi_top_ == -1 && color_ae_roi_right_ == -1 &&

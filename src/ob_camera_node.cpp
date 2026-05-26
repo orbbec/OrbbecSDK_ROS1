@@ -597,10 +597,6 @@ void OBCameraNode::init_interleave_mode() {
   if (has_run) {
     return;
   }
-  if (isConfigJsonLoaded()) {
-    has_run = true;
-    return;
-  }
   if (!isLaunchParamProvided("interleave_frame_enable")) {
     has_run = true;
     return;
