@@ -24,6 +24,8 @@
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/CompressedImage.h>
+#include <sensor_msgs/Image.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/distortion_models.h>
 #include <sensor_msgs/Imu.h>
@@ -161,6 +163,14 @@ class OBCameraNode {
 
   void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair &stream_index);
 
+  void publishColorUndistortedFrame(const std::shared_ptr<ob::Frame> &frame,
+                                    const ros::Time &timestamp, const std::string &frame_id,
+                                    const sensor_msgs::CameraInfo &camera_info,
+                                    const OBCameraIntrinsic &intrinsic);
+
+  void onNewStandaloneFrameCallback(std::shared_ptr<ob::Frame> frame,
+                                    const stream_index_pair &stream_index);
+
   void setupFrameTimestampCsvLogger();
 
   void logFrameInfoOnce(const stream_index_pair &stream_index,
@@ -176,6 +186,20 @@ class OBCameraNode {
                              const stream_index_pair &stream_index);
 
   bool decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame> &frame, uint8_t *dest);
+
+  bool isColorFrameDecodeRequired(const std::shared_ptr<ob::Frame> &frame) const;
+
+  bool hasRawImageSubscriber(const stream_index_pair &stream_index) const;
+
+  bool hasCompressedImageSubscriber(const stream_index_pair &stream_index) const;
+
+  bool isMjpgColorStream(const stream_index_pair &stream_index) const;
+
+  bool hasImagePublisher(const stream_index_pair &stream_index) const;
+
+  void publishCompressedColorImage(const std::shared_ptr<ob::Frame> &frame,
+                                   const stream_index_pair &stream_index,
+                                   const ros::Time &timestamp, const std::string &frame_id);
 
   std::shared_ptr<ob::Frame> decodeIRMJPGFrame(const std::shared_ptr<ob::Frame> &frame);
 
@@ -469,6 +493,8 @@ class OBCameraNode {
   std::map<stream_index_pair, int> save_images_count_;
   int max_save_images_count_ = 10;
   std::map<stream_index_pair, image_transport::Publisher> image_publishers_;
+  std::map<stream_index_pair, ros::Publisher> raw_image_publishers_;
+  std::map<stream_index_pair, ros::Publisher> compressed_image_publishers_;
   std::map<stream_index_pair, uint32_t> image_seq_;
   std::map<stream_index_pair, ros::Publisher> camera_info_publishers_;
   std::map<stream_index_pair, bool> frame_info_logged_;
@@ -774,6 +800,10 @@ class OBCameraNode {
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
   bool enable_firmware_log_ = false;
+  bool enable_color_undistortion_ = false;
+  std::shared_ptr<ob::UnDistortionFilter> color_undistortion_filter_;
+  image_transport::Publisher color_undistortion_publisher_;
+  ros::Publisher color_undistortion_camera_info_publisher_;
   bool has_first_color_frame_ = false;
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;

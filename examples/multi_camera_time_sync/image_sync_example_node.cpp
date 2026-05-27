@@ -1,46 +1,76 @@
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/synchronizer.h>
+#include <ros/master.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
-#include <message_filters/subscriber.h>
-#include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/approximate_time.h>
 
 #include <cv_bridge/cv_bridge.h>
-#include <opencv2/opencv.hpp>
-#include <iostream>
-#include <vector>
-#include <limits>
+
 #include <algorithm>
-#include <iomanip>
-#include <thread>
-#include <mutex>
+#include <array>
+#include <cmath>
 #include <condition_variable>
 #include <deque>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <opencv2/opencv.hpp>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <vector>
 
-using namespace message_filters;
-using namespace sensor_msgs;
+using Image = sensor_msgs::Image;
+using ImageConstPtr = sensor_msgs::ImageConstPtr;
 
 class ImageSyncNode {
  public:
-  ImageSyncNode()
-      : diff_sum_(0.0), count_(0), max_diff_(0.0), min_diff_(std::numeric_limits<double>::max()) {
-    camera_01_color_sub_.subscribe(nh_, "/camera_01/color/image_raw", 1);
-    camera_01_depth_sub_.subscribe(nh_, "/camera_01/depth/image_raw", 1);
-    camera_02_color_sub_.subscribe(nh_, "/camera_02/color/image_raw", 1);
-    camera_02_depth_sub_.subscribe(nh_, "/camera_02/depth/image_raw", 1);
-    camera_03_color_sub_.subscribe(nh_, "/camera_03/color/image_raw", 1);
-    camera_03_depth_sub_.subscribe(nh_, "/camera_03/depth/image_raw", 1);
-    camera_04_color_sub_.subscribe(nh_, "/camera_04/color/image_raw", 1);
-    camera_04_depth_sub_.subscribe(nh_, "/camera_04/depth/image_raw", 1);
+  explicit ImageSyncNode(const double hz = 30.0)
+      : nh_(),
+        pnh_("~"),
+        diff_sum_(0.0),
+        count_(0),
+        max_diff_(0.0),
+        min_diff_(std::numeric_limits<double>::max()),
+        last_time_(0.0),
+        frame_interval_(1.0 / hz),
+        stop_display_thread_(false) {
+    pnh_.getParam("sync_topics", sync_topics_);
+    pnh_.param("queue_size", queue_size_, 10);
+    pnh_.param("sync_tolerance_ms", sync_tolerance_ms_, frame_interval_ * 500.0);
+    pnh_.param("auto_discovery_timeout_ms", auto_discovery_timeout_ms_, 2000);
+    pnh_.param("auto_discovery_poll_ms", auto_discovery_poll_ms_, 100);
 
-    sync_.reset(new Sync(SyncPolicy(10), camera_01_color_sub_, camera_01_depth_sub_,
-                         camera_02_color_sub_, camera_02_depth_sub_, camera_03_color_sub_,
-                         camera_03_depth_sub_, camera_04_color_sub_, camera_04_depth_sub_));
-    sync_->registerCallback(
-        boost::bind(&ImageSyncNode::sync_callback, this, _1, _2, _3, _4, _5, _6, _7, _8));
+    if (sync_topics_.empty()) {
+      sync_topics_ = discover_image_topics();
+      ROS_INFO("Parameter sync_topics is empty. Auto-discovered %zu color/depth image topics.",
+               sync_topics_.size());
+    } else {
+      ROS_INFO("Using %zu image topics from parameter sync_topics.", sync_topics_.size());
+    }
 
-    ROS_INFO("ImageSyncNode started, waiting for messages...");
+    validate_topics();
+    topic_infos_ = make_topic_infos(sync_topics_);
 
-    // Start display thread
+    ROS_INFO("ImageSyncNode started with %zu topic(s):", sync_topics_.size());
+    for (const auto &topic : sync_topics_) {
+      ROS_INFO("  %s", topic.c_str());
+    }
+
+    if (sync_topics_.size() == 1) {
+      single_sub_ =
+          nh_.subscribe<Image>(sync_topics_.front(), queue_size_, &ImageSyncNode::single_callback,
+                               this);
+    } else {
+      for (size_t i = 0; i < sync_topics_.size(); ++i) {
+        subscribers_[i].subscribe(nh_, sync_topics_[i], queue_size_);
+      }
+      create_synchronizer();
+    }
+
     display_thread_ = std::thread(&ImageSyncNode::display_thread_func, this);
   }
 
@@ -56,7 +86,20 @@ class ImageSyncNode {
   }
 
  private:
+  struct TopicInfo {
+    std::string topic;
+    std::string camera_name;
+    std::string image_type;
+  };
+
+  struct FrameBundle {
+    std::vector<cv::Mat> images;
+    std::vector<double> timestamps;
+    std::vector<TopicInfo> topic_infos;
+  };
+
   ros::NodeHandle nh_;
+  ros::NodeHandle pnh_;
 
   double diff_sum_;
   size_t count_;
@@ -64,64 +107,144 @@ class ImageSyncNode {
   double min_diff_;
   double last_time_;
   uint64_t frame_count_ = 0;
-  uint64_t drop_count_ = 0;
   double frame_interval_;
   double fps_cur_ = 0.0;
   double fps_sum_ = 0.0;
   double fps_max_ = 0.0;
   double fps_min_ = std::numeric_limits<double>::max();
 
+  std::vector<std::string> sync_topics_;
+  std::vector<TopicInfo> topic_infos_;
+  int queue_size_;
+  double sync_tolerance_ms_;
+  int auto_discovery_timeout_ms_;
+  int auto_discovery_poll_ms_;
+
+  ros::Subscriber single_sub_;
+  std::array<message_filters::Subscriber<Image>, 8> subscribers_;
+  std::shared_ptr<void> sync_;
+
   std::thread display_thread_;
-  struct FrameBundle {
-    std::vector<cv::Mat> images;
-    std::vector<double> timestamps;
-    std::vector<std::string> camera_names;
-    std::vector<std::string> image_types;
-  };
   std::deque<FrameBundle> frame_queue_;
   std::mutex queue_mutex_;
   std::condition_variable queue_cv_;
-  bool stop_display_thread_ = false;
+  bool stop_display_thread_;
 
-  using SyncPolicy =
-      sync_policies::ApproximateTime<Image, Image, Image, Image, Image, Image, Image, Image>;
-  using Sync = Synchronizer<SyncPolicy>;
-  std::shared_ptr<Sync> sync_;
+  static bool has_suffix(const std::string &str, const std::string &suffix) {
+    return str.size() >= suffix.size() &&
+           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+  }
 
-  message_filters::Subscriber<Image> camera_01_color_sub_;
-  message_filters::Subscriber<Image> camera_01_depth_sub_;
-  message_filters::Subscriber<Image> camera_02_color_sub_;
-  message_filters::Subscriber<Image> camera_02_depth_sub_;
-  message_filters::Subscriber<Image> camera_03_color_sub_;
-  message_filters::Subscriber<Image> camera_03_depth_sub_;
-  message_filters::Subscriber<Image> camera_04_color_sub_;
-  message_filters::Subscriber<Image> camera_04_depth_sub_;
+  std::vector<std::string> discover_image_topics() {
+    std::vector<std::string> topics;
+    const ros::Duration timeout(std::max(0, auto_discovery_timeout_ms_) / 1000.0);
+    const ros::Duration poll_interval(std::max(1, auto_discovery_poll_ms_) / 1000.0);
+    const ros::Time start = ros::Time::now();
 
-  void sync_callback(const ImageConstPtr &img01_c, const ImageConstPtr &img01_d,
-                     const ImageConstPtr &img02_c, const ImageConstPtr &img02_d,
-                     const ImageConstPtr &img03_c, const ImageConstPtr &img03_d,
-                     const ImageConstPtr &img04_c, const ImageConstPtr &img04_d) {
+    while (ros::ok()) {
+      ros::master::V_TopicInfo topic_infos;
+      if (ros::master::getTopics(topic_infos)) {
+        for (const auto &topic_info : topic_infos) {
+          const auto &topic = topic_info.name;
+          if (!has_suffix(topic, "/color/image_raw") && !has_suffix(topic, "/depth/image_raw")) {
+            continue;
+          }
+          const bool is_image = topic_info.datatype == "sensor_msgs/Image";
+          const bool already_found = std::find(topics.begin(), topics.end(), topic) != topics.end();
+          if (is_image && !already_found) {
+            topics.push_back(topic);
+          }
+        }
+      }
+
+      if (ros::Time::now() - start >= timeout) {
+        break;
+      }
+      poll_interval.sleep();
+    }
+
+    std::sort(topics.begin(), topics.end());
+    topics.erase(std::unique(topics.begin(), topics.end()), topics.end());
+    return topics;
+  }
+
+  void validate_topics() {
+    std::vector<std::string> deduplicated_topics;
+    deduplicated_topics.reserve(sync_topics_.size());
+    for (const auto &topic : sync_topics_) {
+      if (topic.empty()) {
+        continue;
+      }
+      if (std::find(deduplicated_topics.begin(), deduplicated_topics.end(), topic) ==
+          deduplicated_topics.end()) {
+        deduplicated_topics.push_back(topic);
+      }
+    }
+    sync_topics_ = std::move(deduplicated_topics);
+
+    if (sync_topics_.empty()) {
+      throw std::runtime_error(
+          "No image topics to synchronize. Set parameter sync_topics or start color/depth cameras "
+          "before this node.");
+    }
+
+    if (sync_topics_.size() > 8) {
+      throw std::runtime_error(
+          "Official ROS message_filters::Synchronizer supports at most 9 inputs, and this example "
+          "supports 1-8 image topics. Found " +
+          std::to_string(sync_topics_.size()) +
+          " color/depth image topics. Please pass <= 8 topics with sync_topics or split the sync "
+          "into multiple stages.");
+    }
+  }
+
+  std::vector<TopicInfo> make_topic_infos(const std::vector<std::string> &topics) {
+    std::vector<TopicInfo> infos;
+    infos.reserve(topics.size());
+    for (const auto &topic : topics) {
+      TopicInfo info;
+      info.topic = topic;
+      info.image_type = "image";
+      info.camera_name = topic;
+
+      const auto color_pos = topic.rfind("/color/image_raw");
+      const auto depth_pos = topic.rfind("/depth/image_raw");
+      if (color_pos != std::string::npos) {
+        info.image_type = "color";
+        info.camera_name = topic.substr(0, color_pos);
+      } else if (depth_pos != std::string::npos) {
+        info.image_type = "depth";
+        info.camera_name = topic.substr(0, depth_pos);
+      }
+
+      const auto slash_pos = info.camera_name.find_last_of('/');
+      if (slash_pos != std::string::npos && slash_pos + 1 < info.camera_name.size()) {
+        info.camera_name = info.camera_name.substr(slash_pos + 1);
+      }
+      infos.push_back(info);
+    }
+    return infos;
+  }
+
+  void single_callback(const ImageConstPtr &msg) { handle_synced_images({msg}); }
+
+  template <typename... MsgPtrs>
+  void sync_callback(const MsgPtrs &...msgs) {
+    handle_synced_images({msgs...});
+  }
+
+  void handle_synced_images(const std::vector<ImageConstPtr> &msgs) {
     std::vector<cv::Mat> images;
     std::vector<double> timestamps;
-    std::vector<std::string> camera_names = {"camera_01", "camera_01", "camera_02", "camera_02",
-                                             "camera_03", "camera_03", "camera_04", "camera_04"};
-    std::vector<std::string> image_types = {"color", "depth", "color", "depth",
-                                            "color", "depth", "color", "depth"};
+    images.reserve(msgs.size());
+    timestamps.reserve(msgs.size());
 
     try {
-      images.push_back(cv_bridge::toCvShare(img01_c, "bgr8")->image.clone());
-      images.push_back(cv_bridge::toCvShare(img01_d, "16UC1")->image.clone());
-      images.push_back(cv_bridge::toCvShare(img02_c, "bgr8")->image.clone());
-      images.push_back(cv_bridge::toCvShare(img02_d, "16UC1")->image.clone());
-      images.push_back(cv_bridge::toCvShare(img03_c, "bgr8")->image.clone());
-      images.push_back(cv_bridge::toCvShare(img03_d, "16UC1")->image.clone());
-      images.push_back(cv_bridge::toCvShare(img04_c, "bgr8")->image.clone());
-      images.push_back(cv_bridge::toCvShare(img04_d, "16UC1")->image.clone());
-
-      timestamps = {img01_c->header.stamp.toSec(), img01_d->header.stamp.toSec(),
-                    img02_c->header.stamp.toSec(), img02_d->header.stamp.toSec(),
-                    img03_c->header.stamp.toSec(), img03_d->header.stamp.toSec(),
-                    img04_c->header.stamp.toSec(), img04_d->header.stamp.toSec()};
+      for (const auto &msg : msgs) {
+        auto cv_image = cv_bridge::toCvShare(msg);
+        images.push_back(cv_image->image.clone());
+        timestamps.push_back(msg->header.stamp.toSec());
+      }
     } catch (cv_bridge::Exception &e) {
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
@@ -133,18 +256,134 @@ class ImageSyncNode {
       if (frame_queue_.size() >= max_queue) {
         frame_queue_.pop_front();
       }
-      frame_queue_.push_back(
-          FrameBundle{std::move(images), std::move(timestamps), camera_names, image_types});
+      frame_queue_.push_back(FrameBundle{std::move(images), timestamps, topic_infos_});
     }
     queue_cv_.notify_one();
 
-    {
-      std::lock_guard<std::mutex> lk(queue_mutex_);
-      if (!frame_queue_.empty()) {
-        std::vector<double> ts_copy = frame_queue_.back().timestamps;
-        print_stats(ts_copy);
-      }
+    print_stats(timestamps);
+  }
+
+  void create_synchronizer() {
+    switch (sync_topics_.size()) {
+      case 2:
+        create_synchronizer_2();
+        break;
+      case 3:
+        create_synchronizer_3();
+        break;
+      case 4:
+        create_synchronizer_4();
+        break;
+      case 5:
+        create_synchronizer_5();
+        break;
+      case 6:
+        create_synchronizer_6();
+        break;
+      case 7:
+        create_synchronizer_7();
+        break;
+      case 8:
+        create_synchronizer_8();
+        break;
+      default:
+        throw std::runtime_error("Unsupported sync topic count: " +
+                                 std::to_string(sync_topics_.size()));
     }
+  }
+
+  template <typename SyncT>
+  void configure_synchronizer(const std::shared_ptr<SyncT> &sync) {
+    sync->setMaxIntervalDuration(ros::Duration(sync_tolerance_ms_ / 1000.0));
+    sync_ = sync;
+  }
+
+  void create_synchronizer_2() {
+    using Policy = message_filters::sync_policies::ApproximateTime<Image, Image>;
+    using Sync = message_filters::Synchronizer<Policy>;
+    auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1]);
+    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr>,
+                                       this, _1, _2));
+    configure_synchronizer(sync);
+  }
+
+  void create_synchronizer_3() {
+    using Policy = message_filters::sync_policies::ApproximateTime<Image, Image, Image>;
+    using Sync = message_filters::Synchronizer<Policy>;
+    auto sync =
+        std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1], subscribers_[2]);
+    sync->registerCallback(
+        boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr, ImageConstPtr>,
+                    this, _1, _2, _3));
+    configure_synchronizer(sync);
+  }
+
+  void create_synchronizer_4() {
+    using Policy = message_filters::sync_policies::ApproximateTime<Image, Image, Image, Image>;
+    using Sync = message_filters::Synchronizer<Policy>;
+    auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
+                                       subscribers_[2], subscribers_[3]);
+    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr>,
+                                       this, _1, _2, _3, _4));
+    configure_synchronizer(sync);
+  }
+
+  void create_synchronizer_5() {
+    using Policy =
+        message_filters::sync_policies::ApproximateTime<Image, Image, Image, Image, Image>;
+    using Sync = message_filters::Synchronizer<Policy>;
+    auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
+                                       subscribers_[2], subscribers_[3], subscribers_[4]);
+    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr>,
+                                       this, _1, _2, _3, _4, _5));
+    configure_synchronizer(sync);
+  }
+
+  void create_synchronizer_6() {
+    using Policy =
+        message_filters::sync_policies::ApproximateTime<Image, Image, Image, Image, Image, Image>;
+    using Sync = message_filters::Synchronizer<Policy>;
+    auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
+                                       subscribers_[2], subscribers_[3], subscribers_[4],
+                                       subscribers_[5]);
+    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr>,
+                                       this, _1, _2, _3, _4, _5, _6));
+    configure_synchronizer(sync);
+  }
+
+  void create_synchronizer_7() {
+    using Policy = message_filters::sync_policies::ApproximateTime<Image, Image, Image, Image,
+                                                                   Image, Image, Image>;
+    using Sync = message_filters::Synchronizer<Policy>;
+    auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
+                                       subscribers_[2], subscribers_[3], subscribers_[4],
+                                       subscribers_[5], subscribers_[6]);
+    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr>,
+                                       this, _1, _2, _3, _4, _5, _6, _7));
+    configure_synchronizer(sync);
+  }
+
+  void create_synchronizer_8() {
+    using Policy = message_filters::sync_policies::ApproximateTime<Image, Image, Image, Image,
+                                                                   Image, Image, Image, Image>;
+    using Sync = message_filters::Synchronizer<Policy>;
+    auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
+                                       subscribers_[2], subscribers_[3], subscribers_[4],
+                                       subscribers_[5], subscribers_[6], subscribers_[7]);
+    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr,
+                                                                      ImageConstPtr, ImageConstPtr>,
+                                       this, _1, _2, _3, _4, _5, _6, _7, _8));
+    configure_synchronizer(sync);
   }
 
   void display_thread_func() {
@@ -159,53 +398,84 @@ class ImageSyncNode {
         bundle = std::move(frame_queue_.back());
         frame_queue_.clear();
       }
-      image_show(bundle.images, bundle.timestamps, bundle.camera_names, bundle.image_types);
+      image_show(bundle.images, bundle.timestamps, bundle.topic_infos);
     }
   }
 
-  void image_show(std::vector<cv::Mat> &images, std::vector<double> &timestamps,
-                  std::vector<std::string> &camera_names, std::vector<std::string> &image_types) {
+  void image_show(std::vector<cv::Mat> &images, const std::vector<double> &timestamps,
+                  const std::vector<TopicInfo> &topic_infos) {
+    if (images.empty()) {
+      return;
+    }
+
+    constexpr int margin = 10;
+    constexpr int max_columns = 4;
+    const int columns = std::min<int>(max_columns, static_cast<int>(images.size()));
+    const int rows = static_cast<int>((images.size() + columns - 1) / columns);
+
+    std::vector<cv::Mat> display_images;
+    display_images.reserve(images.size());
     for (size_t i = 0; i < images.size(); i++) {
+      cv::Mat image;
       if (images[i].channels() == 1) {
         cv::Mat tmp;
         images[i].convertTo(tmp, CV_8U, 255.0 / 10000.0);
-        cv::applyColorMap(tmp, images[i], cv::COLORMAP_JET);
+        cv::applyColorMap(tmp, image, cv::COLORMAP_JET);
+      } else if (images[i].channels() == 3) {
+        image = images[i].clone();
+      } else {
+        cv::cvtColor(images[i], image, cv::COLOR_GRAY2BGR);
       }
-      std::string ts_text =
-          camera_names[i] + " " + image_types[i] + " stamp: " + std::to_string(timestamps[i]);
-      cv::putText(images[i], ts_text, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0,
+
+      const std::string text = topic_infos[i].camera_name + " " + topic_infos[i].image_type +
+                               " stamp: " + std::to_string(timestamps[i]);
+      cv::putText(image, text, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.8,
                   cv::Scalar(0, 0, 255), 2);
+      display_images.push_back(std::move(image));
     }
 
-    int margin = 10;
-    int row1_height = std::max({images[0].rows, images[1].rows, images[2].rows, images[3].rows});
-    int row2_height = std::max({images[4].rows, images[5].rows, images[6].rows, images[7].rows});
-    int row1_width = images[0].cols + margin + images[1].cols + margin + images[2].cols + margin +
-                     images[3].cols;
-    int row2_width = images[4].cols + margin + images[5].cols + margin + images[6].cols + margin +
-                     images[7].cols;
-    int canvas_width = std::max(row1_width, row2_width);
-    int canvas_height = row1_height + margin + row2_height;
+    std::vector<int> column_widths(columns, 0);
+    std::vector<int> row_heights(rows, 0);
+    for (size_t i = 0; i < display_images.size(); ++i) {
+      const int row = static_cast<int>(i) / columns;
+      const int col = static_cast<int>(i) % columns;
+      column_widths[col] = std::max(column_widths[col], display_images[i].cols);
+      row_heights[row] = std::max(row_heights[row], display_images[i].rows);
+    }
+
+    int canvas_width = margin * (columns - 1);
+    for (const auto width : column_widths) {
+      canvas_width += width;
+    }
+
+    int canvas_height = margin * (rows - 1);
+    for (const auto height : row_heights) {
+      canvas_height += height;
+    }
 
     cv::Mat canvas(canvas_height, canvas_width, CV_8UC3, cv::Scalar(30, 30, 30));
-    int x_offset = 0, y_offset = 0;
-    for (int i = 0; i < 4; ++i) {
-      images[i].copyTo(canvas(cv::Rect(x_offset, y_offset, images[i].cols, images[i].rows)));
-      x_offset += images[i].cols + margin;
+
+    int y_offset = 0;
+    for (int row = 0; row < rows; ++row) {
+      int x_offset = 0;
+      for (int col = 0; col < columns; ++col) {
+        const size_t i = static_cast<size_t>(row * columns + col);
+        if (i >= display_images.size()) {
+          break;
+        }
+        display_images[i].copyTo(canvas(cv::Rect(x_offset, y_offset, display_images[i].cols,
+                                                 display_images[i].rows)));
+        x_offset += column_widths[col] + margin;
+      }
+      y_offset += row_heights[row] + margin;
     }
 
-    x_offset = 0;
-    y_offset = row1_height + margin;
-    for (int i = 4; i < 8; ++i) {
-      images[i].copyTo(canvas(cv::Rect(x_offset, y_offset, images[i].cols, images[i].rows)));
-      x_offset += images[i].cols + margin;
-    }
+    constexpr int screen_width = 1800;
+    constexpr int screen_height = 800;
+    const double scale_w = static_cast<double>(screen_width) / canvas.cols;
+    const double scale_h = static_cast<double>(screen_height) / canvas.rows;
+    const double scale = std::min(1.0, std::min(scale_w, scale_h));
 
-    int screen_width = 1800;
-    int screen_height = 800;
-    double scale_w = static_cast<double>(screen_width) / canvas.cols;
-    double scale_h = static_cast<double>(screen_height) / canvas.rows;
-    double scale = std::min(1.0, std::min(scale_w, scale_h));
     cv::Mat display;
     if (scale < 1.0) {
       cv::resize(canvas, display, cv::Size(), scale, scale);
@@ -216,55 +486,53 @@ class ImageSyncNode {
     cv::waitKey(1);
   }
 
-  void print_stats(std::vector<double> &timestamps) {
+  void print_stats(const std::vector<double> &timestamps) {
+    if (timestamps.empty()) {
+      return;
+    }
+
     std::cout << std::fixed;
     std::cout << "===========================================================" << std::endl;
-    for (int i = 0; i < 4; i++) {
-      std::cout << "Camera0" << i + 1 << " stamp: color= " << std::setprecision(6)
-                << timestamps[i * 2] << "  depth= " << std::setprecision(6) << timestamps[i * 2 + 1]
-                << "  Delay relative to camera01(color): color= " << std::setprecision(3)
-                << (timestamps[i * 2] - timestamps[0]) * 1000.0 << " ms"
-                << "  depth= " << std::setprecision(3)
-                << (timestamps[i * 2 + 1] - timestamps[0]) * 1000.0 << " ms" << std::endl;
+
+    const double base_t = timestamps[0];
+    for (size_t i = 0; i < timestamps.size(); ++i) {
+      std::cout << topic_infos_[i].camera_name << " " << topic_infos_[i].image_type
+                << " stamp: " << std::setprecision(6) << timestamps[i]
+                << "  Delay relative to " << topic_infos_[0].camera_name << " "
+                << topic_infos_[0].image_type << ": " << std::setprecision(3)
+                << (timestamps[i] - base_t) * 1000.0 << " ms" << std::endl;
     }
 
     double cur = 0.0;
-    double base_t = timestamps[0];  // Camera01 color
-    for (size_t i = 0; i < timestamps.size(); ++i) {
-      double diff = std::fabs(timestamps[i] - base_t) * 1000.0;
+    for (const auto timestamp : timestamps) {
+      const double diff = std::fabs(timestamp - base_t) * 1000.0;
       cur = std::max(cur, diff);
     }
     diff_sum_ += cur;
     count_++;
     max_diff_ = std::max(max_diff_, cur);
     min_diff_ = std::min(min_diff_, cur);
-    double avg_diff = diff_sum_ / count_;
+    const double avg_diff = diff_sum_ / count_;
+
     std::cout << "\nImage Timestamp Difference Statistics" << std::endl;
     std::cout << "cur: " << cur << " ms"
               << " avg: " << avg_diff << " ms"
               << " max: " << max_diff_ << " ms"
               << " min: " << min_diff_ << " ms" << std::endl;
 
-    // Calculate and display FPS
     if (last_time_ == 0.0) {
       last_time_ = base_t;
     } else {
-      double dt = base_t - last_time_;
-      // if (dt > frame_interval_ * 1.5) {
-      //   std::cout << "base_t: " << base_t << " last_time_: " << last_time_ << std::endl;
-      //   std::cout << "Frame drop detected! dt: " << dt << " s" << std::endl;
-      //   drop_count_ +=
-      //       static_cast<uint64_t>(dt / 0.0333) - 1;  // Assuming 30 FPS, so frame interval
-      //       ~33.3ms
-      //   std::cout << "Total dropped frames: " << drop_count_ << std::endl;
-      // }
+      const double dt = base_t - last_time_;
       fps_cur_ = dt > 0.0 ? 1.0 / dt : fps_cur_;
       last_time_ = base_t;
       frame_count_++;
       fps_sum_ += fps_cur_;
       fps_max_ = std::max(fps_max_, fps_cur_);
-      if (fps_cur_ > 1e-3) fps_min_ = std::min(fps_min_, fps_cur_);
-      double fps_avg = fps_sum_ / frame_count_;
+      if (fps_cur_ > 1e-3) {
+        fps_min_ = std::min(fps_min_, fps_cur_);
+      }
+      const double fps_avg = fps_sum_ / frame_count_;
       std::cout << "\nFPS Statistics" << std::endl;
       std::cout << "cur: " << std::setprecision(2) << fps_cur_ << " avg: " << std::setprecision(2)
                 << fps_avg << " max: " << std::setprecision(2) << fps_max_
@@ -275,7 +543,12 @@ class ImageSyncNode {
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "image_sync_node");
-  ImageSyncNode node;
-  ros::spin();
+  try {
+    ImageSyncNode node;
+    ros::spin();
+  } catch (const std::exception &e) {
+    ROS_FATAL("%s", e.what());
+    return 1;
+  }
   return 0;
 }

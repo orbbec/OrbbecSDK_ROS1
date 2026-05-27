@@ -1,5 +1,6 @@
 #include "orbbec_camera/frame_timestamp_csv_logger.h"
 #include "ros/ros.h"
+#include <algorithm>
 #include <boost/filesystem.hpp>
 #include <chrono>
 #include <iomanip>
@@ -13,11 +14,35 @@ constexpr size_t kCompletedQueueSoftLimit = 1000;
 constexpr size_t kFlushBatchSize = 100;
 constexpr auto kFlushInterval = std::chrono::seconds(1);
 
+int64_t getExpectedIntervalUs(const std::shared_ptr<ob::Frame> &frame) {
+  if (!frame || !frame->is<ob::VideoFrame>()) {
+    return 0;
+  }
+  auto stream_profile = frame->getStreamProfile();
+  if (!stream_profile || !stream_profile->is<ob::VideoStreamProfile>()) {
+    return 0;
+  }
+  auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
+  if (!video_stream_profile) {
+    return 0;
+  }
+  const auto fps = video_stream_profile->getFps();
+  if (fps == 0) {
+    return 0;
+  }
+  return static_cast<int64_t>(1000000.0 / static_cast<double>(fps));
+}
+
 }  // namespace
 
 FrameTimestampCsvLogger::FrameTimestampCsvLogger(bool enabled, const std::string &csv_file_path)
     : enabled_(enabled), csv_file_path_(csv_file_path) {
   if (!enabled_) {
+    return;
+  }
+
+  if (csv_file_path_.empty()) {
+    ROS_INFO_STREAM("Frame timestamp CSV file is empty; only frame lost logs are enabled.");
     return;
   }
 
@@ -46,16 +71,16 @@ FrameTimestampCsvLogger::~FrameTimestampCsvLogger() noexcept { shutdown(); }
 
 void FrameTimestampCsvLogger::recordFrameSet(const std::shared_ptr<ob::Frame> &color_frame,
                                              const std::shared_ptr<ob::Frame> &depth_frame,
-                                             int64_t arrival_system_us,
-                                             int64_t arrival_steady_us, bool track_color,
-                                             bool track_depth,
+                                             int64_t arrival_system_us, int64_t arrival_steady_us,
+                                             bool track_color, bool track_depth,
                                              bool color_image_publish_expected,
                                              bool depth_image_publish_expected) {
   if (!enabled_ || writer_failed_) {
     return;
   }
-  recordFrameSetInternal(color_frame, depth_frame, arrival_system_us, arrival_steady_us, track_color,
-                         track_depth, color_image_publish_expected, depth_image_publish_expected);
+  recordFrameSetInternal(color_frame, depth_frame, arrival_system_us, arrival_steady_us,
+                         track_color, track_depth, color_image_publish_expected,
+                         depth_image_publish_expected);
 }
 
 void FrameTimestampCsvLogger::recordStandaloneFrameArrival(const stream_index_pair &stream_index,
@@ -122,13 +147,10 @@ bool FrameTimestampCsvLogger::isTrackedStream(const stream_index_pair &stream_in
   return stream_index == COLOR || stream_index == DEPTH;
 }
 
-void FrameTimestampCsvLogger::recordFrameSetInternal(const std::shared_ptr<ob::Frame> &color_frame,
-                                                     const std::shared_ptr<ob::Frame> &depth_frame,
-                                                     int64_t arrival_system_us,
-                                                     int64_t arrival_steady_us, bool track_color,
-                                                     bool track_depth,
-                                                     bool color_image_publish_expected,
-                                                     bool depth_image_publish_expected) {
+void FrameTimestampCsvLogger::recordFrameSetInternal(
+    const std::shared_ptr<ob::Frame> &color_frame, const std::shared_ptr<ob::Frame> &depth_frame,
+    int64_t arrival_system_us, int64_t arrival_steady_us, bool track_color, bool track_depth,
+    bool color_image_publish_expected, bool depth_image_publish_expected) {
   if (!track_color && !track_depth) {
     return;
   }
@@ -248,10 +270,10 @@ void FrameTimestampCsvLogger::recordPreImagePublishInternal(const stream_index_p
                                                            : depth_frame_index_to_row_id_;
     auto row_id_it = row_map.find(frame_index);
     if (row_id_it == row_map.end()) {
-      ROS_WARN_STREAM_THROTTLE(5.0, "Frame timestamp CSV logger missed row mapping for stream "
-                                        << (tracked_stream == TrackedStream::COLOR ? "color"
-                                                                                  : "depth")
-                                        << " frame index " << frame_index);
+      ROS_WARN_STREAM_THROTTLE(5.0,
+                               "Frame timestamp CSV logger missed row mapping for stream "
+                                   << (tracked_stream == TrackedStream::COLOR ? "color" : "depth")
+                                   << " frame index " << frame_index);
       return;
     }
     const auto row_id = row_id_it->second;
@@ -288,6 +310,28 @@ void FrameTimestampCsvLogger::populateArrivalData(StreamState &state, TrackedStr
   state.has_frame = true;
   state.publish_expected = publish_expected;
   state.frame_index = frame->index();
+  state.device_ts_us = static_cast<int64_t>(frame->timeStampUs());
+  if (previous.expected_interval_us <= 0) {
+    previous.expected_interval_us = getExpectedIntervalUs(frame);
+  }
+  state.expected_interval_us = previous.expected_interval_us;
+  if (previous.device_ts_us.has_value() && state.expected_interval_us > 0) {
+    const auto device_ts_delta_us = state.device_ts_us - previous.device_ts_us.value();
+    if (device_ts_delta_us > state.expected_interval_us * 3 / 2) {
+      const auto lost_frames =
+          std::max<int64_t>(1, device_ts_delta_us / state.expected_interval_us - 1);
+      previous.dropped_frames += lost_frames;
+      reportDropLogFormatOnce();
+      ROS_WARN_STREAM(
+          "SDK drop " << (stream == TrackedStream::COLOR ? "color" : "depth")
+                      << ": idx=" << state.frame_index << " ts=" << state.device_ts_us << "us"
+                      << " gap=" << std::fixed << std::setprecision(1)
+                      << (static_cast<double>(device_ts_delta_us) / 1000.0) << "ms"
+                      << " ideal=" << (static_cast<double>(state.expected_interval_us) / 1000.0)
+                      << "ms"
+                      << " total=" << previous.dropped_frames);
+    }
+  }
   if (frame->hasMetadata(OB_FRAME_METADATA_TYPE_FRAME_NUMBER)) {
     state.metadata_frame_number =
         static_cast<int64_t>(frame->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER));
@@ -300,7 +344,6 @@ void FrameTimestampCsvLogger::populateArrivalData(StreamState &state, TrackedStr
   } else {
     state.sensor_ts_us.reset();
   }
-  state.device_ts_us = static_cast<int64_t>(frame->timeStampUs());
   state.global_ts_us = static_cast<int64_t>(frame->globalTimeStampUs());
   state.sdk_system_ts_us = static_cast<int64_t>(frame->systemTimeStampUs());
   state.arrival_system_us = arrival_system_us;
@@ -314,10 +357,8 @@ void FrameTimestampCsvLogger::populateArrivalData(StreamState &state, TrackedStr
   }
   state.global_ts_delta_us = updateDelta(previous.global_ts_us, state.global_ts_us);
   state.sdk_system_ts_delta_us = updateDelta(previous.sdk_system_ts_us, state.sdk_system_ts_us);
-  state.arrival_system_delta_us =
-      updateDelta(previous.arrival_system_us, state.arrival_system_us);
-  state.arrival_steady_delta_us =
-      updateDelta(previous.arrival_steady_us, state.arrival_steady_us);
+  previous.arrival_system_us = state.arrival_system_us;
+  state.arrival_steady_delta_us = updateDelta(previous.arrival_steady_us, state.arrival_steady_us);
   state.sdk_delay_from_global_us = state.arrival_system_us - state.global_ts_us;
   state.sdk_delay_from_system_us = state.arrival_system_us - state.sdk_system_ts_us;
 }
@@ -327,14 +368,43 @@ void FrameTimestampCsvLogger::populatePublishData(StreamState &state, TrackedStr
                                                   int64_t publish_steady_us) {
   auto &previous = stream == TrackedStream::COLOR ? color_previous_ : depth_previous_;
 
+  if (previous.publish_device_ts_us.has_value()) {
+    const auto device_ts_delta_us = state.device_ts_us - previous.publish_device_ts_us.value();
+    if (state.expected_interval_us > 0 && device_ts_delta_us > state.expected_interval_us * 3 / 2) {
+      const auto lost_frames =
+          std::max<int64_t>(1, device_ts_delta_us / state.expected_interval_us - 1);
+      previous.publish_dropped_frames += lost_frames;
+      reportDropLogFormatOnce();
+      ROS_WARN_STREAM(
+          "PUB drop " << (stream == TrackedStream::COLOR ? "color" : "depth")
+                      << ": idx=" << state.frame_index << " ts=" << state.device_ts_us << "us"
+                      << " gap=" << std::fixed << std::setprecision(1)
+                      << (static_cast<double>(device_ts_delta_us) / 1000.0) << "ms"
+                      << " ideal=" << (static_cast<double>(state.expected_interval_us) / 1000.0)
+                      << "ms"
+                      << " total=" << previous.publish_dropped_frames);
+    }
+  }
+  previous.publish_device_ts_us = state.device_ts_us;
+
   state.publish_system_us = publish_system_us;
   state.publish_steady_us = publish_steady_us;
-  state.publish_system_delta_us =
-      updateDelta(previous.publish_system_us, state.publish_system_us.value());
+  previous.publish_system_us = state.publish_system_us.value();
   state.publish_steady_delta_us =
       updateDelta(previous.publish_steady_us, state.publish_steady_us.value());
-  state.arrival_to_publish_system_us = state.publish_system_us.value() - state.arrival_system_us;
   state.arrival_to_publish_steady_us = state.publish_steady_us.value() - state.arrival_steady_us;
+}
+
+void FrameTimestampCsvLogger::reportDropLogFormatOnce() {
+  if (drop_log_format_reported_) {
+    return;
+  }
+  drop_log_format_reported_ = true;
+  ROS_INFO_STREAM(
+      "Frame drop log enabled. Format: <SDK|PUB> drop <color|depth>: idx=<frame_index> "
+      "ts=<device_timestamp_us> gap=<actual_interval_ms> ideal=<expected_interval_ms> "
+      "total=<total_dropped_frames>. SDK means frame arrival from SDK; PUB means before ROS "
+      "image publish.");
 }
 
 std::optional<int64_t> FrameTimestampCsvLogger::updateDelta(std::optional<int64_t> &previous,
@@ -347,13 +417,18 @@ std::optional<int64_t> FrameTimestampCsvLogger::updateDelta(std::optional<int64_
   return delta;
 }
 
-void FrameTimestampCsvLogger::finalizeStreamWithoutPublish(StreamState &state) { state.final = true; }
+void FrameTimestampCsvLogger::finalizeStreamWithoutPublish(StreamState &state) {
+  state.final = true;
+}
 
 bool FrameTimestampCsvLogger::isRowReady(const PendingRow &row) const {
   return row.color.final && row.depth.final;
 }
 
 void FrameTimestampCsvLogger::enqueueCompletedRow(const PendingRow &row) {
+  if (csv_file_path_.empty()) {
+    return;
+  }
   std::lock_guard<std::mutex> queue_lock(completed_rows_mutex_);
   completed_rows_.push_back(row);
   if (completed_rows_.size() > kCompletedQueueSoftLimit) {
@@ -397,7 +472,7 @@ std::string FrameTimestampCsvLogger::serializeRow(const PendingRow &row) const {
 }
 
 std::string FrameTimestampCsvLogger::serializeStreamColumns(const StreamState &state) const {
-  std::vector<std::string> fields(22, "");
+  std::vector<std::string> fields(15, "");
   if (state.has_frame) {
     fields[0] = std::to_string(state.frame_index);
     fields[1] = formatOptionalIntColumn(state.metadata_frame_number);
@@ -411,22 +486,11 @@ std::string FrameTimestampCsvLogger::serializeStreamColumns(const StreamState &s
     fields[7] = formatOptionalIntColumn(state.global_ts_delta_us);
     fields[8] = formatSecondsColumn(state.sdk_system_ts_us);
     fields[9] = formatOptionalIntColumn(state.sdk_system_ts_delta_us);
-    fields[10] = formatSecondsColumn(state.arrival_system_us);
-    fields[11] = formatOptionalIntColumn(state.arrival_system_delta_us);
-    fields[12] = formatSecondsColumn(state.arrival_steady_us);
-    fields[13] = formatOptionalIntColumn(state.arrival_steady_delta_us);
-    if (state.publish_system_us.has_value()) {
-      fields[14] = formatSecondsColumn(state.publish_system_us.value());
-    }
-    fields[15] = formatOptionalIntColumn(state.publish_system_delta_us);
-    if (state.publish_steady_us.has_value()) {
-      fields[16] = formatSecondsColumn(state.publish_steady_us.value());
-    }
-    fields[17] = formatOptionalIntColumn(state.publish_steady_delta_us);
-    fields[18] = formatOptionalIntColumn(state.arrival_to_publish_system_us);
-    fields[19] = formatOptionalIntColumn(state.arrival_to_publish_steady_us);
-    fields[20] = formatOptionalIntColumn(state.sdk_delay_from_global_us);
-    fields[21] = formatOptionalIntColumn(state.sdk_delay_from_system_us);
+    fields[10] = formatOptionalIntColumn(state.arrival_steady_delta_us);
+    fields[11] = formatOptionalIntColumn(state.publish_steady_delta_us);
+    fields[12] = formatOptionalIntColumn(state.arrival_to_publish_steady_us);
+    fields[13] = formatOptionalIntColumn(state.sdk_delay_from_global_us);
+    fields[14] = formatOptionalIntColumn(state.sdk_delay_from_system_us);
   }
 
   std::ostringstream ss;
@@ -441,8 +505,7 @@ std::string FrameTimestampCsvLogger::serializeStreamColumns(const StreamState &s
 
 std::string FrameTimestampCsvLogger::formatSecondsColumn(int64_t time_us) {
   std::ostringstream ss;
-  ss << std::fixed << std::setprecision(6)
-     << (static_cast<long double>(time_us) / 1000000.0L);
+  ss << std::fixed << std::setprecision(6) << (static_cast<long double>(time_us) / 1000000.0L);
   return ss.str();
 }
 
@@ -466,15 +529,8 @@ std::string FrameTimestampCsvLogger::csvHeader() {
     ss << prefix << "_global_ts_delta_us,";
     ss << prefix << "_system_ts_sec,";
     ss << prefix << "_system_ts_delta_us,";
-    ss << prefix << "_arrival_system_sec,";
-    ss << prefix << "_arrival_system_delta_us,";
-    ss << prefix << "_arrival_steady_sec,";
     ss << prefix << "_arrival_steady_delta_us,";
-    ss << prefix << "_publish_system_sec,";
-    ss << prefix << "_publish_system_delta_us,";
-    ss << prefix << "_publish_steady_sec,";
     ss << prefix << "_publish_steady_delta_us,";
-    ss << prefix << "_arrival_to_publish_system_us,";
     ss << prefix << "_arrival_to_publish_steady_us,";
     ss << prefix << "_sdk_delay_from_global_us,";
     ss << prefix << "_sdk_delay_from_system_us";
@@ -511,9 +567,8 @@ void FrameTimestampCsvLogger::writerThreadMain() {
     }
 
     const auto now = std::chrono::steady_clock::now();
-    if (csv_stream_.is_open() &&
-        (rows_since_flush >= kFlushBatchSize || now - last_flush >= kFlushInterval ||
-         shutdown_requested_)) {
+    if (csv_stream_.is_open() && (rows_since_flush >= kFlushBatchSize ||
+                                  now - last_flush >= kFlushInterval || shutdown_requested_)) {
       csv_stream_.flush();
       rows_since_flush = 0;
       last_flush = now;

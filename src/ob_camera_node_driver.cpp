@@ -191,6 +191,19 @@ void OBCameraNodeDriver::init() {
     }
   }
   ctx_ = std::make_shared<ob::Context>(config_path_.c_str());
+  timestamp_clock_type_str_ = nh_private_.param<std::string>("timestamp_clock_type", "");
+  if (!timestamp_clock_type_str_.empty()) {
+    auto timestamp_clock_type = timestampClockTypeFromString(timestamp_clock_type_str_);
+    try {
+      ctx_->setTimestampClockType(timestamp_clock_type);
+      auto actual_timestamp_clock_type = ctx_->getTimestampClockType();
+      ROS_INFO_STREAM("Set timestamp clock type to "
+                      << timestampClockTypeToString(actual_timestamp_clock_type));
+    } catch (const ob::Error &e) {
+      ROS_WARN_STREAM(
+          "Failed to set SDK timestamp clock type: " << orbbec_camera::formatObErrorWithStatus(e));
+    }
+  }
 
   force_ip_enable_ = nh_private_.param<bool>("force_ip_enable", false);
   force_ip_mac_ = nh_private_.param<std::string>("force_ip_mac", "");
@@ -1181,6 +1194,32 @@ OBDeviceAccessMode OBCameraNodeDriver::stringToAccessMode(const std::string &mod
   } else {
     ROS_WARN_STREAM("Unknown access mode: " << mode_str << ", using default");
     return OB_DEVICE_DEFAULT_ACCESS;
+  }
+}
+
+OBClockType OBCameraNodeDriver::timestampClockTypeFromString(const std::string &clock_type_str) {
+  std::string lower_type;
+  std::transform(clock_type_str.begin(), clock_type_str.end(), std::back_inserter(lower_type),
+                 [](auto ch) { return tolower(ch); });
+
+  if (lower_type == "realtime") {
+    return OB_CLOCK_TYPE_REALTIME;
+  }
+  if (lower_type == "monotonic") {
+    return OB_CLOCK_TYPE_MONOTONIC;
+  }
+
+  ROS_WARN_STREAM("Unknown timestamp_clock_type: " << clock_type_str << ", using realtime");
+  return OB_CLOCK_TYPE_REALTIME;
+}
+
+std::string OBCameraNodeDriver::timestampClockTypeToString(OBClockType clock_type) {
+  switch (clock_type) {
+    case OB_CLOCK_TYPE_MONOTONIC:
+      return "monotonic";
+    case OB_CLOCK_TYPE_REALTIME:
+    default:
+      return "realtime";
   }
 }
 

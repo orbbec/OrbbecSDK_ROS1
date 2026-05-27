@@ -10,6 +10,7 @@
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="0.0"/>
     <arg name="time_domain" default="device"/><!-- "device", "global", "system" -->
+    <arg name="timestamp_clock_type" default=""/><!-- "realtime" or "monotonic", default is realtime. -->
     <arg name="enable_frame_timestamp_csv" default="false"/>
     <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="upgrade_firmware" default=""/>
@@ -51,6 +52,7 @@
             <param name="publish_tf" value="$(arg publish_tf)"/>
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
+            <param name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
             <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
             <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>

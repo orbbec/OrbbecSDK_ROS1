@@ -1170,6 +1170,13 @@ void OBCameraNode::selectBaseStream() {
   }
 }
 void OBCameraNode::setupColorPostProcessFilter() {
+  if (enable_color_undistortion_) {
+    color_undistortion_filter_ = std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
+    color_undistortion_filter_->setInterpolationMode(1);
+    color_undistortion_filter_->enable(true);
+    ROS_INFO_STREAM("Set color undistortion filter UnDistortionFilter to enabled");
+  }
+
   try {
     auto color_sensor = device_->getSensor(OB_SENSOR_COLOR);
     if (color_sensor) {
@@ -2301,7 +2308,7 @@ void OBCameraNode::setupFrameCallback() {
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
       auto callback = [this, stream_index](std::shared_ptr<ob::Frame> frame) {
-        this->onNewFrameCallback(frame, stream_index);
+        this->onNewStandaloneFrameCallback(frame, stream_index);
       };
       frame_callback_[stream_index] = callback;
     }
@@ -2565,10 +2572,17 @@ void OBCameraNode::setupPublishers() {
           this->imageUnsubscribedCallback(stream_index);
         };
 
-    // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
-    // subscriber detection
-    image_publishers_[stream_index] = getGlobalImagePublisher(
-        topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    if (isMjpgColorStream(stream_index)) {
+      raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
+          topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
+      compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
+          topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+    } else {
+      // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
+      // subscriber detection.
+      image_publishers_[stream_index] = getGlobalImagePublisher(
+          topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    }
 
     topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
@@ -2579,6 +2593,14 @@ void OBCameraNode::setupPublishers() {
       metadata_publishers_[stream_index] =
           nh_.advertise<orbbec_camera::Metadata>("/" + camera_name_ + "/" + name + "/metadata", 1,
                                                  image_subscribed_cb, image_unsubscribed_cb);
+    }
+    if (stream_index == COLOR && enable_color_undistortion_) {
+      color_undistortion_camera_info_publisher_ = nh_.advertise<sensor_msgs::CameraInfo>(
+          "/" + camera_name_ + "/color/camera_info_undistorted", 1, image_subscribed_cb,
+          image_unsubscribed_cb);
+      color_undistortion_publisher_ =
+          getGlobalImagePublisher("/" + camera_name_ + "/color/image_undistorted",
+                                  image_transport_subscribed_cb, image_transport_unsubscribed_cb);
     }
   }
   if (enable_point_cloud_ && enable_stream_[DEPTH]) {
@@ -2704,8 +2726,6 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
       global_nh_ = std::make_shared<ros::NodeHandle>();
     }
     global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
-    ROS_DEBUG_STREAM(
-        "Created persistent global image_transport instance to prevent plugin reloading");
   }
 
   // Always recreate publisher with callbacks to ensure rostopic hz detection works
