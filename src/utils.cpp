@@ -436,6 +436,20 @@ bool isOpenNIDevice(int pid) {
   return false;
 }
 
+bool isHostTimeSyncSupported(int pid) {
+  static const std::vector<int> UNSUPPORTED_DEVICE_PIDS = {0x069d};
+
+  if (isOpenNIDevice(pid)) {
+    return false;
+  }
+  for (const auto &unsupported_pid : UNSUPPORTED_DEVICE_PIDS) {
+    if (pid == unsupported_pid) {
+      return false;
+    }
+  }
+  return true;
+}
+
 OBMultiDeviceSyncMode OBSyncModeFromString(const std::string &mode) {
   if (mode == "FREE_RUN") {
     return OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN;
