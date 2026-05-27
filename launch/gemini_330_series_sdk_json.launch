@@ -20,6 +20,7 @@
     <arg name="diagnostics_frequency" default="1.0"/>
 
     <!-- SDK JSON preset import/export -->
+    <arg name="config_file_path" default=""/>
     <arg name="load_config_json_file_path" default=""/>
     <arg name="export_config_json_file_path" default=""/>
 
@@ -117,6 +118,7 @@
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="enable_sync_host_time" value="$(arg enable_sync_host_time)"/>
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
+            <param name="config_file_path" value="$(arg config_file_path)"/>
             <param name="load_config_json_file_path" value="$(arg load_config_json_file_path)"/>
             <param name="export_config_json_file_path" value="$(arg export_config_json_file_path)"/>
 
@@ -188,5 +190,9 @@
 
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
+    </group>
+    <!-- Load config yaml file -->
+    <group if="$(eval config_file_path != '')">
+        <rosparam ns="$(arg camera_name)/$(arg camera_name)" file="$(arg config_file_path)" command="load" />
     </group>
 </launch>
