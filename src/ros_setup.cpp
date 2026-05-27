@@ -21,10 +21,12 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
+#include <boost/filesystem.hpp>
 
 namespace orbbec_camera {
 
@@ -38,6 +40,21 @@ std::string getDepthFilterStatusName(const std::string& filter_name) {
     return "DisparityToDepth";
   }
   return filter_name;
+}
+
+boost::filesystem::path resolveConfigJsonFilePath(const std::string& file_path) {
+  boost::filesystem::path path(file_path);
+  const char* home_dir = std::getenv("HOME");
+  if ((file_path == "~" || file_path.rfind("~/", 0) == 0) && home_dir != nullptr) {
+    path = boost::filesystem::path(home_dir);
+    if (file_path.size() > 2) {
+      path /= file_path.substr(2);
+    }
+  }
+  if (path.is_relative()) {
+    path = boost::filesystem::absolute(path);
+  }
+  return path.lexically_normal();
 }
 
 std::string getDepthFilterStatusParamName(const std::string& filter_name,
@@ -219,29 +236,31 @@ void OBCameraNode::loadConfigJson() {
     return;
   }
 
-  std::ifstream load_config_file(load_config_json_file_path_);
+  const auto resolved_file_path = resolveConfigJsonFilePath(load_config_json_file_path_);
+  const auto resolved_file_path_str = resolved_file_path.string();
+  std::ifstream load_config_file(resolved_file_path_str);
   if (!load_config_file.good()) {
-    ROS_WARN_STREAM("Config JSON load skip file=" << load_config_json_file_path_
+    ROS_WARN_STREAM("Config JSON load skip file=" << resolved_file_path_str
                                                   << " reason=file_not_found");
     return;
   }
 
   try {
-    device_->loadPresetFromJsonFile(load_config_json_file_path_.c_str());
+    device_->loadPresetFromJsonFile(resolved_file_path_str.c_str());
     config_json_loaded_ = true;
-    ROS_INFO_STREAM("Config JSON loaded file=" << load_config_json_file_path_);
+    ROS_INFO_STREAM("Config JSON loaded file=" << resolved_file_path_str);
   } catch (const ob::Error& e) {
     config_json_loaded_ = false;
-    ROS_ERROR_STREAM("Config JSON load failed file=" << load_config_json_file_path_ << " error=\""
+    ROS_ERROR_STREAM("Config JSON load failed file=" << resolved_file_path_str << " error=\""
                                                      << orbbec_camera::formatObErrorWithStatus(e)
                                                      << "\"");
   } catch (const std::exception& e) {
     config_json_loaded_ = false;
-    ROS_ERROR_STREAM("Config JSON load failed file=" << load_config_json_file_path_ << " error=\""
+    ROS_ERROR_STREAM("Config JSON load failed file=" << resolved_file_path_str << " error=\""
                                                      << e.what() << "\"");
   } catch (...) {
     config_json_loaded_ = false;
-    ROS_ERROR_STREAM("Config JSON load failed file=" << load_config_json_file_path_);
+    ROS_ERROR_STREAM("Config JSON load failed file=" << resolved_file_path_str);
   }
 }
 
@@ -253,8 +272,22 @@ bool OBCameraNode::exportConfigJsonToFile(const std::string& file_path, std::str
   }
 
   try {
-    device_->exportSettingsAsPresetJsonFile(file_path.c_str());
-    message = "Exported config json file path: " + file_path;
+    const auto resolved_file_path = resolveConfigJsonFilePath(file_path);
+    const auto parent_path = resolved_file_path.parent_path();
+    if (!parent_path.empty()) {
+      boost::filesystem::create_directories(parent_path);
+    }
+
+    const auto resolved_file_path_str = resolved_file_path.string();
+    device_->exportSettingsAsPresetJsonFile(resolved_file_path_str.c_str());
+    if (!boost::filesystem::exists(resolved_file_path)) {
+      message = "Failed to export config json file: file not found after export path=" +
+                resolved_file_path_str;
+      ROS_ERROR_STREAM(message);
+      return false;
+    }
+
+    message = "Exported config json file path: " + resolved_file_path_str;
     ROS_INFO_STREAM(message);
     return true;
   } catch (const ob::Error& e) {
