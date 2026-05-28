@@ -48,7 +48,11 @@ OBLogSeverity obLogSeverityFromString(const std::string_view &log_level) {
   return OBLogSeverity::OB_LOG_SEVERITY_OFF;
 }
 
-std::string getRosLogDirectory() {
+std::string getObSdkLogDirectory() {
+  const char *log_dir_override = std::getenv("ORBBEC_LOG_DIR");
+  if (log_dir_override && log_dir_override[0] != '\0') {
+    return (boost::filesystem::path(log_dir_override) / "Log").string();
+  }
   const char *home = std::getenv("HOME");
   const boost::filesystem::path home_dir = home != nullptr ? home : "";
   return (home_dir / ".ros" / "Log").string();
@@ -65,7 +69,7 @@ std::string configureObSdkLoggerForTool(const std::string &tool_name,
     return "";
   }
 
-  const boost::filesystem::path log_dir(getRosLogDirectory());
+  const boost::filesystem::path log_dir(getObSdkLogDirectory());
   boost::filesystem::create_directories(log_dir);
 
   const auto now = std::chrono::system_clock::now();

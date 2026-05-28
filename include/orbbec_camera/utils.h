@@ -101,7 +101,7 @@ T &CheckNotNull(T &ptr, const char *file, int line) {
 namespace orbbec_camera {
 OBLogSeverity obLogSeverityFromString(const std::string_view &log_level);
 
-std::string getRosLogDirectory();
+std::string getObSdkLogDirectory();
 
 std::string configureObSdkLoggerForTool(const std::string &tool_name,
                                         const std::string &log_level);

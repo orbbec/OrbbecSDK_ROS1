@@ -33,6 +33,10 @@ backward::SignalHandling sh;
 
 namespace {
 std::string getLogDirectoryForCamera(const std::string &camera_name) {
+  const char *log_dir_override = std::getenv("ORBBEC_LOG_DIR");
+  if (log_dir_override && log_dir_override[0] != '\0') {
+    return (boost::filesystem::path(log_dir_override) / "Log" / camera_name).string();
+  }
   std::string home_dir = std::getenv("HOME") ? std::getenv("HOME") : "";
   return (boost::filesystem::path(home_dir) / ".ros" / "Log" / camera_name).string();
 }
