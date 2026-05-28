@@ -123,6 +123,7 @@ const int32_t DABAI_MAX_PID = 0x069a;     // DABAI MAX
 const int32_t GEMINI_305_PID = 0x0840;    // Gemini 305
 const int32_t GEMINI_305_PID2 = 0x0841;   // Gemini 305
 const int32_t GEMINI_305G_PID = 0x0842;   // Gemini 305g
+const int32_t GEMINI_309G_PID = 0x0845;   // Gemini 309g
 const int32_t GEMINI_338_PID = 0x0818;    // Gemini 338
 const int32_t GEMINI_338LG_PID = 0x081A;  // Gemini 338Lg
 const int32_t GEMINI_338LE_PID = 0x081B;  // Gemini 338Le
@@ -130,6 +131,7 @@ const int32_t GEMINI_338L_PID = 0x081C;   // Gemini 338L
 const int32_t GEMINI_331L_PID = 0x081D;   // Gemini 331L
 
 inline bool isGemini305SeriesPID(uint32_t pid) {
-  return pid == GEMINI_305_PID || pid == GEMINI_305_PID2 || pid == GEMINI_305G_PID;
+  return pid == GEMINI_305_PID || pid == GEMINI_305_PID2 || pid == GEMINI_305G_PID ||
+         pid == GEMINI_309G_PID;
 }
 }  // namespace orbbec_camera
