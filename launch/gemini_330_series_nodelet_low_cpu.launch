@@ -208,7 +208,7 @@
     <arg name="retry_on_usb3_detection_failure" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="laser_energy_level" default="-1"/>
-    <arg name="enable_ldp" default="true"/>
+    <arg name="enable_ldp" default="false"/>
     <arg name="enable_heartbeat" default="false"/>
     <arg name="enable_firmware_log" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
