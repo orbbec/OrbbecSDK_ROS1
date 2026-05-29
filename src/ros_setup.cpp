@@ -2892,7 +2892,8 @@ void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWra
     stat.add("Chip Bottom Temperature", temperature.chipBottomTemp);
     stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Temperature is normal");
   } catch (const ob::Error& e) {
-    stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, e.getMessage());
+    stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR,
+                 orbbec_camera::formatObErrorWithStatus(e));
   }
 }
 void OBCameraNode::setupDiagnosticUpdater() {
