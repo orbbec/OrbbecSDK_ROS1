@@ -648,7 +648,7 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
     response.message = "set AE ROI success";
     return true;
   } catch (const ob::Error& e) {
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     response.success = false;
     ROS_ERROR_STREAM("Failed to set AE ROI: " << orbbec_camera::formatObErrorWithStatus(e));
     return true;
@@ -876,7 +876,7 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set laser: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -891,7 +891,7 @@ bool OBCameraNode::setPtpConfigCallback(std_srvs::SetBoolRequest& request,
     enable_ptp_config_ = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("set ptp config failed: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -939,7 +939,7 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set LDP: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -966,7 +966,7 @@ bool OBCameraNode::setFanWorkModeCallback(std_srvs::SetBoolRequest& request,
     device_->setBoolProperty(OB_PROP_FAN_WORK_MODE_INT, request.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("set fan failed: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -979,7 +979,7 @@ bool OBCameraNode::setFloodCallback(std_srvs::SetBoolRequest& request,
     device_->setBoolProperty(OB_PROP_FLOOD_BOOL, request.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("set flood failed: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -1276,7 +1276,7 @@ bool OBCameraNode::switchIRModeCallback(SetInt32Request& request, SetInt32Respon
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to switch IR mode: " << e.getMessage();
+    ss << "Failed to switch IR mode: " << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM("Failed to switch IR mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
@@ -1295,7 +1295,8 @@ bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to switch IR data source channel: " << e.getMessage();
+    ss << "Failed to switch IR data source channel: "
+       << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM(
         "Failed to switch IR data source channel: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
@@ -1317,7 +1318,7 @@ bool OBCameraNode::setWriteCustomerData(SetStringRequest& request, SetStringResp
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to set write customer data: " << e.getMessage();
+    ss << "Failed to set write customer data: " << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM(
         "Failed to set write customer data: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
@@ -1339,7 +1340,7 @@ bool OBCameraNode::setReadCustomerData(GetStringRequest& request, GetStringRespo
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to read customer data: " << e.getMessage();
+    ss << "Failed to read customer data: " << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM("Failed to read customer data: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
@@ -1381,7 +1382,7 @@ bool OBCameraNode::setPointCloudDecimationCallback(SetInt32Request& request,
     ROS_ERROR_STREAM(
         "Failed to set point cloud decimation: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("Failed to set point cloud decimation: " << e.what());
@@ -1467,7 +1468,7 @@ bool OBCameraNode::setDisparityRangeModeCallback(SetInt32Request& request,
     ROS_INFO_STREAM(response.message);
     return true;
   } catch (const ob::Error& e) {
-    return setDisparityServiceFailure(response, e.getMessage());
+    return setDisparityServiceFailure(response, orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
     return setDisparityServiceFailure(response, e.what());
   } catch (...) {
@@ -1515,7 +1516,7 @@ bool OBCameraNode::setDisparitySearchOffsetCallback(SetInt32Request& request,
     response.message = "disparity_search_offset updated to " + std::to_string(current_offset);
     return true;
   } catch (const ob::Error& e) {
-    return setDisparityServiceFailure(response, e.getMessage());
+    return setDisparityServiceFailure(response, orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
     return setDisparityServiceFailure(response, e.what());
   } catch (...) {
