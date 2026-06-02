@@ -484,26 +484,6 @@ public:
 /**
  * @brief UnDistortionFilter removes lens distortion from a chosen stream (Color, IR, or Depth).
  *
- * Usage (pure color undistortion, sync_align scenario):
- * @code
- *   auto filter = std::make_shared<ob::UnDistortionFilter>();
- *   // default stream type is COLOR, default mode is pure undistortion
- *   filter->pushFrame(frameSet);
- * @endcode
- *
- * Usage (virtual-camera mode, hw_d2c_align scenario):
- * @code
- *   auto filter = std::make_shared<ob::UnDistortionFilter>();
- *   // Pass the raw depth intrinsic — filter computes the scale to color resolution internally.
- *   filter->setNewCameraMatrix(depthIntrinsic);
- *   filter->pushFrame(frameSet);
- * @endcode
- *
- * Usage (depth undistortion — must use nearest-neighbor interpolation):
- * @code
- *   auto filter = std::make_shared<ob::UnDistortionFilter>(OB_STREAM_DEPTH);
- *   filter->setInterpolationMode(0);  // nearest neighbor avoids ghost-depth artefacts
- * @endcode
  */
 class UnDistortionFilter : public Filter {
 public:
@@ -519,7 +499,6 @@ public:
 
     /**
      * @brief Set which stream to undistort (default: OB_STREAM_COLOR).
-     *        For depth streams, also call setInterpolationMode(0).
      */
     void setStreamType(OBStreamType streamType) {
         setConfigValue("StreamType", static_cast<double>(streamType));
@@ -544,11 +523,11 @@ public:
      * @param depthIntrinsic  The depth camera intrinsic at its native resolution.
      */
     void setNewCameraMatrix(OBCameraIntrinsic depthIntrinsic) {
-        setConfigValue("NewCameraFx",     static_cast<double>(depthIntrinsic.fx));
-        setConfigValue("NewCameraFy",     static_cast<double>(depthIntrinsic.fy));
-        setConfigValue("NewCameraCx",     static_cast<double>(depthIntrinsic.cx));
-        setConfigValue("NewCameraCy",     static_cast<double>(depthIntrinsic.cy));
-        setConfigValue("NewCameraWidth",  static_cast<double>(depthIntrinsic.width));
+        setConfigValue("NewCameraFx", static_cast<double>(depthIntrinsic.fx));
+        setConfigValue("NewCameraFy", static_cast<double>(depthIntrinsic.fy));
+        setConfigValue("NewCameraCx", static_cast<double>(depthIntrinsic.cx));
+        setConfigValue("NewCameraCy", static_cast<double>(depthIntrinsic.cy));
+        setConfigValue("NewCameraWidth", static_cast<double>(depthIntrinsic.width));
         setConfigValue("NewCameraHeight", static_cast<double>(depthIntrinsic.height));
     }
 
@@ -557,18 +536,6 @@ public:
      */
     void clearNewCameraMatrix() {
         setConfigValue("NewCameraWidth", 0.0);
-    }
-
-    /**
-     * @brief Set the pixel interpolation mode.
-     * @param mode 0 = nearest-neighbor (required for depth), 1 = bilinear (default).
-     */
-    void setInterpolationMode(int mode) {
-        setConfigValue("InterpolationMode", static_cast<double>(mode));
-    }
-
-    int getInterpolationMode() const {
-        return static_cast<int>(getConfigValue("InterpolationMode"));
     }
 };
 
@@ -1232,7 +1199,7 @@ public:
      */
     OBUint16PropertyRange getMarginXthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "margin_x_th") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("margin_x_th"));
@@ -1248,7 +1215,7 @@ public:
      */
     OBUint16PropertyRange getMarginYthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "margin_y_th") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("margin_y_th"));
@@ -1264,7 +1231,7 @@ public:
      */
     OBUint16PropertyRange getLimitXthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "limit_x_th") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("limit_x_th"));
@@ -1280,7 +1247,7 @@ public:
      */
     OBUint16PropertyRange getLimitYthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "limit_y_th") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("limit_y_th"));
@@ -1296,7 +1263,7 @@ public:
      */
     OBUint16PropertyRange getVerticalDirectionEnableRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "enable_vertical_direction") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("enable_vertical_direction"));
@@ -1312,7 +1279,7 @@ public:
      */
     OBUint16PropertyRange getWidthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "width") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("width"));
@@ -1328,7 +1295,7 @@ public:
      */
     OBUint16PropertyRange getHeightRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "height") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("height"));
@@ -1369,7 +1336,6 @@ public:
         param.height           = static_cast<uint16_t>(getConfigValue("height"));
         return param;
     }
-
 };
 
 /**
@@ -2166,13 +2132,20 @@ public:
  */
 inline const std::unordered_map<std::string, std::type_index> &getFilterTypeMap() {
     static const std::unordered_map<std::string, std::type_index> filterTypeMap = {
-        { "PointCloudFilter", typeid(PointCloudFilter) },       { "Align", typeid(Align) },
-        { "FormatConverter", typeid(FormatConvertFilter) },     { "HDRMerge", typeid(HdrMerge) },
-        { "SequenceIdFilter", typeid(SequenceIdFilter) },       { "DecimationFilter", typeid(DecimationFilter) },
-        { "ThresholdFilter", typeid(ThresholdFilter) },         { "SpatialAdvancedFilter", typeid(SpatialAdvancedFilter) },
-        { "HoleFillingFilter", typeid(HoleFillingFilter) },     { "NoiseRemovalFilter", typeid(NoiseRemovalFilter) },
-        { "TemporalFilter", typeid(TemporalFilter) },           { "DisparityTransform", typeid(DisparityTransform) },
-        { "SpatialFastFilter", typeid(SpatialFastFilter) },     { "SpatialModerateFilter", typeid(SpatialModerateFilter) },
+        { "PointCloudFilter", typeid(PointCloudFilter) },
+        { "Align", typeid(Align) },
+        { "FormatConverter", typeid(FormatConvertFilter) },
+        { "HDRMerge", typeid(HdrMerge) },
+        { "SequenceIdFilter", typeid(SequenceIdFilter) },
+        { "DecimationFilter", typeid(DecimationFilter) },
+        { "ThresholdFilter", typeid(ThresholdFilter) },
+        { "SpatialAdvancedFilter", typeid(SpatialAdvancedFilter) },
+        { "HoleFillingFilter", typeid(HoleFillingFilter) },
+        { "NoiseRemovalFilter", typeid(NoiseRemovalFilter) },
+        { "TemporalFilter", typeid(TemporalFilter) },
+        { "DisparityTransform", typeid(DisparityTransform) },
+        { "SpatialFastFilter", typeid(SpatialFastFilter) },
+        { "SpatialModerateFilter", typeid(SpatialModerateFilter) },
         { "EdgeNoiseRemovalFilter", typeid(EdgeNoiseRemovalFilter) },
         { "FalsePositiveFilter", typeid(FalsePositiveFilter) },
         { "MgcNoiseRemovalFilter", typeid(MgcNoiseRemovalFilter) },
