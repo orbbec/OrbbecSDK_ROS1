@@ -151,6 +151,17 @@ class OBCameraNode {
 
   void setupLeftIrPostProcessFilter();
 
+  void setupIrPostProcessFilter();
+
+  void setupUndistortionFilters();
+
+  bool shouldUseHwD2CColorUndistortion() const;
+
+  void configureHwD2CColorUndistortion(const std::shared_ptr<ob::Frame> &depth_frame);
+
+  void applyHwD2CColorUndistortion(std::shared_ptr<ob::FrameSet> &frame_set,
+                                   const std::shared_ptr<ob::Frame> &depth_frame);
+
   void setupFrameCallback();
 
   void readDefaultGain();
@@ -162,11 +173,6 @@ class OBCameraNode {
   std::shared_ptr<ob::Frame> softwareDecodeColorFrame(const std::shared_ptr<ob::Frame> &frame);
 
   void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair &stream_index);
-
-  void publishColorUndistortedFrame(const std::shared_ptr<ob::Frame> &frame,
-                                    const ros::Time &timestamp, const std::string &frame_id,
-                                    const sensor_msgs::CameraInfo &camera_info,
-                                    const OBCameraIntrinsic &intrinsic);
 
   void onNewStandaloneFrameCallback(std::shared_ptr<ob::Frame> frame,
                                     const stream_index_pair &stream_index);
@@ -212,6 +218,8 @@ class OBCameraNode {
   std::shared_ptr<ob::Frame> processRightIrFrameFilter(std::shared_ptr<ob::Frame> &frame);
 
   std::shared_ptr<ob::Frame> processLeftIrFrameFilter(std::shared_ptr<ob::Frame> &frame);
+
+  std::shared_ptr<ob::Frame> processIrFrameFilter(std::shared_ptr<ob::Frame> &frame);
 
   uint64_t getFrameTimestampUs(const std::shared_ptr<ob::Frame> &frame);
 
@@ -327,6 +335,8 @@ class OBCameraNode {
   bool isGemini435LePID(uint32_t pid);
 
   bool isPublishMetaData(uint32_t pid);
+
+  static bool isDabaiASeriesForHwD2C(uint32_t pid);
 
   boost::optional<OBCameraParam> getCameraParam();
 
@@ -594,6 +604,7 @@ class OBCameraNode {
   std::vector<std::shared_ptr<ob::Filter>> color_filter_list_;
   std::vector<std::shared_ptr<ob::Filter>> left_color_filter_list_;
   std::vector<std::shared_ptr<ob::Filter>> right_color_filter_list_;
+  std::vector<std::shared_ptr<ob::Filter>> ir_filter_list_;
   std::vector<std::shared_ptr<ob::Filter>> left_ir_filter_list_;
   std::vector<std::shared_ptr<ob::Filter>> right_ir_filter_list_;
   std::string ir_info_uri_;
@@ -800,10 +811,9 @@ class OBCameraNode {
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
   bool enable_firmware_log_ = false;
-  bool enable_color_undistortion_ = false;
-  std::shared_ptr<ob::UnDistortionFilter> color_undistortion_filter_;
-  image_transport::Publisher color_undistortion_publisher_;
-  ros::Publisher color_undistortion_camera_info_publisher_;
+  std::map<stream_index_pair, bool> enable_undistortion_;
+  std::shared_ptr<ob::UnDistortionFilter> hw_d2c_color_undistortion_filter_;
+  bool hw_d2c_color_undistortion_configured_ = false;
   bool has_first_color_frame_ = false;
   // rotation degree
   std::map<stream_index_pair, int> image_rotation_;
