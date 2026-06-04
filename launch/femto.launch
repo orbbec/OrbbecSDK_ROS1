@@ -4,7 +4,7 @@
     <arg name="camera_name" default="camera"/>
     <!-- open device delay time 100m-->
     <arg name="connection_delay" default="100"/>
-    <arg name="log_level" default="none"/>
+    <arg name="log_level" default="info"/>
     <arg name="log_file_name" default=""/>
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="0.0"/>

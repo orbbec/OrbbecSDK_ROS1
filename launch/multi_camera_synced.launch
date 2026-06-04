@@ -5,8 +5,8 @@
     <arg name="camera2_prefix" default="02"/>
     <arg name="camera1_usb_port" default="2-1.2.1"/>
     <arg name="camera2_usb_port" default="2-1.1"/>
-    <arg name="camera1_log_level" default="none"/>
-    <arg name="camera2_log_level" default="none"/>
+    <arg name="camera1_log_level" default="info"/>
+    <arg name="camera2_log_level" default="info"/>
     <arg name="camera1_log_file_name" default="camera_01.log"/>
     <arg name="camera2_log_file_name" default="camera_02.log"/>
 

@@ -41,6 +41,16 @@ std::string getLogDirectoryForCamera(const std::string &camera_name) {
   return (boost::filesystem::path(home_dir) / ".ros" / "Log" / camera_name).string();
 }
 
+std::string makeDefaultSdkLogFileName() {
+  const std::time_t now_time = std::time(nullptr);
+  std::tm tm{};
+  localtime_r(&now_time, &tm);
+
+  std::ostringstream file_name;
+  file_name << std::put_time(&tm, "%Y%m%d_%H%M%S") << ".log";
+  return file_name.str();
+}
+
 ros::console::levels::Level rosLogSeverityFromString(const std::string &log_level) {
   if (log_level == "debug") {
     return ros::console::levels::Debug;
@@ -185,14 +195,16 @@ void OBCameraNodeDriver::init() {
   ob::Context::setLoggerToFile(ob_log_level, log_path.c_str());
   // Set ROS log level
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, rosLogSeverityFromString(log_level));
-  if (!log_file_name.empty()) {
-    try {
-      ob::Context::setLoggerFileName(log_file_name);
-      ROS_INFO_STREAM("SDK log file name set to: " << log_file_name);
-    } catch (const ob::Error &e) {
-      ROS_WARN_STREAM(
-          "Failed to set SDK log file name: " << orbbec_camera::formatObErrorWithStatus(e));
-    }
+  if (log_file_name.empty()) {
+    log_file_name = makeDefaultSdkLogFileName();
+  }
+  try {
+    ob::Context::setLoggerFileName(log_file_name);
+    ROS_INFO_STREAM("SDK log file path set to: "
+                    << (boost::filesystem::path(log_path) / log_file_name).string());
+  } catch (const ob::Error &e) {
+    ROS_WARN_STREAM(
+        "Failed to set SDK log file name: " << orbbec_camera::formatObErrorWithStatus(e));
   }
   ctx_ = std::make_shared<ob::Context>(config_path_.c_str());
   timestamp_clock_type_str_ = nh_private_.param<std::string>("timestamp_clock_type", "");
