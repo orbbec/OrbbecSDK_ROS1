@@ -1203,13 +1203,6 @@ void OBCameraNode::selectBaseStream() {
   }
 }
 void OBCameraNode::setupColorPostProcessFilter() {
-  if (enable_color_undistortion_) {
-    color_undistortion_filter_ = std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
-    color_undistortion_filter_->setInterpolationMode(1);
-    color_undistortion_filter_->enable(true);
-    ROS_INFO_STREAM("Set color undistortion filter UnDistortionFilter to enabled");
-  }
-
   try {
     auto color_sensor = device_->getSensor(OB_SENSOR_COLOR);
     if (color_sensor) {
@@ -1329,6 +1322,133 @@ void OBCameraNode::setupColorPostProcessFilter() {
     }
   }
 }
+
+void OBCameraNode::setupIrPostProcessFilter() {
+  try {
+    auto ir_sensor = device_->getSensor(OB_SENSOR_IR);
+    ir_filter_list_ = ir_sensor->createRecommendedFilters();
+    if (ir_filter_list_.empty()) {
+      ROS_WARN_STREAM("Failed to get ir sensor filter list");
+    }
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Failed to setup ir filters: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to setup ir filters: " << e.what());
+  }
+}
+
+void OBCameraNode::setupUndistortionFilters() {
+  auto remove_undistortion_filter = [](std::vector<std::shared_ptr<ob::Filter>>& filters) {
+    filters.erase(std::remove_if(filters.begin(), filters.end(),
+                                 [](const std::shared_ptr<ob::Filter>& filter) {
+                                   return filter && std::string(filter->type()) ==
+                                                        "UnDistortionFilter";
+                                 }),
+                  filters.end());
+  };
+
+  auto find_or_create_filter =
+      [&](std::vector<std::shared_ptr<ob::Filter>>& filters,
+          OBStreamType stream_type) -> std::shared_ptr<ob::UnDistortionFilter> {
+    for (auto& filter : filters) {
+      if (filter && std::string(filter->type()) == "UnDistortionFilter") {
+        auto undistortion_filter = filter->as<ob::UnDistortionFilter>();
+        undistortion_filter->setStreamType(stream_type);
+        undistortion_filter->enable(true);
+        return undistortion_filter;
+      }
+    }
+    auto undistortion_filter = std::make_shared<ob::UnDistortionFilter>(stream_type);
+    undistortion_filter->enable(true);
+    filters.push_back(undistortion_filter);
+    return undistortion_filter;
+  };
+
+  auto setup_stream_filter = [&](const stream_index_pair& stream_index,
+                                 std::vector<std::shared_ptr<ob::Filter>>& filters) {
+    if (!enable_stream_[stream_index] || !enable_undistortion_[stream_index]) {
+      return;
+    }
+    if (stream_index == LIDAR) {
+      ROS_WARN_STREAM("Undistortion is not supported for lidar stream");
+      return;
+    }
+    if (stream_index == COLOR && shouldUseHwD2CColorUndistortion()) {
+      remove_undistortion_filter(filters);
+      hw_d2c_color_undistortion_filter_ =
+          std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
+      hw_d2c_color_undistortion_filter_->enable(true);
+      ROS_INFO_STREAM("Enable color undistortion with HW D2C depth intrinsic projection");
+      return;
+    }
+    auto undistortion_filter = find_or_create_filter(filters, stream_index.first);
+    undistortion_filter->clearNewCameraMatrix();
+    ROS_INFO_STREAM("Enable " << stream_name_[stream_index] << " undistortion");
+  };
+
+  setup_stream_filter(COLOR, color_filter_list_);
+  setup_stream_filter(COLOR_LEFT, left_color_filter_list_);
+  setup_stream_filter(COLOR_RIGHT, right_color_filter_list_);
+  setup_stream_filter(DEPTH, depth_filter_list_);
+  setup_stream_filter(INFRA0, ir_filter_list_);
+  setup_stream_filter(INFRA1, left_ir_filter_list_);
+  setup_stream_filter(INFRA2, right_ir_filter_list_);
+}
+
+bool OBCameraNode::shouldUseHwD2CColorUndistortion() const {
+  auto color_undistortion = enable_undistortion_.find(COLOR);
+  return color_undistortion != enable_undistortion_.end() && color_undistortion->second &&
+         isDabaiASeriesForHwD2C(device_info_->pid()) && depth_registration_ && align_mode_ == "HW" &&
+         align_target_stream_ == OB_STREAM_COLOR && enable_stream_.at(COLOR) &&
+         enable_stream_.at(DEPTH);
+}
+
+void OBCameraNode::configureHwD2CColorUndistortion(
+    const std::shared_ptr<ob::Frame>& depth_frame) {
+  if (!hw_d2c_color_undistortion_filter_ || hw_d2c_color_undistortion_configured_) {
+    return;
+  }
+  if (!depth_frame) {
+    ROS_WARN_ONCE("Skip HW D2C color undistortion setup because depth frame is not available");
+    return;
+  }
+  auto stream_profile = depth_frame->getStreamProfile();
+  if (!stream_profile) {
+    ROS_WARN_ONCE("Skip HW D2C color undistortion setup because depth stream profile is null");
+    return;
+  }
+  auto video_profile = stream_profile->as<ob::VideoStreamProfile>();
+  if (!video_profile) {
+    ROS_WARN_ONCE("Skip HW D2C color undistortion setup because depth profile is not video");
+    return;
+  }
+  hw_d2c_color_undistortion_filter_->setNewCameraMatrix(video_profile->getIntrinsic());
+  hw_d2c_color_undistortion_configured_ = true;
+  ROS_INFO_STREAM("Configured HW D2C color undistortion with depth camera intrinsic");
+}
+
+void OBCameraNode::applyHwD2CColorUndistortion(std::shared_ptr<ob::FrameSet>& frame_set,
+                                               const std::shared_ptr<ob::Frame>& depth_frame) {
+  if (!frame_set || !hw_d2c_color_undistortion_filter_) {
+    return;
+  }
+  configureHwD2CColorUndistortion(depth_frame);
+  if (!hw_d2c_color_undistortion_configured_) {
+    return;
+  }
+  auto undistorted_frame = hw_d2c_color_undistortion_filter_->process(frame_set);
+  if (!undistorted_frame) {
+    ROS_WARN_STREAM("HW D2C color undistortion filter returned null frame");
+    return;
+  }
+  auto undistorted_frame_set = undistorted_frame->as<ob::FrameSet>();
+  if (!undistorted_frame_set) {
+    ROS_WARN_STREAM("HW D2C color undistortion filter returned non-frameset output");
+    return;
+  }
+  frame_set = undistorted_frame_set;
+}
+
 void OBCameraNode::setupLeftIrPostProcessFilter() {
   if (device_preset_ == "Dual Color Streams") {
     ROS_DEBUG_STREAM("Dual Color Streams preset, skip left ir filter setup");
@@ -2626,14 +2746,6 @@ void OBCameraNode::setupPublishers() {
       metadata_publishers_[stream_index] =
           nh_.advertise<orbbec_camera::Metadata>("/" + camera_name_ + "/" + name + "/metadata", 1,
                                                  image_subscribed_cb, image_unsubscribed_cb);
-    }
-    if (stream_index == COLOR && enable_color_undistortion_) {
-      color_undistortion_camera_info_publisher_ = nh_.advertise<sensor_msgs::CameraInfo>(
-          "/" + camera_name_ + "/color/camera_info_undistorted", 1, image_subscribed_cb,
-          image_unsubscribed_cb);
-      color_undistortion_publisher_ =
-          getGlobalImagePublisher("/" + camera_name_ + "/color/image_undistorted",
-                                  image_transport_subscribed_cb, image_transport_unsubscribed_cb);
     }
   }
   if (enable_point_cloud_ && enable_stream_[DEPTH]) {
