@@ -2665,6 +2665,8 @@ void OBCameraNode::setupProfiles() {
   }
   if (depth_registration_ && align_mode_ == "SW") {
     align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
+    align_filter_->setMatchTargetResolution(true);
+    ROS_INFO_STREAM("SW D2C align output resolution will match target stream resolution");
   }
 }
 void OBCameraNode::updateImageConfig(
@@ -2968,7 +2970,7 @@ void OBCameraNode::setupPipelineConfig() {
       ROS_DEBUG_STREAM("Enable " << stream_name_[stream_index] << " stream");
       auto profile = stream_profile_[stream_index]->as<ob::VideoStreamProfile>();
 
-      if (stream_index == COLOR && enable_stream_[COLOR] && align_filter_) {
+      if (stream_index.first == align_target_stream_ && align_filter_) {
         auto video_profile = profile;
         align_filter_->setAlignToStreamProfile(video_profile);
       }

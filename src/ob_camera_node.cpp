@@ -16,7 +16,10 @@
 
 #include "orbbec_camera/ob_camera_node.h"
 #include "libobsensor/hpp/Utils.hpp"
+#include <algorithm>
+#include <cctype>
 #include <fstream>
+#include <stdexcept>
 #if defined(USE_RK_HW_DECODER)
 #include "orbbec_camera/rk_mpp_decoder.h"
 #elif defined(USE_NV_HW_DECODER)
@@ -26,6 +29,12 @@
 #include <fstream>
 namespace orbbec_camera {
 namespace {
+std::string toUpperCopy(std::string value) {
+  std::transform(value.begin(), value.end(), value.begin(),
+                 [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+  return value;
+}
+
 int64_t getSystemNowUs() {
   return std::chrono::duration_cast<std::chrono::microseconds>(
              std::chrono::system_clock::now().time_since_epoch())
@@ -452,8 +461,36 @@ void OBCameraNode::getParameters() {
   diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
+  const auto original_align_mode = align_mode_;
+  align_mode_ = toUpperCopy(align_mode_);
+  if (!original_align_mode.empty() && original_align_mode != align_mode_) {
+    ROS_WARN_STREAM("Parameter 'align_mode' value '" << original_align_mode
+                                                     << "' normalized to '" << align_mode_ << "'");
+  }
+  if (align_mode_ != "HW" && align_mode_ != "SW") {
+    std::stringstream ss;
+    ss << "Invalid parameter 'align_mode' value '" << original_align_mode
+       << "'. Supported values: HW, SW";
+    ROS_ERROR_STREAM(ss.str());
+    throw std::invalid_argument(ss.str());
+  }
   std::string align_target_stream_str_;
   align_target_stream_str_ = nh_private_.param<std::string>("align_target_stream", "COLOR");
+  const auto original_align_target_stream = align_target_stream_str_;
+  align_target_stream_str_ = toUpperCopy(align_target_stream_str_);
+  if (!original_align_target_stream.empty() &&
+      original_align_target_stream != align_target_stream_str_) {
+    ROS_WARN_STREAM("Parameter 'align_target_stream' value '"
+                    << original_align_target_stream << "' normalized to '"
+                    << align_target_stream_str_ << "'");
+  }
+  if (align_target_stream_str_ != "COLOR" && align_target_stream_str_ != "DEPTH") {
+    std::stringstream ss;
+    ss << "Invalid parameter 'align_target_stream' value '" << original_align_target_stream
+       << "'. Supported values: COLOR, DEPTH";
+    ROS_ERROR_STREAM(ss.str());
+    throw std::invalid_argument(ss.str());
+  }
   align_target_stream_ = obStreamTypeFromString(align_target_stream_str_);
   enable_color_hdr_ = nh_private_.param<bool>("enable_color_hdr", false);
   enable_depth_scale_ = nh_private_.param<bool>("enable_depth_scale", true);
@@ -2108,25 +2145,12 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   OBCameraIntrinsic intrinsic;
   OBCameraDistortion distortion;
-  CHECK_NOTNULL(device_info_.get());
-  if (isGemini335PID(device_info_->pid())) {
-    auto stream_profile = frame->getStreamProfile();
-    CHECK_NOTNULL(stream_profile.get());
-    auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
-    CHECK_NOTNULL(video_stream_profile);
-    intrinsic = video_stream_profile->getIntrinsic();
-    distortion = video_stream_profile->getDistortion();
-  } else {
-    auto camera_params = pipeline_->getCameraParam();
-    intrinsic = stream_index == COLOR ? camera_params.rgbIntrinsic : camera_params.depthIntrinsic;
-    distortion =
-        stream_index == COLOR ? camera_params.rgbDistortion : camera_params.depthDistortion;
-    if (device_info_->pid() == DABAI_MAX_PID) {
-      // use color extrinsic
-      intrinsic = camera_params.rgbIntrinsic;
-      distortion = camera_params.rgbDistortion;
-    }
-  }
+  auto stream_profile = frame->getStreamProfile();
+  CHECK_NOTNULL(stream_profile.get());
+  auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
+  CHECK_NOTNULL(video_stream_profile);
+  intrinsic = video_stream_profile->getIntrinsic();
+  distortion = video_stream_profile->getDistortion();
 
   sensor_msgs::CameraInfo camera_info;
   if (color_camera_info_manager_ && color_camera_info_manager_->isCalibrated() &&
