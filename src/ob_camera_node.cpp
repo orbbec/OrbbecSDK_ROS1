@@ -1833,6 +1833,11 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
         frame_set->pushFrame(depth_frame);
       }
     }
+    if (shouldUseHwD2CColorUndistortion() && color_frame) {
+      applyHwD2CColorUndistortion(frame_set, depth_frame_for_hw_d2c_undistortion);
+      depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+      color_frame = frame_set->getFrame(OB_FRAME_COLOR);
+    }
     if (color_frame) {
       setColorAutoExposureROI();
       color_frame = processColorFrameFilter(color_frame);
@@ -1846,11 +1851,6 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     if (right_color_frame) {
       right_color_frame = processColorFrameFilter(right_color_frame);
       frame_set->pushFrame(right_color_frame);
-    }
-    if (shouldUseHwD2CColorUndistortion() && color_frame) {
-      applyHwD2CColorUndistortion(frame_set, depth_frame_for_hw_d2c_undistortion);
-      depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
-      color_frame = frame_set->getFrame(OB_FRAME_COLOR);
     }
     if (ir_frame) {
       ir_frame = processIrFrameFilter(ir_frame);
@@ -2139,9 +2139,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   int height = static_cast<int>(video_frame->height());
   auto frame_timestamp = getFrameTimestampUs(frame);
   auto timestamp = fromUsToROSTime(frame_timestamp);
-  std::string frame_id = (depth_registration_ && stream_index == DEPTH)
-                             ? depth_aligned_frame_id_[stream_index]
-                             : optical_frame_id_[stream_index];
+  std::string frame_id = getEffectiveOpticalFrameId(stream_index);
 
   OBCameraIntrinsic intrinsic;
   OBCameraDistortion distortion;
@@ -2153,14 +2151,17 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   distortion = video_stream_profile->getDistortion();
 
   sensor_msgs::CameraInfo camera_info;
-  if (color_camera_info_manager_ && color_camera_info_manager_->isCalibrated() &&
+  const bool use_generated_camera_info = shouldUseGeneratedCameraInfo(stream_index);
+  if (!use_generated_camera_info && color_camera_info_manager_ &&
+      color_camera_info_manager_->isCalibrated() &&
       stream_index == COLOR) {
     camera_info = color_camera_info_manager_->getCameraInfo();
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
     camera_info.width = width;
     camera_info.height = height;
-  } else if (ir_camera_info_manager_ && ir_camera_info_manager_->isCalibrated() &&
+  } else if (!use_generated_camera_info && ir_camera_info_manager_ &&
+             ir_camera_info_manager_->isCalibrated() &&
              (stream_index == INFRA0 || stream_index == DEPTH)) {
     camera_info = ir_camera_info_manager_->getCameraInfo();
     camera_info.header.stamp = timestamp;
@@ -2173,19 +2174,19 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     camera_info.height = height;
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;
-    if (frame->type() == OB_FRAME_IR_RIGHT && enable_stream_[INFRA1]) {
-      auto left_video_profile = stream_profile_[INFRA1]->as<ob::VideoStreamProfile>();
-      CHECK_NOTNULL(left_video_profile.get());
-      auto stream_profile = frame->getStreamProfile();
-      CHECK_NOTNULL(stream_profile.get());
-      auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
-      CHECK_NOTNULL(video_stream_profile.get());
-      auto ex = video_stream_profile->getExtrinsicTo(left_video_profile);
-      double fx = camera_info.K.at(0);
-      double fy = camera_info.K.at(4);
-      camera_info.P.at(3) = fx * ex.trans[0] / 1000.0 + 0.0;
-      camera_info.P.at(7) = fy * ex.trans[1] / 1000.0 + 0.0;
-    }
+  }
+  if (frame->type() == OB_FRAME_IR_RIGHT && enable_stream_[INFRA1]) {
+    auto left_video_profile = stream_profile_[INFRA1]->as<ob::VideoStreamProfile>();
+    CHECK_NOTNULL(left_video_profile.get());
+    auto stream_profile = frame->getStreamProfile();
+    CHECK_NOTNULL(stream_profile.get());
+    auto video_stream_profile = stream_profile->as<ob::VideoStreamProfile>();
+    CHECK_NOTNULL(video_stream_profile.get());
+    auto ex = video_stream_profile->getExtrinsicTo(left_video_profile);
+    double fx = camera_info.K.at(0);
+    double fy = camera_info.K.at(4);
+    camera_info.P.at(3) = fx * ex.trans[0] / 1000.0 + 0.0;
+    camera_info.P.at(7) = fy * ex.trans[1] / 1000.0 + 0.0;
   }
 
   CHECK(camera_info_publishers_.count(stream_index) > 0);

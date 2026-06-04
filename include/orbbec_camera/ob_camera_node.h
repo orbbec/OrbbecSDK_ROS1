@@ -157,6 +157,12 @@ class OBCameraNode {
 
   bool shouldUseHwD2CColorUndistortion() const;
 
+  bool isHwD2CProfileSupported() const;
+
+  bool shouldUseGeneratedCameraInfo(const stream_index_pair &stream_index) const;
+
+  std::string getEffectiveOpticalFrameId(const stream_index_pair &stream_index) const;
+
   void configureHwD2CColorUndistortion(const std::shared_ptr<ob::Frame> &depth_frame);
 
   void applyHwD2CColorUndistortion(std::shared_ptr<ob::FrameSet> &frame_set,

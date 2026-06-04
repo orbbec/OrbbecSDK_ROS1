@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 #include <boost/filesystem.hpp>
@@ -1338,6 +1339,9 @@ void OBCameraNode::setupIrPostProcessFilter() {
 }
 
 void OBCameraNode::setupUndistortionFilters() {
+  hw_d2c_color_undistortion_filter_.reset();
+  hw_d2c_color_undistortion_configured_ = false;
+
   auto remove_undistortion_filter = [](std::vector<std::shared_ptr<ob::Filter>>& filters) {
     filters.erase(std::remove_if(filters.begin(), filters.end(),
                                  [](const std::shared_ptr<ob::Filter>& filter) {
@@ -1401,6 +1405,67 @@ bool OBCameraNode::shouldUseHwD2CColorUndistortion() const {
          isDabaiASeriesForHwD2C(device_info_->pid()) && depth_registration_ && align_mode_ == "HW" &&
          align_target_stream_ == OB_STREAM_COLOR && enable_stream_.at(COLOR) &&
          enable_stream_.at(DEPTH);
+}
+
+bool OBCameraNode::isHwD2CProfileSupported() const {
+  if (!pipeline_) {
+    return false;
+  }
+  auto color_profile_iter = stream_profile_.find(COLOR);
+  auto depth_profile_iter = stream_profile_.find(DEPTH);
+  if (color_profile_iter == stream_profile_.end() || depth_profile_iter == stream_profile_.end() ||
+      !color_profile_iter->second || !depth_profile_iter->second) {
+    return false;
+  }
+
+  auto supported_profiles =
+      pipeline_->getD2CDepthProfileList(color_profile_iter->second, ALIGN_D2C_HW_MODE);
+  if (!supported_profiles || supported_profiles->count() == 0) {
+    return false;
+  }
+
+  auto selected_depth = depth_profile_iter->second->as<ob::VideoStreamProfile>();
+  if (!selected_depth) {
+    return false;
+  }
+  for (uint32_t i = 0; i < supported_profiles->getCount(); ++i) {
+    auto supported = supported_profiles->getProfile(i)->as<ob::VideoStreamProfile>();
+    if (!supported) {
+      continue;
+    }
+    if (supported->getWidth() == selected_depth->getWidth() &&
+        supported->getHeight() == selected_depth->getHeight() &&
+        supported->getFormat() == selected_depth->getFormat() &&
+        supported->getFps() == selected_depth->getFps()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool OBCameraNode::shouldUseGeneratedCameraInfo(const stream_index_pair& stream_index) const {
+  auto undistortion_iter = enable_undistortion_.find(stream_index);
+  if (undistortion_iter != enable_undistortion_.end() && undistortion_iter->second) {
+    return true;
+  }
+  if (stream_index == COLOR && hw_d2c_color_undistortion_configured_) {
+    return true;
+  }
+  if (!depth_registration_) {
+    return false;
+  }
+  return (stream_index == DEPTH && align_target_stream_ == OB_STREAM_COLOR) ||
+         (stream_index == COLOR && align_target_stream_ == OB_STREAM_DEPTH);
+}
+
+std::string OBCameraNode::getEffectiveOpticalFrameId(const stream_index_pair& stream_index) const {
+  if (depth_registration_ && stream_index == DEPTH && align_target_stream_ == OB_STREAM_COLOR) {
+    return optical_frame_id_.at(COLOR);
+  }
+  if (depth_registration_ && stream_index == COLOR && align_target_stream_ == OB_STREAM_DEPTH) {
+    return optical_frame_id_.at(DEPTH);
+  }
+  return optical_frame_id_.at(stream_index);
 }
 
 void OBCameraNode::configureHwD2CColorUndistortion(
@@ -2960,6 +3025,14 @@ void OBCameraNode::setupPipelineConfig() {
   pipeline_config_ = std::make_shared<ob::Config>();
   if (align_mode_ == "HW" && depth_registration_ && enable_stream_[COLOR] &&
       enable_stream_[DEPTH]) {
+    if (!isHwD2CProfileSupported()) {
+      std::stringstream ss;
+      ss << "Selected profiles do not support HW D2C. color=" << width_[COLOR] << "x"
+         << height_[COLOR] << "@" << fps_[COLOR] << ", depth=" << width_[DEPTH] << "x"
+         << height_[DEPTH] << "@" << fps_[DEPTH]
+         << ". Select a supported profile or use align_mode:=SW.";
+      throw std::runtime_error(ss.str());
+    }
     OBAlignMode align_mode = ALIGN_D2C_HW_MODE;
     ROS_INFO_STREAM("set align mode to " << align_mode_);
     pipeline_config_->setAlignMode(align_mode);
