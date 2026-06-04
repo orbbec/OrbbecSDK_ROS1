@@ -19,9 +19,9 @@
     <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <arg name="enable_sync_host_time" default="false"/>
-    <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
+    <!-- Set device_preset to select a G330 series depth preset. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
-    <arg name="device_preset" default="Standard default"/>
+    <arg name="device_preset" default=""/>
     <arg name="preset_firmware_path" default=""/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
@@ -106,7 +106,7 @@
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_hole_filling_filter" default="false"/>
-    <arg name="enable_false_positive_filter" default="false"/>
+    <arg name="enable_false_positive_filter" default="true"/>
 
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
