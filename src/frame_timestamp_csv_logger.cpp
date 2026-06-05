@@ -332,7 +332,8 @@ void FrameTimestampCsvLogger::populateArrivalData(StreamState &state, TrackedStr
         previous.dropped_frames += lost_frames;
         ROS_WARN_STREAM("Frame drop detected: stage=SDK_RECEIVE"
                         << " stream=" << (stream == TrackedStream::COLOR ? "color" : "depth")
-                        << " frame_index=" << state.frame_index << " dropped=" << lost_frames);
+                        << " frame_index=" << state.frame_index
+                        << " dropped=" << previous.dropped_frames);
       }
     }
   }
@@ -381,7 +382,8 @@ void FrameTimestampCsvLogger::populatePublishData(StreamState &state, TrackedStr
         previous.publish_dropped_frames += lost_frames;
         ROS_WARN_STREAM("Frame drop detected: stage=ROS_PUBLISH"
                         << " stream=" << (stream == TrackedStream::COLOR ? "color" : "depth")
-                        << " frame_index=" << state.frame_index << " dropped=" << lost_frames);
+                        << " frame_index=" << state.frame_index
+                        << " dropped=" << previous.publish_dropped_frames);
       }
     }
   }
