@@ -32,13 +32,18 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
       <td>recommended for new designs</td>
     </tr>
     <tr>
-      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 301</td>
       <td>Gemini 305</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 305g</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 309g</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
@@ -304,15 +309,20 @@ The following devices are supported by the OrbbecSDK ROS Wrapper.
       <td>gemini435_le.launch</td>
     </tr>
     <tr>
-      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 301</td>
       <td>Gemini 305</td>
       <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.70</a></td>
-      <td>gemini305.launch</td>
+      <td>gemini_301_series.launch</td>
     </tr>
     <tr>
       <td>Gemini 305g</td>
       <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.70</a></td>
-      <td>gemini305_g.launch</td>
+      <td>gemini_301_series.launch</td>
+    </tr>
+    <tr>
+      <td>Gemini 309g</td>
+      <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.70</a></td>
+      <td>gemini_301_series.launch</td>
     </tr>
     <tr>
       <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
