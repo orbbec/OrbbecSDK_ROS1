@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
-#include <stdexcept>
+#include <vector>
 #if defined(USE_RK_HW_DECODER)
 #include "orbbec_camera/rk_mpp_decoder.h"
 #elif defined(USE_NV_HW_DECODER)
@@ -29,10 +29,43 @@
 #include <fstream>
 namespace orbbec_camera {
 namespace {
-std::string toUpperCopy(std::string value) {
+std::string toLowerCopy(std::string value) {
   std::transform(value.begin(), value.end(), value.begin(),
-                 [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+                 [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
   return value;
+}
+
+std::string formatParameterValue(const std::string& value) {
+  return value.empty() ? std::string("\"\"") : "'" + value + "'";
+}
+
+std::string formatValidParameterValues(const std::vector<std::string>& valid_values) {
+  std::stringstream ss;
+  for (size_t i = 0; i < valid_values.size(); ++i) {
+    if (i != 0) {
+      ss << ", ";
+    }
+    ss << formatParameterValue(valid_values[i]);
+  }
+  return ss.str();
+}
+
+std::string normalizeClosedSetParameterValue(const std::string& param_name,
+                                             const std::string& value,
+                                             const std::vector<std::string>& valid_values,
+                                             const std::string& default_value) {
+  const auto lower_value = toLowerCopy(value);
+  for (const auto& valid_value : valid_values) {
+    if (lower_value == toLowerCopy(valid_value)) {
+      return valid_value;
+    }
+  }
+
+  ROS_ERROR_STREAM("Invalid parameter "
+                   << param_name << " " << formatParameterValue(value)
+                   << ". Valid values: " << formatValidParameterValues(valid_values)
+                   << ". Skip setting and use " << formatParameterValue(default_value) << ".");
+  return default_value;
 }
 
 int64_t getSystemNowUs() {
@@ -310,6 +343,8 @@ void OBCameraNode::getParameters() {
   point_cloud_decimation_filter_factor_ =
       nh_private_.param<int>("point_cloud_decimation_filter_factor", 1);
   disparity_to_depth_mode_ = nh_private_.param<std::string>("disparity_to_depth_mode", "");
+  disparity_to_depth_mode_ = normalizeClosedSetParameterValue(
+      "disparity_to_depth_mode", disparity_to_depth_mode_, {"", "HW", "SW", "disable"}, "");
   depth_work_mode_ = nh_private_.param<std::string>("depth_work_mode", "");
   preset_resolution_config_ = nh_private_.param<std::string>("preset_resolution_config", "");
   enable_soft_filter_ = nh_private_.param<bool>("enable_soft_filter", true);
@@ -461,35 +496,16 @@ void OBCameraNode::getParameters() {
   diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
-  const auto original_align_mode = align_mode_;
-  align_mode_ = toUpperCopy(align_mode_);
-  if (!original_align_mode.empty() && original_align_mode != align_mode_) {
-    ROS_WARN_STREAM("Parameter 'align_mode' value '" << original_align_mode
-                                                     << "' normalized to '" << align_mode_ << "'");
-  }
-  if (align_mode_ != "HW" && align_mode_ != "SW") {
-    std::stringstream ss;
-    ss << "Invalid parameter 'align_mode' value '" << original_align_mode
-       << "'. Supported values: HW, SW";
-    ROS_ERROR_STREAM(ss.str());
-    throw std::invalid_argument(ss.str());
-  }
+  align_mode_ = normalizeClosedSetParameterValue("align_mode", align_mode_, {"HW", "SW"}, "HW");
   std::string align_target_stream_str_;
   align_target_stream_str_ = nh_private_.param<std::string>("align_target_stream", "COLOR");
-  const auto original_align_target_stream = align_target_stream_str_;
-  align_target_stream_str_ = toUpperCopy(align_target_stream_str_);
-  if (!original_align_target_stream.empty() &&
-      original_align_target_stream != align_target_stream_str_) {
-    ROS_WARN_STREAM("Parameter 'align_target_stream' value '"
-                    << original_align_target_stream << "' normalized to '"
-                    << align_target_stream_str_ << "'");
-  }
-  if (align_target_stream_str_ != "COLOR" && align_target_stream_str_ != "DEPTH") {
-    std::stringstream ss;
-    ss << "Invalid parameter 'align_target_stream' value '" << original_align_target_stream
-       << "'. Supported values: COLOR, DEPTH";
-    ROS_ERROR_STREAM(ss.str());
-    throw std::invalid_argument(ss.str());
+  align_target_stream_str_ = normalizeClosedSetParameterValue(
+      "align_target_stream", align_target_stream_str_, {"COLOR", "DEPTH"}, "COLOR");
+  if (depth_registration_ && align_mode_ == "HW" && align_target_stream_str_ != "COLOR") {
+    ROS_ERROR_STREAM("HW D2C only supports COLOR as align_target_stream; got "
+                     << align_target_stream_str_
+                     << ". Skip setting and use 'COLOR'. Use align_mode:=SW to align to DEPTH.");
+    align_target_stream_str_ = "COLOR";
   }
   align_target_stream_ = obStreamTypeFromString(align_target_stream_str_);
   enable_color_hdr_ = nh_private_.param<bool>("enable_color_hdr", false);
@@ -506,6 +522,8 @@ void OBCameraNode::getParameters() {
     enable_undistortion_[stream_index] = nh_private_.param<bool>(param_name, false);
   }
   time_domain_ = nh_private_.param<std::string>("time_domain", "global");
+  time_domain_ = normalizeClosedSetParameterValue("time_domain", time_domain_,
+                                                  {"global", "device", "system"}, "global");
   exposure_range_mode_ = nh_private_.param<std::string>("exposure_range_mode", "");
   load_config_json_file_path_ = nh_private_.param<std::string>("load_config_json_file_path", "");
   export_config_json_file_path_ =
@@ -516,6 +534,9 @@ void OBCameraNode::getParameters() {
   offset_index0_ = nh_private_.param<int>("offset_index0", -1);
   offset_index1_ = nh_private_.param<int>("offset_index1", -1);
   frame_aggregate_mode_ = nh_private_.param<std::string>("frame_aggregate_mode", "ANY");
+  frame_aggregate_mode_ =
+      normalizeClosedSetParameterValue("frame_aggregate_mode", frame_aggregate_mode_,
+                                       {"full_frame", "color_frame", "ANY", "disable"}, "ANY");
   interleave_ae_mode_ = nh_private_.param<std::string>("interleave_ae_mode", "");
   interleave_frame_enable_ = nh_private_.param<bool>("interleave_frame_enable", false);
   interleave_skip_enable_ = nh_private_.param<bool>("interleave_skip_enable", false);
@@ -2105,8 +2126,8 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   const bool has_raw_image_subscriber = hasRawImageSubscriber(stream_index);
   const bool has_compressed_image_subscriber = hasCompressedImageSubscriber(stream_index);
   const bool need_raw_image = has_raw_image_subscriber || save_images_[stream_index];
-  bool has_subscriber = has_raw_image_subscriber || has_compressed_image_subscriber ||
-                        save_images_[stream_index];
+  bool has_subscriber =
+      has_raw_image_subscriber || has_compressed_image_subscriber || save_images_[stream_index];
   if (camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
     has_subscriber = true;
   }
@@ -2152,8 +2173,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   sensor_msgs::CameraInfo camera_info;
   const bool use_generated_camera_info = shouldUseGeneratedCameraInfo(stream_index);
   if (!use_generated_camera_info && color_camera_info_manager_ &&
-      color_camera_info_manager_->isCalibrated() &&
-      stream_index == COLOR) {
+      color_camera_info_manager_->isCalibrated() && stream_index == COLOR) {
     camera_info = color_camera_info_manager_->getCameraInfo();
     camera_info.header.stamp = timestamp;
     camera_info.header.frame_id = frame_id;

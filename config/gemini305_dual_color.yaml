@@ -18,7 +18,7 @@ color_info_url: ""
 # device_misc
 device_access_mode: Default
 exposure_range_mode: default
-log_level: info
+log_level: none
 log_file_name: ""
 enable_publish_extrinsic: false
 enable_d2c_viewer: false
