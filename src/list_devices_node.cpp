@@ -28,7 +28,7 @@
 
 namespace {
 
-constexpr int kFirmwareLogDrainDelaySec = 3;
+constexpr int kFirmwareLogDrainDelaySec = 5;
 
 struct CliArgs {
   bool help = false;

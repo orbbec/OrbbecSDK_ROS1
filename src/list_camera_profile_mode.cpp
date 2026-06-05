@@ -9,7 +9,7 @@ using namespace orbbec_camera;
 
 namespace {
 
-constexpr int kFirmwareLogDrainDelaySec = 3;
+constexpr int kFirmwareLogDrainDelaySec = 5;
 
 struct CommandLineOptions {
   bool show_help = false;
@@ -19,32 +19,31 @@ struct CommandLineOptions {
 
 void printUsage(const char* program_name) {
   (void)program_name;
-  std::cout
-      << "Usage:\n"
-      << "rosrun orbbec_camera list_camera_profile_mode_node\\\n"
-      << "      [--serial_number SN]\n\n"
-      << "Parameters:\n"
-      << "  --serial_number SN  Select a specific camera by serial number.\n"
-      << "  --sdk_log_level LEVEL\n"
-      << "                      SDK file log level: debug/info/warn/error/fatal/off "
-         "(default: off).\n"
-      << "  -h, --help          Show this help message.\n"
-      << "Examples:\n"
-      << "  rosrun orbbec_camera list_camera_profile_mode_node --sdk_log_level debug\n";
+  std::cout << "Usage:\n"
+            << "rosrun orbbec_camera list_camera_profile_mode_node\\\n"
+            << "      [--serial_number SN]\n\n"
+            << "Parameters:\n"
+            << "  --serial_number SN  Select a specific camera by serial number.\n"
+            << "  --sdk_log_level LEVEL\n"
+            << "                      SDK file log level: debug/info/warn/error/fatal/off "
+               "(default: off).\n"
+            << "  -h, --help          Show this help message.\n"
+            << "Examples:\n"
+            << "  rosrun orbbec_camera list_camera_profile_mode_node --sdk_log_level debug\n";
 }
 
-CommandLineOptions parseCommandLine(int argc, char** argv) {
-  CommandLineOptions options;
+bool parseCommandLine(int argc, char** argv, CommandLineOptions& options, std::string& error) {
   for (int i = 1; i < argc; ++i) {
     const std::string arg(argv[i]);
     if (arg == "-h" || arg == "--help") {
       options.show_help = true;
-      continue;
+      return true;
     }
 
     if (arg == "--serial_number") {
       if (i + 1 >= argc) {
-        throw std::runtime_error(arg + " requires a value");
+        error = arg + " requires a value";
+        return false;
       }
       options.serial_number = argv[++i];
       continue;
@@ -54,7 +53,8 @@ CommandLineOptions parseCommandLine(int argc, char** argv) {
     if (arg.rfind(prefix, 0) == 0) {
       options.serial_number = arg.substr(prefix.size());
       if (options.serial_number.empty()) {
-        throw std::runtime_error("--serial_number requires a value");
+        error = "--serial_number requires a value";
+        return false;
       }
       continue;
     }
@@ -66,7 +66,8 @@ CommandLineOptions parseCommandLine(int argc, char** argv) {
     }
     if (arg == "--sdk_log_level") {
       if (i + 1 >= argc) {
-        throw std::runtime_error(arg + " requires a value");
+        error = arg + " requires a value";
+        return false;
       }
       options.sdk_log_level = argv[++i];
       continue;
@@ -77,16 +78,18 @@ CommandLineOptions parseCommandLine(int argc, char** argv) {
       continue;
     }
 
-    throw std::runtime_error("Unknown argument: " + arg);
+    error = "Unknown argument: " + arg;
+    return false;
   }
 
   const auto log_severity = obLogSeverityFromString(options.sdk_log_level);
   if (log_severity == OBLogSeverity::OB_LOG_SEVERITY_OFF && options.sdk_log_level != "off" &&
       options.sdk_log_level != "none") {
-    throw std::runtime_error("--sdk_log_level expects one of: debug, info, warn, error, fatal, off");
+    error = "--sdk_log_level expects one of: debug, info, warn, error, fatal, off";
+    return false;
   }
 
-  return options;
+  return true;
 }
 
 std::shared_ptr<ob::Device> initializeDevice(const std::string& serial_number) {
@@ -105,8 +108,8 @@ std::shared_ptr<ob::Device> initializeDevice(const std::string& serial_number) {
 }
 
 void waitForFirmwareLogDrain() {
-  std::cout << "Waiting " << kFirmwareLogDrainDelaySec
-            << " seconds to keep firmware log alive..." << std::endl;
+  std::cout << "Waiting " << kFirmwareLogDrainDelaySec << " seconds to keep firmware log alive..."
+            << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(kFirmwareLogDrainDelaySec));
 }
 
@@ -200,7 +203,13 @@ void printPreset(const std::shared_ptr<ob::Device>& device) {
 
 int main(int argc, char** argv) {
   try {
-    const auto options = parseCommandLine(argc, argv);
+    CommandLineOptions options;
+    std::string parse_error;
+    if (!parseCommandLine(argc, argv, options, parse_error)) {
+      std::cerr << parse_error << std::endl;
+      printUsage(argv[0]);
+      return 1;
+    }
     if (options.show_help) {
       printUsage(argv[0]);
       return 0;
