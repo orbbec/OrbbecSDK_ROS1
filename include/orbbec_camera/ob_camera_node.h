@@ -870,7 +870,7 @@ class OBCameraNode {
   std::string frame_aggregate_mode_;
   bool is_cleaned_ = false;
 
-  bool enable_frame_timestamp_csv_ = false;
+  bool enable_frame_drop_log_ = false;
   std::string frame_timestamp_csv_file_;
   std::unique_ptr<FrameTimestampCsvLogger> frame_timestamp_csv_logger_{nullptr};
 

@@ -16,7 +16,7 @@
     <arg name="enable_depth_undistortion" default="false"/>
     <arg name="enable_left_ir_undistortion" default="false"/>
     <arg name="enable_right_ir_undistortion" default="false"/>
-    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="enable_frame_drop_log" default="false"/>
     <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <arg name="enable_sync_host_time" default="false"/>
@@ -119,7 +119,7 @@
             <param name="enable_depth_undistortion" value="$(arg enable_depth_undistortion)"/>
             <param name="enable_left_ir_undistortion" value="$(arg enable_left_ir_undistortion)"/>
             <param name="enable_right_ir_undistortion" value="$(arg enable_right_ir_undistortion)"/>
-            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="enable_frame_drop_log" value="$(arg enable_frame_drop_log)"/>
             <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="enable_sync_host_time" value="$(arg enable_sync_host_time)"/>

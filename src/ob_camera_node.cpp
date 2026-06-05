@@ -266,7 +266,7 @@ void OBCameraNode::getParameters() {
   captureInitialRosParameters();
 
   camera_name_ = nh_private_.param<std::string>("camera_name", "camera");
-  enable_frame_timestamp_csv_ = nh_private_.param<bool>("enable_frame_timestamp_csv", false);
+  enable_frame_drop_log_ = nh_private_.param<bool>("enable_frame_drop_log", false);
   frame_timestamp_csv_file_ = nh_private_.param<std::string>("frame_timestamp_csv_file", "");
   camera_link_frame_id_ = camera_name_ + "_link";
   for (const auto& stream_index : IMAGE_STREAMS) {
@@ -623,16 +623,15 @@ void OBCameraNode::getParameters() {
 }
 
 void OBCameraNode::setupFrameTimestampCsvLogger() {
-  if (!enable_frame_timestamp_csv_) {
-    return;
-  }
   if (frame_timestamp_csv_logger_) {
     return;
   }
-  frame_timestamp_csv_logger_ = std::make_unique<FrameTimestampCsvLogger>(
-      enable_frame_timestamp_csv_, frame_timestamp_csv_file_);
+  if (!enable_frame_drop_log_ && frame_timestamp_csv_file_.empty()) {
+    return;
+  }
+  frame_timestamp_csv_logger_ =
+      std::make_unique<FrameTimestampCsvLogger>(enable_frame_drop_log_, frame_timestamp_csv_file_);
   if (!frame_timestamp_csv_logger_->enabled()) {
-    enable_frame_timestamp_csv_ = false;
     frame_timestamp_csv_logger_.reset();
   }
 }
