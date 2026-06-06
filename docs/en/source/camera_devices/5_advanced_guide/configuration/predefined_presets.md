@@ -1,4 +1,4 @@
-#Device default
+# Device default
 
 This document lists available presets, features, and recommended scenarios by product. Please select a preset name that matches the product model and set it as the value of the `device_preset` parameter.
 
