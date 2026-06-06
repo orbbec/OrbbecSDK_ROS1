@@ -320,9 +320,9 @@ OrbbecSDK ROS包装器提供了奥比中光相机与ROS环境的无缝集成。�
   </thead>
   <tbody>
     <tr><td style="text-align: center; font-weight: bold;">Gemini 430</td><td>Gemini 435Le</td><td>-</td></tr>
-    <tr><td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 301</td><td>Gemini 305</td><td>-</td></tr>
-    <tr><td>Gemini 305g</td><td>-</td></tr>
-    <tr><td>Gemini 309g</td><td>-</td></tr>
+    <tr><td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 301</td><td>Gemini 305</td><td>gemini_305.urdf.xacro</td></tr>
+    <tr><td>Gemini 305g</td><td>gemini_305_g.urdf.xacro</td></tr>
+    <tr><td>Gemini 309g</td><td>gemini_309_g.urdf.xacro</td></tr>
     <tr><td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td><td>Gemini 335</td><td>gemini_335_336.urdf.xacro</td></tr>
     <tr><td>Gemini 336</td><td>gemini_335_336.urdf.xacro</td></tr>
     <tr><td>Gemini 330</td><td>-</td></tr>
