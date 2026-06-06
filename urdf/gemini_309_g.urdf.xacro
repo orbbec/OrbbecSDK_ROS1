@@ -2,15 +2,15 @@
 <!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com)
      Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
-<robot xmlns:xacro="http://ros.org/wiki/xacro" name="gemini305_g">
-  <xacro:property name="mesh_path" value="package://orbbec_camera/meshes/gemini305_g/" />
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="gemini_309_g">
+  <xacro:property name="mesh_path" value="package://orbbec_camera/meshes/gemini309_g/" />
   <link
     name="camera_link" />
   <joint
     name="camera_link"
     type="fixed">
     <origin
-      xyz="0.008050000000001 0.00900395097915 0.0209939609855011"
+      xyz="0.008050000000002 0.009003950979152 0.0209939609855101"
       rpy="0 0 0" />
     <parent
       link="camera_bottom_screw" />
@@ -53,45 +53,22 @@
     name="camera_bottom_screw">
     <inertial>
       <origin
-        xyz="9.11600953309166E-05 -0.00320635295652284 -0.020524426961246"
+        xyz="0.000175737970584729 -0.00394983412061421 -0.0206345858068119"
         rpy="0 0 0" />
       <mass
-        value="0.0214423582709099" />
+        value="0.0249222072968717" />
       <inertia
-        ixx="4.83339010606525E-06"
-        ixy="-3.72329051071151E-09"
-        ixz="2.51447927275988E-08"
-        iyy="8.20575253145867E-06"
-        iyz="1.19581716252661E-08"
-        izz="4.32451827833792E-06" />
+        ixx="5.00403811957311E-06"
+        ixy="-7.2306914084516E-10"
+        ixz="2.22927661310567E-08"
+        iyy="8.89433351709202E-06"
+        iyz="-2.67333736513775E-09"
+        izz="4.83457340761002E-06" />
     </inertial>
     <visual>
       <origin
-        xyz="0 0 0"
+        xyz="-0.0234099999999966 0 0.0209939609855071"
         rpy="3.141592653589793 0 1.570796326794897" />
-      <geometry>
-        <mesh
-          filename="${mesh_path}base_link.STL" />
-      </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.631372549019608 0.686274509803922 0.749019607843137 1" />
-      </material>
-    </visual>
-    <collision>
-      <origin
-        xyz="0 0 0"
-        rpy="3.141592653589793 0 1.570796326794897" />
-      <geometry>
-        <mesh
-          filename="${mesh_path}base_link.STL" />
-      </geometry>
-    </collision>
-    <visual>
-      <origin
-        xyz="-0.033409999999996 0 0.020993960985498"
-        rpy="0 0 1.570796326794897" />
       <geometry>
         <mesh
           filename="${mesh_path}FAKRA.STL" />
@@ -104,8 +81,8 @@
     </visual>
     <collision>
       <origin
-        xyz="-0.033409999999996 0 0.020993960985498"
-        rpy="0 0 1.570796326794897" />
+        xyz="-0.0234099999999966 0 0.0209939609855071"
+        rpy="3.141592653589793 0 1.570796326794897" />
       <geometry>
         <mesh
           filename="${mesh_path}FAKRA.STL" />
@@ -116,16 +93,16 @@
     name="camera_right_color_frame">
     <inertial>
       <origin
-        xyz="-1.1760228169691E-06 -0.0034693462830589 0.000376234001467315"
+        xyz="-1.17602281696563E-06 -0.0034693462830589 0.000376234001467319"
         rpy="0 0 0" />
       <mass
         value="0.000735468334566907" />
       <inertia
-        ixx="7.92202560415907E-09"
-        ixy="-1.95146774675994E-12"
-        ixz="-9.3353249049419E-12"
+        ixx="7.92202560415908E-09"
+        ixy="-1.95146774676002E-12"
+        ixz="-9.33532490494195E-12"
         iyy="9.93176003014812E-09"
-        iyz="-6.12381828511411E-12"
+        iyz="-6.12381828511392E-12"
         izz="8.02751620920214E-09" />
     </inertial>
     <visual>
@@ -169,16 +146,16 @@
     name="camera_left_color_frame">
     <inertial>
       <origin
-        xyz="-1.17602281778789E-06 -0.00346934628305837 0.000376234001468578"
+        xyz="-1.17602281780871E-06 -0.00346934628305838 0.000376234001468585"
         rpy="0 0 0" />
       <mass
-        value="0.000735468334566977" />
+        value="0.000735468334566978" />
       <inertia
         ixx="7.92202562203234E-09"
-        ixy="-1.95146773316258E-12"
-        ixz="-9.33532489896877E-12"
-        iyy="9.9317599983348E-09"
-        iyz="-6.12381825718017E-12"
+        ixy="-1.95146773316204E-12"
+        ixz="-9.33532489896924E-12"
+        iyy="9.93175999833481E-09"
+        iyz="-6.12381825718048E-12"
         izz="8.0275161952487E-09" />
     </inertial>
     <visual>
