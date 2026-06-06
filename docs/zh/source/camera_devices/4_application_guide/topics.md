@@ -9,7 +9,9 @@
 这些话题为每个启用的相机流提供原始图像数据和相应的标定信息。`color`、`depth`、`left_ir`和`right_ir`流的模式是一致的。
 
 *   `/camera/color/image_raw`
-    *   来自彩色流的原始图像数据。
+    *   来自彩色流的原始图像数据。彩色格式为 RGB/YUYV 等非 MJPG 时，通常订阅该话题。
+*   `/camera/color/image_raw/compressed`
+    *   来自 MJPG 彩色流的压缩图像数据。使用 `color_format:=MJPG` 时建议订阅该话题，以避免 ROS wrapper 侧额外解码并降低 CPU 占用。
 *   `/camera/color/camera_info`
     *   彩色流的相机标定数据和元数据。
 *   `/camera/color/metadata`

@@ -28,6 +28,14 @@
 | `color_format` |                `RGB`                |         比`MJPG`格式CPU使用率更低         |
 |    `filter`    | 仅使用`hardware_noise_removal_filter` | 其他滤波器会显著增加CPU使用率 |
 
+### 彩色流格式与订阅方式
+
+v2.8.8 优化了彩色流图像发布流程：
+
+- 当 `color_format` 为 RGB/YUYV 等非 MJPG 格式时，订阅 `/camera/color/image_raw`。
+- 当 `color_format:=MJPG` 时，建议订阅 `/camera/color/image_raw/compressed`。ROS wrapper 会直接发布压缩图像，避免额外解码，从而显著降低 MJPG 场景下的 CPU 占用。
+- 如果订阅 `/camera/color/image_raw`，MJPG 仍需要在主机侧解码，CPU 占用会更高。
+
 ### 用于测试的启动文件
 
 * `gemini_330_lower_cpu_usage.launch`

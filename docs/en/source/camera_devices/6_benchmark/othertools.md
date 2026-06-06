@@ -1,16 +1,16 @@
 # Other Tools
 
-## Frame Timestamp CSV Logging
+## Frame Drop Logging and Frame Timestamp CSV Logging
 
-When `enable_frame_timestamp_csv` is enabled, the camera node records Color and Depth frame timestamp data to a CSV file. This is useful for frame synchronization, publish latency, and timestamp debugging.
+When `enable_frame_drop_log` is enabled, the camera node prints Color and Depth frame drop statistics to the log. The log helps distinguish drops detected at the SDK receive stage from drops detected at the ROS publish stage. When `frame_timestamp_csv_file` is set, the camera node also records Color and Depth frame timestamp data to a CSV file for frame continuity, publish latency, and timestamp debugging.
 
 ```bash
 roslaunch orbbec_camera gemini_330_series.launch \
-enable_frame_timestamp_csv:=true \
+enable_frame_drop_log:=true \
 frame_timestamp_csv_file:=/tmp/frame_timestamp.csv
 ```
 
-The CSV includes SDK frame index, hardware frame number, sensor timestamp, device/global/system timestamp, arrival timestamp, publish timestamp, inter-frame delta values, and SDK delay fields.
+The CSV includes SDK frame index, hardware frame number, sensor timestamp, device/global/system timestamp, steady arrival/publish delta values, ROS publish latency, and SDK delay fields.
 
 ### Field Description
 
@@ -28,15 +28,8 @@ The current CSV contains two sets of homogeneous fields with the prefixes `color
 | `_global_ts_delta_us` | Delta between adjacent global timestamps | us |
 | `_system_ts_sec` | SDK system timestamp | Seconds |
 | `_system_ts_delta_us` | Delta between adjacent SDK system timestamps | us |
-| `_arrival_system_sec` | System time sampled when the frame arrives at the node | Seconds |
-| `_arrival_system_delta_us` | Delta between adjacent arrival system timestamps | us |
-| `_arrival_steady_sec` | Host steady time sampled when the frame arrives at the node | Seconds |
 | `_arrival_steady_delta_us` | Delta between adjacent arrival steady timestamps | us |
-| `_publish_system_sec` | System time sampled before publishing the image | Seconds |
-| `_publish_system_delta_us` | Delta between adjacent publish system timestamps | us |
-| `_publish_steady_sec` | Host steady time sampled before publishing the image | Seconds |
 | `_publish_steady_delta_us` | Delta between adjacent publish steady timestamps | us |
-| `_arrival_to_publish_system_us` | Time from frame arrival to publish on the ROS side (system) | `publish_system - arrival_system` |
 | `_arrival_to_publish_steady_us` | Time from frame arrival to publish on the ROS side (steady) | `publish_steady - arrival_steady` |
 | `_sdk_delay_from_global_us` | SDK publish delay referenced to global time | `arrival_system - global_ts` |
 | `_sdk_delay_from_system_us` | SDK publish delay referenced to system time | `arrival_system - sdk_system_ts` |
@@ -49,11 +42,11 @@ The current CSV contains two sets of homogeneous fields with the prefixes `color
 - Plot `_sensor_ts_delta_us` as a line chart or scatter plot and look for obvious jumps.
 - For example, at 30 fps, the interval between adjacent frames should usually be close to 33333 us.
 
-#### SDK Frame Drop Detection
+#### SDK / ROS Frame Drop Detection
 
 - Check whether `_sdk_frame_index` is continuous.
 - Plot `_device_ts_delta_us`, `_global_ts_delta_us`, and `_system_ts_delta_us` to see whether any of them show abnormal jumps.
-- If the SDK frame index or the inter-frame deltas from multiple clock sources become abnormal, this can help locate frame loss at the SDK layer.
+- When `enable_frame_drop_log` is enabled, `stage=SDK_RECEIVE` means drops were detected at the SDK receive stage, and `stage=ROS_PUBLISH` means drops were detected at the ROS publish stage.
 
 #### Latency Analysis
 
