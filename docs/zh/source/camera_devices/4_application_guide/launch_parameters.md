@@ -15,7 +15,7 @@
 *   **`device_num`**
     *   设备数量。如果需要多个相机，必须填写此参数。
 *   **`device_preset`**
-    *   默认值为 `Default`。可以使用下面命令查看可设置模式
+    *   默认值由启动文件决定。可以使用下面命令查看可设置模式；该工具会同时打印 preset 列表和 preset 版本信息。
     ```bash
     rosrun orbbec_camera list_camera_profile_mode_node
     ```
@@ -140,7 +140,7 @@
 #### 网络相机
 * **`enumerate_net_device`**
   * 启用自动枚举网络设备。
-* **`net_device_ip`** / **`net_device_port`**
+* **`ip_address`** / **`port`**
   * 设置网络设备的IP地址和端口（通常为 `8090`）。
 * **`force_ip_enable`**
   * 启用强制IP功能。**默认值：** `false`
@@ -175,11 +175,12 @@
   > **支持模组**：Gemini 305。
 * **`enable_false_positive_filter`**
   * 启用鬼影滤波。可减少重影噪声。
-  > **支持模组**： DaBaiA/DaBaiAL/Gemini345/Gemini345Lg.
+  > **支持模组**：DaBaiA / DaBaiAL / Gemini 330 系列 / Gemini345 / Gemini345Lg。
 
 #### 视差
 *   **`disparity_to_depth_mode`**
-    *   `HW`：使用硬件视差到深度转换。`SW`：使用软件视差到深度转换。
+    *   `HW`：使用硬件视差到深度转换。`SW`：使用软件视差到深度转换。也可以设置为 `disable` 关闭。
+    *   该参数大小写不敏感；非法值会报错并回退默认值。
 *   **`disparity_range_mode`**、**`disparity_search_offset`**、**`disparity_offset_config`**
     *   视差搜索偏移参数。用于 [视差搜索偏移](../5_advanced_guide/configuration/disparity_search_offset.md)。
 
@@ -198,11 +199,13 @@
   *   启用深度帧与彩色帧的对齐。当 `enable_colored_point_cloud` 设置为 `true` 时需要此字段。
 - **`align_mode`**
   *   要使用的对齐模式。选项为 `HW`（硬件对齐）和 `SW`（软件对齐）。
+  *   该参数大小写不敏感；非法值会报错并回退默认值。
 - **`align_target_stream`**
   *   设置对齐目标流模式。
   *   可能的值为 `COLOR`、`DEPTH`。
   *   `COLOR`：将深度对齐到彩色。
   *   `DEPTH`：将彩色对齐到深度。
+  *   该参数大小写不敏感。硬件 D2C 仅支持 `COLOR` 作为对齐目标；如需对齐到 `DEPTH`，请使用 `align_mode:=SW`。
 - **`intra_camera_sync_reference`**
   - 设置相机内同步的参考点。适用于Gemini 330系列设备，当 `sync_mode` 设置为**软件**或**硬件触发**模式时。**选项：** `Start`、`Middle`、`End`。设置为空时，长基线设备默认End，短基线设备默认Middle。
 
@@ -227,21 +230,24 @@
     *   启用外参发布。
 *   **`ir_info_url`** / **`color_info_url`**
     *   设置IR/彩色相机信息的URL。
-*   **`enable_color_undistortion`**
-    *   启用彩色去畸变。
+*   **`enable_[color|depth|ir|left_ir|right_ir]_undistortion`**
+    *   启用对应图像流的 SDK 去畸变滤波器。双 IR 设备使用 `enable_left_ir_undistortion` / `enable_right_ir_undistortion`，单 IR 设备使用 `enable_ir_undistortion`。
 
 #### 时间同步
 *   **`enable_sync_host_time`**
     *   启用主机时间与相机时间的同步。默认值为 `true`。如果使用全局时间，设置为 `false`。
 *   **`time_domain`**
     *   选择时间戳类型：`device`、`global` 和 `system`。
+    *   该参数大小写不敏感；非法值会报错并回退默认值。
+*   **`timestamp_clock_type`**
+    *   设置 SDK 时间戳时钟类型。可选值：`realtime`、`monotonic`。默认使用 `realtime`。
 * **`time_sync_period`**
   * 相机时间与主机系统同步的间隔（秒）。
   > **注意**：仅当 **`enable_sync_host_time = true`** 且 **`time_domain = device`** 时需要设置此参数。
-*   **`enable_frame_timestamp_csv`**
-    *   启用帧时间戳统计 CSV 记录。
+*   **`enable_frame_drop_log`**
+    *   启用帧丢失日志。日志会分别统计 SDK 接收阶段和 ROS 发布阶段检测到的丢帧。
 *   **`frame_timestamp_csv_file`**
-    *   帧时间戳统计 CSV 输出路径。为空时写入默认 ROS 日志路径。
+    *   帧时间戳统计 CSV 输出路径。为空时不写 CSV；如需保存 CSV，请指定文件路径，例如 `/tmp/frame_timestamp.csv`。
 *   **`enable_frame_sync`**
     *   启用帧同步。
 
@@ -261,8 +267,13 @@
 #### 其他
 *   **`config_file_path`**
     *   YAML配置文件的路径。默认为 `""`。如果未指定，将使用启动文件中的默认参数。设置为 `gemini2L_dual_ir.yaml` 可启用 Gemini 2L 双 IR 模式。
+*   **`load_config_json_file_path`**
+    *   SDK JSON 配置导入路径。设置后节点会在初始化时调用 SDK 导入 JSON 配置。Gemini 330 系列可使用 `gemini_330_series_sdk_json.launch` 作为专用启动文件。
+*   **`export_config_json_file_path`**
+    *   SDK JSON 配置导出路径。设置后节点会在初始化完成后将当前设备配置导出为 JSON。也可以通过 `/camera/export_config_json` 服务运行时导出。
 *   **`frame_aggregate_mode`**
     *   设置帧聚合输出模式。可选值：`full_frame`、`color_frame`、`ANY`、`disable`。
+    *   该参数大小写不敏感；非法值会报错并回退默认值。
 *   **`enable_d2c_viewer`**
     *   发布D2C叠加图像（仅用于测试）。
 

@@ -33,4 +33,13 @@ rosrun orbbec_camera firmware_update_tool \
 --continue_on_error
 ```
 
+To enable SDK file logs and also attempt to enable firmware logs, add `--sdk_log_level`. Optional values are `debug`, `info`, `warn`, `error`, `fatal`, and `off`; the default is `off`.
+
+```bash
+rosrun orbbec_camera firmware_update_tool \
+--serial_number <SN> \
+--preset_path /path/to/preset.bin \
+--sdk_log_level debug
+```
+
 The old launch arguments `upgrade_firmware` and `preset_firmware_path` are still parsed for compatibility, but `--firmware_path` and `--preset_path` are recommended.

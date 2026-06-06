@@ -15,7 +15,7 @@ The following are the launch parameters available:
 *   **`device_num`**
     *   The number of devices. This must be filled in if multiple cameras are required.
 * **`device_preset`**
-    * The default value is `Default`. You can use the following command to view the configurable mode
+    * The default value is determined by the launch file. You can use the following command to view the configurable modes; the tool also prints the preset list and preset version information.
     ```bash
     rosrun orbbec_camera list_camera_profile_mode_node
     ```
@@ -139,7 +139,7 @@ The following are the launch parameters available:
 #### Network Cameras
 * **`enumerate_net_device`**
   * Enable automatically enumerate network devices.
-* **`net_device_ip`** / **`net_device_port`**
+* **`ip_address`** / **`port`**
   * Set net device's IP address and port (Usually `8090`).
 * **`force_ip_enable`**
   * Enable the Force IP function. **Default:** `false`
@@ -175,10 +175,11 @@ The following are the launch parameters available:
   > **Supported Modules**: Gemini 305
 * **`enable_false_positive_filter`**
   * Enable this option to reduce ghosting noise.
-  > **Supported Modules**: DaBaiA / DaBaiAL / Gemini345 / Gemini345Lg
+  > **Supported Modules**: DaBaiA / DaBaiAL / Gemini 330 series / Gemini345 / Gemini345Lg
 #### Disparity
 *   **`disparity_to_depth_mode`**
-    *   `HW`: use hardware disparity to depth conversion. `SW`: use software disparity to depth conversion.
+    *   `HW`: use hardware disparity to depth conversion. `SW`: use software disparity to depth conversion. Use `disable` to turn it off.
+    *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
 *   **`disparity_range_mode`**, **`disparity_search_offset`**, **`disparity_offset_config`**
     *   Parameters for disparity search offset. Used for [disparity search offset](../5_advanced_guide/configuration/disparity_search_offset.md).
 
@@ -197,11 +198,13 @@ The following are the launch parameters available:
   *   Enable alignment of the depth frame to the color frame. This field is required when the `enable_colored_point_cloud` is set to `true`.
 - **`align_mode`**
   *   The alignment mode to be used. Options are `HW` for hardware alignment and `SW` for software alignment.
+  *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
 - **`align_target_stream`**
   *   Set align target stream mode.
   *   The possible values are `COLOR`, `DEPTH`.
   *   `COLOR`: Align depth to color.
   *   `DEPTH`: Align color to depth.
+  *   This parameter is case-insensitive. Hardware D2C only supports `COLOR` as the target stream; use `align_mode:=SW` if you need to align to `DEPTH`.
 - **`intra_camera_sync_reference`**
   - Sets the reference point for intra-camera synchronization. Applicable for Gemini 330 series devices when `sync_mode` is set to **software** or **hardware trigger** mode. **Options:** `Start`, `Middle`, `End`. When set to empty, the long baseline device defaults to End, and the short baseline device defaults to Middle.
 
@@ -226,22 +229,25 @@ The following are the launch parameters available:
     *   Enable the extrinsics publish.
 *   **`ir_info_url`** / **`color_info_url`**
     *   Set URL of the IR/color camera info.
-*   **`enable_color_undistortion`**
-    *   Enable the Color undistortion.
+*   **`enable_[color|depth|ir|left_ir|right_ir]_undistortion`**
+    *   Enable the SDK undistortion filter for the selected image stream. Dual-IR devices use `enable_left_ir_undistortion` / `enable_right_ir_undistortion`; single-IR devices use `enable_ir_undistortion`.
 
 #### Time Synchronization
 * **`enable_sync_host_time`**
   * Enable synchronization of the host time with the camera time. The default value is `true`. If using global time, set to `false`.
 * **`time_domain`**
   * Select timestamp type: `device`, `global`, and `system`.
+  * This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
+* **`timestamp_clock_type`**
+  * Set the SDK timestamp clock type. Optional values: `realtime`, `monotonic`. The default is `realtime`.
 * **`time_sync_period`**
   * Interval (in seconds) for synchronizing the camera time with the host system.
   > **Note**: This parameter only needs to be set when `enable_sync_host_time = true` and `time_domain = device`.
 
-* **`enable_frame_timestamp_csv`**
-  * Enable CSV logging for frame timestamp statistics.
+* **`enable_frame_drop_log`**
+  * Enable frame drop logging. The log reports drops detected at both the SDK receive stage and the ROS publish stage.
 * **`frame_timestamp_csv_file`**
-  * CSV output path for frame timestamp statistics. If empty, the wrapper writes to the default ROS log path.
+  * CSV output path for frame timestamp statistics. If empty, no CSV file is written; set a path such as `/tmp/frame_timestamp.csv` to save CSV data.
 * **`enable_frame_sync`**
   * Enable the frame synchronization.
 
@@ -261,8 +267,13 @@ The following are the launch parameters available:
 #### Miscellaneous
 *   **`config_file_path`**
     *   The path to the YAML configuration file. Default is `""`. If not specified, default parameters from the launch file will be used. Set this to `gemini2L_dual_ir.yaml` to enable Gemini 2L dual IR mode.
+*   **`load_config_json_file_path`**
+    *   SDK JSON configuration import path. When set, the node imports the JSON configuration during initialization. For Gemini 330 series, use `gemini_330_series_sdk_json.launch` as the dedicated SDK JSON launch file.
+*   **`export_config_json_file_path`**
+    *   SDK JSON configuration export path. When set, the node exports the current device configuration to JSON after initialization. You can also export at runtime with the `/camera/export_config_json` service.
 *   **`frame_aggregate_mode`**
     *   Set frame aggregate output mode. Optional values: `full_frame`, `color_frame`, `ANY`, `disable`.
+    *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
 *   **`enable_d2c_viewer`**
     *   Publishes the D2C overlay image (for testing only).
 

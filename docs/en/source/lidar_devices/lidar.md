@@ -121,8 +121,8 @@ The `lidar.launch` file contains default parameters for the driver. You can cust
 - **max_range**: Maximum measurable distance of LiDAR in meters. Default: `30.0`.
 - **echo_mode**: LiDAR echo mode. Options: `Last Echo`, `First Echo`
 - **enumerate_net_device**: Enable automatic enumeration of network devices.
-- **net_device_ip**: IP address of network device.
-- **net_device_port**: Port number of network device.
+- **ip_address**: IP address of network device.
+- **port**: Port number of network device.
 - **log_level**: SDK log level, default is `none`, options are `debug`, `info`, `warn`, `error`, `fatal`
 - **time_domain**: Device timestamp type. Options: `device`, `global`, `system`
 - **enable_heartbeat**: Enable heartbeat function, default is `false`. If set to `true`, camera node will send heartbeat signal to firmware; should also be set to `true` if hardware logging is needed.

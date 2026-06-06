@@ -14,6 +14,14 @@ To achieve the lowest possible CPU usage in OrbbecSDK_ROS1, it is recommended to
 | `color_format` |                `RGB`                |         Lower CPU usage than `MJPG`         |
 |    `filter`    | Only `hardware_noise_removal_filter` | Other filters significantly increase CPU usage |
 
+### Color Stream Format and Subscription
+
+v2.8.8 optimizes the color image publishing path:
+
+- For non-MJPG color formats such as RGB or YUYV, subscribe to `/camera/color/image_raw`.
+- When `color_format:=MJPG` is used, subscribe to `/camera/color/image_raw/compressed`. The ROS wrapper publishes the compressed image directly, avoiding extra host-side decoding and significantly reducing CPU usage for MJPG streams.
+- If you subscribe to `/camera/color/image_raw`, MJPG still needs to be decoded on the host, which increases CPU usage.
+
 ### Launch Files Used for Testing
 
 * `gemini_330_lower_cpu_usage.launch`

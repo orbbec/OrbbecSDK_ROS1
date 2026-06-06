@@ -121,8 +121,8 @@ rosrun orbbec_camera list_camera_profile_mode_node
 - **max_range**: 激光雷达可测量的最大距离（米）。默认值：`30.0`
 - **echo_mode**: 激光雷达的回波模式。可选值：`Last Echo`、`First Echo`
 - **enumerate_net_device**: 启用网络设备的自动枚举。
-- **net_device_ip**: 网络设备的IP地址。
-- **net_device_port**: 网络设备的端口号。
+- **ip_address**: 网络设备的 IP 地址。
+- **port**: 网络设备的端口号。
 - **log_level**: SDK日志级别，默认值为 `none`，可选值为 `debug`、`info`、`warn`、`error`、`fatal`
 - **time_domain**: 设备的时间戳类型。可选值为 `device`、`global`、`system`
 - **enable_heartbeat**: 启用心跳功能，默认为 `false`。如果设置为 `true`，相机节点将向固件发送心跳信号；如果需要硬件日志记录，也应将其设置为 `true`。

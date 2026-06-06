@@ -320,6 +320,12 @@ rosservice call /camera/get_sdk_version
 rosservice call /camera/get_camera_params
 ```
 
+* `/camera/export_config_json`
+
+```bash
+rosservice call /camera/export_config_json "data: '/tmp/orbbec_camera_config.json'"
+```
+
 * `/camera/reboot_device`
 
 ```bash
@@ -373,7 +379,9 @@ rosservice call /camera/set_ae_strategy motion
 * `/camera/set_filter`
 
 ```bash
-# filter_name is the filter name, filter_enable indicates whether the filter is enabled or disabled, and filter_param represents the filter parameters.
+# filter_name is the filter name, and filter_enable indicates whether the filter is enabled.
+# filter_param is the legacy positional parameter form; filter_config is the new named parameter form.
+# filter_param and filter_config cannot be used at the same time.
 
 # Set DecimationFilter: [scale]
 rosservice call /camera/set_filter '{filter_name: DecimationFilter, filter_enable: false, filter_param: [5]}'
@@ -405,6 +413,11 @@ rosservice call /camera/set_filter '{filter_name: FalsePositiveFilter, filter_en
 # Set MgcNoiseRemovalFilter / LutNoiseRemovalFilter: []
 rosservice call /camera/set_filter '{filter_name: MgcNoiseRemovalFilter, filter_enable: true, filter_param: []}'
 rosservice call /camera/set_filter '{filter_name: LutNoiseRemovalFilter, filter_enable: true, filter_param: []}'
+
+# Tune filters with named parameters
+rosservice call /camera/set_filter "{filter_name: NoiseRemovalFilter, filter_enable: true, filter_config: [{name: min_diff, value: '256'}, {name: max_size, value: '80'}]}"
+rosservice call /camera/set_filter "{filter_name: HardwareNoiseRemovalFilter, filter_enable: true, filter_config: [{name: threshold, value: '0.2'}]}"
+rosservice call /camera/set_filter "{filter_name: SpatialAdvancedFilter, filter_enable: true, filter_config: [{name: alpha, value: '0.5'}, {name: disp_diff, value: '160'}, {name: magnitude, value: '1'}, {name: radius, value: '8'}]}"
 ```
 
 ## Data Capture & Calibration Management

@@ -33,4 +33,13 @@ rosrun orbbec_camera firmware_update_tool \
 --continue_on_error
 ```
 
+如需开启 SDK 文件日志并同时尝试开启固件日志，可增加 `--sdk_log_level`。可选值为 `debug`、`info`、`warn`、`error`、`fatal`、`off`，默认 `off`。
+
+```bash
+rosrun orbbec_camera firmware_update_tool \
+--serial_number <SN> \
+--preset_path /path/to/preset.bin \
+--sdk_log_level debug
+```
+
 旧启动参数 `upgrade_firmware` 和 `preset_firmware_path` 仍会兼容解析，但推荐使用 `--firmware_path` 和 `--preset_path`。
