@@ -16,7 +16,7 @@
 | `hardware_noise_removal_filter`                     | 115.7%           | -0.3%              | 45.6%          | -0.1%              |
 | `hardware_noise_removal_filter + spatial_filter`  | 124.5%           | +8.5%              | 61.7%          | +16.0%             |中最小化CPU使用的策略。固件版本必须**不低于1.4.10**，并且`device`应设置为**Default**。
 
-您可以在[示例](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples)中找到示例使用代码。
+您可以参考 [gemini_330_series_low_cpu.launch](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/launch/gemini_330_series_low_cpu.launch) 启动文件中的低 CPU 占用配置。
 
 ### 降低CPU使用率的推荐设置
 
@@ -38,8 +38,7 @@ v2.8.8 优化了彩色流图像发布流程：
 
 ### 用于测试的启动文件
 
-* `gemini_330_lower_cpu_usage.launch`
-* `multi_camera_lower_cpu_usage.launch`
+* [gemini_330_series_low_cpu.launch](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/launch/gemini_330_series_low_cpu.launch)
 
 ### 测试环境
 

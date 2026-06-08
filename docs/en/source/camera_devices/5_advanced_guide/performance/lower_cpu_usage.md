@@ -2,7 +2,7 @@
 
 This document outlines strategies for minimizing CPU usage in the **OrbbecSDK_ROS1 v2** environment when using **Gemini 330 series cameras**. The firmware version must be **no lower than 1.4.10**, and `device` should be set to **Default**.
 
-You can find example usage code in the [example](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples).
+You can use the [gemini_330_series_low_cpu.launch](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/launch/gemini_330_series_low_cpu.launch) launch file as the low CPU usage configuration reference.
 
 ### Recommended Settings for Lower CPU Usage
 
@@ -22,10 +22,9 @@ v2.8.8 optimizes the color image publishing path:
 - When `color_format:=MJPG` is used, subscribe to `/camera/color/image_raw/compressed`. The ROS wrapper publishes the compressed image directly, avoiding extra host-side decoding and significantly reducing CPU usage for MJPG streams.
 - If you subscribe to `/camera/color/image_raw`, MJPG still needs to be decoded on the host, which increases CPU usage.
 
-### Launch Files Used for Testing
+### Launch File Used for Testing
 
-* `gemini_330_lower_cpu_usage.launch`
-* `multi_camera_lower_cpu_usage.launch`
+* [gemini_330_series_low_cpu.launch](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/launch/gemini_330_series_low_cpu.launch)
 
 ### Test environment
 
