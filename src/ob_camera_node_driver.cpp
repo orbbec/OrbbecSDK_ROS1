@@ -47,7 +47,7 @@ std::string makeDefaultSdkLogFileName() {
   localtime_r(&now_time, &tm);
 
   std::ostringstream file_name;
-  file_name << std::put_time(&tm, "%Y%m%d_%H%M%S") << ".log";
+  file_name << "OrbbecSDK_" << std::put_time(&tm, "%Y%m%d_%H%M%S") << ".log";
   return file_name.str();
 }
 
