@@ -2898,11 +2898,6 @@ void OBCameraNode::setupPublishers() {
     depth_to_other_extrinsics_publishers_[GYRO] =
         nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_gyro", 1, true);
   }
-  filter_status_pub_ =
-      nh_.advertise<std_msgs::String>("/" + camera_name_ + "/filter_status", 1, true);
-  std_msgs::String msg;
-  msg.data = filter_status_.dump(2);
-  filter_status_pub_.publish(msg);
   depth_filters_status_pub_ = nh_.advertise<orbbec_camera::DepthFiltersStatus>(
       "/" + camera_name_ + "/depth_filters/status", 1, true);
   publishDepthFiltersStatus();
@@ -3554,11 +3549,6 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
       }
 
       filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
-      if (filter_status_pub_) {
-        std_msgs::String msg;
-        msg.data = filter_status_.dump(2);
-        filter_status_pub_.publish(msg);
-      }
       publishDepthFiltersStatus();
 
       response.success = true;
@@ -3820,11 +3810,6 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
     }
 
     filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
-    if (filter_status_pub_) {
-      std_msgs::String msg;
-      msg.data = filter_status_.dump(2);
-      filter_status_pub_.publish(msg);
-    }
     publishDepthFiltersStatus();
 
     response.success = true;

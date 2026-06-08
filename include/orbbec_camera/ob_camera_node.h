@@ -792,7 +792,6 @@ class OBCameraNode {
   int spatial_moderate_filter_magnitude_ = -1;
   int spatial_moderate_filter_radius_ = -1;
   std::string hole_filling_filter_mode_;
-  ros::Publisher filter_status_pub_;
   ros::Publisher depth_filters_status_pub_;
   nlohmann::json filter_status_;
   std::shared_ptr<diagnostic_updater::Updater> diagnostic_updater_ = nullptr;
