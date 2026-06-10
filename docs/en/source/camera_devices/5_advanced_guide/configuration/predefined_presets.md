@@ -2,6 +2,12 @@
 
 This document lists available presets, features, and recommended scenarios by product. Please select a preset name that matches the product model and set it as the value of the `device_preset` parameter.
 
+For example, modify the default device preset to `High Accuracy` in the launch file:
+
+```xml
+<arg name="device_preset" default="High Accuracy"/>
+```
+
 ## Gemini 330 / Gemini 330L / Gemini 335 / Gemini 335L
 
 | Defaults | Features | Recommended usage scenarios |

@@ -2,6 +2,12 @@
 
 本文档按产品列出可用预设、特点与推荐场景。请选择匹配产品型号的预设名称，并将其设置为`device_preset`参数的值。
 
+例如，在 launch 文件中将设备预设的默认值修改为 `High Accuracy`：
+
+```xml
+<arg name="device_preset" default="High Accuracy"/>
+```
+
 ## Gemini 330 / Gemini 330L / Gemini 335 / Gemini 335L
 
 | 预设 | 特点 | 推荐使用场景 |
@@ -66,4 +72,3 @@
 | 预设 | 特点 | 推荐使用场景 |
 | --- | --- | --- |
 | G336X AMR Default |  优化其在阳光照射和重复纹理的仓库场景中具有可靠的深度性能<br> 推荐深度分辨率：1280x800 / 640x400 / 424x266 |  仓库AMRs |
-

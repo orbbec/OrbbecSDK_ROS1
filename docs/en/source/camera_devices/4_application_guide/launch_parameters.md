@@ -1,6 +1,44 @@
 # Launch parameters
 
-> If you are not sure how to set the parameters, you can connect the orbbec camera and open the [OrbbecViewer](https://github.com/orbbec/OrbbecSDK/releases).
+> If you are not sure how to set the parameters, connect the Orbbec camera and open [OrbbecViewer](https://github.com/orbbec/OrbbecSDK/releases), or refer to the [camera datasheet](../1_overview/introduction.md) in Chapter 1.
+
+## How to modify launch parameters
+
+Launch parameters can be modified in two ways:
+
+1. **Override parameters in the launch command**
+
+   This is recommended for debugging, testing a parameter, or applying a setting only for the current launch. Use the format `parameter_name:=parameter_value`. You can append multiple parameters to the same command.
+
+   ```bash
+   roslaunch orbbec_camera gemini_330_series.launch camera_name:=camera_02
+   ```
+
+   Example: change the camera name and enable point cloud output at the same time.
+
+   ```bash
+   roslaunch orbbec_camera gemini_330_series.launch camera_name:=camera_02 enable_point_cloud:=true
+   ```
+
+2. **Modify the default value in a launch file**
+
+   This is useful when you want a setting to become a long-term default, such as a fixed resolution, frame rate, camera name, or synchronization mode. Device launch files are located in [launch](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/launch). Choose the `*.launch` file that matches your camera model.
+
+   For example, modify the default camera name to `camera_02`:
+
+   ```xml
+   <arg name="camera_name" default="camera_02"/>
+   ```
+
+   If you build from source, rebuild the workspace and source it again after modifying a launch file:
+
+   ```bash
+   cd ~/ros_ws
+   catkin_make
+   source devel/setup.bash
+   ```
+
+   If you installed with apt/deb, it is not recommended to edit files in the system installation directory directly. Prefer command-line parameter overrides, or copy the launch file and maintain your own launch configuration.
 
 The following are the launch parameters available:
 
@@ -9,18 +47,20 @@ The following are the launch parameters available:
 *   **`camera_name`**
     *   Start the node namespace.
 *   **`serial_number`**
-    *   The serial number of the camera. This is required when multiple cameras are used.
+    *   The serial number of the camera. This is required when multiple cameras are used. See [multi camera](../5_advanced_guide/multi_camera/multi_camera.md) for multi-camera startup.
 *   **`usb_port`**
-    *   The USB port of the camera. This is required when multiple cameras are used.
+    *   The USB port of the camera. This is required when multiple cameras are used. See [multi camera](../5_advanced_guide/multi_camera/multi_camera.md) for multi-camera startup.
 *   **`device_num`**
-    *   The number of devices. This must be filled in if multiple cameras are required.
+    *   The number of devices. This must be filled in if multiple cameras are required. See [multi camera](../5_advanced_guide/multi_camera/multi_camera.md) for multi-camera startup.
 * **`device_preset`**
-    * The default value is determined by the launch file. You can use the following command to view the configurable modes; the tool also prints the preset list and preset version information.
+    * Depth preset. See [predefined presets](../5_advanced_guide/configuration/predefined_presets.md) for available presets and recommended scenarios. You can use the following command to view the configurable modes; the tool also prints the preset list and preset version information.
     ```bash
-    rosrun orbbec_camera list_camera_profile_mode_node
+    rosrun orbbec_camera list_devices_node
     ```
 *   **`[color|depth|left_ir|right_ir|ir]_[width|height|fps|format]`**
     *   The resolution and frame rate of the sensor stream.
+    *   For Femto Mega / Femto Bolt, depth NFOV and WFOV modes are configured by combining depth and IR resolutions. See [Configuration of depth NFOV and WFOV modes](../5_advanced_guide/configuration/configuration_of_depth_NFOV_and_WFOV_modes.md).
+    *   For lower CPU usage, see the `color_format` recommendations in [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md).
 *   **`[color|depth|left_ir|right_ir|ir]_rotation`**
     *   Set stream image rotation.
     *   The possible values are `0`, `90`, `180`, `270`.
@@ -29,23 +69,15 @@ The following are the launch parameters available:
 *   **`[color|depth|left_ir|right_ir|ir]_mirror`**
     *   Enable the stream image mirror.
 *   **`enable_point_cloud`**
-    *   Enable the point cloud.
+    *   Enable the point cloud. See [Point Cloud](point_cloud.md) for usage and RViz visualization.
 *   **`enable_colored_point_cloud`**
-    *   Enable the RGB point cloud.
+    *   Enable the RGB point cloud. See [Point Cloud](point_cloud.md) for usage and RViz visualization.
 *   **`cloud_frame_id`**
     *   Modify the `frame_id` name within the ros message.
 *   **`ordered_pc`**
     *   Enable filtering of invalid point clouds.
 *   **`point_cloud_qos`, `[stream]_qos`, `[stream]_camera_info_qos`**
     *   These QoS parameters are not applicable in the ROS1 wrapper. In ROS1, topic behavior is mainly controlled by publisher/subscriber queue sizes.
-* **`color.image_raw.enable_pub_plugins`**
-  * Enable Color image transport plugins. Default: `["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`.
-* **`depth.image_raw.enable_pub_plugins`**
-  * Enable Depth image transport plugins. Default: `["image_transport/compressedDepth", "image_transport/raw"]`.
-* **`left_ir.image_raw.enable_pub_plugins`**
-  * Enable Left IR image transport plugins. Default: `["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`.
-* **`right_ir.image_raw.enable_pub_plugins`**
-  * Enable Right IR image transport plugins. Default: `["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`.
 * **`point_cloud_decimation_filter_factor`**
   * Point cloud downsampling factor. Range: `1–8`. `1` means no downsampling.
 
@@ -96,6 +128,8 @@ The following are the launch parameters available:
     *   Whether to enable depth scaling after setting D2C. `true` means enabled, the default is `true`.
 *   **`depth_precision`**
     *   The depth precision should be in the format `1mm`. The default value is `1mm`.
+*   **`depth_work_mode`**
+    *   Set the depth work mode. See [Depth Work Mode Switch](../5_advanced_guide/configuration/depth_work_mode_switch.md) for supported devices, mode query commands, and launch examples.
 *   **`depth_ae_roi_[left|right|top|bottom]`**
     *   Set Depth auto exposure ROI.
 
@@ -120,7 +154,7 @@ The following are the launch parameters available:
 
 #### Multi-Camera Synchronization
 *   **`sync_mode`**
-    *   Set sync mode. The default value is `standalone`.
+    *   Set sync mode. The default value is `standalone`. See [multi camera synced](../5_advanced_guide/multi_camera/multi_camera_synced.md) for multi-camera connection, synchronization modes, and trigger configuration.
 *   **`depth_delay_us`** / **`color_delay_us`**
     *   The delay time (microseconds) of the depth/color image capture after receiving the capture command or trigger signal.
 *   **`trigger2image_delay_us`**
@@ -134,13 +168,11 @@ The following are the launch parameters available:
 *   **`frames_per_trigger`**
     *   The frame number of each stream after each trigger in triggering mode.
 
-> Used for [multi camera synced](../5_advanced_guide/multi_camera/multi_camera_synced.md).
-
 #### Network Cameras
 * **`enumerate_net_device`**
-  * Enable automatically enumerate network devices.
+  * Enable automatically enumerate network devices. See [net camera](../5_advanced_guide/configuration/net_camera.md) for network camera startup, specified IP startup, and Force IP configuration.
 * **`ip_address`** / **`port`**
-  * Set net device's IP address and port (Usually `8090`).
+  * Set net device's IP address and port (usually `8090`). See [net camera](../5_advanced_guide/configuration/net_camera.md) for network camera startup, specified IP startup, and Force IP configuration.
 * **`force_ip_enable`**
   * Enable the Force IP function. **Default:** `false`
 * **`force_ip_mac`**
@@ -151,12 +183,10 @@ The following are the launch parameters available:
   * Subnet mask for the static IP. **Default:** `255.255.255.0`
 * **`force_ip_gateway`**
   * Gateway address for the static IP. **Default:** `192.168.1.1`
-> Used for [net camera](../5_advanced_guide/configuration/net_camera.md).
-
 #### Device-Specific
 * **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
   * Enable the gmsl trigger out signal / set gmsl trigger fps.
-  > Only supports [gmsl camera](../5_advanced_guide/multi_camera/gmsl_camera.md).
+  > Only supports [gmsl camera](../5_advanced_guide/multi_camera/gmsl_cameras.md).
   >
 * **`enable_ptp_config`**
   * Enable PTP time synchronization. Requires `enable_sync_host_time` to be `false`.
@@ -195,7 +225,7 @@ The following are the launch parameters available:
 #### Intra-Camera Synchronization
 
 - **`depth_registration`**
-  *   Enable alignment of the depth frame to the color frame. This field is required when the `enable_colored_point_cloud` is set to `true`.
+  *   Enable alignment of the depth frame to the color frame. This field is required when the `enable_colored_point_cloud` is set to `true`. See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for startup and viewing examples.
 - **`align_mode`**
   *   The alignment mode to be used. Options are `HW` for hardware alignment and `SW` for software alignment.
   *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
@@ -204,7 +234,7 @@ The following are the launch parameters available:
   *   The possible values are `COLOR`, `DEPTH`.
   *   `COLOR`: Align depth to color.
   *   `DEPTH`: Align color to depth.
-  *   This parameter is case-insensitive. Hardware D2C only supports `COLOR` as the target stream; use `align_mode:=SW` if you need to align to `DEPTH`.
+  *   This parameter is case-insensitive. Hardware D2C only supports `COLOR` as the target stream; use `align_mode:=SW` if you need to align to `DEPTH`. See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for startup and viewing examples.
 - **`intra_camera_sync_reference`**
   - Sets the reference point for intra-camera synchronization. Applicable for Gemini 330 series devices when `sync_mode` is set to **software** or **hardware trigger** mode. **Options:** `Start`, `Middle`, `End`. When set to empty, the long baseline device defaults to End, and the short baseline device defaults to Middle.
 
@@ -212,11 +242,11 @@ The following are the launch parameters available:
 
 #### Firmware & Backend
 * **`upgrade_firmware`**
-  * The input parameter is the firmware path. For new versions, use the standalone `firmware_update_tool` for firmware updates.
+  * The input parameter is the firmware path. For new versions, use the standalone `firmware_update_tool` for firmware updates. See [firmware_update_tool](../5_advanced_guide/configuration/firmware_update_tool.md).
 * **`preset_firmware_path`**
-  * The input parameter is the preset firmware path. If multiple paths are input, each path needs to be separated by `,` and a maximum of 3 firmware paths can be input.
+  * The input parameter is the preset firmware path. If multiple paths are input, each path needs to be separated by `,` and a maximum of 3 firmware paths can be input. For new versions, use the standalone tool to burn presets. See [firmware_update_tool](../5_advanced_guide/configuration/firmware_update_tool.md).
 * **`uvc_backend`**
-  * Optional values: `v4l2`, `libuvc`.
+  * Optional values: `v4l2`, `libuvc`. See [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md) for low-CPU scenarios.
 * **`connection_delay`**
   * The delay time in milliseconds for reopening the device. Some devices, such as Astra mini, require a longer time to initialize and reopening the device immediately can cause firmware crashes when hot plugging.
 * **`retry_on_usb3_detection_failure`**
@@ -224,7 +254,7 @@ The following are the launch parameters available:
 
 #### TF, Extrinsics & Calibration
 *   **`publish_tf`** / **`tf_publish_rate`**
-    *   Enable the TF publish and set its publication rate.
+    *   Enable the TF publish and set its publication rate. See [Coordinate Systems and TF Transforms](coordinate_and_tf.md) for coordinate frames, TF tree inspection, and visualization.
 *   **`enable_publish_extrinsic`**
     *   Enable the extrinsics publish.
 *   **`ir_info_url`** / **`color_info_url`**
@@ -266,7 +296,7 @@ The following are the launch parameters available:
 
 #### Miscellaneous
 *   **`config_file_path`**
-    *   The path to the YAML configuration file. Default is `""`. If not specified, default parameters from the launch file will be used. Set this to `gemini2L_dual_ir.yaml` to enable Gemini 2L dual IR mode.
+    *   The path to the YAML configuration file. Default is `""`. If not specified, default parameters from the launch file will be used. Some presets or special modes are configured through YAML. See [predefined presets](../5_advanced_guide/configuration/predefined_presets.md).
 *   **`load_config_json_file_path`**
     *   SDK JSON configuration import path. When set, the node imports the JSON configuration during initialization. For Gemini 330 series, use `gemini_330_series_sdk_json.launch` as the dedicated SDK JSON launch file.
 *   **`export_config_json_file_path`**
@@ -275,7 +305,7 @@ The following are the launch parameters available:
     *   Set frame aggregate output mode. Optional values: `full_frame`, `color_frame`, `ANY`, `disable`.
     *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
 *   **`enable_d2c_viewer`**
-    *   Publishes the D2C overlay image (for testing only).
+    *   Publishes the D2C overlay image (for testing only). See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for usage examples.
 
 ### IMU
 
@@ -303,11 +333,11 @@ The following are the launch parameters available:
 *   **`enable_threshold_filter`**
     *   Enable the Depth threshold filter. Set with `threshold_filter_max`, `threshold_filter_min`.
 *   **`enable_hardware_noise_removal_filter`**
-    *   Enable the Depth hardware noise removal filter.
+    *   Enable the Depth hardware noise removal filter. See [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md) for low-CPU configuration recommendations.
 *   **`enable_noise_removal_filter`**
-    *   Enable the Depth software noise removal filter. Set with `noise_removal_filter_min_diff`, etc.
+    *   Enable the Depth software noise removal filter. Set with `noise_removal_filter_min_diff`, etc. See [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md) for low-CPU configuration recommendations.
 *   **`enable_spatial_filter`**
-    *   Enable the Depth spatial filter. Set with `spatial_filter_alpha`, etc.
+    *   Enable the Depth spatial filter. Set with `spatial_filter_alpha`, etc. See [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md) for low-CPU configuration recommendations.
 *   **`enable_temporal_filter`**
     *   Enable the Depth temporal filter. Set with `temporal_filter_diff_threshold`, etc.
 *   **`enable_hole_filling_filter`**

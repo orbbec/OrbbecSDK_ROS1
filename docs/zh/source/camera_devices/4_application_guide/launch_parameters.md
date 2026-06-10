@@ -1,6 +1,44 @@
 # 启动参数
 
-> 如果您不确定如何设置参数，可以连接orbbec相机并打开 [OrbbecViewer](https://github.com/orbbec/OrbbecSDK/releases)。
+> 如果您不确定如何设置参数，可以连接 Orbbec 相机并打开 [OrbbecViewer](https://github.com/orbbec/OrbbecSDK/releases)，也可以查看第 1 章中的 [设备规格书](../1_overview/introduction.md)。
+
+## 如何修改启动参数
+
+启动参数可以通过两种方式修改：
+
+1. **在启动命令中临时覆盖参数**
+
+   适合调试、验证某个参数或只在本次启动中生效的场景。格式为 `参数名:=参数值`，可以在同一条命令中追加多个参数。
+
+   ```bash
+   roslaunch orbbec_camera gemini_330_series.launch camera_name:=camera_02
+   ```
+
+   示例：同时修改相机名称并启用点云。
+
+   ```bash
+   roslaunch orbbec_camera gemini_330_series.launch camera_name:=camera_02 enable_point_cloud:=true
+   ```
+
+2. **在 launch 文件中修改默认值**
+
+   适合将参数作为长期默认配置使用，例如团队固定使用某个分辨率、帧率、相机名称或同步模式。各设备的 launch 文件位于 [launch](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/launch)，请选择与设备型号对应的 `*.launch` 文件。
+
+   例如，将相机名称的默认值修改为 `camera_02`：
+
+   ```xml
+   <arg name="camera_name" default="camera_02"/>
+   ```
+
+   如果您是从源码构建，修改 launch 文件后通常需要回到工作空间重新编译并重新 source：
+
+   ```bash
+   cd ~/ros_ws
+   catkin_make
+   source devel/setup.bash
+   ```
+
+   若使用 apt/deb 安装，不建议直接修改系统安装目录中的 launch 文件；建议优先使用命令行覆盖参数，或复制 launch 文件后维护自己的启动配置。
 
 以下是可用的启动参数：
 
@@ -9,18 +47,20 @@
 *   **`camera_name`**
     *   启动节点的命名空间。
 *   **`serial_number`**
-    *   相机的序列号。当使用多个相机时需要此参数。
+    *   相机的序列号。当使用多个相机时需要此参数。多相机启动方式参考 [多相机](../5_advanced_guide/multi_camera/multi_camera.md)。
 *   **`usb_port`**
-    *   相机的USB端口。当使用多个相机时需要此参数。
+    *   相机的USB端口。当使用多个相机时需要此参数。多相机启动方式参考 [多相机](../5_advanced_guide/multi_camera/multi_camera.md)。
 *   **`device_num`**
-    *   设备数量。如果需要多个相机，必须填写此参数。
+    *   设备数量。如果需要多个相机，必须填写此参数。多相机启动方式参考 [多相机](../5_advanced_guide/multi_camera/multi_camera.md)。
 *   **`device_preset`**
-    *   默认值由启动文件决定。可以使用下面命令查看可设置模式；该工具会同时打印 preset 列表和 preset 版本信息。
+    *   深度预设。可选预设和推荐场景请参考 [设备预设](../5_advanced_guide/configuration/predefined_presets.md)。可以使用下面命令查看可设置模式；该工具会同时打印 preset 列表和 preset 版本信息。
     ```bash
-    rosrun orbbec_camera list_camera_profile_mode_node
+    rosrun orbbec_camera list_devices_node
     ```
 *   **`[color|depth|left_ir|right_ir|ir]_[width|height|fps|format]`**
     *   传感器流的分辨率和帧率。
+    *   Femto Mega / Femto Bolt 的深度 NFOV、WFOV 模式通过深度和 IR 分辨率组合配置，参考 [深度 NFOV 和 WFOV 模式配置](../5_advanced_guide/configuration/configuration_of_depth_NFOV_and_WFOV_modes.md)。
+    *   如需降低 CPU 使用率，可参考 [降低 CPU 使用率](../5_advanced_guide/performance/lower_cpu_usage.md) 中的 `color_format` 建议。
 *   **`[color|depth|left_ir|right_ir|ir]_rotation`**
     *   设置流图像旋转。
     *   可能的值为 `0`、`90`、`180`、`270`。
@@ -29,23 +69,15 @@
 *   **`[color|depth|left_ir|right_ir|ir]_mirror`**
     *   启用流图像镜像。
 *   **`enable_point_cloud`**
-    *   启用点云。
+    *   启用点云。使用和 RViz 可视化方法参考 [点云](point_cloud.md)。
 *   **`enable_colored_point_cloud`**
-    *   启用RGB点云。
+    *   启用RGB点云。使用和 RViz 可视化方法参考 [点云](point_cloud.md)。
 *   **`cloud_frame_id`**
     *   修改ros消息中的 `frame_id` 名称。
 *   **`ordered_pc`**
     *   启用无效点云过滤。
 *   **`point_cloud_qos`、`[stream]_qos`、`[stream]_camera_info_qos`**
     *   这些 QoS 参数在 ROS1 wrapper 中不适用。ROS1 中话题通信行为主要由发布者/订阅者队列长度控制。
-* **`color.image_raw.enable_pub_plugins`**
-  * 启用彩色图像传输插件。默认值：`["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`。
-* **`depth.image_raw.enable_pub_plugins`**
-  * 启用深度图像传输插件。默认值：`["image_transport/compressedDepth", "image_transport/raw"]`。
-* **`left_ir.image_raw.enable_pub_plugins`**
-  * 启用左红外图像传输插件。默认值：`["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`。
-* **`right_ir.image_raw.enable_pub_plugins`**
-  * 启用右红外图像传输插件。默认值：`["image_transport/compressed", "image_transport/raw", "image_transport/theora"]`。
 * **`point_cloud_decimation_filter_factor`**
   * 点云下采样因子。范围：`1–8`，`1`表示不下采样，数值越大下采样倍数越大。
 
@@ -96,6 +128,8 @@
     *   设置D2C后是否启用深度缩放。`true`表示启用，默认为`true`。
 *   **`depth_precision`**
     *   深度精度应为 `1mm` 格式。默认值为 `1mm`。
+*   **`depth_work_mode`**
+    *   设置深度工作模式。支持的设备、模式列表查看命令和启动示例参考 [深度工作模式切换](../5_advanced_guide/configuration/depth_work_mode_switch.md)。
 *   **`depth_ae_roi_[left|right|top|bottom]`**
     *   设置深度自动曝光ROI。
 
@@ -121,7 +155,7 @@
 
 #### 多相机同步
 *   **`sync_mode`**
-    *   设置同步模式。默认值为 `standalone`。
+    *   设置同步模式。默认值为 `standalone`。多相机连接、同步模式和触发配置参考 [多相机同步](../5_advanced_guide/multi_camera/multi_camera_synced.md)。
 *   **`depth_delay_us`** / **`color_delay_us`**
     *   接收捕获命令或触发信号后深度/彩色图像捕获的延迟时间（微秒）。
 *   **`trigger2image_delay_us`**
@@ -135,13 +169,11 @@
 *   **`frames_per_trigger`**
     *   触发模式下每次触发后每个流的帧数。
 
-> 用于 [多相机同步](../5_advanced_guide/multi_camera/multi_camera_synced.md)。
-
 #### 网络相机
 * **`enumerate_net_device`**
-  * 启用自动枚举网络设备。
+  * 启用自动枚举网络设备。网络相机启动、指定 IP 和 Force IP 配置参考 [网络相机](../5_advanced_guide/configuration/net_camera.md)。
 * **`ip_address`** / **`port`**
-  * 设置网络设备的IP地址和端口（通常为 `8090`）。
+  * 设置网络设备的IP地址和端口（通常为 `8090`）。网络相机启动、指定 IP 和 Force IP 配置参考 [网络相机](../5_advanced_guide/configuration/net_camera.md)。
 * **`force_ip_enable`**
   * 启用强制IP功能。**默认值：** `false`
 * **`force_ip_mac`**
@@ -153,11 +185,9 @@
 * **`force_ip_gateway`**
   * 静态IP的网关地址。**默认值：** `192.168.1.1`
 
-> 用于 [网络相机](../5_advanced_guide/configuration/net_camera.md)。
-
 #### 设备特定
 *   **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
-    *   启用gmsl触发输出信号 / 设置gmsl触发fps。用于 [gmsl相机](../5_advanced_guide/multi_camera/gmsl_camera.md)。
+    *   启用gmsl触发输出信号 / 设置gmsl触发fps。用于 [gmsl相机](../5_advanced_guide/multi_camera/gmsl_cameras.md)。
 * **`enable_ptp_config`**
   * 启用PTP时间同步。仅适用于Gemini 335Le。需要 `enable_sync_host_time` 设置为 `false`。
   > **支持模组**：Gemini 335Le。
@@ -196,7 +226,7 @@
 #### 相机内同步
 
 - **`depth_registration`**
-  *   启用深度帧与彩色帧的对齐。当 `enable_colored_point_cloud` 设置为 `true` 时需要此字段。
+  *   启用深度帧与彩色帧的对齐。当 `enable_colored_point_cloud` 设置为 `true` 时需要此字段。启动和查看方法参考 [对齐深度到彩色](../5_advanced_guide/configuration/align_depth_color.md)。
 - **`align_mode`**
   *   要使用的对齐模式。选项为 `HW`（硬件对齐）和 `SW`（软件对齐）。
   *   该参数大小写不敏感；非法值会报错并回退默认值。
@@ -205,7 +235,7 @@
   *   可能的值为 `COLOR`、`DEPTH`。
   *   `COLOR`：将深度对齐到彩色。
   *   `DEPTH`：将彩色对齐到深度。
-  *   该参数大小写不敏感。硬件 D2C 仅支持 `COLOR` 作为对齐目标；如需对齐到 `DEPTH`，请使用 `align_mode:=SW`。
+  *   该参数大小写不敏感。硬件 D2C 仅支持 `COLOR` 作为对齐目标；如需对齐到 `DEPTH`，请使用 `align_mode:=SW`。启动和查看方法参考 [对齐深度到彩色](../5_advanced_guide/configuration/align_depth_color.md)。
 - **`intra_camera_sync_reference`**
   - 设置相机内同步的参考点。适用于Gemini 330系列设备，当 `sync_mode` 设置为**软件**或**硬件触发**模式时。**选项：** `Start`、`Middle`、`End`。设置为空时，长基线设备默认End，短基线设备默认Middle。
 
@@ -213,11 +243,11 @@
 
 #### 固件与后端
 *   **`upgrade_firmware`**
-    *   输入参数为固件路径。新版本建议使用独立工具 `firmware_update_tool` 进行固件升级。
+    *   输入参数为固件路径。新版本建议使用独立工具 `firmware_update_tool` 进行固件升级，参考 [firmware_update_tool 工具](../5_advanced_guide/configuration/firmware_update_tool.md)。
 *   **`preset_firmware_path`**
-    *   输入参数为预设固件路径。如果输入多个路径，每个路径需要用 `,` 分隔，最多可输入3个固件路径。
+    *   输入参数为预设固件路径。如果输入多个路径，每个路径需要用 `,` 分隔，最多可输入3个固件路径。新版本建议使用独立工具烧录 preset，参考 [firmware_update_tool 工具](../5_advanced_guide/configuration/firmware_update_tool.md)。
 *   **`uvc_backend`**
-    *   可选值：`v4l2`、`libuvc`。
+    *   可选值：`v4l2`、`libuvc`。低 CPU 场景建议参考 [降低 CPU 使用率](../5_advanced_guide/performance/lower_cpu_usage.md)。
 *   **`connection_delay`**
     *   重新打开设备的延迟时间（毫秒）。某些设备（如Astra mini）需要较长时间初始化，热插拔时立即重新打开设备可能导致固件崩溃。
 *   **`retry_on_usb3_detection_failure`**
@@ -225,7 +255,7 @@
 
 #### TF、外参与校准
 *   **`publish_tf`** / **`tf_publish_rate`**
-    *   启用TF发布并设置其发布速率。
+    *   启用TF发布并设置其发布速率。坐标系、TF 树查看和可视化方法参考 [坐标系和 TF 变换](coordinate_and_tf.md)。
 *   **`enable_publish_extrinsic`**
     *   启用外参发布。
 *   **`ir_info_url`** / **`color_info_url`**
@@ -266,7 +296,7 @@
 
 #### 其他
 *   **`config_file_path`**
-    *   YAML配置文件的路径。默认为 `""`。如果未指定，将使用启动文件中的默认参数。设置为 `gemini2L_dual_ir.yaml` 可启用 Gemini 2L 双 IR 模式。
+    *   YAML配置文件的路径。默认为 `""`。如果未指定，将使用启动文件中的默认参数。部分 preset 或特殊模式会通过 YAML 配置，示例参考 [设备预设](../5_advanced_guide/configuration/predefined_presets.md)。
 *   **`load_config_json_file_path`**
     *   SDK JSON 配置导入路径。设置后节点会在初始化时调用 SDK 导入 JSON 配置。Gemini 330 系列可使用 `gemini_330_series_sdk_json.launch` 作为专用启动文件。
 *   **`export_config_json_file_path`**
@@ -275,7 +305,7 @@
     *   设置帧聚合输出模式。可选值：`full_frame`、`color_frame`、`ANY`、`disable`。
     *   该参数大小写不敏感；非法值会报错并回退默认值。
 *   **`enable_d2c_viewer`**
-    *   发布D2C叠加图像（仅用于测试）。
+    *   发布D2C叠加图像（仅用于测试）。使用示例参考 [对齐深度到彩色](../5_advanced_guide/configuration/align_depth_color.md)。
 
 ### IMU
 
@@ -303,11 +333,11 @@
 *   **`enable_threshold_filter`**
     *   启用深度阈值滤波器。使用 `threshold_filter_max`、`threshold_filter_min` 设置。
 *   **`enable_hardware_noise_removal_filter`**
-    *   启用深度硬件降噪滤波器。
+    *   启用深度硬件降噪滤波器。低 CPU 配置建议参考 [降低 CPU 使用率](../5_advanced_guide/performance/lower_cpu_usage.md)。
 *   **`enable_noise_removal_filter`**
-    *   启用深度软件降噪滤波器。使用 `noise_removal_filter_min_diff` 等设置。
+    *   启用深度软件降噪滤波器。使用 `noise_removal_filter_min_diff` 等设置。低 CPU 配置建议参考 [降低 CPU 使用率](../5_advanced_guide/performance/lower_cpu_usage.md)。
 *   **`enable_spatial_filter`**
-    *   启用深度空间滤波器。使用 `spatial_filter_alpha` 等设置。
+    *   启用深度空间滤波器。使用 `spatial_filter_alpha` 等设置。低 CPU 配置建议参考 [降低 CPU 使用率](../5_advanced_guide/performance/lower_cpu_usage.md)。
 *   **`enable_temporal_filter`**
     *   启用深度时间滤波器。使用 `temporal_filter_diff_threshold` 等设置。
 *   **`enable_hole_filling_filter`**

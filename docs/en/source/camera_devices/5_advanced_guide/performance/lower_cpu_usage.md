@@ -13,13 +13,16 @@ To achieve the lowest possible CPU usage in OrbbecSDK_ROS1, it is recommended to
 | `uvc_backend` |                `v4l2`                |     Lower CPU usage compared to `libuvc`     |
 | `color_format` |                `RGB`                |         Lower CPU usage than `MJPG`         |
 |    `filter`    | Only `hardware_noise_removal_filter` | Other filters significantly increase CPU usage |
+|     `depth_registration`     | `false` or `true` with `align_mode=HW` |      Software alignment consumes more CPU      |
+|     `enable_point_cloud`     |                    `false`                    |     Disabling point cloud reduces CPU usage     |
+| `enable_colored_point_cloud` |                    `false`                    | Disabling colored point cloud reduces CPU usage |
 
 ### Color Stream Format and Subscription
 
 v2.8.8 optimizes the color image publishing path:
 
 - For non-MJPG color formats such as RGB or YUYV, subscribe to `/camera/color/image_raw`.
-- When `color_format:=MJPG` is used, subscribe to `/camera/color/image_raw/compressed`. The ROS wrapper publishes the compressed image directly, avoiding extra host-side decoding and significantly reducing CPU usage for MJPG streams.
+- When `color_format:=MJPG` is used, subscribe to `/camera/color/image_raw/compressed`. The ROS wrapper publishes the compressed image directly, avoiding extra host-side decoding and significantly reducing CPU usage for MJPG streams, even lower than RGB format.
 - If you subscribe to `/camera/color/image_raw`, MJPG still needs to be decoded on the host, which increases CPU usage.
 
 ### Launch File Used for Testing
@@ -84,11 +87,3 @@ The CPU usage can be reduced if the RGB format is selected instead of MJPG, sinc
 | `hardware_noise_removal_filter + spatial_filter`  | 124.5%           | +8.5%              | 61.7%          | +16.0%             |
 
 Based on the test results, using only the `hardware_noise_removal_filter` results in a negligible change in CPU usage for both `libuvc` (-0.3%) and `v4l2` (-0.1%) compared to the no-filter benchmark, as this filter runs internally on the camera hardware. In contrast, other filters execute on the host system. Adding the `spatial_filter` to the hardware filter leads to a moderate increase in CPU usage, while applying the software-based `noise_removal_filter` —either alone or combined with `spatial_filter` —significantly increases CPU load. To maintain low CPU usage, it is recommended to avoid software-based filters and rely solely on the `hardware_noise_removal_filter`.
-
-### Further Optimization
-
-|           Parameter           |                  Recommendation                  |                      Note                      |
-| :----------------------------: | :----------------------------------------------: | :---------------------------------------------: |
-|     `depth_registration`     | `false` or `true` with `align_mode=HW` |      Software alignment consumes more CPU      |
-|     `enable_point_cloud`     |                    `false`                    |     Disabling point cloud reduces CPU usage     |
-| `enable_colored_point_cloud` |                    `false`                    | Disabling colored point cloud reduces CPU usage |

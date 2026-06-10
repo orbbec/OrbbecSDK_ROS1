@@ -12,3 +12,4 @@
     runtime_modifiable_parameters.md
     coordinate_and_tf.md
     point_cloud.md
+    compressed_image.md

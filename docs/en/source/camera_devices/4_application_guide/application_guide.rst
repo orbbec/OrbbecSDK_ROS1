@@ -12,3 +12,4 @@ This chapter introduces application development with the SDK, including launch p
     runtime_modifiable_parameters.md
     coordinate_and_tf.md
     point_cloud.md
+    compressed_image.md
