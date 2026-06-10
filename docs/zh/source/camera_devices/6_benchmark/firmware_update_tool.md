@@ -1,4 +1,4 @@
-# firmware_update_tool 工具（旧版位置）
+# firmware_update_tool 设备维护工具
 
 `firmware_update_tool` 用于从 ROS1 命令行升级设备固件或烧录 preset 文件。升级前请确认设备连接稳定；多设备连接时建议指定序列号，避免升级到错误设备。
 

@@ -52,85 +52,9 @@ To enable SDK and firmware logs, add `--sdk_log_level debug`:
 rosrun orbbec_camera list_devices_node --sdk_log_level debug
 ```
 
-## ip_config_tool Utility
+## IP Configuration Tool
 
-The **`ip_config_tool`** executable allows you to configure network camera IP settings directly from ROS1, including DHCP, static IP, Force IP, and DHCP address assignment timeout. This is useful for quickly assigning or updating IP addresses without modifying launch files.
-
-> **Note:** DHCP / persistent IP configuration applied with `set_ip` is written to the device. `force_ip` is temporary and must be applied again after the device is powered off or restarted.
-> **Compatibility:** `set_device_ip` has been replaced by `ip_config_tool`. The old `old_ip` argument has been renamed to `current_ip`.
-
-**Example Usage**
-
-Show help:
-
-```bash
-rosrun orbbec_camera ip_config_tool --help
-```
-
-Enable DHCP:
-
-```bash
-rosrun orbbec_camera ip_config_tool set_ip \
---current_ip 192.168.1.10 \
---enable_dhcp true \
---enable_persistent_ip false
-```
-
-Disable DHCP and set a persistent IP:
-
-```bash
-rosrun orbbec_camera ip_config_tool set_ip \
---current_ip 192.168.1.10 \
---enable_dhcp false \
---enable_persistent_ip true \
---new_ip 192.168.1.11 \
---mask 255.255.255.0 \
---gateway 192.168.1.1
-```
-
-Enable both DHCP and persistent IP (requires a device/firmware that supports IP config V2):
-
-```bash
-rosrun orbbec_camera ip_config_tool set_ip \
---current_ip 192.168.1.10 \
---enable_dhcp true \
---enable_persistent_ip true \
---new_ip 192.168.1.11 \
---mask 255.255.255.0 \
---gateway 192.168.1.1
-```
-
-Force IP by MAC address:
-
-```bash
-rosrun orbbec_camera ip_config_tool force_ip \
---force_ip_mac 54:14:FD:06:07:DA \
---new_ip 192.168.1.50 \
---mask 255.255.255.0 \
---gateway 192.168.1.1
-```
-
-Set DHCP address assignment timeout:
-
-```bash
-rosrun orbbec_camera ip_config_tool set_dhcp_timeout \
---current_ip 192.168.1.10 \
---timeout 10
-```
-
-**Parameters**
-
-- **`current_ip`** - Current IP address of the device.
-- **`enable_dhcp`** - Enable or disable DHCP for the `set_ip` or `force_ip` subcommand.
-- **`enable_persistent_ip`** - Enable or disable persistent IP for the `set_ip` subcommand.
-- **`new_ip`** - Persistent IP or Force IP address to assign.
-- **`mask`** - Subnet mask for the new IP.
-- **`gateway`** - Gateway address for the new IP.
-- **`force_ip_mac`** - Target MAC address for Force IP.
-- **`timeout`** / **`dhcp_assign_ip_timeout`** - DHCP address assignment timeout in seconds.
-- **`sdk_log_level`** - SDK file log level. Optional values: `debug`, `info`, `warn`, `error`, `fatal`, `off`. Any non-`off` value also attempts to enable firmware logs.
-
-> **Version notes:** The `LLA` switch was supported only by Gemini 335Le firmware `1.7.05` and above and Gemini 435Le firmware `1.3.17` and above.
+To configure network camera DHCP, persistent IP, Force IP, or DHCP address assignment timeout directly, use `ip_config_tool`. For complete command examples and parameter descriptions, see [Network Configuration Tools](../../6_benchmark/network_config_tools.md).
 
 ## Force IP Function
 

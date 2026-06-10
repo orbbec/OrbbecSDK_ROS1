@@ -242,9 +242,9 @@ The following are the launch parameters available:
 
 #### Firmware & Backend
 * **`upgrade_firmware`**
-  * The input parameter is the firmware path. For new versions, use the standalone `firmware_update_tool` for firmware updates. See [firmware_update_tool](../5_advanced_guide/configuration/firmware_update_tool.md).
+  * The input parameter is the firmware path. For new versions, use the standalone `firmware_update_tool` for firmware updates. See [firmware_update_tool](../6_benchmark/firmware_update_tool.md).
 * **`preset_firmware_path`**
-  * The input parameter is the preset firmware path. If multiple paths are input, each path needs to be separated by `,` and a maximum of 3 firmware paths can be input. For new versions, use the standalone tool to burn presets. See [firmware_update_tool](../5_advanced_guide/configuration/firmware_update_tool.md).
+  * The input parameter is the preset firmware path. If multiple paths are input, each path needs to be separated by `,` and a maximum of 3 firmware paths can be input. For new versions, use the standalone tool to burn presets. See [firmware_update_tool](../6_benchmark/firmware_update_tool.md).
 * **`uvc_backend`**
   * Optional values: `v4l2`, `libuvc`. See [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md) for low-CPU scenarios.
 * **`connection_delay`**

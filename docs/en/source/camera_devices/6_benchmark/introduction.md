@@ -1,4 +1,4 @@
-# Introduction
+# Benchmark Introduction (Legacy)
 
 This section introduces the benchmark tool, explaining its purpose, features, and what it can help you measure.
 

@@ -1,6 +1,6 @@
-# firmware_update_tool (Legacy Location)
+# firmware_update_tool Device Maintenance Tool
 
-`firmware_update_tool` upgrades device firmware or writes preset files from the ROS1 command line. Before upgrading, make sure the device connection is stable. When multiple devices are connected, specify the serial number to avoid updating the wrong device.
+`firmware_update_tool` updates device firmware or burns preset files from the ROS1 command line. Before updating, make sure the device connection is stable. When multiple devices are connected, specify serial numbers to avoid updating the wrong device.
 
 Show help:
 
@@ -8,7 +8,7 @@ Show help:
 rosrun orbbec_camera firmware_update_tool --help
 ```
 
-Upgrade firmware for one device:
+Update firmware for one device:
 
 ```bash
 rosrun orbbec_camera firmware_update_tool \
@@ -16,7 +16,7 @@ rosrun orbbec_camera firmware_update_tool \
 --firmware_path /path/to/firmware.bin
 ```
 
-Write a preset file:
+Burn a preset file:
 
 ```bash
 rosrun orbbec_camera firmware_update_tool \
@@ -24,7 +24,7 @@ rosrun orbbec_camera firmware_update_tool \
 --preset_path /path/to/preset.bin
 ```
 
-For batch updates, `--serial_number` accepts comma-separated values. Add `--continue_on_error` if later devices should still be processed after one device fails.
+For batch updates, `--serial_number` accepts comma-separated serial numbers. Add `--continue_on_error` if later devices should still be processed after one device fails.
 
 ```bash
 rosrun orbbec_camera firmware_update_tool \
