@@ -96,4 +96,4 @@ rosrun orbbec_camera service_benchmark_node \
 3. 可将不同设备的结果按日期归档，便于性能趋势分析。
 4. 出现异常延迟可结合 `/camera/device_status` 话题排查设备状态。
 
-旧版完整 YAML 示例仍保留在 [基准测试使用指南](benchmark_usage.md) 中。
+完整 service YAML 示例可参考源码中的 `scripts/default_service.yaml`。

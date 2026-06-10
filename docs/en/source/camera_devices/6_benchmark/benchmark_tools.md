@@ -96,4 +96,4 @@ rosrun orbbec_camera service_benchmark_node \
 3. Archive results by device and date for trend analysis.
 4. If abnormal latency appears, inspect the `/camera/device_status` topic together with the benchmark result.
 
-The older complete YAML example is still available in [Benchmark Usage](benchmark_usage.md).
+For a complete service YAML example, see `scripts/default_service.yaml` in the source tree.

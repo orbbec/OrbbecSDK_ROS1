@@ -14,10 +14,3 @@
     diagnostic_tools.md
     multi_camera_tools.md
     helper_scripts.md
-
-.. toctree::
-    :hidden:
-
-    introduction.md
-    benchmark_usage.md
-    othertools.md

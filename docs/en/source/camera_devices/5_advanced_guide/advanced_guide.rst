@@ -40,8 +40,3 @@ Configuration & Modes
     configuration/interleave_ae_mode.md
     configuration/predefined_presets.md
     configuration/net_camera.md
-
-.. toctree::
-    :hidden:
-
-    configuration/firmware_update_tool.md
