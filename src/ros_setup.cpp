@@ -1204,6 +1204,9 @@ void OBCameraNode::selectBaseStream() {
   }
 }
 void OBCameraNode::setupColorPostProcessFilter() {
+  if (!enable_stream_[COLOR] && !enable_stream_[COLOR_LEFT] && !enable_stream_[COLOR_RIGHT]) {
+    return;
+  }
   try {
     auto color_sensor = device_->getSensor(OB_SENSOR_COLOR);
     if (color_sensor) {
@@ -1325,6 +1328,9 @@ void OBCameraNode::setupColorPostProcessFilter() {
 }
 
 void OBCameraNode::setupIrPostProcessFilter() {
+  if (!enable_stream_[INFRA0]) {
+    return;
+  }
   try {
     auto ir_sensor = device_->getSensor(OB_SENSOR_IR);
     ir_filter_list_ = ir_sensor->createRecommendedFilters();
@@ -1515,6 +1521,9 @@ void OBCameraNode::applyHwD2CColorUndistortion(std::shared_ptr<ob::FrameSet>& fr
 }
 
 void OBCameraNode::setupLeftIrPostProcessFilter() {
+  if (!enable_stream_[INFRA1]) {
+    return;
+  }
   if (device_preset_ == "Dual Color Streams") {
     ROS_DEBUG_STREAM("Dual Color Streams preset, skip left ir filter setup");
     return;
@@ -1555,6 +1564,9 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
 }
 
 void OBCameraNode::setupRightIrPostProcessFilter() {
+  if (!enable_stream_[INFRA2]) {
+    return;
+  }
   if (device_preset_ == "Dual Color Streams") {
     ROS_DEBUG_STREAM("Dual Color Streams preset, skip right ir filter setup");
     return;
