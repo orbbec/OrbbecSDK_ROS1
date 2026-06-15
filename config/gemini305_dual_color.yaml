@@ -22,6 +22,7 @@ log_level: none
 log_file_name: ""
 enable_publish_extrinsic: false
 enable_d2c_viewer: false
+enable_image_transport_plugins: false
 disparity_to_depth_mode: ""
 align_mode: SW
 align_target_stream: COLOR

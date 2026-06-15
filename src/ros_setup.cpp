@@ -1513,8 +1513,8 @@ void OBCameraNode::setupUndistortionFilters() {
   auto remove_undistortion_filter = [](std::vector<std::shared_ptr<ob::Filter>>& filters) {
     filters.erase(std::remove_if(filters.begin(), filters.end(),
                                  [](const std::shared_ptr<ob::Filter>& filter) {
-                                   return filter &&
-                                          std::string(filter->type()) == "UnDistortionFilter";
+                                   return filter && std::string(filter->type()) ==
+                                                        "UnDistortionFilter";
                                  }),
                   filters.end());
   };
@@ -1547,7 +1547,8 @@ void OBCameraNode::setupUndistortionFilters() {
     }
     if (stream_index == COLOR && shouldUseHwD2CColorUndistortion()) {
       remove_undistortion_filter(filters);
-      hw_d2c_color_undistortion_filter_ = std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
+      hw_d2c_color_undistortion_filter_ =
+          std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
       hw_d2c_color_undistortion_filter_->enable(true);
       ROS_INFO_STREAM("Enable color undistortion with HW D2C depth intrinsic projection");
       return;
@@ -1569,9 +1570,9 @@ void OBCameraNode::setupUndistortionFilters() {
 bool OBCameraNode::shouldUseHwD2CColorUndistortion() const {
   auto color_undistortion = enable_undistortion_.find(COLOR);
   return color_undistortion != enable_undistortion_.end() && color_undistortion->second &&
-         isDabaiASeriesForHwD2C(device_info_->pid()) && depth_registration_ &&
-         align_mode_ == "HW" && align_target_stream_ == OB_STREAM_COLOR &&
-         enable_stream_.at(COLOR) && enable_stream_.at(DEPTH);
+         isDabaiASeriesForHwD2C(device_info_->pid()) && depth_registration_ && align_mode_ == "HW" &&
+         align_target_stream_ == OB_STREAM_COLOR && enable_stream_.at(COLOR) &&
+         enable_stream_.at(DEPTH);
 }
 
 bool OBCameraNode::isHwD2CProfileSupported() const {
@@ -1635,7 +1636,8 @@ std::string OBCameraNode::getEffectiveOpticalFrameId(const stream_index_pair& st
   return optical_frame_id_.at(stream_index);
 }
 
-void OBCameraNode::configureHwD2CColorUndistortion(const std::shared_ptr<ob::Frame>& depth_frame) {
+void OBCameraNode::configureHwD2CColorUndistortion(
+    const std::shared_ptr<ob::Frame>& depth_frame) {
   if (!hw_d2c_color_undistortion_filter_ || hw_d2c_color_undistortion_configured_) {
     return;
   }
@@ -2964,11 +2966,13 @@ void OBCameraNode::setupPublishers() {
           this->imageUnsubscribedCallback(stream_index);
         };
 
-    if (isMjpgColorStream(stream_index)) {
+    if (isMjpgColorStream(stream_index) || !enable_image_transport_plugins_) {
       raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
           topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
-      compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
-          topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+      if (isMjpgColorStream(stream_index)) {
+        compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
+            topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+      }
     } else {
       // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
       // subscriber detection.
@@ -3006,12 +3010,23 @@ void OBCameraNode::setupPublishers() {
   }
 
   if (depth_registration_ && align_mode_ == "SW") {
-    image_transport::SubscriberStatusCallback depth_unaligned_subscribed_cb =
+    ros::SubscriberStatusCallback depth_unaligned_subscribed_cb =
         boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
-    image_transport::SubscriberStatusCallback depth_unaligned_unsubscribed_cb =
+    ros::SubscriberStatusCallback depth_unaligned_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
-    depth_unaligned_publisher_ = image_transport::ImageTransport(nh_).advertise(
-        "depth/image_unaligned", 1, depth_unaligned_subscribed_cb, depth_unaligned_unsubscribed_cb);
+    if (enable_image_transport_plugins_) {
+      image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
+          boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+      image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
+          boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
+      depth_unaligned_publisher_ = image_transport::ImageTransport(nh_).advertise(
+          "depth/image_unaligned", 1, image_transport_subscribed_cb,
+          image_transport_unsubscribed_cb);
+    } else {
+      depth_unaligned_raw_publisher_ = nh_.advertise<sensor_msgs::Image>(
+          "depth/image_unaligned", 1, depth_unaligned_subscribed_cb,
+          depth_unaligned_unsubscribed_cb);
+    }
   }
 
   if (enable_sync_output_accel_gyro_) {

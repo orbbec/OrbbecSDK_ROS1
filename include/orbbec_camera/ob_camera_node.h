@@ -504,6 +504,7 @@ class OBCameraNode {
   std::map<stream_index_pair, int> image_format_;  // for cv_bridge
   std::map<stream_index_pair, int> unit_step_size_;
   std::map<stream_index_pair, bool> enable_stream_;
+  bool enable_image_transport_plugins_ = true;
   std::map<stream_index_pair, std::shared_ptr<ob::StreamProfile>> stream_profile_;
   std::map<stream_index_pair, std::shared_ptr<ob::StreamProfileList>> supported_profiles_;
   std::map<stream_index_pair, std::string> stream_name_;
@@ -625,6 +626,7 @@ class OBCameraNode {
   ros::Publisher depth_cloud_pub_;
   ros::Publisher depth_registered_cloud_pub_;
   image_transport::Publisher depth_unaligned_publisher_;
+  ros::Publisher depth_unaligned_raw_publisher_;
   sensor_msgs::PointCloud2 cloud_msg_;
   std::recursive_mutex cloud_mutex_;
   std::atomic_bool pipeline_started_{false};

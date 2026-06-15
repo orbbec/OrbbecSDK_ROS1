@@ -333,6 +333,7 @@ void OBCameraNode::getParameters() {
   accel_gyro_frame_id_ = camera_name_ + "_accel_gyro_optical_frame";
 
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
+  enable_image_transport_plugins_ = nh_private_.param<bool>("enable_image_transport_plugins", true);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
   enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", false);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
@@ -1288,8 +1289,10 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
 }
 
 void OBCameraNode::publishRawDepthImage(const std::shared_ptr<ob::Frame>& depth_frame) {
-  if (!depth_frame || !depth_unaligned_publisher_ ||
-      depth_unaligned_publisher_.getNumSubscribers() == 0) {
+  const bool has_unaligned_depth_subscriber =
+      (depth_unaligned_publisher_ && depth_unaligned_publisher_.getNumSubscribers() > 0) ||
+      (depth_unaligned_raw_publisher_ && depth_unaligned_raw_publisher_.getNumSubscribers() > 0);
+  if (!depth_frame || !has_unaligned_depth_subscriber) {
     return;
   }
 
@@ -1322,7 +1325,11 @@ void OBCameraNode::publishRawDepthImage(const std::shared_ptr<ob::Frame>& depth_
   image_msg.data.resize(image_msg.step * height);
   memcpy(image_msg.data.data(), depth_image.data, image_msg.data.size());
 
-  depth_unaligned_publisher_.publish(image_msg);
+  if (depth_unaligned_raw_publisher_) {
+    depth_unaligned_raw_publisher_.publish(image_msg);
+  } else {
+    depth_unaligned_publisher_.publish(image_msg);
+  }
 }
 
 IMUInfo OBCameraNode::createIMUInfo(const stream_index_pair& stream_index) {

@@ -56,6 +56,7 @@
 
     <!-- ROS pipeline parameters -->
     <arg name="enable_d2c_viewer" default="false"/>
+    <arg name="enable_image_transport_plugins" default="true"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
@@ -105,6 +106,7 @@
             <param name="linear_accel_cov" value="$(arg linear_accel_cov)"/>
 
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
+            <param name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
 
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
