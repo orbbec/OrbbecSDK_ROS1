@@ -337,6 +337,11 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](SetInt32Request& request, SetInt32Response& response) {
         return this->setDisparitySearchOffsetCallback(request, response);
       });
+  set_sync_io_voltage_level_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+      "/" + camera_name_ + "/" + "set_sync_io_voltage_level",
+      [this](SetInt32Request& request, SetInt32Response& response) {
+        return this->setSyncIoVoltageLevelCallback(request, response);
+      });
   set_ae_reference_stream_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
       "/" + camera_name_ + "/" + "set_ae_reference_stream",
       [this](const SetStringRequest& request, SetStringResponse& response) {
@@ -1522,6 +1527,44 @@ bool OBCameraNode::setDisparitySearchOffsetCallback(SetInt32Request& request,
   } catch (...) {
     return setDisparityServiceFailure(response, "unknown error");
   }
+}
+
+bool OBCameraNode::setSyncIoVoltageLevelCallback(SetInt32Request& request,
+                                                 SetInt32Response& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    if (!device_->isPropertySupported(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT,
+                                      OB_PERMISSION_READ_WRITE)) {
+      response.success = false;
+      response.message = "Current device does not support sync IO voltage level";
+      return true;
+    }
+
+    auto range = device_->getIntPropertyRange(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT);
+    if (request.data < range.min || request.data > range.max) {
+      response.success = false;
+      response.message =
+          "Invalid sync IO voltage level. Allowed values:" + std::to_string(range.min) + " to " +
+          std::to_string(range.max);
+      return true;
+    }
+
+    device_->setIntProperty(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT, request.data);
+    sync_io_voltage_level_ = device_->getIntProperty(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT);
+    response.success = true;
+    response.message = "sync_io_voltage_level updated to " + std::to_string(sync_io_voltage_level_);
+    ROS_INFO_STREAM(response.message);
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return true;
 }
 
 void OBCameraNode::setAEReferenceStreamCallback(const SetStringRequest& request,

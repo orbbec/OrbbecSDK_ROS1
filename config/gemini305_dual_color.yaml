@@ -29,6 +29,7 @@ diagnostic_period: 1.0
 device_preset: Dual Color Streams
 retry_on_usb3_detection_failure: false
 enable_sync_host_time: true
+sync_io_voltage_level: -1
 time_sync_period: 6.0
 time_domain: global
 config_file_path: ""
