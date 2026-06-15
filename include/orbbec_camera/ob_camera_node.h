@@ -134,6 +134,8 @@ class OBCameraNode {
 
   bool isLaunchParamProvided(const std::string &param_name) const;
 
+  void syncConfigJsonApplicationConfig();
+
   void syncConfigJsonDeviceSettings();
 
   void syncConfigJsonFilterSettings(const std::vector<std::shared_ptr<ob::Filter>> &filters,

@@ -9,13 +9,8 @@
     <arg name="log_file_name" default=""/>
     <arg name="publish_tf" default="true"/>
     <arg name="tf_publish_rate" default="0.0"/>
-    <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="global"/><!-- "device", "global", "system" -->
     <arg name="timestamp_clock_type" default=""/><!-- "realtime" or "monotonic", default is realtime. -->
-    <arg name="enable_color_undistortion" default="false"/>
-    <arg name="enable_depth_undistortion" default="false"/>
-    <arg name="enable_left_ir_undistortion" default="false"/>
-    <arg name="enable_right_ir_undistortion" default="false"/>
     <arg name="enable_frame_drop_log" default="false"/>
     <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
@@ -50,58 +45,17 @@
     <arg name="ir_info_uri" default=""/>
     <arg name="color_info_uri" default=""/>
 
-    <!-- Color stream parameters -->
-    <arg name="color_width" default="0"/>
-    <arg name="color_height" default="0"/>
-    <arg name="color_fps" default="0"/>
-    <arg name="enable_color" default="true"/>
-    <arg name="color_format" default="ANY"/>
-
-    <!-- Depth stream parameters -->
-    <arg name="depth_width" default="0"/>
-    <arg name="depth_height" default="0"/>
-    <arg name="depth_fps" default="0"/>
-    <arg name="enable_depth" default="true"/>
-    <arg name="depth_format" default="ANY"/>
-    <arg name="depth_registration" default="false"/>
-
-    <!-- Left IR stream parameters -->
-    <arg name="left_ir_width" default="0"/>
-    <arg name="left_ir_height" default="0"/>
-    <arg name="left_ir_fps" default="0"/>
-    <arg name="enable_left_ir" default="false"/>
-    <arg name="left_ir_format" default="ANY"/>
-
-    <!-- Right IR stream parameters -->
-    <arg name="right_ir_width" default="0"/>
-    <arg name="right_ir_height" default="0"/>
-    <arg name="right_ir_fps" default="0"/>
-    <arg name="enable_right_ir" default="false"/>
-    <arg name="right_ir_format" default="ANY"/>
-
     <!-- Point cloud parameters -->
-    <arg name="enable_point_cloud" default="true"/>
-    <arg name="enable_colored_point_cloud" default="false"/>
-    <arg name="point_cloud_decimation_filter_factor" default="1"/>
     <arg name="ordered_pc" default="false"/>
-    <arg name="align_mode" default="SW"/>
-    <arg name="align_target_stream" default="COLOR"/><!-- COLOR or DEPTH -->
 
     <!-- IMU parameters -->
     <arg name="enable_sync_output_accel_gyro" default="false"/>
-    <arg name="enable_accel" default="false"/>
     <arg name="enable_accel_data_correction" default="true"/>
-    <arg name="accel_rate" default="200hz"/>
-    <arg name="accel_range" default="4g"/>
-    <arg name="enable_gyro" default="false"/>
     <arg name="enable_gyro_data_correction" default="true"/>
-    <arg name="gyro_rate" default="200hz"/>
-    <arg name="gyro_range" default="1000dps"/>
     <arg name="linear_accel_cov" default="0.01"/>
 
     <!-- ROS pipeline parameters -->
     <arg name="enable_d2c_viewer" default="false"/>
-    <arg name="frame_aggregate_mode" default="ANY"/><!-- full_frame,color_frame,ANY or disable -->
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
@@ -112,13 +66,8 @@
             <param name="log_file_name" value="$(arg log_file_name)"/>
             <param name="publish_tf" value="$(arg publish_tf)"/>
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
-            <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
             <param name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
-            <param name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
-            <param name="enable_depth_undistortion" value="$(arg enable_depth_undistortion)"/>
-            <param name="enable_left_ir_undistortion" value="$(arg enable_left_ir_undistortion)"/>
-            <param name="enable_right_ir_undistortion" value="$(arg enable_right_ir_undistortion)"/>
             <param name="enable_frame_drop_log" value="$(arg enable_frame_drop_log)"/>
             <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
@@ -148,51 +97,14 @@
             <param name="ir_info_uri" value="$(arg ir_info_uri)"/>
             <param name="color_info_uri" value="$(arg color_info_uri)"/>
 
-            <param name="color_width" value="$(arg color_width)"/>
-            <param name="color_height" value="$(arg color_height)"/>
-            <param name="color_fps" value="$(arg color_fps)"/>
-            <param name="enable_color" value="$(arg enable_color)"/>
-            <param name="color_format" value="$(arg color_format)"/>
-
-            <param name="depth_width" value="$(arg depth_width)"/>
-            <param name="depth_height" value="$(arg depth_height)"/>
-            <param name="depth_fps" value="$(arg depth_fps)"/>
-            <param name="enable_depth" value="$(arg enable_depth)"/>
-            <param name="depth_format" value="$(arg depth_format)"/>
-            <param name="depth_registration" value="$(arg depth_registration)"/>
-
-            <param name="left_ir_width" value="$(arg left_ir_width)"/>
-            <param name="left_ir_height" value="$(arg left_ir_height)"/>
-            <param name="left_ir_fps" value="$(arg left_ir_fps)"/>
-            <param name="enable_left_ir" value="$(arg enable_left_ir)"/>
-            <param name="left_ir_format" value="$(arg left_ir_format)"/>
-
-            <param name="right_ir_width" value="$(arg right_ir_width)"/>
-            <param name="right_ir_height" value="$(arg right_ir_height)"/>
-            <param name="right_ir_fps" value="$(arg right_ir_fps)"/>
-            <param name="enable_right_ir" value="$(arg enable_right_ir)"/>
-            <param name="right_ir_format" value="$(arg right_ir_format)"/>
-
-            <param name="enable_point_cloud" value="$(arg enable_point_cloud)"/>
-            <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
-            <param name="point_cloud_decimation_filter_factor" value="$(arg point_cloud_decimation_filter_factor)"/>
             <param name="ordered_pc" value="$(arg ordered_pc)"/>
-            <param name="align_mode" value="$(arg align_mode)"/>
-            <param name="align_target_stream" value="$(arg align_target_stream)"/>
 
             <param name="enable_sync_output_accel_gyro" value="$(arg enable_sync_output_accel_gyro)"/>
-            <param name="enable_accel" value="$(arg enable_accel)"/>
             <param name="enable_accel_data_correction" value="$(arg enable_accel_data_correction)"/>
-            <param name="accel_rate" value="$(arg accel_rate)"/>
-            <param name="accel_range" value="$(arg accel_range)"/>
-            <param name="enable_gyro" value="$(arg enable_gyro)"/>
             <param name="enable_gyro_data_correction" value="$(arg enable_gyro_data_correction)"/>
-            <param name="gyro_rate" value="$(arg gyro_rate)"/>
-            <param name="gyro_range" value="$(arg gyro_range)"/>
             <param name="linear_accel_cov" value="$(arg linear_accel_cov)"/>
 
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
-            <param name="frame_aggregate_mode" value="$(arg frame_aggregate_mode)"/>
 
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>

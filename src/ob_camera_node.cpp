@@ -109,6 +109,7 @@ void OBCameraNode::init() {
   setupConfig();
   getParameters();
   loadConfigJson();
+  syncConfigJsonApplicationConfig();
   setupDevices();
   setupDepthPostProcessFilter();
   setupColorPostProcessFilter();
