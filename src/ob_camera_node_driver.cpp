@@ -117,6 +117,11 @@ OBCameraNodeDriver::OBCameraNodeDriver(ros::NodeHandle &nh, ros::NodeHandle &nh_
 
 OBCameraNodeDriver::~OBCameraNodeDriver() {
   is_alive_ = false;
+
+  if (record_device_) {
+    ROS_INFO_STREAM("Finalizing bag recording...");
+    record_device_.reset();
+  }
   // Stop the timer first to prevent any callbacks from executing during destruction
   if (check_connection_timer_) {
     check_connection_timer_.stop();
@@ -206,6 +211,14 @@ void OBCameraNodeDriver::init() {
     ROS_WARN_STREAM(
         "Failed to set SDK log file name: " << orbbec_camera::formatObErrorWithStatus(e));
   }
+
+  bag_filename_ = nh_private_.param<std::string>("bag_filename", "");
+  bag_loop_ = nh_private_.param<bool>("bag_loop", false);
+  if (!bag_filename_.empty()) {
+    initializeBagPlayback();
+    return;
+  }
+
   ctx_ = std::make_shared<ob::Context>(config_path_.c_str());
   timestamp_clock_type_str_ = nh_private_.param<std::string>("timestamp_clock_type", "");
   if (!timestamp_clock_type_str_.empty()) {
@@ -250,6 +263,8 @@ void OBCameraNodeDriver::init() {
   orb_device_lock_ = (pthread_mutex_t *)orb_device_lock_shm_addr_;
   pthread_mutex_init(orb_device_lock_, &orb_device_lock_attr_);
   serial_number_ = nh_private_.param<std::string>("serial_number", "");
+  bag_record_filename_ = nh_private_.param<std::string>("bag_record_filename", "");
+  bag_record_compression_ = nh_private_.param<bool>("bag_record_compression", true);
   usb_port_ = nh_private_.param<std::string>("usb_port", "");
   connection_delay_ = nh_private_.param<int>("connection_delay", 100);
   device_num_ = static_cast<int>(nh_private_.param<int>("device_num", 1));
@@ -414,6 +429,37 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByNetIP(
   return nullptr;
 }
 
+void OBCameraNodeDriver::initializeBagPlayback() {
+  ROS_INFO_STREAM("Starting bag file playback: " << bag_filename_);
+  try {
+    playback_device_ = std::make_shared<ob::PlaybackDevice>(bag_filename_);
+  } catch (const ob::Error &e) {
+    ROS_ERROR_STREAM("Failed to open bag file: " << orbbec_camera::formatObErrorWithStatus(e));
+    ros::shutdown();
+    return;
+  }
+
+  if (bag_loop_) {
+    playback_device_->setPlaybackStatusChangeCallback([this](OBPlaybackStatus status) {
+      if (status == OB_PLAYBACK_STOPPED && is_alive_) {
+        ROS_INFO_STREAM("Bag playback completed, restarting from beginning...");
+        try {
+          playback_device_->seek(0);
+          if (ob_camera_node_) {
+            ob_camera_node_->restartPlaybackStreams();
+          }
+        } catch (const ob::Error &e) {
+          ROS_WARN_STREAM(
+              "Failed to restart bag playback: " << orbbec_camera::formatObErrorWithStatus(e));
+        }
+      }
+    });
+  }
+
+  std::shared_ptr<ob::Device> device = playback_device_;
+  initializeDevice(device);
+}
+
 void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &device) {
   auto start_time = std::chrono::high_resolution_clock::now();
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
@@ -447,7 +493,8 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     ob_lidar_node_.reset();
   }
   if (device_type_ == "camera") {
-    ob_camera_node_ = std::make_shared<OBCameraNode>(nh_, nh_private_, device_);
+    ob_camera_node_ =
+        std::make_shared<OBCameraNode>(nh_, nh_private_, device_, playback_device_ != nullptr);
 
     if (!upgrade_firmware_.empty()) {
       bool is_second_update = is_reupdating_.load();
@@ -557,6 +604,16 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   auto time_cost =
       std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
   ROS_INFO_STREAM("Initialize device cost: " << time_cost << " ms");
+
+  if (!bag_record_filename_.empty() && !record_device_) {
+    try {
+      record_device_ = std::make_shared<ob::RecordDevice>(device_, bag_record_filename_,
+                                                          bag_record_compression_);
+      ROS_INFO_STREAM("Recording to bag file: " << bag_record_filename_);
+    } catch (const ob::Error &e) {
+      ROS_ERROR_STREAM("Failed to start recording: " << orbbec_camera::formatObErrorWithStatus(e));
+    }
+  }
 }
 
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList> &list) {
@@ -597,6 +654,10 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
 
     {
       std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
+      if (record_device_) {
+        ROS_WARN_STREAM("Device disconnected, stopping bag recording");
+        record_device_.reset();
+      }
       if (ob_camera_node_) {
         ob_camera_node_->clean();
         ob_camera_node_.reset();
@@ -743,6 +804,10 @@ void OBCameraNodeDriver::resetDeviceThread() {
     ROS_INFO_STREAM("resetDeviceThread: device is disconnected, reset device start");
     {
       std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
+      if (record_device_) {
+        ROS_WARN_STREAM("Device disconnected, stopping bag recording");
+        record_device_.reset();
+      }
       if (ob_camera_node_) {
         ob_camera_node_->clean();
         ob_camera_node_.reset();

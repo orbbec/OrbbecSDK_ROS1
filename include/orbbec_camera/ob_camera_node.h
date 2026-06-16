@@ -59,8 +59,8 @@
 namespace orbbec_camera {
 class OBCameraNode {
  public:
-  OBCameraNode(ros::NodeHandle &nh, ros::NodeHandle &nh_private,
-               std::shared_ptr<ob::Device> device);
+  OBCameraNode(ros::NodeHandle &nh, ros::NodeHandle &nh_private, std::shared_ptr<ob::Device> device,
+               bool is_playback_device = false);
 
   OBCameraNode(const OBCameraNode &) = delete;
 
@@ -77,6 +77,8 @@ class OBCameraNode {
   void rebootDevice();
 
   void clean();
+
+  void restartPlaybackStreams();
 
   // Safely expose the lock
   template <typename Func>
@@ -829,6 +831,7 @@ class OBCameraNode {
   bool config_json_loaded_ = false;
   std::set<std::string> initial_ros_params_;
   bool enable_sync_host_time_ = true;
+  bool is_playback_device_ = false;
   ros::Timer sync_host_time_timer_;
 
   int disparity_range_mode_ = -1;

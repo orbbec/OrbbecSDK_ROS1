@@ -1989,6 +1989,10 @@ void OBCameraNode::setupDevices() {
     imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
 
+  if (is_playback_device_) {
+    return;
+  }
+
   try {
     if (should_apply_launch_config("retry_on_usb3_detection_failure") &&
         retry_on_usb3_detection_failure_ &&

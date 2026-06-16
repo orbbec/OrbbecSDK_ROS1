@@ -17,6 +17,7 @@
 #pragma once
 #include "ob_camera_node.h"
 #include "ob_lidar_node.h"
+#include "libobsensor/hpp/RecordPlayback.hpp"
 #include <thread>
 #include <mutex>
 #include <semaphore.h>
@@ -47,6 +48,8 @@ class OBCameraNodeDriver {
                                                   const std::string& net_ip);
 
   void initializeDevice(const std::shared_ptr<ob::Device>& device);
+
+  void initializeBagPlayback();
 
   void deviceConnectCallback(const std::shared_ptr<ob::DeviceList>& list);
 
@@ -133,6 +136,12 @@ class OBCameraNodeDriver {
   ros::Timer device_status_timer_;
   ros::Publisher device_status_pub_;
   std::string device_type_;
+  std::string bag_record_filename_;
+  bool bag_record_compression_ = true;
+  std::shared_ptr<ob::RecordDevice> record_device_ = nullptr;
+  std::string bag_filename_;
+  bool bag_loop_ = false;
+  std::shared_ptr<ob::PlaybackDevice> playback_device_ = nullptr;
   OBCallbackId device_changed_callback_id_ =
       INVALID_CALLBACK_ID;  // Store callback ID for unregistering
 };

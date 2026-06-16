@@ -202,6 +202,9 @@
     <arg name="usb_port" default=""/>
     <arg name="serial_number" default=""/>
     <arg name="device_num" default="1"/>
+    <arg name="bag_record_filename" default=""/>
+    <arg name="bag_filename" default=""/>
+    <arg name="bag_loop" default="false"/>
 
     <arg name="retry_on_usb3_detection_failure" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
@@ -259,6 +262,9 @@
             <param name="device_type" value="$(arg device_type)"/>
             <!-- Use the parameters defined above -->
             <param name="camera_name" value="$(arg camera_name)"/>
+            <param name="bag_record_filename" value="$(arg bag_record_filename)"/>
+            <param name="bag_filename" value="$(arg bag_filename)"/>
+            <param name="bag_loop" value="$(arg bag_loop)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="log_file_name" value="$(arg log_file_name)"/>
