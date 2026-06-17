@@ -14,6 +14,7 @@
     <arg name="device_num" default="4"/>
     <arg name="timestamp_clock_type" default=""/><!-- "realtime" or "monotonic", default is realtime. -->
     <arg name="enable_color_undistortion" default="false"/>
+    <arg name="enable_image_transport_plugins" default="true"/>
 
     <node unless="false" pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
               output="screen" required="false" respawn="false"/>
@@ -26,6 +27,7 @@
         <arg name="device_num" value="$(arg device_num)"/>
         <arg name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
         <arg name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
+        <arg name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
     </include>
 
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
@@ -36,6 +38,7 @@
         <arg name="device_num" value="$(arg device_num)"/>
         <arg name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
         <arg name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
+        <arg name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
     </include>
 
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
@@ -46,6 +49,7 @@
         <arg name="device_num" value="$(arg device_num)"/>
         <arg name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
         <arg name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
+        <arg name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
     </include>
 
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
@@ -56,5 +60,6 @@
         <arg name="device_num" value="$(arg device_num)"/>
         <arg name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
         <arg name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
+        <arg name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
     </include>
 </launch>

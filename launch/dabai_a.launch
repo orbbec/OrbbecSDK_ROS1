@@ -131,6 +131,7 @@
 
     <arg name="retry_on_usb3_detection_failure" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
+    <arg name="enable_image_transport_plugins" default="true"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
     <arg name="enable_firmware_log" default="false"/>
@@ -248,6 +249,7 @@
             <param name="device_num" value="$(arg device_num)"/>
             <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
+            <param name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
             <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
