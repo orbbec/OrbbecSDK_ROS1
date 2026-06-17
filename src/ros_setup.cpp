@@ -2157,6 +2157,19 @@ void OBCameraNode::setupDevices() {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
     }
+    if (sync_io_voltage_level_ != -1 &&
+        device_->isPropertySupported(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT,
+                                     OB_PERMISSION_READ_WRITE)) {
+      auto range = device_->getIntPropertyRange(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT);
+      if (sync_io_voltage_level_ < range.min || sync_io_voltage_level_ > range.max) {
+        ROS_ERROR_STREAM("sync IO voltage level is out of range " << range.min << " - "
+                                                                  << range.max);
+      } else {
+        device_->setIntProperty(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT, sync_io_voltage_level_);
+        ROS_INFO_STREAM("Current sync IO voltage level: "
+                        << device_->getIntProperty(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT));
+      }
+    }
     if (noise_removal_filter_min_diff_ != -1 && enable_noise_removal_filter_ &&
         sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {

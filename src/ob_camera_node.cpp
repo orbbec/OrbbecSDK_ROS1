@@ -534,6 +534,7 @@ void OBCameraNode::getParameters() {
   disparity_offset_config_ = nh_private_.param<bool>("disparity_offset_config", false);
   offset_index0_ = nh_private_.param<int>("offset_index0", -1);
   offset_index1_ = nh_private_.param<int>("offset_index1", -1);
+  sync_io_voltage_level_ = nh_private_.param<int>("sync_io_voltage_level", -1);
   frame_aggregate_mode_ = nh_private_.param<std::string>("frame_aggregate_mode", "ANY");
   frame_aggregate_mode_ =
       normalizeClosedSetParameterValue("frame_aggregate_mode", frame_aggregate_mode_,

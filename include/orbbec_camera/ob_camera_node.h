@@ -471,6 +471,8 @@ class OBCameraNode {
 
   bool setDisparitySearchOffsetCallback(SetInt32Request &request, SetInt32Response &response);
 
+  bool setSyncIoVoltageLevelCallback(SetInt32Request &request, SetInt32Response &response);
+
   void setAEReferenceStreamCallback(const SetStringRequest &request, SetStringResponse &response);
 
   void setAEStrategyCallback(const SetStringRequest &request, SetStringResponse &response);
@@ -592,6 +594,7 @@ class OBCameraNode {
   ros::ServiceServer get_point_cloud_decimation_srv_;
   ros::ServiceServer set_disparity_range_mode_srv_;
   ros::ServiceServer set_disparity_search_offset_srv_;
+  ros::ServiceServer set_sync_io_voltage_level_srv_;
   ros::ServiceServer set_ae_reference_stream_srv_;
   ros::ServiceServer set_ae_strategy_srv_;
 
@@ -838,6 +841,7 @@ class OBCameraNode {
   bool disparity_offset_config_ = false;
   int offset_index0_ = -1;
   int offset_index1_ = -1;
+  int sync_io_voltage_level_ = -1;
 
   // interleave AE
   std::string interleave_ae_mode_;  // hdr or laser
