@@ -949,7 +949,14 @@ bool OBCameraNode::getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
-    response.data = device_->getBoolProperty(OB_PROP_LDP_STATUS_BOOL);
+    if (!device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ) ||
+        !device_->isPropertySupported(OB_PROP_LDP_STATUS_BOOL, OB_PERMISSION_READ)) {
+      response.message = "LDP property is not supported";
+      response.success = false;
+      return false;
+    }
+    response.data = device_->getBoolProperty(OB_PROP_LDP_BOOL) &&
+                    device_->getBoolProperty(OB_PROP_LDP_STATUS_BOOL);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to get LDP status: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -1295,8 +1302,7 @@ bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to switch IR data source channel: "
-       << orbbec_camera::formatObErrorWithStatus(e);
+    ss << "Failed to switch IR data source channel: " << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM(
         "Failed to switch IR data source channel: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
