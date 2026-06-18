@@ -53,6 +53,38 @@ bool setDisparityServiceFailure(SetInt32Response& response, const std::string& m
   return true;
 }
 
+std::string alignTargetStreamToString(OBStreamType stream_type) {
+  switch (stream_type) {
+    case OB_STREAM_COLOR:
+      return "COLOR";
+    case OB_STREAM_DEPTH:
+      return "DEPTH";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string colorPresetToString(int value) {
+  switch (value) {
+    case 0:
+      return "Default";
+    case 1:
+      return "Warm Biased AWB";
+    default:
+      return "";
+  }
+}
+
+std::string disparityToDepthModeToString(bool hardware_enabled, bool software_enabled) {
+  if (hardware_enabled) {
+    return "HW";
+  }
+  if (software_enabled) {
+    return "SW";
+  }
+  return "disable";
+}
+
 }  // namespace
 
 void OBCameraNode::setupCameraCtrlServices() {
@@ -236,6 +268,12 @@ void OBCameraNode::setupCameraCtrlServices() {
       "/" + camera_name_ + "/" + "get_device_info",
       [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
         response.success = this->getDeviceInfoCallback(request, response);
+        return response.success;
+      });
+  get_device_config_srv_ = nh_.advertiseService<GetDeviceConfigRequest, GetDeviceConfigResponse>(
+      "/" + camera_name_ + "/" + "get_device_config",
+      [this](GetDeviceConfigRequest& request, GetDeviceConfigResponse& response) {
+        response.success = this->getDeviceConfigCallback(request, response);
         return response.success;
       });
   get_serial_number_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
@@ -1007,6 +1045,181 @@ bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
   response.info.firmware_version = device_info->firmwareVersion();
   response.info.supported_min_sdk_version = device_info->supportedMinSdkVersion();
   response.success = true;
+  return true;
+}
+
+bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
+                                           GetDeviceConfigResponse& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  response.schema_version = "1";
+  response.color_preset = color_preset_;
+  response.align_mode = align_mode_;
+  response.align_target_stream = alignTargetStreamToString(align_target_stream_);
+  response.time_domain = time_domain_;
+  response.frame_aggregate_mode = frame_aggregate_mode_;
+  response.disparity_to_depth_mode = disparity_to_depth_mode_;
+  response.sync_mode = OBSyncModeToString(sync_mode_);
+  response.depth_precision = depth_precision_str_;
+  response.enable_frame_sync = enable_frame_sync_;
+  response.depth_registration = depth_registration_;
+  response.exposure_range_mode = exposure_range_mode_;
+  response.intra_camera_sync_reference = intra_camera_sync_reference_;
+  response.data_json = "";
+
+  auto can_read = [this](OBPropertyID property_id) {
+    return device_->isPropertySupported(property_id, OB_PERMISSION_READ) ||
+           device_->isPropertySupported(property_id, OB_PERMISSION_READ_WRITE);
+  };
+
+  try {
+    if (can_read(OB_PROP_DISPARITY_TO_DEPTH_BOOL) &&
+        can_read(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL)) {
+      response.disparity_to_depth_mode = disparityToDepthModeToString(
+          device_->getBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL),
+          device_->getBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get disparity to depth mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get disparity to depth mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get disparity to depth mode");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL)) {
+      const bool hardware_align_enabled =
+          device_->getBoolProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL);
+      if (hardware_align_enabled) {
+        response.align_mode = "HW";
+        response.align_target_stream = "COLOR";
+        response.depth_registration = true;
+      } else if (align_mode_ == "HW") {
+        response.depth_registration = false;
+      }
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status: "
+                     << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status");
+  }
+
+  try {
+    response.sync_mode = OBSyncModeToString(device_->getMultiDeviceSyncConfig().syncMode);
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get multi-device sync mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get multi-device sync mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get multi-device sync mode");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEPTH_PRECISION_LEVEL_INT)) {
+      response.depth_precision =
+          depthPrecisionLevelToString(device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT));
+    } else if (can_read(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT)) {
+      response.depth_precision =
+          std::to_string(device_->getFloatProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT)) +
+          "mm";
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get depth precision: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get depth precision: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get depth precision");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEVICE_PERFORMANCE_MODE_INT)) {
+      response.exposure_range_mode =
+          exposureRangeModeToString(device_->getIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get exposure range mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get exposure range mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get exposure range mode");
+  }
+
+  try {
+    if (can_read(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT)) {
+      response.intra_camera_sync_reference = intraCameraSyncReferenceToString(
+          device_->getIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get intra-camera sync reference: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get intra-camera sync reference: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get intra-camera sync reference");
+  }
+
+  try {
+    response.device_preset = device_->getCurrentPresetName();
+    if (response.device_preset == "Custom") {
+      try {
+        const char* current_depth_mode_name = device_->getCurrentDepthModeName();
+        if (current_depth_mode_name != nullptr) {
+          std::string current_depth_mode(current_depth_mode_name);
+          if (!current_depth_mode.empty()) {
+            response.device_preset = "Custom(from " + current_depth_mode + ")";
+          }
+        }
+      } catch (const ob::Error& e) {
+        ROS_DEBUG_STREAM(
+            "Failed to get current depth mode name: " << orbbec_camera::formatObErrorWithStatus(e));
+      } catch (const std::exception& e) {
+        ROS_DEBUG_STREAM("Failed to get current depth mode name: " << e.what());
+      } catch (...) {
+        ROS_DEBUG_STREAM("Failed to get current depth mode name");
+      }
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get current preset: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get current preset: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get current preset");
+  }
+
+  try {
+    const auto color_preset = device_->getIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT);
+    const auto color_preset_name = colorPresetToString(color_preset);
+    if (!color_preset_name.empty()) {
+      response.color_preset = color_preset_name;
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get color preset: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get color preset: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get color preset");
+  }
+
+  try {
+    response.preset_version = device_->getExtensionInfo("PresetVer");
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get preset version: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get preset version: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get preset version");
+  }
+
+  response.success = true;
+  response.message = "OK";
   return true;
 }
 
