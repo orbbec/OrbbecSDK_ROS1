@@ -18,6 +18,7 @@
 #include "ob_camera_node.h"
 #include "ob_lidar_node.h"
 #include "libobsensor/hpp/RecordPlayback.hpp"
+#include "orbbec_camera/SetBagRecording.h"
 #include <thread>
 #include <mutex>
 #include <semaphore.h>
@@ -39,6 +40,8 @@ class OBCameraNodeDriver {
   std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
 
   bool rebootDeviceServiceCallback(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res);
+  bool setBagRecordingCallback(orbbec_camera::SetBagRecordingRequest& request,
+                               orbbec_camera::SetBagRecordingResponse& response);
 
   std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
       const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number);
@@ -116,6 +119,7 @@ class OBCameraNodeDriver {
   std::string ip_address_;
   int port_ = 0;
   ros::ServiceServer reboot_service_srv_;
+  ros::ServiceServer set_bag_recording_srv_;
   static backward::SignalHandling sh;
   bool enable_hardware_reset_ = false;
   bool hardware_reset_done_ = false;
