@@ -1070,7 +1070,6 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   response.schema_version = "1";
-  response.depth_work_mode = depth_work_mode_;
   response.color_preset = color_preset_;
   response.align_mode = align_mode_;
   response.align_target_stream = alignTargetStreamToString(align_target_stream_);
@@ -1234,8 +1233,23 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
 
   try {
     response.device_preset = device_->getCurrentPresetName();
-    if (response.device_preset == "Custom" && !device_preset_.empty()) {
-      response.device_preset = "Custom(from " + device_preset_ + ")";
+    if (response.device_preset == "Custom") {
+      try {
+        const char* current_depth_mode_name = device_->getCurrentDepthModeName();
+        if (current_depth_mode_name != nullptr) {
+          std::string current_depth_mode(current_depth_mode_name);
+          if (!current_depth_mode.empty()) {
+            response.device_preset = "Custom(from " + current_depth_mode + ")";
+          }
+        }
+      } catch (const ob::Error& e) {
+        ROS_DEBUG_STREAM(
+            "Failed to get current depth mode name: " << orbbec_camera::formatObErrorWithStatus(e));
+      } catch (const std::exception& e) {
+        ROS_DEBUG_STREAM("Failed to get current depth mode name: " << e.what());
+      } catch (...) {
+        ROS_DEBUG_STREAM("Failed to get current depth mode name");
+      }
     }
   } catch (const ob::Error& e) {
     ROS_DEBUG_STREAM("Failed to get current preset: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -1243,17 +1257,6 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
     ROS_DEBUG_STREAM("Failed to get current preset: " << e.what());
   } catch (...) {
     ROS_DEBUG_STREAM("Failed to get current preset");
-  }
-
-  try {
-    response.depth_work_mode = device_->getCurrentDepthWorkMode().name;
-  } catch (const ob::Error& e) {
-    ROS_DEBUG_STREAM(
-        "Failed to get current depth work mode: " << orbbec_camera::formatObErrorWithStatus(e));
-  } catch (const std::exception& e) {
-    ROS_DEBUG_STREAM("Failed to get current depth work mode: " << e.what());
-  } catch (...) {
-    ROS_DEBUG_STREAM("Failed to get current depth work mode");
   }
 
   try {

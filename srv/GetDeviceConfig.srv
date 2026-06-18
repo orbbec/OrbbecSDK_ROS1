@@ -5,7 +5,6 @@ string schema_version
 # Effective device configuration state that is not provided by existing device/version services.
 string device_preset
 string preset_version
-string depth_work_mode
 string color_preset
 string align_mode
 string align_target_stream
