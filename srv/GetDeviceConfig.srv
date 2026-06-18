@@ -6,16 +6,18 @@ string schema_version
 string device_preset
 string preset_version
 string color_preset
+string depth_precision
+string disparity_to_depth_mode
+string exposure_range_mode
+
+bool depth_registration
 string align_mode
 string align_target_stream
-string time_domain
 string frame_aggregate_mode
-string disparity_to_depth_mode
-string sync_mode
-string depth_precision
 bool enable_frame_sync
-bool depth_registration
-string exposure_range_mode
+
+string time_domain
+string sync_mode
 string intra_camera_sync_reference
 
 # Reserved for future non-breaking, device-specific extensions.
