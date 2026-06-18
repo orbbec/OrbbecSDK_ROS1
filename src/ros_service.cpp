@@ -75,6 +75,33 @@ std::string colorPresetToString(int value) {
   }
 }
 
+std::string frameInterleaveModeToString(const char* frame_interleave_name) {
+  if (frame_interleave_name == nullptr) {
+    return "";
+  }
+
+  std::string mode(frame_interleave_name);
+  std::string lower_mode = mode;
+  std::transform(lower_mode.begin(), lower_mode.end(), lower_mode.begin(), ::tolower);
+  if (lower_mode.find("laser") != std::string::npos) {
+    return "laser";
+  }
+  if (lower_mode.find("hdr") != std::string::npos) {
+    return "hdr";
+  }
+  return "";
+}
+
+std::string disparityToDepthModeToString(bool hardware_enabled, bool software_enabled) {
+  if (hardware_enabled) {
+    return "HW";
+  }
+  if (software_enabled) {
+    return "SW";
+  }
+  return "disable";
+}
+
 }  // namespace
 
 void OBCameraNode::setupCameraCtrlServices() {
@@ -1050,24 +1077,165 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
   response.time_domain = time_domain_;
   response.frame_aggregate_mode = frame_aggregate_mode_;
   response.disparity_to_depth_mode = disparity_to_depth_mode_;
+  response.sync_mode = OBSyncModeToString(sync_mode_);
+  response.depth_precision = depth_precision_str_;
+  response.enable_frame_sync = enable_frame_sync_;
+  response.depth_registration = depth_registration_;
+  response.exposure_range_mode = exposure_range_mode_;
+  response.intra_camera_sync_reference = intra_camera_sync_reference_;
   nlohmann::json data;
-  data["sync_mode"] = OBSyncModeToString(sync_mode_);
-  data["depth_precision"] = depth_precision_str_;
-  data["enable_frame_sync"] = enable_frame_sync_;
-  data["depth_registration"] = depth_registration_;
-  data["exposure_range_mode"] = exposure_range_mode_;
   data["preset_resolution_config"] = preset_resolution_config_;
   data["interleave"]["enable"] = interleave_frame_enable_;
   data["interleave"]["ae_mode"] = interleave_ae_mode_;
-  data["interleave"]["skip_enable"] = interleave_skip_enable_;
   data["interleave"]["skip_index"] = interleave_skip_index_;
-  data["intra_camera_sync_reference"] = intra_camera_sync_reference_;
+
+  auto can_read = [this](OBPropertyID property_id) {
+    return device_->isPropertySupported(property_id, OB_PERMISSION_READ) ||
+           device_->isPropertySupported(property_id, OB_PERMISSION_READ_WRITE);
+  };
+
+  try {
+    if (can_read(OB_PROP_DISPARITY_TO_DEPTH_BOOL) &&
+        can_read(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL)) {
+      response.disparity_to_depth_mode = disparityToDepthModeToString(
+          device_->getBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL),
+          device_->getBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get disparity to depth mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get disparity to depth mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get disparity to depth mode");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL)) {
+      const bool hardware_align_enabled =
+          device_->getBoolProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL);
+      if (hardware_align_enabled) {
+        response.align_mode = "HW";
+        response.align_target_stream = "COLOR";
+        response.depth_registration = true;
+      } else if (align_mode_ == "HW") {
+        response.depth_registration = false;
+      }
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status: "
+                     << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status");
+  }
+
+  try {
+    response.sync_mode = OBSyncModeToString(device_->getMultiDeviceSyncConfig().syncMode);
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get multi-device sync mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get multi-device sync mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get multi-device sync mode");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEPTH_PRECISION_LEVEL_INT)) {
+      response.depth_precision =
+          depthPrecisionLevelToString(device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT));
+    } else if (can_read(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT)) {
+      response.depth_precision =
+          std::to_string(device_->getFloatProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT)) +
+          "mm";
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get depth precision: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get depth precision: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get depth precision");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEVICE_PERFORMANCE_MODE_INT)) {
+      response.exposure_range_mode =
+          exposureRangeModeToString(device_->getIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get exposure range mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get exposure range mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get exposure range mode");
+  }
+
+  try {
+    if (can_read(OB_STRUCT_PRESET_RESOLUTION_CONFIG)) {
+      OBPresetResolutionConfig config;
+      uint32_t data_size = sizeof(config);
+      device_->getStructuredData(OB_STRUCT_PRESET_RESOLUTION_CONFIG,
+                                 reinterpret_cast<uint8_t*>(&config), &data_size);
+      data["preset_resolution_config"] = std::to_string(config.width) + "," +
+                                         std::to_string(config.height) + "," +
+                                         std::to_string(config.irDecimationFactor) + "," +
+                                         std::to_string(config.depthDecimationFactor);
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get preset resolution config: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get preset resolution config: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get preset resolution config");
+  }
+
+  try {
+    if (can_read(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL)) {
+      data["interleave"]["enable"] = device_->getBoolProperty(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL);
+    }
+    if (can_read(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT)) {
+      data["interleave"]["skip_index"] =
+          device_->getIntProperty(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT);
+    }
+    const auto interleave_mode =
+        frameInterleaveModeToString(device_->getCurrentFrameInterleaveName());
+    if (!interleave_mode.empty()) {
+      data["interleave"]["ae_mode"] = interleave_mode;
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get frame interleave config: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get frame interleave config: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get frame interleave config");
+  }
+
+  try {
+    if (can_read(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT)) {
+      response.intra_camera_sync_reference = intraCameraSyncReferenceToString(
+          device_->getIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get intra-camera sync reference: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get intra-camera sync reference: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get intra-camera sync reference");
+  }
+
   response.data_json = data.dump();
 
   try {
-    response.current_preset = device_->getCurrentPresetName();
-    if (response.current_preset == "Custom" && !device_preset_.empty()) {
-      response.current_preset = "Custom(from " + device_preset_ + ")";
+    response.device_preset = device_->getCurrentPresetName();
+    if (response.device_preset == "Custom" && !device_preset_.empty()) {
+      response.device_preset = "Custom(from " + device_preset_ + ")";
     }
   } catch (const ob::Error& e) {
     ROS_DEBUG_STREAM("Failed to get current preset: " << orbbec_camera::formatObErrorWithStatus(e));
