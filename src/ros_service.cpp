@@ -1050,7 +1050,19 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
   response.time_domain = time_domain_;
   response.frame_aggregate_mode = frame_aggregate_mode_;
   response.disparity_to_depth_mode = disparity_to_depth_mode_;
-  response.data_json = nlohmann::json::object().dump();
+  nlohmann::json data;
+  data["sync_mode"] = OBSyncModeToString(sync_mode_);
+  data["depth_precision"] = depth_precision_str_;
+  data["enable_frame_sync"] = enable_frame_sync_;
+  data["depth_registration"] = depth_registration_;
+  data["exposure_range_mode"] = exposure_range_mode_;
+  data["preset_resolution_config"] = preset_resolution_config_;
+  data["interleave"]["enable"] = interleave_frame_enable_;
+  data["interleave"]["ae_mode"] = interleave_ae_mode_;
+  data["interleave"]["skip_enable"] = interleave_skip_enable_;
+  data["interleave"]["skip_index"] = interleave_skip_index_;
+  data["intra_camera_sync_reference"] = intra_camera_sync_reference_;
+  response.data_json = data.dump();
 
   try {
     response.current_preset = device_->getCurrentPresetName();
