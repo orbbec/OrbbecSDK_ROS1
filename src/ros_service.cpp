@@ -75,23 +75,6 @@ std::string colorPresetToString(int value) {
   }
 }
 
-std::string frameInterleaveModeToString(const char* frame_interleave_name) {
-  if (frame_interleave_name == nullptr) {
-    return "";
-  }
-
-  std::string mode(frame_interleave_name);
-  std::string lower_mode = mode;
-  std::transform(lower_mode.begin(), lower_mode.end(), lower_mode.begin(), ::tolower);
-  if (lower_mode.find("laser") != std::string::npos) {
-    return "laser";
-  }
-  if (lower_mode.find("hdr") != std::string::npos) {
-    return "hdr";
-  }
-  return "";
-}
-
 std::string disparityToDepthModeToString(bool hardware_enabled, bool software_enabled) {
   if (hardware_enabled) {
     return "HW";
@@ -1082,11 +1065,7 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
   response.depth_registration = depth_registration_;
   response.exposure_range_mode = exposure_range_mode_;
   response.intra_camera_sync_reference = intra_camera_sync_reference_;
-  nlohmann::json data;
-  data["preset_resolution_config"] = preset_resolution_config_;
-  data["interleave"]["enable"] = interleave_frame_enable_;
-  data["interleave"]["ae_mode"] = interleave_ae_mode_;
-  data["interleave"]["skip_index"] = interleave_skip_index_;
+  response.data_json = "";
 
   auto can_read = [this](OBPropertyID property_id) {
     return device_->isPropertySupported(property_id, OB_PERMISSION_READ) ||
@@ -1174,48 +1153,6 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
   }
 
   try {
-    if (can_read(OB_STRUCT_PRESET_RESOLUTION_CONFIG)) {
-      OBPresetResolutionConfig config;
-      uint32_t data_size = sizeof(config);
-      device_->getStructuredData(OB_STRUCT_PRESET_RESOLUTION_CONFIG,
-                                 reinterpret_cast<uint8_t*>(&config), &data_size);
-      data["preset_resolution_config"] = std::to_string(config.width) + "," +
-                                         std::to_string(config.height) + "," +
-                                         std::to_string(config.irDecimationFactor) + "," +
-                                         std::to_string(config.depthDecimationFactor);
-    }
-  } catch (const ob::Error& e) {
-    ROS_DEBUG_STREAM(
-        "Failed to get preset resolution config: " << orbbec_camera::formatObErrorWithStatus(e));
-  } catch (const std::exception& e) {
-    ROS_DEBUG_STREAM("Failed to get preset resolution config: " << e.what());
-  } catch (...) {
-    ROS_DEBUG_STREAM("Failed to get preset resolution config");
-  }
-
-  try {
-    if (can_read(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL)) {
-      data["interleave"]["enable"] = device_->getBoolProperty(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL);
-    }
-    if (can_read(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT)) {
-      data["interleave"]["skip_index"] =
-          device_->getIntProperty(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT);
-    }
-    const auto interleave_mode =
-        frameInterleaveModeToString(device_->getCurrentFrameInterleaveName());
-    if (!interleave_mode.empty()) {
-      data["interleave"]["ae_mode"] = interleave_mode;
-    }
-  } catch (const ob::Error& e) {
-    ROS_DEBUG_STREAM(
-        "Failed to get frame interleave config: " << orbbec_camera::formatObErrorWithStatus(e));
-  } catch (const std::exception& e) {
-    ROS_DEBUG_STREAM("Failed to get frame interleave config: " << e.what());
-  } catch (...) {
-    ROS_DEBUG_STREAM("Failed to get frame interleave config");
-  }
-
-  try {
     if (can_read(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT)) {
       response.intra_camera_sync_reference = intraCameraSyncReferenceToString(
           device_->getIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT));
@@ -1228,8 +1165,6 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
   } catch (...) {
     ROS_DEBUG_STREAM("Failed to get intra-camera sync reference");
   }
-
-  response.data_json = data.dump();
 
   try {
     response.device_preset = device_->getCurrentPresetName();
