@@ -28,6 +28,7 @@
 #include "orbbec_camera/DepthFiltersStatus.h"
 #include "orbbec_camera/Extrinsics.h"
 #include "orbbec_camera/Metadata.h"
+#include "orbbec_camera/GetDeviceConfig.h"
 #include "orbbec_camera/GetDeviceInfo.h"
 #include "orbbec_camera/GetBool.h"
 #include "orbbec_camera/GetInt32.h"

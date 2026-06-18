@@ -53,6 +53,28 @@ bool setDisparityServiceFailure(SetInt32Response& response, const std::string& m
   return true;
 }
 
+std::string alignTargetStreamToString(OBStreamType stream_type) {
+  switch (stream_type) {
+    case OB_STREAM_COLOR:
+      return "COLOR";
+    case OB_STREAM_DEPTH:
+      return "DEPTH";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string colorPresetToString(int value) {
+  switch (value) {
+    case 0:
+      return "Default";
+    case 1:
+      return "Warm Biased AWB";
+    default:
+      return "";
+  }
+}
+
 }  // namespace
 
 void OBCameraNode::setupCameraCtrlServices() {
@@ -236,6 +258,12 @@ void OBCameraNode::setupCameraCtrlServices() {
       "/" + camera_name_ + "/" + "get_device_info",
       [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
         response.success = this->getDeviceInfoCallback(request, response);
+        return response.success;
+      });
+  get_device_config_srv_ = nh_.advertiseService<GetDeviceConfigRequest, GetDeviceConfigResponse>(
+      "/" + camera_name_ + "/" + "get_device_config",
+      [this](GetDeviceConfigRequest& request, GetDeviceConfigResponse& response) {
+        response.success = this->getDeviceConfigCallback(request, response);
         return response.success;
       });
   get_serial_number_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
@@ -1007,6 +1035,73 @@ bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
   response.info.firmware_version = device_info->firmwareVersion();
   response.info.supported_min_sdk_version = device_info->supportedMinSdkVersion();
   response.success = true;
+  return true;
+}
+
+bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
+                                           GetDeviceConfigResponse& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  response.schema_version = "1";
+  response.depth_work_mode = depth_work_mode_;
+  response.color_preset = color_preset_;
+  response.align_mode = align_mode_;
+  response.align_target_stream = alignTargetStreamToString(align_target_stream_);
+  response.time_domain = time_domain_;
+  response.frame_aggregate_mode = frame_aggregate_mode_;
+  response.disparity_to_depth_mode = disparity_to_depth_mode_;
+  response.data_json = nlohmann::json::object().dump();
+
+  try {
+    response.current_preset = device_->getCurrentPresetName();
+    if (response.current_preset == "Custom" && !device_preset_.empty()) {
+      response.current_preset = "Custom(from " + device_preset_ + ")";
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get current preset: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get current preset: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get current preset");
+  }
+
+  try {
+    response.depth_work_mode = device_->getCurrentDepthWorkMode().name;
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get current depth work mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get current depth work mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get current depth work mode");
+  }
+
+  try {
+    const auto color_preset = device_->getIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT);
+    const auto color_preset_name = colorPresetToString(color_preset);
+    if (!color_preset_name.empty()) {
+      response.color_preset = color_preset_name;
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get color preset: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get color preset: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get color preset");
+  }
+
+  try {
+    response.preset_version = device_->getExtensionInfo("PresetVer");
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get preset version: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get preset version: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get preset version");
+  }
+
+  response.success = true;
+  response.message = "OK";
   return true;
 }
 

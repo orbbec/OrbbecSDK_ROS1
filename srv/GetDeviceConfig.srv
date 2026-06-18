@@ -1,0 +1,20 @@
+---
+# Schema version for this service response. Increment only when field semantics change.
+string schema_version
+
+# Effective device configuration state that is not provided by existing device/version services.
+string current_preset
+string preset_version
+string depth_work_mode
+string color_preset
+string align_mode
+string align_target_stream
+string time_domain
+string frame_aggregate_mode
+string disparity_to_depth_mode
+
+# Reserved for future non-breaking, device-specific extensions.
+string data_json
+
+bool success
+string message

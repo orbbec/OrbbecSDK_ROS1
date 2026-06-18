@@ -77,6 +77,7 @@ set(SERVICE_FILES
   SetBool.srv
   GetCameraInfo.srv
   GetCameraParams.srv
+  GetDeviceConfig.srv
   GetDeviceInfo.srv
   GetInt32.srv
   SetFilter.srv
