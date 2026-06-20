@@ -41,7 +41,8 @@ int main() {
   } catch (const std::exception &e) {
     ROS_ERROR_STREAM("list_depth_work_mode: " << e.what());
   } catch (...) {
-    ROS_ERROR_STREAM("list_depth_work_mode: " << "unknown error");
+    ROS_ERROR_STREAM("list_depth_work_mode: "
+                     << "unknown error");
   }
   return 0;
 }

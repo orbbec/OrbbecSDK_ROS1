@@ -61,9 +61,8 @@ class ImageSyncNode {
     }
 
     if (sync_topics_.size() == 1) {
-      single_sub_ =
-          nh_.subscribe<Image>(sync_topics_.front(), queue_size_, &ImageSyncNode::single_callback,
-                               this);
+      single_sub_ = nh_.subscribe<Image>(sync_topics_.front(), queue_size_,
+                                         &ImageSyncNode::single_callback, this);
     } else {
       for (size_t i = 0; i < sync_topics_.size(); ++i) {
         subscribers_[i].subscribe(nh_, sync_topics_[i], queue_size_);
@@ -302,16 +301,16 @@ class ImageSyncNode {
     using Policy = message_filters::sync_policies::ApproximateTime<Image, Image>;
     using Sync = message_filters::Synchronizer<Policy>;
     auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1]);
-    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr>,
-                                       this, _1, _2));
+    sync->registerCallback(
+        boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr>, this, _1, _2));
     configure_synchronizer(sync);
   }
 
   void create_synchronizer_3() {
     using Policy = message_filters::sync_policies::ApproximateTime<Image, Image, Image>;
     using Sync = message_filters::Synchronizer<Policy>;
-    auto sync =
-        std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1], subscribers_[2]);
+    auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
+                                       subscribers_[2]);
     sync->registerCallback(
         boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr, ImageConstPtr>,
                     this, _1, _2, _3));
@@ -323,9 +322,9 @@ class ImageSyncNode {
     using Sync = message_filters::Synchronizer<Policy>;
     auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
                                        subscribers_[2], subscribers_[3]);
-    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr>,
-                                       this, _1, _2, _3, _4));
+    sync->registerCallback(boost::bind(
+        &ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr, ImageConstPtr, ImageConstPtr>,
+        this, _1, _2, _3, _4));
     configure_synchronizer(sync);
   }
 
@@ -335,10 +334,10 @@ class ImageSyncNode {
     using Sync = message_filters::Synchronizer<Policy>;
     auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
                                        subscribers_[2], subscribers_[3], subscribers_[4]);
-    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr>,
-                                       this, _1, _2, _3, _4, _5));
+    sync->registerCallback(
+        boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr, ImageConstPtr,
+                                                  ImageConstPtr, ImageConstPtr>,
+                    this, _1, _2, _3, _4, _5));
     configure_synchronizer(sync);
   }
 
@@ -346,13 +345,13 @@ class ImageSyncNode {
     using Policy =
         message_filters::sync_policies::ApproximateTime<Image, Image, Image, Image, Image, Image>;
     using Sync = message_filters::Synchronizer<Policy>;
-    auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
-                                       subscribers_[2], subscribers_[3], subscribers_[4],
-                                       subscribers_[5]);
-    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr>,
-                                       this, _1, _2, _3, _4, _5, _6));
+    auto sync =
+        std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
+                               subscribers_[2], subscribers_[3], subscribers_[4], subscribers_[5]);
+    sync->registerCallback(
+        boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr, ImageConstPtr,
+                                                  ImageConstPtr, ImageConstPtr, ImageConstPtr>,
+                    this, _1, _2, _3, _4, _5, _6));
     configure_synchronizer(sync);
   }
 
@@ -363,11 +362,10 @@ class ImageSyncNode {
     auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
                                        subscribers_[2], subscribers_[3], subscribers_[4],
                                        subscribers_[5], subscribers_[6]);
-    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr>,
-                                       this, _1, _2, _3, _4, _5, _6, _7));
+    sync->registerCallback(boost::bind(
+        &ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr, ImageConstPtr, ImageConstPtr,
+                                      ImageConstPtr, ImageConstPtr, ImageConstPtr>,
+        this, _1, _2, _3, _4, _5, _6, _7));
     configure_synchronizer(sync);
   }
 
@@ -378,11 +376,10 @@ class ImageSyncNode {
     auto sync = std::make_shared<Sync>(Policy(queue_size_), subscribers_[0], subscribers_[1],
                                        subscribers_[2], subscribers_[3], subscribers_[4],
                                        subscribers_[5], subscribers_[6], subscribers_[7]);
-    sync->registerCallback(boost::bind(&ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr,
-                                                                      ImageConstPtr, ImageConstPtr>,
-                                       this, _1, _2, _3, _4, _5, _6, _7, _8));
+    sync->registerCallback(boost::bind(
+        &ImageSyncNode::sync_callback<ImageConstPtr, ImageConstPtr, ImageConstPtr, ImageConstPtr,
+                                      ImageConstPtr, ImageConstPtr, ImageConstPtr, ImageConstPtr>,
+        this, _1, _2, _3, _4, _5, _6, _7, _8));
     configure_synchronizer(sync);
   }
 
@@ -463,8 +460,8 @@ class ImageSyncNode {
         if (i >= display_images.size()) {
           break;
         }
-        display_images[i].copyTo(canvas(cv::Rect(x_offset, y_offset, display_images[i].cols,
-                                                 display_images[i].rows)));
+        display_images[i].copyTo(
+            canvas(cv::Rect(x_offset, y_offset, display_images[i].cols, display_images[i].rows)));
         x_offset += column_widths[col] + margin;
       }
       y_offset += row_heights[row] + margin;
@@ -497,10 +494,9 @@ class ImageSyncNode {
     const double base_t = timestamps[0];
     for (size_t i = 0; i < timestamps.size(); ++i) {
       std::cout << topic_infos_[i].camera_name << " " << topic_infos_[i].image_type
-                << " stamp: " << std::setprecision(6) << timestamps[i]
-                << "  Delay relative to " << topic_infos_[0].camera_name << " "
-                << topic_infos_[0].image_type << ": " << std::setprecision(3)
-                << (timestamps[i] - base_t) * 1000.0 << " ms" << std::endl;
+                << " stamp: " << std::setprecision(6) << timestamps[i] << "  Delay relative to "
+                << topic_infos_[0].camera_name << " " << topic_infos_[0].image_type << ": "
+                << std::setprecision(3) << (timestamps[i] - base_t) * 1000.0 << " ms" << std::endl;
     }
 
     double cur = 0.0;

@@ -1513,8 +1513,8 @@ void OBCameraNode::setupUndistortionFilters() {
   auto remove_undistortion_filter = [](std::vector<std::shared_ptr<ob::Filter>>& filters) {
     filters.erase(std::remove_if(filters.begin(), filters.end(),
                                  [](const std::shared_ptr<ob::Filter>& filter) {
-                                   return filter && std::string(filter->type()) ==
-                                                        "UnDistortionFilter";
+                                   return filter &&
+                                          std::string(filter->type()) == "UnDistortionFilter";
                                  }),
                   filters.end());
   };
@@ -1547,8 +1547,7 @@ void OBCameraNode::setupUndistortionFilters() {
     }
     if (stream_index == COLOR && shouldUseHwD2CColorUndistortion()) {
       remove_undistortion_filter(filters);
-      hw_d2c_color_undistortion_filter_ =
-          std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
+      hw_d2c_color_undistortion_filter_ = std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
       hw_d2c_color_undistortion_filter_->enable(true);
       ROS_INFO_STREAM("Enable color undistortion with HW D2C depth intrinsic projection");
       return;
@@ -1570,9 +1569,9 @@ void OBCameraNode::setupUndistortionFilters() {
 bool OBCameraNode::shouldUseHwD2CColorUndistortion() const {
   auto color_undistortion = enable_undistortion_.find(COLOR);
   return color_undistortion != enable_undistortion_.end() && color_undistortion->second &&
-         isDabaiASeriesForHwD2C(device_info_->pid()) && depth_registration_ && align_mode_ == "HW" &&
-         align_target_stream_ == OB_STREAM_COLOR && enable_stream_.at(COLOR) &&
-         enable_stream_.at(DEPTH);
+         isDabaiASeriesForHwD2C(device_info_->pid()) && depth_registration_ &&
+         align_mode_ == "HW" && align_target_stream_ == OB_STREAM_COLOR &&
+         enable_stream_.at(COLOR) && enable_stream_.at(DEPTH);
 }
 
 bool OBCameraNode::isHwD2CProfileSupported() const {
@@ -1636,8 +1635,7 @@ std::string OBCameraNode::getEffectiveOpticalFrameId(const stream_index_pair& st
   return optical_frame_id_.at(stream_index);
 }
 
-void OBCameraNode::configureHwD2CColorUndistortion(
-    const std::shared_ptr<ob::Frame>& depth_frame) {
+void OBCameraNode::configureHwD2CColorUndistortion(const std::shared_ptr<ob::Frame>& depth_frame) {
   if (!hw_d2c_color_undistortion_filter_ || hw_d2c_color_undistortion_configured_) {
     return;
   }

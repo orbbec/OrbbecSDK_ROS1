@@ -103,8 +103,7 @@ OBLogSeverity obLogSeverityFromString(const std::string_view &log_level);
 
 std::string getObSdkLogDirectory();
 
-std::string configureObSdkLoggerForTool(const std::string &tool_name,
-                                        const std::string &log_level);
+std::string configureObSdkLoggerForTool(const std::string &tool_name, const std::string &log_level);
 
 OBFormat OBFormatFromString(const std::string &format);
 
