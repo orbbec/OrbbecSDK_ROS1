@@ -17,6 +17,8 @@
 #pragma once
 #include "ob_camera_node.h"
 #include "ob_lidar_node.h"
+#include "libobsensor/hpp/RecordPlayback.hpp"
+#include "orbbec_camera/SetBagRecording.h"
 #include <thread>
 #include <mutex>
 #include <semaphore.h>
@@ -38,6 +40,8 @@ class OBCameraNodeDriver {
   std::shared_ptr<ob::Device> selectDevice(const std::shared_ptr<ob::DeviceList>& list);
 
   bool rebootDeviceServiceCallback(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res);
+  bool setBagRecordingCallback(orbbec_camera::SetBagRecordingRequest& request,
+                               orbbec_camera::SetBagRecordingResponse& response);
 
   std::shared_ptr<ob::Device> selectDeviceBySerialNumber(
       const std::shared_ptr<ob::DeviceList>& list, const std::string& serial_number);
@@ -47,6 +51,10 @@ class OBCameraNodeDriver {
                                                   const std::string& net_ip);
 
   void initializeDevice(const std::shared_ptr<ob::Device>& device);
+
+  void initializeBagPlayback();
+
+  void exportBagPresetJson(const std::string& bag_path);
 
   void deviceConnectCallback(const std::shared_ptr<ob::DeviceList>& list);
 
@@ -113,6 +121,7 @@ class OBCameraNodeDriver {
   std::string ip_address_;
   int port_ = 0;
   ros::ServiceServer reboot_service_srv_;
+  ros::ServiceServer set_bag_recording_srv_;
   static backward::SignalHandling sh;
   bool enable_hardware_reset_ = false;
   bool hardware_reset_done_ = false;
@@ -133,6 +142,12 @@ class OBCameraNodeDriver {
   ros::Timer device_status_timer_;
   ros::Publisher device_status_pub_;
   std::string device_type_;
+  std::string bag_record_filename_;
+  bool bag_record_compression_ = true;
+  std::shared_ptr<ob::RecordDevice> record_device_ = nullptr;
+  std::string bag_filename_;
+  bool bag_loop_ = false;
+  std::shared_ptr<ob::PlaybackDevice> playback_device_ = nullptr;
   OBCallbackId device_changed_callback_id_ =
       INVALID_CALLBACK_ID;  // Store callback ID for unregistering
 };

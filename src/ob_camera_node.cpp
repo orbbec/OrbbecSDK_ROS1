@@ -82,7 +82,7 @@ int64_t getSteadyNowUs() {
 }  // namespace
 
 OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
-                           std::shared_ptr<ob::Device> device)
+                           std::shared_ptr<ob::Device> device, bool is_playback_device)
     : nh_(nh),
       nh_private_(nh_private),
       device_(std::move(device)),
@@ -94,7 +94,8 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
       rgb_left_is_decoded_(false),
       rgb_right_is_decoded_(false),
       is_running_(false),
-      is_initialized_(false) {
+      is_initialized_(false),
+      is_playback_device_(is_playback_device) {
   // Initialize global image_transport (persistent across node recreations)
   initializeGlobalImageTransport();
   fps_delay_status_color_ = std::make_unique<FpsDelayStatus>();
@@ -181,7 +182,7 @@ void OBCameraNode::init() {
   }
   rgb_is_decoded_ = false;
   exportConfigJsonIfRequested();
-  if (diagnostics_frequency_ > 0.0) {
+  if (diagnostics_frequency_ > 0.0 && !is_playback_device_) {
     // Ensure we don't create multiple diagnostic threads
     if (diagnostics_thread_ && diagnostics_thread_->joinable()) {
       diagnostics_thread_->join();
@@ -192,6 +193,34 @@ void OBCameraNode::init() {
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
+
+void OBCameraNode::restartPlaybackStreams() {
+  if (!is_playback_device_ || !is_initialized_ || !is_running_.load()) {
+    return;
+  }
+  try {
+    stopStreams();
+    startStreams();
+    if (enable_sync_output_accel_gyro_) {
+      stopIMU();
+      startIMUSyncStream();
+    } else {
+      for (const auto& stream_index : HID_STREAMS) {
+        if (enable_stream_[stream_index]) {
+          stopIMU(stream_index);
+          startIMU(stream_index);
+        }
+      }
+    }
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM(
+        "Failed to restart playback streams: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Failed to restart playback streams: " << e.what());
+  } catch (...) {
+    ROS_WARN_STREAM("Failed to restart playback streams");
+  }
+}
 
 void OBCameraNode::rebootDevice() {
   ROS_INFO("Do cleanup before rebooting device");
@@ -622,7 +651,7 @@ void OBCameraNode::getParameters() {
   if (isOpenNIDevice(pid)) {
     time_domain_ = "system";
   }
-  if (time_domain_ == "global") {
+  if (time_domain_ == "global" && !is_playback_device_) {
     device_->enableGlobalTimestamp(true);
   }
 
@@ -630,7 +659,7 @@ void OBCameraNode::getParameters() {
 
   enable_sync_host_time_ = nh_private_.param<bool>("enable_sync_host_time", true);
   ROS_INFO_STREAM("enable_sync_host_time:" << (enable_sync_host_time_ ? "true" : "false"));
-  if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid())) {
+  if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid()) && !is_playback_device_) {
     device_->timerSyncWithHost();
     if (time_domain_ != "global") {
       device_->enableGlobalTimestamp(false);
@@ -991,6 +1020,7 @@ void OBCameraNode::stopIMU() {
       ROS_ERROR_STREAM(
           "Failed to stop imu pipeline: " << orbbec_camera::formatObErrorWithStatus(e));
     }
+    imu_sync_output_start_ = false;
   } else {
     for (const auto& stream_index : HID_STREAMS) {
       if (imu_started_[stream_index]) {
