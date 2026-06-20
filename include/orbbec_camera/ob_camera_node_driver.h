@@ -54,6 +54,8 @@ class OBCameraNodeDriver {
 
   void initializeBagPlayback();
 
+  void exportBagPresetJson(const std::string& bag_path);
+
   void deviceConnectCallback(const std::shared_ptr<ob::DeviceList>& list);
 
   void connectNetDevice(const std::string& ip_address, int port);

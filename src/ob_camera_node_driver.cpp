@@ -132,8 +132,8 @@ OBCameraNodeDriver::~OBCameraNodeDriver() {
   is_alive_ = false;
 
   if (record_device_) {
-    ROS_INFO_STREAM("Finalizing bag recording...");
     record_device_.reset();
+    ROS_INFO_STREAM("Bag recording stopped");
   }
   // Stop the timer first to prevent any callbacks from executing during destruction
   if (check_connection_timer_) {
@@ -449,6 +449,34 @@ std::shared_ptr<ob::Device> OBCameraNodeDriver::selectDeviceByNetIP(
   return nullptr;
 }
 
+void OBCameraNodeDriver::exportBagPresetJson(const std::string &bag_path) {
+  if (!device_ || bag_path.empty() || playback_device_) {
+    return;
+  }
+
+  auto json_path = boost::filesystem::path(bag_path);
+  if (json_path.extension() == ".bag") {
+    json_path.replace_extension(".json");
+  } else {
+    json_path += ".json";
+  }
+
+  const auto json_path_str = json_path.string();
+  try {
+    const auto parent_path = json_path.parent_path();
+    if (!parent_path.empty()) {
+      boost::filesystem::create_directories(parent_path);
+    }
+    device_->exportSettingsAsPresetJsonFile(json_path_str.c_str());
+    ROS_INFO_STREAM("Exported bag preset JSON: " << json_path_str);
+  } catch (const ob::Error &e) {
+    ROS_WARN_STREAM("Failed to export bag preset JSON "
+                    << json_path_str << ": " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception &e) {
+    ROS_WARN_STREAM("Failed to export bag preset JSON " << json_path_str << ": " << e.what());
+  }
+}
+
 void OBCameraNodeDriver::initializeBagPlayback() {
   ROS_INFO_STREAM("Starting bag file playback: " << bag_filename_);
   try {
@@ -627,6 +655,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
 
   if (!bag_record_filename_.empty() && !record_device_) {
     try {
+      exportBagPresetJson(bag_record_filename_);
       record_device_ = std::make_shared<ob::RecordDevice>(device_, bag_record_filename_,
                                                           bag_record_compression_);
       ROS_INFO_STREAM("Recording to bag file: " << bag_record_filename_);
@@ -675,8 +704,8 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     {
       std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
       if (record_device_) {
-        ROS_WARN_STREAM("Device disconnected, stopping bag recording");
         record_device_.reset();
+        ROS_WARN_STREAM("Device disconnected, bag recording stopped");
       }
       if (ob_camera_node_) {
         ob_camera_node_->clean();
@@ -825,8 +854,8 @@ void OBCameraNodeDriver::resetDeviceThread() {
     {
       std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
       if (record_device_) {
-        ROS_WARN_STREAM("Device disconnected, stopping bag recording");
         record_device_.reset();
+        ROS_WARN_STREAM("Device disconnected, bag recording stopped");
       }
       if (ob_camera_node_) {
         ob_camera_node_->clean();
@@ -892,8 +921,8 @@ bool OBCameraNodeDriver::setBagRecordingCallback(orbbec_camera::SetBagRecordingR
       response.message = "Bag recording is not running";
       return true;
     }
-    ROS_INFO_STREAM("Stopping bag recording");
     record_device_.reset();
+    ROS_INFO_STREAM("Bag recording stopped");
     response.success = true;
     response.message = "Bag recording stopped";
     return true;
@@ -904,9 +933,11 @@ bool OBCameraNodeDriver::setBagRecordingCallback(orbbec_camera::SetBagRecordingR
 
   if (record_device_) {
     record_device_.reset();
+    ROS_INFO_STREAM("Bag recording stopped before starting a new recording");
   }
 
   try {
+    exportBagPresetJson(file_path);
     record_device_ =
         std::make_shared<ob::RecordDevice>(device_, file_path, bag_record_compression_);
   } catch (const ob::Error &e) {
