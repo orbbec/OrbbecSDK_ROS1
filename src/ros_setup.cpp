@@ -427,6 +427,124 @@ void OBCameraNode::syncConfigJsonApplicationConfig() {
   }
 }
 
+void OBCameraNode::syncApplicationSensorConfigForExport() {
+  try {
+    if (!ob::ApplicationConfig::isSupported(device_)) {
+      return;
+    }
+
+    auto application_config = ob::ApplicationConfig::get(device_);
+    CHECK_NOTNULL(application_config.get());
+
+    for (const auto& sensor_config : application_config->sensors()) {
+      if (!sensor_config || !sensor_config->streamProfile()) {
+        continue;
+      }
+
+      const auto current_profile = sensor_config->streamProfile();
+      const stream_index_pair stream_index{current_profile->getType(), 0};
+      const auto stream_name_it = stream_name_.find(stream_index);
+      if (stream_name_it == stream_name_.end()) {
+        ROS_DEBUG_STREAM("Config JSON sensors export skips unsupported stream type="
+                         << current_profile->getType());
+        continue;
+      }
+
+      auto export_sensor_config =
+          std::make_shared<ob::ApplicationSensorConfig>(sensor_config->sensorType());
+      const auto enable_stream_it = enable_stream_.find(stream_index);
+      export_sensor_config->enableStream(enable_stream_it != enable_stream_.end()
+                                             ? enable_stream_it->second
+                                             : sensor_config->isStreamEnabled());
+
+      const auto stream_profile_it = stream_profile_.find(stream_index);
+      export_sensor_config->setStreamProfile(stream_profile_it != stream_profile_.end() &&
+                                                     stream_profile_it->second
+                                                 ? stream_profile_it->second
+                                                 : current_profile);
+
+      const auto enable_undistortion_it = enable_undistortion_.find(stream_index);
+      export_sensor_config->enableUndistortion(enable_undistortion_it != enable_undistortion_.end()
+                                                   ? enable_undistortion_it->second
+                                                   : sensor_config->isUndistortionEnabled());
+
+      application_config->setSensor(export_sensor_config);
+    }
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Config JSON sensors export sync failed error=\""
+                    << orbbec_camera::formatObErrorWithStatus(e) << "\"");
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Config JSON sensors export sync failed error=\"" << e.what() << "\"");
+  } catch (...) {
+    ROS_WARN_STREAM("Config JSON sensors export sync failed");
+  }
+}
+
+void OBCameraNode::syncApplicationPointCloudConfigForExport() {
+  try {
+    if (!ob::ApplicationConfig::isSupported(device_)) {
+      return;
+    }
+
+    auto application_config = ob::ApplicationConfig::get(device_);
+    CHECK_NOTNULL(application_config.get());
+
+    auto point_cloud_config = std::make_shared<ob::ApplicationPointCloudConfig>();
+    const auto point_cloud_enabled = enable_point_cloud_ || enable_colored_point_cloud_;
+    point_cloud_config->enable(point_cloud_enabled);
+    point_cloud_config->setFormat(enable_colored_point_cloud_ ? OB_FORMAT_RGB_POINT
+                                                              : OB_FORMAT_POINT);
+    point_cloud_config->setDecimationFactor(std::max(1, point_cloud_decimation_filter_factor_));
+
+    auto align_mode = ALIGN_DISABLE;
+    if (depth_registration_) {
+      if (align_mode_ == "HW") {
+        align_mode = ALIGN_D2C_HW_MODE;
+      } else if (align_target_stream_ == OB_STREAM_DEPTH) {
+        align_mode = ALIGN_C2D_SW_MODE;
+      } else {
+        align_mode = ALIGN_D2C_SW_MODE;
+      }
+    }
+    point_cloud_config->setAlignMode(align_mode);
+    point_cloud_config->enableFrameSync(enable_frame_sync_);
+    point_cloud_config->setAllFrameTypeRequired(frame_aggregate_mode_ == "full_frame");
+    point_cloud_config->enableMatchTargetResolution(
+        align_mode == ALIGN_D2C_HW_MODE ? enable_depth_scale_ : true);
+    application_config->setPointCloud(point_cloud_config);
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Config JSON point_cloud export sync failed error=\""
+                    << orbbec_camera::formatObErrorWithStatus(e) << "\"");
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Config JSON point_cloud export sync failed error=\"" << e.what() << "\"");
+  } catch (...) {
+    ROS_WARN_STREAM("Config JSON point_cloud export sync failed");
+  }
+}
+
+void OBCameraNode::syncApplicationHdrMergeConfigForExport() {
+  try {
+    if (!ob::ApplicationConfig::isSupported(device_)) {
+      return;
+    }
+
+    auto application_config = ob::ApplicationConfig::get(device_);
+    CHECK_NOTNULL(application_config.get());
+
+    auto hdr_merge_config = std::make_shared<ob::ApplicationHDRMergeConfig>();
+    hdr_merge_config->enable(enable_hdr_merge_);
+    hdr_merge_config->enableIR(true);
+    application_config->setHDRMerge(hdr_merge_config);
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Config JSON hdr_merge export sync failed error=\""
+                    << orbbec_camera::formatObErrorWithStatus(e) << "\"");
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Config JSON hdr_merge export sync failed error=\"" << e.what() << "\"");
+  } catch (...) {
+    ROS_WARN_STREAM("Config JSON hdr_merge export sync failed");
+  }
+}
+
 bool OBCameraNode::exportConfigJsonToFile(const std::string& file_path, std::string& message) {
   if (file_path.empty()) {
     message = "Config json export file path is empty";
@@ -442,6 +560,9 @@ bool OBCameraNode::exportConfigJsonToFile(const std::string& file_path, std::str
     }
 
     const auto resolved_file_path_str = resolved_file_path.string();
+    syncApplicationSensorConfigForExport();
+    syncApplicationPointCloudConfigForExport();
+    syncApplicationHdrMergeConfigForExport();
     device_->exportSettingsAsPresetJsonFile(resolved_file_path_str.c_str());
     if (!boost::filesystem::exists(resolved_file_path)) {
       message = "Failed to export config json file: file not found after export path=" +
