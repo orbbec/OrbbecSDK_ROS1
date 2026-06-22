@@ -647,9 +647,9 @@ typedef enum {
     OB_PROP_DEPTH_RM_FILTER_BOOL = 2029,
 
     /**
-     * @brief Color camera maximal gain
+     * @brief Color AE max gain
      */
-    OB_PROP_COLOR_MAXIMAL_GAIN_INT = 2030,
+    OB_PROP_COLOR_AE_MAX_GAIN_INT = 2030,
 
     /**
      * @brief Color camera shutter gain
@@ -746,6 +746,12 @@ typedef enum {
      * @brief Calibration JSON file read from device (Femto Mega, read only)
      */
     OB_RAW_DATA_CAMERA_CALIB_JSON_FILE = 4029,
+
+    /**
+     * @brief Color camera CCI denoising level. 0: Auto; 1-8: higher values indicate stronger denoising.
+     * @note This setting has no effect when AE (Auto Exposure) is disabled.
+     */
+    OB_PROP_COLOR_DENOISING_LEVEL_INT = 5525,
 } OBPropertyID,
     ob_property_id;
 
