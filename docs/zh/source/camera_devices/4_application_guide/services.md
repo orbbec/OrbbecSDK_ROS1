@@ -297,6 +297,14 @@ rosservice call /camera/set_fan_work_mode 1
 rosservice call /camera/get_device_info
 ```
 
+* `/camera/get_device_config`
+
+获取当前生效的设备配置状态，例如 preset、对齐模式、时间域、同步模式、帧聚合模式等。
+
+```bash
+rosservice call /camera/get_device_config
+```
+
 * `/camera/get_device_type`
 
 ```bash
@@ -327,6 +335,20 @@ rosservice call /camera/get_camera_params
 rosservice call /camera/export_config_json "data: '/tmp/orbbec_camera_config.json'"
 ```
 
+* `/camera/set_bag_recording`
+
+使用 SDK bag 录制当前设备数据。`enable: true` 开始录制，`enable: false` 停止录制；`file_path` 为空时使用当前工作目录下的默认文件名。
+
+```bash
+rosservice call /camera/set_bag_recording "enable: true
+file_path: '/tmp/orbbec_record.bag'"
+```
+
+```bash
+rosservice call /camera/set_bag_recording "enable: false
+file_path: ''"
+```
+
 * `/camera/reboot_device`
 
 ```bash
@@ -345,6 +367,14 @@ rosservice call /camera/get_ptp_config
 
 ```bash
 rosservice call /camera/set_ptp_config true
+```
+
+* `/camera/set_sync_io_voltage_level`
+
+设置同步 IO 电压等级。仅支持具备该属性的设备。
+
+```bash
+rosservice call /camera/set_sync_io_voltage_level 0
 ```
 
 ## 视差配置

@@ -296,6 +296,14 @@ rosservice call /camera/set_fan_work_mode 1
 rosservice call /camera/get_device_info
 ```
 
+* `/camera/get_device_config`
+
+Get the currently effective device configuration state, such as preset, alignment mode, time domain, sync mode, and frame aggregate mode.
+
+```bash
+rosservice call /camera/get_device_config
+```
+
 * `/camera/get_device_type`
 
 ```bash
@@ -326,6 +334,20 @@ rosservice call /camera/get_camera_params
 rosservice call /camera/export_config_json "data: '/tmp/orbbec_camera_config.json'"
 ```
 
+* `/camera/set_bag_recording`
+
+Record current device data with SDK bag recording. `enable: true` starts recording and `enable: false` stops recording. When `file_path` is empty, the default file name is created in the current working directory.
+
+```bash
+rosservice call /camera/set_bag_recording "enable: true
+file_path: '/tmp/orbbec_record.bag'"
+```
+
+```bash
+rosservice call /camera/set_bag_recording "enable: false
+file_path: ''"
+```
+
 * `/camera/reboot_device`
 
 ```bash
@@ -344,6 +366,14 @@ rosservice call /camera/get_ptp_config
 
 ```bash
 rosservice call /camera/set_ptp_config true
+```
+
+* `/camera/set_sync_io_voltage_level`
+
+Set the sync IO voltage level. This is only supported on devices that expose the property.
+
+```bash
+rosservice call /camera/set_sync_io_voltage_level 0
 ```
 
 ## Disparity Configuration

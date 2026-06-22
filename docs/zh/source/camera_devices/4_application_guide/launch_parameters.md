@@ -80,6 +80,14 @@
     *   这些 QoS 参数在 ROS1 wrapper 中不适用。ROS1 中话题通信行为主要由发布者/订阅者队列长度控制。
 * **`point_cloud_decimation_filter_factor`**
   * 点云下采样因子。范围：`1–8`，`1`表示不下采样，数值越大下采样倍数越大。
+* **`enable_image_transport_plugins`**
+  * 启用 ROS `image_transport` 插件发布普通图像流。默认值：`true`。设置为 `false` 时，普通图像流仅使用原始 `sensor_msgs/Image` 发布；MJPG 彩色流仍会额外发布 `/compressed` 话题。压缩图像订阅方法参考 [压缩图像](compressed_image.md)。
+* **`bag_record_filename`**
+  * 启动后使用 SDK 录制设备数据到指定 `.bag` 文件。为空时不自动录制。开始录制时会同时导出同名 JSON preset 文件，例如 `record.bag` 对应 `record.json`。
+* **`bag_filename`**
+  * 使用 SDK 回放指定 `.bag` 文件。设置后节点从 bag 文件创建回放设备，而不是连接真实相机。
+* **`bag_loop`**
+  * SDK bag 回放结束后是否循环播放。默认值：`false`。仅在设置 `bag_filename` 时生效。
 
 ## 传感器控制
 
@@ -168,6 +176,8 @@
     *   启用软件触发输出信号 / 设置软件触发周期（毫秒）。
 *   **`frames_per_trigger`**
     *   触发模式下每次触发后每个流的帧数。
+*   **`sync_io_voltage_level`**
+    *   设置同步 IO 电压等级。默认值为 `-1`，表示不设置。仅支持具备该属性的设备；可通过 `/camera/set_sync_io_voltage_level` 服务在运行时修改。
 
 ### 网络相机
 * **`enumerate_net_device`**
@@ -299,8 +309,10 @@
     *   YAML配置文件的路径。默认为 `""`。如果未指定，将使用启动文件中的默认参数。部分 preset 或特殊模式会通过 YAML 配置，示例参考 [设备预设](../5_advanced_guide/configuration/predefined_presets.md)。
 *   **`load_config_json_file_path`**
     *   SDK JSON 配置导入路径。设置后节点会在初始化时调用 SDK 导入 JSON 配置。Gemini 330 系列可使用 `gemini_330_series_sdk_json.launch` 作为专用启动文件。
+    *   如果 JSON 中包含 `application_config`，节点会在未被 launch 参数显式覆盖时同步其中的流开关、分辨率、帧率、格式、去畸变、点云、HDR 合并和设备级下采样配置。
 *   **`export_config_json_file_path`**
     *   SDK JSON 配置导出路径。设置后节点会在初始化完成后将当前设备配置导出为 JSON。也可以通过 `/camera/export_config_json` 服务运行时导出。
+    *   导出前会把当前 ROS 参数中的传感器流、点云和 HDR 合并配置同步到 SDK `application_config`（设备支持时）。
 *   **`frame_aggregate_mode`**
     *   设置帧聚合输出模式。可选值：`full_frame`、`color_frame`、`ANY`、`disable`。
     *   该参数大小写不敏感；非法值会报错并回退默认值。

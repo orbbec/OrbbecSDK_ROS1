@@ -80,6 +80,14 @@ The following are the launch parameters available:
     *   These QoS parameters are not applicable in the ROS1 wrapper. In ROS1, topic behavior is mainly controlled by publisher/subscriber queue sizes.
 * **`point_cloud_decimation_filter_factor`**
   * Point cloud downsampling factor. Range: `1–8`. `1` means no downsampling.
+* **`enable_image_transport_plugins`**
+  * Enable ROS `image_transport` plugins for regular image streams. Default: `true`. When set to `false`, regular image streams are published only as raw `sensor_msgs/Image`; MJPG color streams still publish the extra `/compressed` topic. See [Compressed Image](compressed_image.md) for subscribing to compressed images.
+* **`bag_record_filename`**
+  * Record device data to the specified SDK `.bag` file after startup. Leave empty to disable automatic recording. When recording starts, a JSON preset file with the same base name is also exported, for example `record.bag` creates `record.json`.
+* **`bag_filename`**
+  * Play back the specified SDK `.bag` file. When set, the node creates a playback device from the bag file instead of connecting to a physical camera.
+* **`bag_loop`**
+  * Loop SDK bag playback after the file reaches the end. Default: `false`. This only takes effect when `bag_filename` is set.
 
 ## Sensor Controls
 
@@ -167,6 +175,8 @@ The following are the launch parameters available:
     *   Enable the software trigger out signal / set the software trigger period in ms.
 *   **`frames_per_trigger`**
     *   The frame number of each stream after each trigger in triggering mode.
+*   **`sync_io_voltage_level`**
+    *   Set the sync IO voltage level. Default: `-1`, which means do not set it. This is only supported on devices that expose the property; it can also be changed at runtime with `/camera/set_sync_io_voltage_level`.
 
 ### Network Cameras
 * **`enumerate_net_device`**
@@ -299,8 +309,10 @@ The following are the launch parameters available:
     *   The path to the YAML configuration file. Default is `""`. If not specified, default parameters from the launch file will be used. Some presets or special modes are configured through YAML. See [predefined presets](../5_advanced_guide/configuration/predefined_presets.md).
 *   **`load_config_json_file_path`**
     *   SDK JSON configuration import path. When set, the node imports the JSON configuration during initialization. For Gemini 330 series, use `gemini_330_series_sdk_json.launch` as the dedicated SDK JSON launch file.
+    *   If the JSON contains `application_config`, the node syncs stream enable states, resolution, frame rate, format, undistortion, point cloud, HDR merge, and device-level decimation from it when those values are not explicitly overridden by launch parameters.
 *   **`export_config_json_file_path`**
     *   SDK JSON configuration export path. When set, the node exports the current device configuration to JSON after initialization. You can also export at runtime with the `/camera/export_config_json` service.
+    *   Before export, the node syncs the current ROS sensor stream, point cloud, and HDR merge settings into the SDK `application_config` when the device supports it.
 *   **`frame_aggregate_mode`**
     *   Set frame aggregate output mode. Optional values: `full_frame`, `color_frame`, `ANY`, `disable`.
     *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.

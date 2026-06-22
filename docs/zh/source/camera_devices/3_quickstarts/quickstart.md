@@ -89,3 +89,35 @@ rosservice call /camera/get_device_info "{}"
 ```bash
 rosbag record /camera/color/image_raw /camera/depth/image_raw
 ```
+
+#### 使用 SDK bag 录制和回放
+
+SDK bag 会通过 Orbbec SDK 录制设备数据，适合后续用 wrapper 作为回放设备重新启动。启动时录制：
+
+```bash
+roslaunch orbbec_camera gemini_330_series.launch bag_record_filename:=/tmp/orbbec_record.bag
+```
+
+也可以在节点运行时通过服务开始或停止录制：
+
+```bash
+rosservice call /camera/set_bag_recording "enable: true
+file_path: '/tmp/orbbec_record.bag'"
+```
+
+```bash
+rosservice call /camera/set_bag_recording "enable: false
+file_path: ''"
+```
+
+回放 SDK bag：
+
+```bash
+roslaunch orbbec_camera gemini_330_series.launch bag_filename:=/tmp/orbbec_record.bag
+```
+
+如果需要循环回放：
+
+```bash
+roslaunch orbbec_camera gemini_330_series.launch bag_filename:=/tmp/orbbec_record.bag bag_loop:=true
+```
