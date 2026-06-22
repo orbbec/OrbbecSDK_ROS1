@@ -42,7 +42,7 @@ Launch parameters can be modified in two ways:
 
 The following are the launch parameters available:
 
-### Core & Stream Configuration
+## Core & Stream Configuration
 
 *   **`camera_name`**
     *   Start the node namespace.
@@ -81,9 +81,9 @@ The following are the launch parameters available:
 * **`point_cloud_decimation_filter_factor`**
   * Point cloud downsampling factor. Range: `1–8`. `1` means no downsampling.
 
-### Sensor Controls
+## Sensor Controls
 
-#### Color Stream
+### Color Stream
 *   **`enable_color_auto_exposure`**
     *   Enable the Color auto exposure.
 *   **`enable_color_auto_exposure_priority`**
@@ -118,7 +118,7 @@ The following are the launch parameters available:
     *   Enable ISP Color denoising. **Range:** `0–8`; `0` means auto. Supported by Gemini 2 firmware `1.5.04` and above, and Gemini 2L firmware `1.5.09` and above. This feature requires Color auto exposure and new firmware support.
 
 
-#### Depth Stream
+### Depth Stream
 * **`enable_depth_auto_exposure_priority`**
   * Enable the Depth auto exposure priority.
 * **`mean_intensity_set_point`**
@@ -133,7 +133,7 @@ The following are the launch parameters available:
 *   **`depth_ae_roi_[left|right|top|bottom]`**
     *   Set Depth auto exposure ROI.
 
-#### IR Stream
+### IR Stream
 *   **`enable_ir_auto_exposure`**
     *   Enable the IR auto exposure.
 *   **`ir_exposure`** / **`ir_gain`**
@@ -142,7 +142,7 @@ The following are the launch parameters available:
     *   Set the maximum exposure value for IR auto exposure.
 *   **`ir_brightness`**
     *   Set the target average intensity of the ir image when auto-exposure is turned on.
-#### Laser / LDP
+### Laser / LDP
 *   **`enable_laser`**
     *   Enable the laser. The default value is `true`.
 *   **`laser_energy_level`**
@@ -150,9 +150,9 @@ The following are the launch parameters available:
 *   **`enable_ldp`** / **`ldp_power_level`**
     *   Enable the LDP and set its power level.
 
-### Device, Sync & Advanced Features
+## Device, Sync & Advanced Features
 
-#### Multi-Camera Synchronization
+### Multi-Camera Synchronization
 *   **`sync_mode`**
     *   Set sync mode. The default value is `standalone`. See [multi camera synced](../5_advanced_guide/multi_camera/multi_camera_synced.md) for multi-camera connection, synchronization modes, and trigger configuration.
 *   **`depth_delay_us`** / **`color_delay_us`**
@@ -168,7 +168,7 @@ The following are the launch parameters available:
 *   **`frames_per_trigger`**
     *   The frame number of each stream after each trigger in triggering mode.
 
-#### Network Cameras
+### Network Cameras
 * **`enumerate_net_device`**
   * Enable automatically enumerate network devices. See [net camera](../5_advanced_guide/configuration/net_camera.md) for network camera startup, specified IP startup, and Force IP configuration.
 * **`ip_address`** / **`port`**
@@ -183,7 +183,7 @@ The following are the launch parameters available:
   * Subnet mask for the static IP. **Default:** `255.255.255.0`
 * **`force_ip_gateway`**
   * Gateway address for the static IP. **Default:** `192.168.1.1`
-#### Device-Specific
+### Device-Specific
 * **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
   * Enable the gmsl trigger out signal / set gmsl trigger fps.
   > Only supports [gmsl camera](../5_advanced_guide/multi_camera/gmsl_cameras.md).
@@ -206,14 +206,14 @@ The following are the launch parameters available:
 * **`enable_false_positive_filter`**
   * Enable this option to reduce ghosting noise.
   > **Supported Modules**: DaBaiA / DaBaiAL / Gemini 330 series / Gemini345 / Gemini345Lg
-#### Disparity
+### Disparity
 *   **`disparity_to_depth_mode`**
     *   `HW`: use hardware disparity to depth conversion. `SW`: use software disparity to depth conversion. Use `disable` to turn it off.
     *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
 *   **`disparity_range_mode`**, **`disparity_search_offset`**, **`disparity_offset_config`**
     *   Parameters for disparity search offset. Used for [disparity search offset](../5_advanced_guide/configuration/disparity_search_offset.md).
 
-#### Interleave AE Mode
+### Interleave AE Mode
 *   **`interleave_ae_mode`**
     *   Set `laser` or `hdr` interleave.
 *   **`interleave_frame_enable`**, **`interleave_skip_enable`**, **`interleave_skip_index`**
@@ -222,7 +222,7 @@ The following are the launch parameters available:
     *   In interleave frame mode, set the 0th and 1st frame parameters of hdr or laser interleaving frames.
 *   *All interleave parameters are used for [interleave ae mode](../5_advanced_guide/configuration/interleave_ae_mode.md).*
 
-#### Intra-Camera Synchronization
+### Intra-Camera Synchronization
 
 - **`depth_registration`**
   *   Enable alignment of the depth frame to the color frame. This field is required when the `enable_colored_point_cloud` is set to `true`. See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for startup and viewing examples.
@@ -238,9 +238,9 @@ The following are the launch parameters available:
 - **`intra_camera_sync_reference`**
   - Sets the reference point for intra-camera synchronization. Applicable for Gemini 330 series devices when `sync_mode` is set to **software** or **hardware trigger** mode. **Options:** `Start`, `Middle`, `End`. When set to empty, the long baseline device defaults to End, and the short baseline device defaults to Middle.
 
-### Basic & General Parameters
+## Basic & General Parameters
 
-#### Firmware & Backend
+### Firmware & Backend
 * **`upgrade_firmware`**
   * The input parameter is the firmware path. For new versions, use the standalone `firmware_update_tool` for firmware updates. See [firmware_update_tool](../6_benchmark/firmware_update_tool.md).
 * **`preset_firmware_path`**
@@ -252,7 +252,7 @@ The following are the launch parameters available:
 * **`retry_on_usb3_detection_failure`**
   * If the camera is connected to a USB 2.0 port and is not detected, the system will attempt to reset the camera up to three times. It is recommended to set this parameter to `false` when using a USB 2.0 connection to avoid unnecessary resets.
 
-#### TF, Extrinsics & Calibration
+### TF, Extrinsics & Calibration
 *   **`publish_tf`** / **`tf_publish_rate`**
     *   Enable the TF publish and set its publication rate. See [Coordinate Systems and TF Transforms](coordinate_and_tf.md) for coordinate frames, TF tree inspection, and visualization.
 *   **`enable_publish_extrinsic`**
@@ -262,7 +262,7 @@ The following are the launch parameters available:
 *   **`enable_[color|depth|ir|left_ir|right_ir]_undistortion`**
     *   Enable the SDK undistortion filter for the selected image stream. Dual-IR devices use `enable_left_ir_undistortion` / `enable_right_ir_undistortion`; single-IR devices use `enable_ir_undistortion`.
 
-#### Time Synchronization
+### Time Synchronization
 * **`enable_sync_host_time`**
   * Enable synchronization of the host time with the camera time. The default value is `true`. If using global time, set to `false`.
 * **`time_domain`**
@@ -281,7 +281,7 @@ The following are the launch parameters available:
 * **`enable_frame_sync`**
   * Enable the frame synchronization.
 
-#### Logging & Diagnostics
+### Logging & Diagnostics
 * **`log_level`**
   * SDK log level. Default output keeps only the current device status; use `debug` for more detailed logs. Optional values: `debug`, `info`, `warn`, `error`, `fatal`.
   * SDK logs and crash files are stored in `~/.ros/Log`; ROS1 runtime logs are stored in `~/.ros/log/<run_id>`.
@@ -294,7 +294,7 @@ The following are the launch parameters available:
 * **`enable_firmware_log`**
   * Enable firmware log capture independently from `enable_heartbeat`.
 
-#### Miscellaneous
+### Miscellaneous
 *   **`config_file_path`**
     *   The path to the YAML configuration file. Default is `""`. If not specified, default parameters from the launch file will be used. Some presets or special modes are configured through YAML. See [predefined presets](../5_advanced_guide/configuration/predefined_presets.md).
 *   **`load_config_json_file_path`**
@@ -307,7 +307,7 @@ The following are the launch parameters available:
 *   **`enable_d2c_viewer`**
     *   Publishes the D2C overlay image (for testing only). See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for usage examples.
 
-### IMU
+## IMU
 
 *   **`enable_accel`** / **`enable_gyro`**
     *   Enable the Accelerometer/gyroscope and output its info topic data.
@@ -322,7 +322,7 @@ The following are the launch parameters available:
 *   **`linear_accel_cov`** / **`angular_vel_cov`**
     *   Covariance of the linear acceleration and angular velocity.
 
-### Depth Filters
+## Depth Filters
 
 *   **`enable_decimation_filter`**
     *   Enable the Depth decimation filter. Set with `decimation_filter_scale`.
