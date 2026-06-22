@@ -24,18 +24,13 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
       <td>recommended for new designs</td>
     </tr>
     <tr>
-      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 301</td>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td>
       <td>Gemini 305</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
     <tr>
       <td>Gemini 305g</td>
-      <td>not supported</td>
-      <td>recommended for new designs</td>
-    </tr>
-    <tr>
-      <td>Gemini 309g</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
@@ -202,11 +197,11 @@ To learn how to obtain and upgrade the latest firmware, [please click here](../3
     <tr>
       <td style="text-align: center; font-weight: bold;">Gemini 430</td>
       <td>Gemini 435Le</td>
-      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware">1.3.2</a></td>
+      <td><a href="https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware">1.3.19</a></td>
       <td>gemini435_le.launch</td>
     </tr>
     <tr>
-      <td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 301</td>
+      <td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td>
       <td>Gemini 305</td>
       <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.70</a></td>
       <td>gemini_301_series.launch</td>
@@ -214,11 +209,6 @@ To learn how to obtain and upgrade the latest firmware, [please click here](../3
     <tr>
       <td>Gemini 305g</td>
       <td><a href="https://doc.orbbec.com/documentation/Gemini%20305%20Documentation/Firmware%20Release%20of%20Gemini%20305">1.0.70</a></td>
-      <td>gemini_301_series.launch</td>
-    </tr>
-    <tr>
-      <td>Gemini 309g</td>
-      <td>-</td>
       <td>gemini_301_series.launch</td>
     </tr>
     <tr>
@@ -320,9 +310,8 @@ To learn how to obtain and upgrade the latest firmware, [please click here](../3
   </thead>
   <tbody>
     <tr><td style="text-align: center; font-weight: bold;">Gemini 430</td><td>Gemini 435Le</td><td>-</td></tr>
-    <tr><td rowspan="3" style="text-align: center; font-weight: bold;">Gemini 301</td><td>Gemini 305</td><td>gemini_305.urdf.xacro</td></tr>
+    <tr><td rowspan="2" style="text-align: center; font-weight: bold;">Gemini 301</td><td>Gemini 305</td><td>gemini_305.urdf.xacro</td></tr>
     <tr><td>Gemini 305g</td><td>gemini_305_g.urdf.xacro</td></tr>
-    <tr><td>Gemini 309g</td><td>gemini_309_g.urdf.xacro</td></tr>
     <tr><td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td><td>Gemini 335</td><td>gemini_335_336.urdf.xacro</td></tr>
     <tr><td>Gemini 336</td><td>gemini_335_336.urdf.xacro</td></tr>
     <tr><td>Gemini 330</td><td>-</td></tr>

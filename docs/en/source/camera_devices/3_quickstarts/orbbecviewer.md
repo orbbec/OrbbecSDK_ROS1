@@ -43,4 +43,4 @@ Please refer to the list below for the latest camera firmware. [For more informa
 | Gemini 330 series | [Gemini 330 series Firmware](https://www.orbbec.com/docs/g330-firmware-release/?_gl=1)               |                |
 | Gemini 215        | [Gemini 215](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini215-Firmware)               | v1.0.9         |
 | Gemini 210        | [Gemini 210](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini210-Firmware)               | v1.0.9         |
-| Gemini 435Le      | [Gemini 435Le](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware)            | v1.3.2         |
+| Gemini 435Le      | [Gemini 435Le](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware)            | v1.3.19        |

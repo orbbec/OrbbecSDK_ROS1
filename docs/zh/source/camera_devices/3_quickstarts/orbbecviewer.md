@@ -43,4 +43,4 @@
 | Gemini 330系列    | [Gemini 330系列固件](https://www.orbbec.com/docs/g330-firmware-release/?_gl=1)               |                |
 | Gemini 215        | [Gemini 215固件](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini215-Firmware)               | v1.0.9         |
 | Gemini 210        | [Gemini 210固件](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemini210-Firmware)               | v1.0.9         |
-| Gemini 435Le      | [Gemini 435Le固件](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware)            | v1.3.2         |
+| Gemini 435Le      | [Gemini 435Le固件](https://github.com/orbbec/OrbbecFirmware/releases/tag/Gemin435Le-Firmware)            | v1.3.19        |
