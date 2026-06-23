@@ -20,7 +20,7 @@
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
-    <arg name="color_ae_max_exposure" default="-1"/>
+    <arg name="color_ae_max_gain" default="-1"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="400"/>
     <arg name="depth_fps" default="15"/>
@@ -93,7 +93,7 @@
             <param name="color_format" value="$(arg color_format)"/>
             <param name="flip_color" value="$(arg flip_color)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
-            <param name="color_ae_max_exposure" value="$(arg color_ae_max_exposure)"/>
+            <param name="color_ae_max_gain" value="$(arg color_ae_max_gain)"/>
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
             <param name="depth_fps" value="$(arg depth_fps)"/>

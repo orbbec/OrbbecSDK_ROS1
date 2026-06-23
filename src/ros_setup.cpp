@@ -243,6 +243,17 @@ void OBCameraNode::setupDevices() {
         device_->isPropertySupported(OB_PROP_COLOR_AE_MAX_EXPOSURE_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_AE_MAX_EXPOSURE_INT, color_ae_max_exposure_);
     }
+    if (color_ae_max_gain_ != -1 &&
+        device_->isPropertySupported(OB_PROP_COLOR_AE_MAX_GAIN_INT, OB_PERMISSION_READ_WRITE)) {
+      auto range = device_->getIntPropertyRange(OB_PROP_COLOR_AE_MAX_GAIN_INT);
+      if (color_ae_max_gain_ < range.min || color_ae_max_gain_ > range.max) {
+        ROS_ERROR_STREAM("color AE max gain value is out of range[" << range.min << "," << range.max
+                                                                    << "], please check the value");
+      } else {
+        ROS_INFO_STREAM("Setting color AE max gain to " << color_ae_max_gain_);
+        device_->setIntProperty(OB_PROP_COLOR_AE_MAX_GAIN_INT, color_ae_max_gain_);
+      }
+    }
     if (color_brightness_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_BRIGHTNESS_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_COLOR_BRIGHTNESS_INT, color_brightness_);

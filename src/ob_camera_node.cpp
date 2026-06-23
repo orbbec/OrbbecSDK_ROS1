@@ -259,6 +259,7 @@ void OBCameraNode::getParameters() {
   color_gain_ = nh_private_.param<int>("color_gain", -1);
   color_white_balance_ = nh_private_.param<int>("color_white_balance", -1);
   color_ae_max_exposure_ = nh_private_.param<int>("color_ae_max_exposure", -1);
+  color_ae_max_gain_ = nh_private_.param<int>("color_ae_max_gain", -1);
   color_brightness_ = nh_private_.param<int>("color_brightness", -1);
   color_sharpness_ = nh_private_.param<int>("color_sharpness", -1);
   color_contrast_ = nh_private_.param<int>("color_contrast", -1);

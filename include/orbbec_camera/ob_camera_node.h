@@ -433,6 +433,7 @@ class OBCameraNode {
   int color_gain_ = -1;
   int color_white_balance_ = -1;
   int color_ae_max_exposure_ = -1;
+  int color_ae_max_gain_ = -1;
   int color_brightness_ = -1;
   int color_sharpness_ = -1;
   int color_contrast_ = -1;
