@@ -155,6 +155,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
   - [Start the Camera](#start-the-camera)
   - [Select Topics and Control the Camera](#select-topics-and-control-the-camera)
   - [Network camera](#network-camera)
+  - [Use V4L2 backend](#use-v4l2-backend)
   - [Launch Parameters](#launch-parameters)
   - [Depth work mode switch:](#depth-work-mode-switch)
   - [Configuration of depth NFOV and WFOV modes](#configuration-of-depth-nfov-and-wfov-modes)
@@ -339,6 +340,16 @@ For Femto Mega and Femto Mega I, the network camera feature is supported.
 roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
 ```
 
+## Use V4L2 backend
+
+OpenNI devices with UVC Color support can select the Linux UVC backend through the `uvc_backend` launch parameter when the corresponding launch file exposes it. The supported values are `auto`, `libuvc`, and `v4l2`, and the value is case-insensitive. The default value is `auto`, which keeps the backend selection from `config/OrbbecSDKConfig_v1.0.xml`. Unsupported values also fall back to the SDK XML configuration.
+
+```bash
+roslaunch orbbec_camera gemini2.launch uvc_backend:=v4l2
+```
+
+The `uvc_backend` parameter is only available for devices that support `LinuxUVCDefaultBackend` in `config/OrbbecSDKConfig_v1.0.xml`.
+
 ## Launch Parameters
 
 The following launch parameters are available:
@@ -359,6 +370,14 @@ The following launch parameters are available:
   when `enable_colored_point_cloud` is set to `true`.
 - `log_level` for OrbbecSDK controls console log verbosity, with levels `none`, `info`, `debug`, `warn`, `fatal`. Logs
   save in `~/.ros/Log`. For file logging, adjust `<FileLogLevel>` in `config/OrbbecSDKConfig_v1.0.xml`.
+- `depth_filter_config`: Configures the loading path for the depth filtering configuration file. By default, the depth
+  filtering configuration file is located in the /config/depthfilter directory. Gemini2 can use `Gemini2_v1.8.json`;
+  OpenNI and DaBaiMax series devices that expose this parameter can use `Openni_device.json` to configure filters such
+  as outlier removal.
+- `color_ae_max_exposure`: Color auto exposure maximum exposure.
+- `color_ae_max_gain`: Color auto exposure maximum gain. Supported by Gemini2 and Gemini2L.
+- `uvc_backend`: Selects the Linux UVC Color backend for supported OpenNI devices. Optional values are `auto`, `libuvc`,
+  and `v4l2`; the default value is `auto`.
 - `ordered_pc`: Whether the point cloud should be organized in an ordered grid (`true`) or as an unordered set of
   points (`false`).
 - `device_preset`: The default value is `Default`. Only the G330 series is supported. For more information, refer to
