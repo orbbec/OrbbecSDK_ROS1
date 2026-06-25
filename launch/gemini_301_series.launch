@@ -24,7 +24,7 @@
     <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
     <arg name="device_preset" default="Default"/>
-    <arg name="color_preset" default="Default"/> <!-- color preset: Default, Warm Biased AWB, Cool Biased AWB -->
+    <arg name="color_preset" default="Default"/> <!-- color preset: Default, Warm Biased AWB, Cold Biased AWB -->
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="enable_laser" default="true"/>
     <arg name="depth_precision" default=""/>
