@@ -95,7 +95,7 @@
     <arg name="enable_mgc_noise_removal_filter" default="false"/>
     <arg name="enable_lut_noise_removal_filter" default="false"/>
     <arg name="enable_disp_outliers_filter" default="false"/>
-    <arg name="disp_outliers_filter_search_mode" default="-1"/><!-- -1: SDK default; otherwise follows OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT -->
+    <arg name="disp_outliers_filter_search_mode" default=""/><!-- FULL or OFFSET_80 -->
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
     <arg name="threshold_filter_min" default="-1"/>

@@ -72,7 +72,7 @@
     <arg name="enable_mgc_noise_removal_filter" default="false"/>
     <arg name="enable_lut_noise_removal_filter" default="false"/>
     <arg name="enable_disp_outliers_filter" default="false"/>
-    <arg name="disp_outliers_filter_search_mode" default="-1"/><!-- -1: SDK default; otherwise follows OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT -->
+    <arg name="disp_outliers_filter_search_mode" default=""/><!-- FULL or OFFSET_80 -->
     <arg name="enable_edge_noise_removal_filter" default="false"/>
     <arg name="enable_spatial_fast_filter" default="false"/>
     <arg name="spatial_fast_filter_radius" default="-1"/>

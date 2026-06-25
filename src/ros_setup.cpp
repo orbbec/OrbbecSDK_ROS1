@@ -180,6 +180,34 @@ bool parseFilterConfigDouble(const std::string& raw_value, double& parsed_value,
   return true;
 }
 
+std::string dispOutliersSearchModeToString(int search_mode) {
+  switch (search_mode) {
+    case 0:
+      return "FULL";
+    case 1:
+      return "OFFSET_80";
+    default:
+      return "";
+  }
+}
+
+bool parseDispOutliersSearchMode(const std::string& raw_value, int& search_mode,
+                                 std::string& message) {
+  const auto value = trimFilterConfigValue(raw_value);
+  const auto lower_value = lowerFilterConfigValue(value);
+  if (lower_value == "full") {
+    search_mode = 0;
+    return true;
+  }
+  if (lower_value == "offset_80") {
+    search_mode = 1;
+    return true;
+  }
+
+  message = "Filter config 'search_mode' expects one of FULL, OFFSET_80";
+  return false;
+}
+
 bool parseFilterConfigValue(const OBFilterConfigSchemaItem& schema, const std::string& raw_value,
                             double& parsed_value, std::string& message) {
   const auto value = trimFilterConfigValue(raw_value);
@@ -1201,7 +1229,7 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
                            toParamValue(hardware_noise_removal_filter_threshold_));
   } else if (normalized_filter_name == "DispOutliersFilter") {
     appendDepthFilterParam(filter_state, "search_mode",
-                           toParamValue(disp_outliers_filter_search_mode_));
+                           dispOutliersSearchModeToString(disp_outliers_filter_search_mode_));
   } else if (filter && shouldExposeDepthFilterParams(normalized_filter_name)) {
     try {
       auto config_schema_vec = filter->getConfigSchemaVec();
@@ -3895,16 +3923,10 @@ bool OBCameraNode::applyNamedDepthFilterConfig(
         return false;
       }
 
-      double parsed_value = 0.0;
-      if (!parseFilterConfigDouble(param.value, parsed_value, message)) {
-        return false;
-      }
-      if (std::floor(parsed_value) != parsed_value) {
-        message = "Filter config '" + param_name + "' expects an integer value";
+      if (!parseDispOutliersSearchMode(param.value, search_mode, message)) {
         return false;
       }
       has_search_mode = true;
-      search_mode = static_cast<int>(parsed_value);
     }
 
     if (device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
@@ -4022,6 +4044,9 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
     if (has_positional_params && has_named_params) {
       return fail("filter_param and filter_config cannot be used at the same time");
     }
+    if (is_disp_outliers_filter && has_positional_params) {
+      return fail("DispOutliersFilter search_mode expects filter_config value FULL or OFFSET_80");
+    }
 
     if (has_named_params || !has_positional_params) {
       std::string message;
@@ -4098,24 +4123,6 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
           }
         }
         enable_hardware_noise_removal_filter_ = request.filter_enable;
-      } else if (is_disp_outliers_filter) {
-        if (device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
-                                         OB_PERMISSION_READ_WRITE)) {
-          device_->setBoolProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL, request.filter_enable);
-          ROS_INFO_STREAM("Setting DispOutliersFilter:" << request.filter_enable);
-        }
-        if (!request.filter_param.empty()) {
-          if (device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
-                                           OB_PERMISSION_READ_WRITE)) {
-            device_->setIntProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
-                                    request.filter_param[0]);
-            disp_outliers_filter_search_mode_ = request.filter_param[0];
-            ROS_INFO_STREAM("Setting DispOutliersFilter search_mode:" << request.filter_param[0]);
-          } else {
-            return fail("Filter config 'search_mode' is not supported by this device");
-          }
-        }
-        enable_disp_outliers_filter_ = request.filter_enable;
       }
     } else {
       std::unique_lock<std::mutex> depth_filter_lock(depth_filter_mutex_);

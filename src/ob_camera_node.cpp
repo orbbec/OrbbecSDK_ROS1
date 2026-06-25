@@ -20,6 +20,7 @@
 #include <cctype>
 #include <fstream>
 #include <vector>
+#include <xmlrpcpp/XmlRpcValue.h>
 #if defined(USE_RK_HW_DECODER)
 #include "orbbec_camera/rk_mpp_decoder.h"
 #elif defined(USE_NV_HW_DECODER)
@@ -33,6 +34,54 @@ std::string toLowerCopy(std::string value) {
   std::transform(value.begin(), value.end(), value.begin(),
                  [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
   return value;
+}
+
+std::string trimParameterValue(const std::string& value) {
+  auto begin = value.begin();
+  while (begin != value.end() && std::isspace(static_cast<unsigned char>(*begin))) {
+    ++begin;
+  }
+  auto end = value.end();
+  while (end != begin && std::isspace(static_cast<unsigned char>(*(end - 1)))) {
+    --end;
+  }
+  return std::string(begin, end);
+}
+
+bool parseDispOutliersSearchModeParameter(const std::string& raw_value, int& search_mode) {
+  const auto value = trimParameterValue(raw_value);
+  const auto lower_value = toLowerCopy(value);
+  if (lower_value.empty()) {
+    search_mode = -1;
+    return true;
+  }
+  if (lower_value == "full") {
+    search_mode = 0;
+    return true;
+  }
+  if (lower_value == "offset_80") {
+    search_mode = 1;
+    return true;
+  }
+  return false;
+}
+
+int getDispOutliersSearchModeParameter(ros::NodeHandle& nh_private, const std::string& param_name) {
+  XmlRpc::XmlRpcValue raw_value;
+  if (!nh_private.getParam(param_name, raw_value)) {
+    return -1;
+  }
+
+  int search_mode = -1;
+  if (raw_value.getType() == XmlRpc::XmlRpcValue::TypeString) {
+    if (parseDispOutliersSearchModeParameter(static_cast<std::string>(raw_value), search_mode)) {
+      return search_mode;
+    }
+  }
+
+  ROS_WARN_STREAM("Invalid " << param_name
+                             << " value. Expected FULL, OFFSET_80, or empty; using empty");
+  return -1;
 }
 
 std::string formatParameterValue(const std::string& value) {
@@ -501,7 +550,7 @@ void OBCameraNode::getParameters() {
       nh_private_.param<bool>("enable_lut_noise_removal_filter", false);
   enable_disp_outliers_filter_ = nh_private_.param<bool>("enable_disp_outliers_filter", false);
   disp_outliers_filter_search_mode_ =
-      nh_private_.param<int>("disp_outliers_filter_search_mode", -1);
+      getDispOutliersSearchModeParameter(nh_private_, "disp_outliers_filter_search_mode");
   decimation_filter_scale_range_ = nh_private_.param<int>("decimation_filter_scale_range", -1);
   sequence_id_filter_id_ = nh_private_.param<int>("sequence_id_filter_id", -1);
   threshold_filter_max_ = nh_private_.param<int>("threshold_filter_max", -1);
