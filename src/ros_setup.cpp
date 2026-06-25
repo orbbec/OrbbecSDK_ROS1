@@ -226,6 +226,9 @@ std::string OBCameraNode::normalizeDepthFilterName(const std::string& filter_nam
   if (filter_name == "SpatialFilter") {
     return "SpatialAdvancedFilter";
   }
+  if (filter_name == "DepthOutliersFilter" || filter_name == "DisparityOutliersFilter") {
+    return "DispOutliersFilter";
+  }
   return filter_name;
 }
 
@@ -1248,6 +1251,7 @@ void OBCameraNode::publishDepthFiltersStatus() {
   sync_filter_enabled("FalsePositiveFilter", enable_false_positive_filter_);
   sync_filter_enabled("MgcNoiseRemovalFilter", enable_mgc_noise_removal_filter_);
   sync_filter_enabled("LutNoiseRemovalFilter", enable_lut_noise_removal_filter_);
+  sync_filter_enabled("DispOutliersFilter", enable_disp_outliers_filter_);
 
   if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
     try {
@@ -1944,6 +1948,9 @@ void OBCameraNode::setupDepthPostProcessFilter() {
     if (filter_name == "LutNoiseRemovalFilter") {
       return std::string("enable_lut_noise_removal_filter");
     }
+    if (filter_name == "DispOutliersFilter") {
+      return std::string("enable_disp_outliers_filter");
+    }
     return std::string();
   };
   for (size_t i = 0; i < depth_filter_list_.size(); i++) {
@@ -1962,6 +1969,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"FalsePositiveFilter", enable_false_positive_filter_},
         {"MgcNoiseRemovalFilter", enable_mgc_noise_removal_filter_},
         {"LutNoiseRemovalFilter", enable_lut_noise_removal_filter_},
+        {"DispOutliersFilter", enable_disp_outliers_filter_},
     };
     std::string filter_name = filter->type();
     ROS_DEBUG_STREAM("Setting " << filter_name << "......");
@@ -3631,6 +3639,8 @@ void OBCameraNode::updateDepthFilterEnabledCache(const std::string& filter_name,
     enable_mgc_noise_removal_filter_ = enabled;
   } else if (normalized_filter_name == "LutNoiseRemovalFilter") {
     enable_lut_noise_removal_filter_ = enabled;
+  } else if (normalized_filter_name == "DispOutliersFilter") {
+    enable_disp_outliers_filter_ = enabled;
   } else if (normalized_filter_name == "NoiseRemovalFilter") {
     enable_noise_removal_filter_ = enabled;
   } else if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
@@ -4126,6 +4136,9 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         auto lut_noise_filter = existing_filter->as<ob::LutNoiseRemovalFilter>();
         lut_noise_filter->enable(request.filter_enable);
         enable_lut_noise_removal_filter_ = request.filter_enable;
+      } else if (normalized_request_filter_name == "DispOutliersFilter") {
+        existing_filter->enable(request.filter_enable);
+        enable_disp_outliers_filter_ = request.filter_enable;
       } else {
         return fail(normalized_request_filter_name + " cannot be set");
       }
