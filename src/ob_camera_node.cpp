@@ -498,6 +498,8 @@ void OBCameraNode::getParameters() {
   enable_lut_noise_removal_filter_ =
       nh_private_.param<bool>("enable_lut_noise_removal_filter", false);
   enable_disp_outliers_filter_ = nh_private_.param<bool>("enable_disp_outliers_filter", false);
+  disp_outliers_filter_search_mode_ =
+      nh_private_.param<int>("disp_outliers_filter_search_mode", -1);
   decimation_filter_scale_range_ = nh_private_.param<int>("decimation_filter_scale_range", -1);
   sequence_id_filter_id_ = nh_private_.param<int>("sequence_id_filter_id", -1);
   threshold_filter_max_ = nh_private_.param<int>("threshold_filter_max", -1);

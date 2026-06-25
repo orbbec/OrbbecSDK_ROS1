@@ -789,6 +789,7 @@ class OBCameraNode {
   bool enable_lut_noise_removal_filter_ = false;
   bool enable_disp_outliers_filter_ = false;
   // filter params
+  int disp_outliers_filter_search_mode_ = -1;
   int decimation_filter_scale_range_ = -1;
   int sequence_id_filter_id_ = -1;
   int threshold_filter_max_ = -1;
