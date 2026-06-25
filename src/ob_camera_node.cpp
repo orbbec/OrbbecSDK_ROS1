@@ -492,6 +492,8 @@ void OBCameraNode::getParameters() {
   enable_spatial_fast_filter_ = nh_private_.param<bool>("enable_spatial_fast_filter", false);
   enable_spatial_moderate_filter_ =
       nh_private_.param<bool>("enable_spatial_moderate_filter", false);
+  enable_edge_noise_removal_filter_ =
+      nh_private_.param<bool>("enable_edge_noise_removal_filter", false);
   enable_false_positive_filter_ = nh_private_.param<bool>("enable_false_positive_filter", false);
   enable_mgc_noise_removal_filter_ =
       nh_private_.param<bool>("enable_mgc_noise_removal_filter", false);

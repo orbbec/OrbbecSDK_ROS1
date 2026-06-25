@@ -1275,6 +1275,7 @@ void OBCameraNode::publishDepthFiltersStatus() {
   sync_filter_enabled("ThresholdFilter", enable_threshold_filter_);
   sync_filter_enabled("SpatialFastFilter", enable_spatial_fast_filter_);
   sync_filter_enabled("SpatialModerateFilter", enable_spatial_moderate_filter_);
+  sync_filter_enabled("EdgeNoiseRemovalFilter", enable_edge_noise_removal_filter_);
   sync_filter_enabled("FalsePositiveFilter", enable_false_positive_filter_);
   sync_filter_enabled("MgcNoiseRemovalFilter", enable_mgc_noise_removal_filter_);
   sync_filter_enabled("LutNoiseRemovalFilter", enable_lut_noise_removal_filter_);
@@ -1990,6 +1991,9 @@ void OBCameraNode::setupDepthPostProcessFilter() {
     if (filter_name == "SpatialModerateFilter") {
       return std::string("enable_spatial_moderate_filter");
     }
+    if (filter_name == "EdgeNoiseRemovalFilter") {
+      return std::string("enable_edge_noise_removal_filter");
+    }
     if (filter_name == "FalsePositiveFilter") {
       return std::string("enable_false_positive_filter");
     }
@@ -2014,6 +2018,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"ThresholdFilter", enable_threshold_filter_},
         {"SpatialFastFilter", enable_spatial_fast_filter_},
         {"SpatialModerateFilter", enable_spatial_moderate_filter_},
+        {"EdgeNoiseRemovalFilter", enable_edge_noise_removal_filter_},
         {"FalsePositiveFilter", enable_false_positive_filter_},
         {"MgcNoiseRemovalFilter", enable_mgc_noise_removal_filter_},
         {"LutNoiseRemovalFilter", enable_lut_noise_removal_filter_},
@@ -3717,6 +3722,8 @@ void OBCameraNode::updateDepthFilterEnabledCache(const std::string& filter_name,
     enable_spatial_fast_filter_ = enabled;
   } else if (normalized_filter_name == "SpatialModerateFilter") {
     enable_spatial_moderate_filter_ = enabled;
+  } else if (normalized_filter_name == "EdgeNoiseRemovalFilter") {
+    enable_edge_noise_removal_filter_ = enabled;
   } else if (normalized_filter_name == "FalsePositiveFilter") {
     enable_false_positive_filter_ = enabled;
   } else if (normalized_filter_name == "MgcNoiseRemovalFilter") {
@@ -4297,6 +4304,9 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         auto lut_noise_filter = existing_filter->as<ob::LutNoiseRemovalFilter>();
         lut_noise_filter->enable(request.filter_enable);
         enable_lut_noise_removal_filter_ = request.filter_enable;
+      } else if (normalized_request_filter_name == "EdgeNoiseRemovalFilter") {
+        existing_filter->enable(request.filter_enable);
+        enable_edge_noise_removal_filter_ = request.filter_enable;
       } else {
         return fail(normalized_request_filter_name + " cannot be set");
       }
