@@ -1569,7 +1569,7 @@ void OBCameraNode::setupColorPostProcessFilter() {
 
   if (color_filter_list_.empty() && left_color_filter_list_.empty() &&
       right_color_filter_list_.empty()) {
-    ROS_DEBUG("Failed to get any color sensor filter list");
+    ROS_DEBUG("Color sensor filter lists are empty");
     return;
   }
   for (size_t i = 0; i < color_filter_list_.size(); i++) {
@@ -1674,7 +1674,7 @@ void OBCameraNode::setupIrPostProcessFilter() {
     auto ir_sensor = device_->getSensor(OB_SENSOR_IR);
     ir_filter_list_ = ir_sensor->createRecommendedFilters();
     if (ir_filter_list_.empty()) {
-      ROS_WARN_STREAM("Failed to get ir sensor filter list");
+      ROS_DEBUG_STREAM("IR sensor filter list is empty");
     }
   } catch (const ob::Error& e) {
     ROS_WARN_STREAM("Failed to setup ir filters: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -1872,7 +1872,7 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
     auto left_ir_sensor = device_->getSensor(OB_SENSOR_IR_LEFT);
     left_ir_filter_list_ = left_ir_sensor->createRecommendedFilters();
     if (left_ir_filter_list_.empty()) {
-      ROS_WARN_STREAM("Failed to get left ir sensor filter list");
+      ROS_DEBUG_STREAM("Left IR sensor filter list is empty");
       return;
     }
     for (size_t i = 0; i < left_ir_filter_list_.size(); i++) {
@@ -1915,7 +1915,7 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
     auto right_ir_sensor = device_->getSensor(OB_SENSOR_IR_RIGHT);
     right_ir_filter_list_ = right_ir_sensor->createRecommendedFilters();
     if (right_ir_filter_list_.empty()) {
-      ROS_WARN_STREAM("Failed to get right ir sensor filter list");
+      ROS_DEBUG_STREAM("Right IR sensor filter list is empty");
       return;
     }
     for (size_t i = 0; i < right_ir_filter_list_.size(); i++) {
@@ -1957,7 +1957,7 @@ void OBCameraNode::setupDepthPostProcessFilter() {
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
   depth_filter_list_ = depth_sensor->createRecommendedFilters();
   if (depth_filter_list_.empty()) {
-    ROS_WARN_STREAM("Failed to get depth sensor filter list");
+    ROS_DEBUG_STREAM("Depth sensor filter list is empty");
     return;
   }
   auto depth_filter_enable_param = [](const std::string& filter_name) {
