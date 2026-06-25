@@ -217,6 +217,22 @@ bool parseFilterConfigValue(const OBFilterConfigSchemaItem& schema, const std::s
   return true;
 }
 
+bool equalsIgnoreCase(const std::string& lhs, const char* rhs) {
+  if (rhs == nullptr) {
+    return false;
+  }
+
+  const std::string rhs_value(rhs);
+  if (lhs.size() != rhs_value.size()) {
+    return false;
+  }
+
+  return std::equal(lhs.begin(), lhs.end(), rhs_value.begin(), [](char a, char b) {
+    return std::tolower(static_cast<unsigned char>(a)) ==
+           std::tolower(static_cast<unsigned char>(b));
+  });
+}
+
 }  // namespace
 
 std::string OBCameraNode::normalizeDepthFilterName(const std::string& filter_name) {
@@ -946,11 +962,15 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
     }
   }
   sync_bool("color", "color_anti_flicker", color_anti_flicker_, OB_PROP_COLOR_ANTI_FLICKER_BOOL);
-  if (isConfigJsonLoaded() && can_read(OB_PROP_COLOR_PRESET_PRIORITY_INT)) {
+  if (isConfigJsonLoaded()) {
     try {
-      const auto color_preset = device_->getIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT);
-      color_preset_ = color_preset == 1 ? "Warm Biased AWB" : "Default";
-      log_readback("color", "color_preset", color_preset_);
+      if (device_->isColorPresetSupported()) {
+        const char* color_preset = device_->getCurrentColorPresetName();
+        if (color_preset != nullptr) {
+          color_preset_ = color_preset;
+          log_readback("color", "color_preset", color_preset_);
+        }
+      }
     } catch (const std::exception&) {
     }
   }
@@ -2116,27 +2136,48 @@ void OBCameraNode::setupDevices() {
       ROS_ERROR_STREAM("Failed to load device preset");
     }
   }
-  if (!color_preset_.empty() &&
-      device_->isPropertySupported(OB_PROP_COLOR_PRESET_PRIORITY_INT, OB_PERMISSION_WRITE)) {
-    std::string preset_key = color_preset_;
-    std::transform(preset_key.begin(), preset_key.end(), preset_key.begin(), ::tolower);
-    int preset_value = -1;
-    if (preset_key == "default") {
-      preset_value = 0;
-    } else if (preset_key == "warm biased awb") {
-      preset_value = 1;
-    } else {
-      ROS_WARN_STREAM("Unsupported color_preset: "
-                      << color_preset_ << ". Supported values: Default, Warm Biased AWB");
-    }
-    if (preset_value >= 0) {
-      device_->setIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT, preset_value);
-      auto current_value = device_->getIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT);
-      if (current_value == 0) {
-        ROS_INFO_STREAM("Current color preset: Default");
-      } else if (current_value == 1) {
-        ROS_INFO_STREAM("Current color preset: Warm Biased AWB");
+  if (!color_preset_.empty()) {
+    try {
+      if (!device_->isColorPresetSupported()) {
+        ROS_WARN_STREAM("Color preset is not supported by this device");
+      } else {
+        auto color_preset_list = device_->getColorPresetList();
+        std::string selected_preset;
+        std::ostringstream supported_presets;
+        bool has_supported_preset = false;
+        const uint32_t preset_count = color_preset_list ? color_preset_list->getCount() : 0;
+        for (uint32_t i = 0; i < preset_count; ++i) {
+          const char* preset_name = color_preset_list->getName(i);
+          if (preset_name == nullptr) {
+            continue;
+          }
+          if (has_supported_preset) {
+            supported_presets << ", ";
+          }
+          supported_presets << preset_name;
+          has_supported_preset = true;
+          if (equalsIgnoreCase(color_preset_, preset_name)) {
+            selected_preset = preset_name;
+          }
+        }
+
+        if (selected_preset.empty()) {
+          ROS_WARN_STREAM("Unsupported color_preset: " << color_preset_ << ". Supported values: "
+                                                       << supported_presets.str());
+        } else {
+          device_->switchColorPreset(selected_preset.c_str());
+          const char* current_preset = device_->getCurrentColorPresetName();
+          color_preset_ = current_preset != nullptr ? current_preset : selected_preset;
+          ROS_INFO_STREAM("Current color preset: " << color_preset_);
+        }
       }
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM(
+          "Failed to switch color preset: " << orbbec_camera::formatObErrorWithStatus(e));
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM("Failed to switch color preset: " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("Failed to switch color preset");
     }
   }
   if (!preset_resolution_config_.empty()) {

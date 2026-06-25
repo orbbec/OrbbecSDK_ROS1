@@ -64,17 +64,6 @@ std::string alignTargetStreamToString(OBStreamType stream_type) {
   }
 }
 
-std::string colorPresetToString(int value) {
-  switch (value) {
-    case 0:
-      return "Default";
-    case 1:
-      return "Warm Biased AWB";
-    default:
-      return "";
-  }
-}
-
 std::string disparityToDepthModeToString(bool hardware_enabled, bool software_enabled) {
   if (hardware_enabled) {
     return "HW";
@@ -1195,10 +1184,11 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
   }
 
   try {
-    const auto color_preset = device_->getIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT);
-    const auto color_preset_name = colorPresetToString(color_preset);
-    if (!color_preset_name.empty()) {
-      response.color_preset = color_preset_name;
+    if (device_->isColorPresetSupported()) {
+      const char* color_preset_name = device_->getCurrentColorPresetName();
+      if (color_preset_name != nullptr && color_preset_name[0] != '\0') {
+        response.color_preset = color_preset_name;
+      }
     }
   } catch (const ob::Error& e) {
     ROS_DEBUG_STREAM("Failed to get color preset: " << orbbec_camera::formatObErrorWithStatus(e));
