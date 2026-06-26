@@ -193,38 +193,6 @@ The following are the launch parameters available:
   * Subnet mask for the static IP. **Default:** `255.255.255.0`
 * **`force_ip_gateway`**
   * Gateway address for the static IP. **Default:** `192.168.1.1`
-### Device-Specific
-* **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
-  * Enable the gmsl trigger out signal / set gmsl trigger fps.
-  > Only supports [gmsl camera](../5_advanced_guide/multi_camera/gmsl_cameras.md).
-  >
-* **`enable_ptp_config`**
-  * Enable PTP time synchronization. Requires `enable_sync_host_time` to be `false`.
-  > **Supported Modules**: Gemini 335Le
-* **`preset_resolution_config`**
-  * Preset resolution configuration for the camera device. Format: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". Leave empty to disable.
-  > **Supported Modules**: Gemini 435Le
-* **`ae_reference_stream`**
-  * Select the AE reference stream for Gemini 305 series devices. Options: `color`, `depth`.
-  > **Supported Modules**: Gemini 305
-* **`ae_strategy`**
-  * Select the AE strategy for Gemini 305 series devices. Options: `default`, `motion`.
-  > **Supported Modules**: Gemini 305
-* **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
-  * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
-  > **Supported Modules**: Gemini 305
-* **`enable_false_positive_filter`**
-  * Enable this option to reduce ghosting noise.
-  > **Supported Modules**: DaBaiA / DaBaiAL / Gemini 330 series / Gemini345 / Gemini345Lg
-* **`enable_edge_noise_removal_filter`**
-  * Enable EdgeNoiseRemovalFilter to reduce edge noise in depth frames.
-  > **Supported Modules**: DaBai Max Pro
-* **`enable_disp_outliers_filter`**
-  * Enable DispOutliersFilter to remove disparity outliers in depth frames.
-  > **Supported Modules**: DaBai Max Pro
-* **`disp_outliers_filter_search_mode`**
-  * Set the DispOutliersFilter search mode. Leave it empty to keep the SDK default. Options: `FULL`, `OFFSET_80`. The value is case-insensitive.
-  > **Supported Modules**: DaBai Max Pro
 ### Disparity
 *   **`disparity_to_depth_mode`**
     *   `HW`: use hardware disparity to depth conversion. `SW`: use software disparity to depth conversion. Use `disable` to turn it off.
@@ -256,6 +224,39 @@ The following are the launch parameters available:
   *   This parameter is case-insensitive. Hardware D2C only supports `COLOR` as the target stream; use `align_mode:=SW` if you need to align to `DEPTH`. See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for startup and viewing examples.
 - **`intra_camera_sync_reference`**
   - Sets the reference point for intra-camera synchronization. Applicable for Gemini 330 series devices when `sync_mode` is set to **software** or **hardware trigger** mode. **Options:** `Start`, `Middle`, `End`. When set to empty, the long baseline device defaults to End, and the short baseline device defaults to Middle.
+
+## Device-Specific Parameters
+* **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
+  * Enable the gmsl trigger out signal / set gmsl trigger fps.
+  > Only supports [gmsl camera](../5_advanced_guide/multi_camera/gmsl_cameras.md).
+  >
+* **`enable_ptp_config`**
+  * Enable PTP time synchronization. Requires `enable_sync_host_time` to be `false`.
+  > **Supported Modules**: Gemini 335Le
+* **`preset_resolution_config`**
+  * Preset resolution configuration for the camera device. Format: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". Leave empty to disable.
+  > **Supported Modules**: Gemini 435Le
+* **`ae_reference_stream`**
+  * Select the AE reference stream for Gemini 305 series devices. Options: `color`, `depth`.
+  > **Supported Modules**: Gemini 305
+* **`ae_strategy`**
+  * Select the AE strategy for Gemini 305 series devices. Options: `default`, `motion`.
+  > **Supported Modules**: Gemini 305
+* **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
+  * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
+  > **Supported Modules**: Gemini 305
+* **`enable_false_positive_filter`**
+  * Enable this option to reduce ghosting noise.
+  > **Supported Modules**: DaBaiA / DaBaiAL / Gemini 330 series / Gemini345 / Gemini345Lg
+* **`enable_edge_noise_removal_filter`**
+  * Enable EdgeNoiseRemovalFilter to reduce edge noise in depth frames.
+  > **Supported Modules**: DaBai Max Pro
+* **`enable_disp_outliers_filter`**
+  * Enable DispOutliersFilter to remove disparity outliers in depth frames.
+  > **Supported Modules**: DaBai Max Pro
+* **`disp_outliers_filter_search_mode`**
+  * Set the DispOutliersFilter search mode. Leave it empty to keep the SDK default. Options: `FULL`, `OFFSET_80`. The value is case-insensitive.
+  > **Supported Modules**: DaBai Max Pro
 
 ## Basic & General Parameters
 

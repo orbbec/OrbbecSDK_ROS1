@@ -195,37 +195,6 @@
 * **`force_ip_gateway`**
   * 静态IP的网关地址。**默认值：** `192.168.1.1`
 
-### 设备特定
-*   **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
-    *   启用gmsl触发输出信号 / 设置gmsl触发fps。用于 [gmsl相机](../5_advanced_guide/multi_camera/gmsl_cameras.md)。
-* **`enable_ptp_config`**
-  * 启用PTP时间同步。仅适用于Gemini 335Le。需要 `enable_sync_host_time` 设置为 `false`。
-  > **支持模组**：Gemini 335Le。
-* **`preset_resolution_config`**
-  * 摄像头设备的预设分辨率配置。格式: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". 留空禁用。
-  > **支持模组**：Gemini 435Le。
-* **`ae_reference_stream`**
-  * 设置 Gemini 305 系列设备的 AE 参考流。可选值：`color`、`depth`。
-  > **支持模组**：Gemini 305。
-* **`ae_strategy`**
-  * 设置 Gemini 305 系列设备的 AE 策略。可选值：`default`、`motion`。
-  > **支持模组**：Gemini 305。
-* **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
-  * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
-  > **支持模组**：Gemini 305。
-* **`enable_false_positive_filter`**
-  * 启用鬼影滤波。可减少重影噪声。
-  > **支持模组**：DaBaiA / DaBaiAL / Gemini 330 系列 / Gemini345 / Gemini345Lg。
-* **`enable_edge_noise_removal_filter`**
-  * 启用 EdgeNoiseRemovalFilter，用于减少深度图边缘噪声。
-  > **支持模组**：DaBai Max Pro。
-* **`enable_disp_outliers_filter`**
-  * 启用 DispOutliersFilter，用于移除深度图中的视差离群点。
-  > **支持模组**：DaBai Max Pro。
-* **`disp_outliers_filter_search_mode`**
-  * 设置 DispOutliersFilter 的搜索模式。留空表示使用 SDK 默认值。可选值：`FULL`、`OFFSET_80`，大小写不敏感。
-  > **支持模组**：DaBai Max Pro。
-
 ### 视差
 *   **`disparity_to_depth_mode`**
     *   `HW`：使用硬件视差到深度转换。`SW`：使用软件视差到深度转换。也可以设置为 `disable` 关闭。
@@ -257,6 +226,37 @@
   *   该参数大小写不敏感。硬件 D2C 仅支持 `COLOR` 作为对齐目标；如需对齐到 `DEPTH`，请使用 `align_mode:=SW`。启动和查看方法参考 [对齐深度到彩色](../5_advanced_guide/configuration/align_depth_color.md)。
 - **`intra_camera_sync_reference`**
   - 设置相机内同步的参考点。适用于Gemini 330系列设备，当 `sync_mode` 设置为**软件**或**硬件触发**模式时。**选项：** `Start`、`Middle`、`End`。设置为空时，长基线设备默认End，短基线设备默认Middle。
+
+## 设备特定参数
+*   **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
+    *   启用gmsl触发输出信号 / 设置gmsl触发fps。用于 [gmsl相机](../5_advanced_guide/multi_camera/gmsl_cameras.md)。
+* **`enable_ptp_config`**
+  * 启用PTP时间同步。仅适用于Gemini 335Le。需要 `enable_sync_host_time` 设置为 `false`。
+  > **支持模组**：Gemini 335Le。
+* **`preset_resolution_config`**
+  * 摄像头设备的预设分辨率配置。格式: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". 留空禁用。
+  > **支持模组**：Gemini 435Le。
+* **`ae_reference_stream`**
+  * 设置 Gemini 305 系列设备的 AE 参考流。可选值：`color`、`depth`。
+  > **支持模组**：Gemini 305。
+* **`ae_strategy`**
+  * 设置 Gemini 305 系列设备的 AE 策略。可选值：`default`、`motion`。
+  > **支持模组**：Gemini 305。
+* **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
+  * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
+  > **支持模组**：Gemini 305。
+* **`enable_false_positive_filter`**
+  * 启用鬼影滤波。可减少重影噪声。
+  > **支持模组**：DaBaiA / DaBaiAL / Gemini 330 系列 / Gemini345 / Gemini345Lg。
+* **`enable_edge_noise_removal_filter`**
+  * 启用 EdgeNoiseRemovalFilter，用于减少深度图边缘噪声。
+  > **支持模组**：DaBai Max Pro。
+* **`enable_disp_outliers_filter`**
+  * 启用 DispOutliersFilter，用于移除深度图中的视差离群点。
+  > **支持模组**：DaBai Max Pro。
+* **`disp_outliers_filter_search_mode`**
+  * 设置 DispOutliersFilter 的搜索模式。留空表示使用 SDK 默认值。可选值：`FULL`、`OFFSET_80`，大小写不敏感。
+  > **支持模组**：DaBai Max Pro。
 
 ## 基础与通用参数
 
