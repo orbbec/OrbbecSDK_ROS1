@@ -278,6 +278,8 @@ int main(int argc, char **argv) {
           ROS_INFO_STREAM("gateway: " << list->getGateway(i));
           ROS_INFO_STREAM(
               "local net interface: " << list->getLocalNetInterfaceName(static_cast<uint32_t>(i)));
+          ROS_INFO_STREAM(
+              "local MAC address: " << list->getLocalMacAddress(static_cast<uint32_t>(i)));
           ROS_INFO_STREAM("ip source type: " << ipSourceTypeToString(
                               static_cast<int>(list->getIpSourceType(static_cast<uint32_t>(i)))));
           printIpConfigStatus(device_);
