@@ -164,14 +164,6 @@ void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
       }
     }
 
-    std::string key = "PresetVer";
-    if (device->isExtensionInfoExist(key)) {
-      std::string value = device->getExtensionInfo(key);
-      ROS_INFO_STREAM("device_preset version: " << value);
-    } else {
-      ROS_INFO_STREAM("device_preset version: not available");
-    }
-
     if (device->isColorPresetSupported()) {
       auto color_preset_list = device->getColorPresetList();
       const uint32_t color_preset_count = color_preset_list ? color_preset_list->getCount() : 0;
@@ -182,6 +174,14 @@ void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
           ROS_INFO_STREAM("  - " << preset_name);
         }
       }
+    }
+
+    std::string key = "PresetVer";
+    if (device->isExtensionInfoExist(key)) {
+      std::string value = device->getExtensionInfo(key);
+      ROS_INFO_STREAM("preset version: " << value);
+    } else {
+      ROS_INFO_STREAM("preset version: not available");
     }
   } catch (ob::Error &e) {
     ROS_WARN_STREAM("Failed to get preset info: " << orbbec_camera::formatObErrorWithStatus(e));
