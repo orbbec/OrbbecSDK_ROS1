@@ -35,11 +35,13 @@ typedef struct ob_filter_t                        ob_filter;
 typedef struct ob_filter_list_t                   ob_filter_list;
 typedef struct ob_pipeline_t                      ob_pipeline;
 typedef struct ob_config_t                        ob_config;
+typedef struct ob_application_config_t            ob_application_config;
 typedef struct ob_depth_work_mode_list_t          ob_depth_work_mode_list;
 typedef struct ob_device_preset_list_t            ob_device_preset_list;
 typedef struct ob_filter_config_schema_list_t     ob_filter_config_schema_list;
 typedef struct ob_device_frame_interleave_list_t  ob_device_frame_interleave_list;
 typedef struct ob_preset_resolution_config_list_t ob_preset_resolution_config_list;
+typedef struct ob_color_preset_list_t             ob_color_preset_list;
 
 #define OB_WIDTH_ANY 0
 #define OB_HEIGHT_ANY 0
@@ -574,6 +576,7 @@ typedef enum {
     ALIGN_DISABLE,     /**< Turn off alignment */
     ALIGN_D2C_HW_MODE, /**< Hardware D2C alignment mode */
     ALIGN_D2C_SW_MODE, /**< Software D2C alignment mode */
+    ALIGN_C2D_SW_MODE, /**< Software C2D alignment mode */
 } OBAlignMode,
     ob_align_mode;
 
@@ -2029,6 +2032,15 @@ typedef enum {
     OB_IP_SOURCE_PERSISTENT = 3,  ///< Persistent IP (Static IP stored in memory).
 } ob_ip_source_type,
     OBIpSourceType;
+
+/**
+ * @brief Host-side timestamp clock type for device.
+ */
+typedef enum {
+    OB_CLOCK_TYPE_REALTIME  = 0, /**< Wall clock (system_clock), epoch-based. Default. */
+    OB_CLOCK_TYPE_MONOTONIC = 1, /**< System monotonic clock, non-epoch. */
+} OBClockType,
+    ob_clock_type;
 
 /**
  * @brief Callback for file transfer

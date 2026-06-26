@@ -18,8 +18,16 @@
 #include "orbbec_camera/utils.h"
 #include <image_transport/image_transport.h>
 #include <std_msgs/String.h>
+#include <algorithm>
+#include <cctype>
+#include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
+#include <unordered_map>
+#include <unordered_set>
+#include <boost/filesystem.hpp>
 
 namespace orbbec_camera {
 
@@ -33,6 +41,43 @@ std::string getDepthFilterStatusName(const std::string& filter_name) {
     return "DisparityToDepth";
   }
   return filter_name;
+}
+
+boost::filesystem::path resolveConfigJsonFilePath(const std::string& file_path) {
+  boost::filesystem::path path(file_path);
+  const char* home_dir = std::getenv("HOME");
+  if ((file_path == "~" || file_path.rfind("~/", 0) == 0) && home_dir != nullptr) {
+    path = boost::filesystem::path(home_dir);
+    if (file_path.size() > 2) {
+      path /= file_path.substr(2);
+    }
+  }
+  if (path.is_relative()) {
+    path = boost::filesystem::absolute(path);
+  }
+  return path.lexically_normal();
+}
+
+bool configJsonContainsApplicationConfig(const std::string& file_path) {
+  if (file_path.empty()) {
+    return false;
+  }
+
+  std::ifstream config_file(resolveConfigJsonFilePath(file_path).string());
+  if (!config_file.good()) {
+    return false;
+  }
+
+  try {
+    nlohmann::json config_json;
+    config_file >> config_json;
+    return config_json.contains("application_config");
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Config JSON application_config check failed file="
+                    << resolveConfigJsonFilePath(file_path).string() << " error=\"" << e.what()
+                    << "\"");
+  }
+  return false;
 }
 
 std::string getDepthFilterStatusParamName(const std::string& filter_name,
@@ -52,10 +97,168 @@ std::string getDepthFilterStatusParamName(const std::string& filter_name,
   return param_name;
 }
 
+std::string getDepthFilterConfigParamName(const std::string& filter_name,
+                                          const std::string& param_name) {
+  if ((filter_name == "SpatialAdvancedFilter" || filter_name == "SpatialModerateFilter") &&
+      param_name == "diff_threshold") {
+    return "disp_diff";
+  }
+  if (filter_name == "TemporalFilter" && param_name == "diff_threshold") {
+    return "diff_scale";
+  }
+  if (filter_name == "DecimationFilter" && param_name == "scale") {
+    return "decimate";
+  }
+  if (filter_name == "SequenceIdFilter" && (param_name == "id" || param_name == "sequence_id" ||
+                                            param_name == "sequence_id_filter_id")) {
+    return "sequenceid";
+  }
+  if (filter_name == "HoleFillingFilter" && param_name == "mode") {
+    return "hole_filling_mode";
+  }
+  return param_name;
+}
+
 bool shouldExposeDepthFilterParams(const std::string& filter_name) {
   return filter_name != "MgcNoiseRemovalFilter" && filter_name != "LutNoiseRemovalFilter" &&
-         filter_name != "DisparityTransform" && filter_name != "FalsePositiveFilter" &&
-         filter_name != "EdgeNoiseRemovalFilter";
+         filter_name != "DisparityTransform" && filter_name != "EdgeNoiseRemovalFilter";
+}
+
+std::string formatFilterConfigValue(const OBFilterConfigSchemaItem& config_schema, double value) {
+  switch (config_schema.type) {
+    case OB_FILTER_CONFIG_VALUE_TYPE_INT: {
+      return std::to_string(static_cast<long long>(value));
+    }
+    case OB_FILTER_CONFIG_VALUE_TYPE_BOOLEAN:
+      return value != 0.0 ? std::string("true") : std::string("false");
+    case OB_FILTER_CONFIG_VALUE_TYPE_FLOAT:
+    default: {
+      std::ostringstream ss;
+      ss << value;
+      return ss.str();
+    }
+  }
+}
+
+std::string trimFilterConfigValue(const std::string& value) {
+  auto begin = value.begin();
+  while (begin != value.end() && std::isspace(static_cast<unsigned char>(*begin))) {
+    ++begin;
+  }
+  auto end = value.end();
+  while (end != begin && std::isspace(static_cast<unsigned char>(*(end - 1)))) {
+    --end;
+  }
+  return std::string(begin, end);
+}
+
+std::string lowerFilterConfigValue(std::string value) {
+  std::transform(value.begin(), value.end(), value.begin(),
+                 [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  return value;
+}
+
+bool parseFilterConfigDouble(const std::string& raw_value, double& parsed_value,
+                             std::string& message) {
+  const auto value = trimFilterConfigValue(raw_value);
+  if (value.empty()) {
+    message = "Filter config value is empty";
+    return false;
+  }
+
+  try {
+    size_t parsed_chars = 0;
+    parsed_value = std::stod(value, &parsed_chars);
+    if (parsed_chars != value.size()) {
+      message = "Filter config value '" + raw_value + "' is not a valid number";
+      return false;
+    }
+  } catch (const std::exception&) {
+    message = "Filter config value '" + raw_value + "' is not a valid number";
+    return false;
+  }
+  return true;
+}
+
+std::string dispOutliersSearchModeToString(int search_mode) {
+  switch (search_mode) {
+    case 0:
+      return "FULL";
+    case 1:
+      return "OFFSET_80";
+    default:
+      return "";
+  }
+}
+
+bool parseDispOutliersSearchMode(const std::string& raw_value, int& search_mode,
+                                 std::string& message) {
+  const auto value = trimFilterConfigValue(raw_value);
+  const auto lower_value = lowerFilterConfigValue(value);
+  if (lower_value == "full") {
+    search_mode = 0;
+    return true;
+  }
+  if (lower_value == "offset_80") {
+    search_mode = 1;
+    return true;
+  }
+
+  message = "Filter config 'search_mode' expects one of FULL, OFFSET_80";
+  return false;
+}
+
+bool parseFilterConfigValue(const OBFilterConfigSchemaItem& schema, const std::string& raw_value,
+                            double& parsed_value, std::string& message) {
+  const auto value = trimFilterConfigValue(raw_value);
+  if (schema.type == OB_FILTER_CONFIG_VALUE_TYPE_BOOLEAN) {
+    const auto lower_value = lowerFilterConfigValue(value);
+    if (lower_value == "true" || lower_value == "1") {
+      parsed_value = 1.0;
+      return true;
+    }
+    if (lower_value == "false" || lower_value == "0") {
+      parsed_value = 0.0;
+      return true;
+    }
+    message = "Filter config '" + std::string(schema.name) + "' expects a boolean value";
+    return false;
+  }
+
+  if (!parseFilterConfigDouble(value, parsed_value, message)) {
+    return false;
+  }
+
+  if (schema.type == OB_FILTER_CONFIG_VALUE_TYPE_INT && std::floor(parsed_value) != parsed_value) {
+    message = "Filter config '" + std::string(schema.name) + "' expects an integer value";
+    return false;
+  }
+
+  if (parsed_value < schema.min || parsed_value > schema.max) {
+    std::ostringstream ss;
+    ss << "Filter config '" << schema.name << "' value " << parsed_value << " is out of range ["
+       << schema.min << ", " << schema.max << "]";
+    message = ss.str();
+    return false;
+  }
+
+  return true;
+}
+
+bool equalsIgnoreCase(const std::string& lhs, const char* rhs) {
+  if (rhs == nullptr) {
+    return false;
+  }
+
+  const std::string rhs_value(rhs);
+  if (lhs.size() != rhs_value.size()) {
+    return false;
+  }
+
+  return std::equal(lhs.begin(), lhs.end(), rhs_value.begin(), [](char a, char b) {
+    return std::tolower(static_cast<unsigned char>(a)) ==
+           std::tolower(static_cast<unsigned char>(b));
+  });
 }
 
 }  // namespace
@@ -67,6 +270,9 @@ std::string OBCameraNode::normalizeDepthFilterName(const std::string& filter_nam
   if (filter_name == "SpatialFilter") {
     return "SpatialAdvancedFilter";
   }
+  if (filter_name == "DepthOutliersFilter" || filter_name == "DisparityOutliersFilter") {
+    return "DispOutliersFilter";
+  }
   return filter_name;
 }
 
@@ -76,6 +282,931 @@ void OBCameraNode::appendDepthFilterParam(orbbec_camera::DepthFilterState& filte
   param.name = name;
   param.value = value;
   filter_state.params.push_back(param);
+}
+
+bool OBCameraNode::isConfigJsonLoaded() const { return config_json_loaded_; }
+
+void OBCameraNode::captureInitialRosParameters() {
+  std::vector<std::string> param_names;
+  nh_private_.getParamNames(param_names);
+  initial_ros_params_.clear();
+  initial_ros_params_.insert(param_names.begin(), param_names.end());
+}
+
+bool OBCameraNode::isLaunchParamProvided(const std::string& param_name) const {
+  if (param_name.empty()) {
+    return false;
+  }
+  return initial_ros_params_.find(param_name) != initial_ros_params_.end() ||
+         initial_ros_params_.find(nh_private_.resolveName(param_name)) != initial_ros_params_.end();
+}
+
+void OBCameraNode::loadConfigJson() {
+  if (load_config_json_file_path_.empty()) {
+    return;
+  }
+
+  const auto resolved_file_path = resolveConfigJsonFilePath(load_config_json_file_path_);
+  const auto resolved_file_path_str = resolved_file_path.string();
+  std::ifstream load_config_file(resolved_file_path_str);
+  if (!load_config_file.good()) {
+    ROS_WARN_STREAM("Config JSON load skip file=" << resolved_file_path_str
+                                                  << " reason=file_not_found");
+    return;
+  }
+
+  try {
+    device_->loadPresetFromJsonFile(resolved_file_path_str.c_str());
+    config_json_loaded_ = true;
+    ROS_INFO_STREAM("Config JSON loaded file=" << resolved_file_path_str);
+  } catch (const ob::Error& e) {
+    config_json_loaded_ = false;
+    ROS_ERROR_STREAM("Config JSON load failed file=" << resolved_file_path_str << " error=\""
+                                                     << orbbec_camera::formatObErrorWithStatus(e)
+                                                     << "\"");
+  } catch (const std::exception& e) {
+    config_json_loaded_ = false;
+    ROS_ERROR_STREAM("Config JSON load failed file=" << resolved_file_path_str << " error=\""
+                                                     << e.what() << "\"");
+  } catch (...) {
+    config_json_loaded_ = false;
+    ROS_ERROR_STREAM("Config JSON load failed file=" << resolved_file_path_str);
+  }
+}
+
+void OBCameraNode::syncConfigJsonApplicationConfig() {
+  if (!config_json_loaded_ || !configJsonContainsApplicationConfig(load_config_json_file_path_)) {
+    return;
+  }
+
+  try {
+    if (!ob::ApplicationConfig::isSupported(device_)) {
+      ROS_WARN_STREAM(
+          "Config JSON application_config is ignored because this device does not "
+          "support SDK application config");
+      return;
+    }
+
+    auto application_config = ob::ApplicationConfig::get(device_);
+    CHECK_NOTNULL(application_config.get());
+
+    for (const auto& sensor_config : application_config->sensors()) {
+      if (!sensor_config || !sensor_config->streamProfile()) {
+        continue;
+      }
+
+      auto profile = sensor_config->streamProfile();
+      const stream_index_pair stream_index{profile->getType(), 0};
+      auto stream_name_it = stream_name_.find(stream_index);
+      if (stream_name_it == stream_name_.end()) {
+        ROS_DEBUG_STREAM(
+            "Config JSON application_config skips unsupported stream type=" << profile->getType());
+        continue;
+      }
+
+      const auto& stream_name = stream_name_it->second;
+      if (!isLaunchParamProvided("enable_" + stream_name)) {
+        enable_stream_[stream_index] = sensor_config->isStreamEnabled();
+      }
+
+      if (std::find(IMAGE_STREAMS.begin(), IMAGE_STREAMS.end(), stream_index) !=
+          IMAGE_STREAMS.end()) {
+        auto video_profile = profile->as<ob::VideoStreamProfile>();
+        if (!isLaunchParamProvided(stream_name + "_width")) {
+          width_[stream_index] = static_cast<int>(video_profile->width());
+        }
+        if (!isLaunchParamProvided(stream_name + "_height")) {
+          height_[stream_index] = static_cast<int>(video_profile->height());
+        }
+        if (!isLaunchParamProvided(stream_name + "_fps")) {
+          fps_[stream_index] = static_cast<int>(video_profile->fps());
+        }
+        if (!isLaunchParamProvided(stream_name + "_format")) {
+          format_[stream_index] = video_profile->format();
+          format_str_[stream_index] = OBFormatToString(format_[stream_index]);
+        }
+        if (!isLaunchParamProvided("enable_" + stream_name + "_undistortion")) {
+          enable_undistortion_[stream_index] = sensor_config->isUndistortionEnabled();
+        }
+      } else if (stream_index == ACCEL) {
+        auto accel_profile = profile->as<ob::AccelStreamProfile>();
+        if (!isLaunchParamProvided("accel_rate")) {
+          imu_rate_[ACCEL] = sampleRateToString(accel_profile->sampleRate());
+        }
+        if (!isLaunchParamProvided("accel_range")) {
+          imu_range_[ACCEL] = fullAccelScaleRangeToString(accel_profile->fullScaleRange());
+        }
+      } else if (stream_index == GYRO) {
+        auto gyro_profile = profile->as<ob::GyroStreamProfile>();
+        if (!isLaunchParamProvided("gyro_rate")) {
+          imu_rate_[GYRO] = sampleRateToString(gyro_profile->sampleRate());
+        }
+        if (!isLaunchParamProvided("gyro_range")) {
+          imu_range_[GYRO] = fullGyroScaleRangeToString(gyro_profile->fullScaleRange());
+        }
+      }
+    }
+
+    auto point_cloud_config = application_config->pointCloud();
+    if (point_cloud_config) {
+      const auto point_cloud_enabled = point_cloud_config->isEnabled();
+      const auto point_cloud_format = point_cloud_config->format();
+      if (!isLaunchParamProvided("enable_point_cloud")) {
+        enable_point_cloud_ = point_cloud_enabled && point_cloud_format == OB_FORMAT_POINT;
+      }
+      if (!isLaunchParamProvided("enable_colored_point_cloud")) {
+        enable_colored_point_cloud_ =
+            point_cloud_enabled && point_cloud_format == OB_FORMAT_RGB_POINT;
+      }
+      if (!isLaunchParamProvided("point_cloud_decimation_filter_factor")) {
+        point_cloud_decimation_filter_factor_ = point_cloud_config->decimationFactor();
+      }
+      if (!isLaunchParamProvided("enable_frame_sync")) {
+        enable_frame_sync_ = point_cloud_config->isFrameSyncEnabled();
+      }
+      if (!isLaunchParamProvided("frame_aggregate_mode")) {
+        frame_aggregate_mode_ = point_cloud_config->isAllFrameTypeRequired() ? "full_frame" : "ANY";
+      }
+
+      const auto align_mode = point_cloud_config->alignMode();
+      if (!isLaunchParamProvided("depth_registration")) {
+        depth_registration_ = align_mode != ALIGN_DISABLE;
+      }
+      if (!isLaunchParamProvided("align_mode")) {
+        if (align_mode == ALIGN_D2C_HW_MODE) {
+          align_mode_ = "HW";
+        } else if (align_mode == ALIGN_D2C_SW_MODE || align_mode == ALIGN_C2D_SW_MODE) {
+          align_mode_ = "SW";
+        }
+      }
+      if (!isLaunchParamProvided("align_target_stream")) {
+        if (align_mode == ALIGN_D2C_HW_MODE || align_mode == ALIGN_D2C_SW_MODE) {
+          align_target_stream_ = OB_STREAM_COLOR;
+        } else if (align_mode == ALIGN_C2D_SW_MODE) {
+          align_target_stream_ = OB_STREAM_DEPTH;
+        }
+      }
+    }
+
+    auto hdr_merge_config = application_config->hdrMerge();
+    if (hdr_merge_config && !isLaunchParamProvided("enable_hdr_merge")) {
+      enable_hdr_merge_ = hdr_merge_config->isEnabled();
+    }
+
+    auto device_decimation_config = application_config->deviceDecimation();
+    if (device_decimation_config && device_decimation_config->isEnabled() &&
+        !isLaunchParamProvided("preset_resolution_config")) {
+      const auto& config = device_decimation_config->presetResolutionConfig();
+      std::ostringstream ss;
+      ss << config.width << "," << config.height << "," << config.irDecimationFactor << ","
+         << config.depthDecimationFactor;
+      preset_resolution_config_ = ss.str();
+    }
+
+    ROS_INFO_STREAM("Config JSON application_config synced");
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Config JSON application_config sync failed error=\""
+                    << orbbec_camera::formatObErrorWithStatus(e) << "\"");
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Config JSON application_config sync failed error=\"" << e.what() << "\"");
+  } catch (...) {
+    ROS_WARN_STREAM("Config JSON application_config sync failed");
+  }
+}
+
+void OBCameraNode::syncApplicationSensorConfigForExport() {
+  try {
+    if (!ob::ApplicationConfig::isSupported(device_)) {
+      return;
+    }
+
+    auto application_config = ob::ApplicationConfig::get(device_);
+    CHECK_NOTNULL(application_config.get());
+
+    for (const auto& sensor_config : application_config->sensors()) {
+      if (!sensor_config || !sensor_config->streamProfile()) {
+        continue;
+      }
+
+      const auto current_profile = sensor_config->streamProfile();
+      const stream_index_pair stream_index{current_profile->getType(), 0};
+      const auto stream_name_it = stream_name_.find(stream_index);
+      if (stream_name_it == stream_name_.end()) {
+        ROS_DEBUG_STREAM("Config JSON sensors export skips unsupported stream type="
+                         << current_profile->getType());
+        continue;
+      }
+
+      auto export_sensor_config =
+          std::make_shared<ob::ApplicationSensorConfig>(sensor_config->sensorType());
+      const auto enable_stream_it = enable_stream_.find(stream_index);
+      export_sensor_config->enableStream(enable_stream_it != enable_stream_.end()
+                                             ? enable_stream_it->second
+                                             : sensor_config->isStreamEnabled());
+
+      const auto stream_profile_it = stream_profile_.find(stream_index);
+      export_sensor_config->setStreamProfile(stream_profile_it != stream_profile_.end() &&
+                                                     stream_profile_it->second
+                                                 ? stream_profile_it->second
+                                                 : current_profile);
+
+      const auto enable_undistortion_it = enable_undistortion_.find(stream_index);
+      export_sensor_config->enableUndistortion(enable_undistortion_it != enable_undistortion_.end()
+                                                   ? enable_undistortion_it->second
+                                                   : sensor_config->isUndistortionEnabled());
+
+      application_config->setSensor(export_sensor_config);
+    }
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Config JSON sensors export sync failed error=\""
+                    << orbbec_camera::formatObErrorWithStatus(e) << "\"");
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Config JSON sensors export sync failed error=\"" << e.what() << "\"");
+  } catch (...) {
+    ROS_WARN_STREAM("Config JSON sensors export sync failed");
+  }
+}
+
+void OBCameraNode::syncApplicationPointCloudConfigForExport() {
+  try {
+    if (!ob::ApplicationConfig::isSupported(device_)) {
+      return;
+    }
+
+    auto application_config = ob::ApplicationConfig::get(device_);
+    CHECK_NOTNULL(application_config.get());
+
+    auto point_cloud_config = std::make_shared<ob::ApplicationPointCloudConfig>();
+    const auto point_cloud_enabled = enable_point_cloud_ || enable_colored_point_cloud_;
+    point_cloud_config->enable(point_cloud_enabled);
+    point_cloud_config->setFormat(enable_colored_point_cloud_ ? OB_FORMAT_RGB_POINT
+                                                              : OB_FORMAT_POINT);
+    point_cloud_config->setDecimationFactor(std::max(1, point_cloud_decimation_filter_factor_));
+
+    auto align_mode = ALIGN_DISABLE;
+    if (depth_registration_) {
+      if (align_mode_ == "HW") {
+        align_mode = ALIGN_D2C_HW_MODE;
+      } else if (align_target_stream_ == OB_STREAM_DEPTH) {
+        align_mode = ALIGN_C2D_SW_MODE;
+      } else {
+        align_mode = ALIGN_D2C_SW_MODE;
+      }
+    }
+    point_cloud_config->setAlignMode(align_mode);
+    point_cloud_config->enableFrameSync(enable_frame_sync_);
+    point_cloud_config->setAllFrameTypeRequired(frame_aggregate_mode_ == "full_frame");
+    point_cloud_config->enableMatchTargetResolution(
+        align_mode == ALIGN_D2C_HW_MODE ? enable_depth_scale_ : true);
+    application_config->setPointCloud(point_cloud_config);
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Config JSON point_cloud export sync failed error=\""
+                    << orbbec_camera::formatObErrorWithStatus(e) << "\"");
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Config JSON point_cloud export sync failed error=\"" << e.what() << "\"");
+  } catch (...) {
+    ROS_WARN_STREAM("Config JSON point_cloud export sync failed");
+  }
+}
+
+void OBCameraNode::syncApplicationHdrMergeConfigForExport() {
+  try {
+    if (!ob::ApplicationConfig::isSupported(device_)) {
+      return;
+    }
+
+    auto application_config = ob::ApplicationConfig::get(device_);
+    CHECK_NOTNULL(application_config.get());
+
+    auto hdr_merge_config = std::make_shared<ob::ApplicationHDRMergeConfig>();
+    hdr_merge_config->enable(enable_hdr_merge_);
+    hdr_merge_config->enableIR(true);
+    application_config->setHDRMerge(hdr_merge_config);
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Config JSON hdr_merge export sync failed error=\""
+                    << orbbec_camera::formatObErrorWithStatus(e) << "\"");
+  } catch (const std::exception& e) {
+    ROS_WARN_STREAM("Config JSON hdr_merge export sync failed error=\"" << e.what() << "\"");
+  } catch (...) {
+    ROS_WARN_STREAM("Config JSON hdr_merge export sync failed");
+  }
+}
+
+bool OBCameraNode::exportConfigJsonToFile(const std::string& file_path, std::string& message) {
+  if (file_path.empty()) {
+    message = "Config json export file path is empty";
+    ROS_ERROR_STREAM(message);
+    return false;
+  }
+
+  try {
+    const auto resolved_file_path = resolveConfigJsonFilePath(file_path);
+    const auto parent_path = resolved_file_path.parent_path();
+    if (!parent_path.empty()) {
+      boost::filesystem::create_directories(parent_path);
+    }
+
+    const auto resolved_file_path_str = resolved_file_path.string();
+    syncApplicationSensorConfigForExport();
+    syncApplicationPointCloudConfigForExport();
+    syncApplicationHdrMergeConfigForExport();
+    device_->exportSettingsAsPresetJsonFile(resolved_file_path_str.c_str());
+    if (!boost::filesystem::exists(resolved_file_path)) {
+      message = "Failed to export config json file: file not found after export path=" +
+                resolved_file_path_str;
+      ROS_ERROR_STREAM(message);
+      return false;
+    }
+
+    message = "Exported config json file path: " + resolved_file_path_str;
+    ROS_INFO_STREAM(message);
+    return true;
+  } catch (const ob::Error& e) {
+    message = "Failed to export config json file: " + orbbec_camera::formatObErrorWithStatus(e);
+    ROS_ERROR_STREAM(message);
+  } catch (const std::exception& e) {
+    message = std::string("Failed to export config json file: ") + e.what();
+    ROS_ERROR_STREAM(message);
+  } catch (...) {
+    message = "Failed to export config json file";
+    ROS_ERROR_STREAM(message);
+  }
+  return false;
+}
+
+void OBCameraNode::exportConfigJsonIfRequested() {
+  if (export_config_json_file_path_.empty()) {
+    return;
+  }
+  std::string message;
+  exportConfigJsonToFile(export_config_json_file_path_, message);
+}
+
+void OBCameraNode::syncConfigJsonDeviceSettings() {
+  if (!config_json_loaded_) {
+    return;
+  }
+
+  auto can_read = [this](OBPropertyID property_id) {
+    return device_->isPropertySupported(property_id, OB_PERMISSION_READ) ||
+           device_->isPropertySupported(property_id, OB_PERMISSION_READ_WRITE);
+  };
+  auto can_write = [this](OBPropertyID property_id) {
+    return device_->isPropertySupported(property_id, OB_PERMISSION_WRITE) ||
+           device_->isPropertySupported(property_id, OB_PERMISSION_READ_WRITE);
+  };
+  auto can_read_struct = can_read;
+  auto log_readback = [](const std::string& scope, const std::string& name, const auto& value) {
+    std::ostringstream ss;
+    ss << std::boolalpha << value;
+    ROS_INFO_STREAM("Config final readback [" << scope << "] " << name << "=" << ss.str());
+  };
+  auto log_readback_fields = [](const std::string& scope, const std::string& fields) {
+    ROS_INFO_STREAM("Config final readback [" << scope << "] " << fields);
+  };
+  auto sync_bool = [&](const char* scope, const char* param_name, bool& member,
+                       OBPropertyID property_id) {
+    if (!isConfigJsonLoaded() || !can_read(property_id)) {
+      return;
+    }
+    try {
+      member = device_->getBoolProperty(property_id);
+      log_readback(scope, param_name, member);
+    } catch (const std::exception& e) {
+      ROS_DEBUG_STREAM("Config final readback failed [" << scope << "] " << param_name
+                                                        << " error=\"" << e.what() << "\"");
+    }
+  };
+  auto sync_int = [&](const char* scope, const char* param_name, int& member,
+                      OBPropertyID property_id) {
+    if (!isConfigJsonLoaded() || !can_read(property_id)) {
+      return;
+    }
+    try {
+      member = device_->getIntProperty(property_id);
+      log_readback(scope, param_name, member);
+    } catch (const std::exception& e) {
+      ROS_DEBUG_STREAM("Config final readback failed [" << scope << "] " << param_name
+                                                        << " error=\"" << e.what() << "\"");
+    }
+  };
+  auto sync_float = [&](const char* scope, const char* param_name, float& member,
+                        OBPropertyID property_id) {
+    if (!isConfigJsonLoaded() || !can_read(property_id)) {
+      return;
+    }
+    try {
+      member = device_->getFloatProperty(property_id);
+      log_readback(scope, param_name, member);
+    } catch (const std::exception& e) {
+      ROS_DEBUG_STREAM("Config final readback failed [" << scope << "] " << param_name
+                                                        << " error=\"" << e.what() << "\"");
+    }
+  };
+  auto sync_stream_orientation = [&](const char* param_prefix,
+                                     const stream_index_pair& stream_index,
+                                     OBPropertyID flip_property_id, OBPropertyID mirror_property_id,
+                                     OBPropertyID rotation_property_id) {
+    if (!isConfigJsonLoaded()) {
+      return;
+    }
+    if (can_read(flip_property_id)) {
+      try {
+        image_flip_[stream_index] = device_->getBoolProperty(flip_property_id);
+        log_readback(std::string(param_prefix) + ".orientation", "flip", image_flip_[stream_index]);
+      } catch (const std::exception&) {
+      }
+    }
+    if (can_read(mirror_property_id)) {
+      try {
+        image_mirror_[stream_index] = device_->getBoolProperty(mirror_property_id);
+        log_readback(std::string(param_prefix) + ".orientation", "mirror",
+                     image_mirror_[stream_index]);
+      } catch (const std::exception&) {
+      }
+    }
+    if (can_read(rotation_property_id)) {
+      try {
+        image_rotation_[stream_index] = device_->getIntProperty(rotation_property_id);
+        log_readback(std::string(param_prefix) + ".orientation", "rotation",
+                     image_rotation_[stream_index]);
+      } catch (const std::exception&) {
+      }
+    }
+  };
+
+  sync_bool("device", "enable_heartbeat", enable_heartbeat_, OB_PROP_HEARTBEAT_BOOL);
+  sync_bool("device", "retry_on_usb3_detection_failure", retry_on_usb3_detection_failure_,
+            OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL);
+  sync_bool("device", "enable_ptp_config", enable_ptp_config_,
+            OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL);
+
+  if (isConfigJsonLoaded()) {
+    try {
+      device_preset_ = device_->getCurrentPresetName();
+      log_readback("depth", "device_preset", device_preset_);
+    } catch (const std::exception& e) {
+      ROS_DEBUG_STREAM("Config final readback failed [depth] device_preset error=\"" << e.what()
+                                                                                     << "\"");
+    }
+  }
+
+  if (isConfigJsonLoaded() && can_read(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT)) {
+    try {
+      enable_depth_auto_exposure_priority_ =
+          device_->getIntProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT) != 0;
+      log_readback("depth", "enable_depth_auto_exposure_priority",
+                   enable_depth_auto_exposure_priority_);
+    } catch (const std::exception&) {
+    }
+  }
+  if (isConfigJsonLoaded() && can_read(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL)) {
+    try {
+      enable_ir_auto_exposure_ = device_->getBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
+      log_readback("depth", "enable_ir_auto_exposure", enable_ir_auto_exposure_);
+    } catch (const std::exception&) {
+    }
+  }
+  sync_int("depth", "ir_ae_max_exposure", ir_ae_max_exposure_, OB_PROP_IR_AE_MAX_EXPOSURE_INT);
+  sync_int("depth", "mean_intensity_set_point", mean_intensity_set_point_,
+           OB_PROP_IR_BRIGHTNESS_INT);
+  sync_int("depth", "depth_exposure", depth_exposure_, OB_PROP_DEPTH_EXPOSURE_INT);
+  sync_int("depth", "ir_exposure", ir_exposure_, OB_PROP_IR_EXPOSURE_INT);
+  sync_int("depth", "depth_gain", depth_gain_, OB_PROP_DEPTH_GAIN_INT);
+  sync_int("depth", "ir_gain", ir_gain_, OB_PROP_IR_GAIN_INT);
+  if (isConfigJsonLoaded() && can_read(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT)) {
+    try {
+      const auto depth_unit =
+          device_->getFloatProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT);
+      depth_precision_str_ = std::to_string(depth_unit) + "mm";
+      log_readback("depth", "depth_unit", depth_unit);
+      log_readback("depth", "depth_precision", depth_precision_str_);
+    } catch (const std::exception&) {
+    }
+  }
+  if (isConfigJsonLoaded() && can_read(OB_PROP_LASER_CONTROL_INT)) {
+    try {
+      enable_laser_ = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT) != 0;
+      log_readback("depth", "enable_laser", enable_laser_);
+    } catch (const std::exception&) {
+    }
+  } else if (isConfigJsonLoaded() && can_read(OB_PROP_LASER_BOOL)) {
+    try {
+      enable_laser_ = device_->getBoolProperty(OB_PROP_LASER_BOOL);
+      log_readback("depth", "enable_laser", enable_laser_);
+    } catch (const std::exception&) {
+    }
+  }
+  sync_int("depth", "laser_energy_level", laser_energy_level_, OB_PROP_LASER_ENERGY_LEVEL_INT);
+  sync_bool("depth", "enable_ldp", enable_ldp_, OB_PROP_LDP_BOOL);
+
+  if (isConfigJsonLoaded() && can_read_struct(OB_STRUCT_DEPTH_AE_ROI)) {
+    try {
+      OBRegionOfInterest config{};
+      uint32_t data_size = sizeof(config);
+      device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
+                                 &data_size);
+      depth_ae_roi_left_ = config.x0_left;
+      depth_ae_roi_top_ = config.y0_top;
+      depth_ae_roi_right_ = config.x1_right;
+      depth_ae_roi_bottom_ = config.y1_bottom;
+      std::ostringstream fields;
+      fields << "left=" << depth_ae_roi_left_ << " top=" << depth_ae_roi_top_
+             << " right=" << depth_ae_roi_right_ << " bottom=" << depth_ae_roi_bottom_;
+      log_readback_fields("depth.ae_roi", fields.str());
+    } catch (const std::exception&) {
+    }
+  }
+
+  if (isConfigJsonLoaded()) {
+    sync_bool("depth.interleave", "enable", interleave_frame_enable_,
+              OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL);
+    sync_int("depth.interleave", "skip_index", interleave_skip_index_,
+             OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT);
+    try {
+      const auto* frame_interleave_name = device_->getCurrentFrameInterleaveName();
+      if (frame_interleave_name != nullptr) {
+        std::string mode(frame_interleave_name);
+        std::string lower_mode = mode;
+        std::transform(lower_mode.begin(), lower_mode.end(), lower_mode.begin(), ::tolower);
+        if (lower_mode.find("laser") != std::string::npos) {
+          interleave_ae_mode_ = "laser";
+        } else if (lower_mode.find("hdr") != std::string::npos) {
+          interleave_ae_mode_ = "hdr";
+        } else {
+          interleave_ae_mode_.clear();
+        }
+        log_readback("depth.interleave", "ae_mode", interleave_ae_mode_);
+      }
+    } catch (const std::exception&) {
+    }
+    if (!interleave_ae_mode_.empty() && can_write(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT)) {
+      int original_interleave_index = interleave_skip_index_;
+      bool has_original_interleave_index = false;
+      if (can_read(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT)) {
+        try {
+          original_interleave_index =
+              device_->getIntProperty(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT);
+          has_original_interleave_index = true;
+        } catch (const std::exception&) {
+        }
+      }
+
+      auto read_int_property = [&](OBPropertyID property_id, int& value) {
+        if (!can_read(property_id)) {
+          return;
+        }
+        try {
+          value = device_->getIntProperty(property_id);
+        } catch (const std::exception&) {
+        }
+      };
+      auto sync_interleave_param = [&](int config_index, int& laser_control, int& depth_exposure,
+                                       int& depth_gain, int& ir_brightness,
+                                       int& ir_ae_max_exposure) {
+        try {
+          device_->setIntProperty(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT, config_index);
+          read_int_property(OB_PROP_LASER_CONTROL_INT, laser_control);
+          read_int_property(OB_PROP_DEPTH_EXPOSURE_INT, depth_exposure);
+          read_int_property(OB_PROP_DEPTH_GAIN_INT, depth_gain);
+          read_int_property(OB_PROP_IR_BRIGHTNESS_INT, ir_brightness);
+          read_int_property(OB_PROP_IR_AE_MAX_EXPOSURE_INT, ir_ae_max_exposure);
+          std::ostringstream fields;
+          fields << "laser_control=" << laser_control << " depth_exposure=" << depth_exposure
+                 << " depth_gain=" << depth_gain << " depth_brightness=" << ir_brightness
+                 << " depth_ae_max_exposure=" << ir_ae_max_exposure;
+          log_readback_fields("depth.interleave.params." + std::to_string(config_index),
+                              fields.str());
+        } catch (const std::exception& e) {
+          ROS_DEBUG_STREAM("Config final readback failed [depth.interleave.params."
+                           << config_index << "] error=\"" << e.what() << "\"");
+        }
+      };
+
+      if (interleave_ae_mode_ == "hdr") {
+        sync_interleave_param(0, hdr_index0_laser_control_, hdr_index0_depth_exposure_,
+                              hdr_index0_depth_gain_, hdr_index0_ir_brightness_,
+                              hdr_index0_ir_ae_max_exposure_);
+        sync_interleave_param(1, hdr_index1_laser_control_, hdr_index1_depth_exposure_,
+                              hdr_index1_depth_gain_, hdr_index1_ir_brightness_,
+                              hdr_index1_ir_ae_max_exposure_);
+      } else if (interleave_ae_mode_ == "laser") {
+        sync_interleave_param(0, laser_index0_laser_control_, laser_index0_depth_exposure_,
+                              laser_index0_depth_gain_, laser_index0_ir_brightness_,
+                              laser_index0_ir_ae_max_exposure_);
+        sync_interleave_param(1, laser_index1_laser_control_, laser_index1_depth_exposure_,
+                              laser_index1_depth_gain_, laser_index1_ir_brightness_,
+                              laser_index1_ir_ae_max_exposure_);
+      }
+
+      if (has_original_interleave_index) {
+        try {
+          device_->setIntProperty(OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT,
+                                  original_interleave_index);
+        } catch (const std::exception& e) {
+          ROS_DEBUG_STREAM("Failed to restore frame_interleave.config_index: " << e.what());
+        }
+      }
+    }
+  }
+
+  if (isConfigJsonLoaded()) {
+    try {
+      const bool hw = can_read(OB_PROP_DISPARITY_TO_DEPTH_BOOL) &&
+                      device_->getBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL);
+      const bool sw = can_read(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL) &&
+                      device_->getBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL);
+      disparity_to_depth_mode_ = hw ? "HW" : (sw ? "SW" : "disable");
+      log_readback("depth", "disparity_to_depth_mode", disparity_to_depth_mode_);
+    } catch (const std::exception&) {
+    }
+  }
+  if (isConfigJsonLoaded() && can_read(OB_PROP_DISP_SEARCH_RANGE_MODE_INT)) {
+    try {
+      disparity_range_mode_ = std::stoi(
+          disparityRangeModeToString(device_->getIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT)));
+      log_readback("depth", "disparity_range_mode", disparity_range_mode_);
+    } catch (const std::exception&) {
+    }
+  }
+  sync_int("depth", "disparity_search_offset", disparity_search_offset_,
+           OB_PROP_DISP_SEARCH_OFFSET_INT);
+
+  sync_bool("depth", "enable_hardware_noise_removal_filter", enable_hardware_noise_removal_filter_,
+            OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL);
+  sync_float("depth", "hardware_noise_removal_filter_threshold",
+             hardware_noise_removal_filter_threshold_,
+             OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT);
+  sync_bool("depth", "enable_noise_removal_filter", enable_noise_removal_filter_,
+            OB_PROP_DEPTH_SOFT_FILTER_BOOL);
+  sync_int("depth", "noise_removal_filter_min_diff", noise_removal_filter_min_diff_,
+           OB_PROP_DEPTH_MAX_DIFF_INT);
+  sync_int("depth", "noise_removal_filter_max_size", noise_removal_filter_max_size_,
+           OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+  sync_bool("depth", "enable_disp_outliers_filter", enable_disp_outliers_filter_,
+            OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL);
+  sync_int("depth", "disp_outliers_filter_search_mode", disp_outliers_filter_search_mode_,
+           OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT);
+
+  sync_stream_orientation("depth", DEPTH, OB_PROP_DEPTH_FLIP_BOOL, OB_PROP_DEPTH_MIRROR_BOOL,
+                          OB_PROP_DEPTH_ROTATE_INT);
+  sync_stream_orientation("color", COLOR, OB_PROP_COLOR_FLIP_BOOL, OB_PROP_COLOR_MIRROR_BOOL,
+                          OB_PROP_COLOR_ROTATE_INT);
+  sync_stream_orientation("left_ir", INFRA1, OB_PROP_IR_FLIP_BOOL, OB_PROP_IR_MIRROR_BOOL,
+                          OB_PROP_IR_ROTATE_INT);
+  sync_stream_orientation("right_ir", INFRA2, OB_PROP_IR_RIGHT_FLIP_BOOL,
+                          OB_PROP_IR_RIGHT_MIRROR_BOOL, OB_PROP_IR_RIGHT_ROTATE_INT);
+
+  if (isConfigJsonLoaded() && can_read(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT)) {
+    try {
+      enable_color_auto_exposure_priority_ =
+          device_->getIntProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT) != 0;
+      log_readback("color", "enable_color_auto_exposure_priority",
+                   enable_color_auto_exposure_priority_);
+    } catch (const std::exception&) {
+    }
+  }
+  sync_bool("color", "enable_color_auto_exposure", enable_color_auto_exposure_,
+            OB_PROP_COLOR_AUTO_EXPOSURE_BOOL);
+  sync_int("color", "color_denoising_level", color_denoising_level_,
+           OB_PROP_COLOR_DENOISING_LEVEL_INT);
+  sync_int("color", "color_ae_max_exposure", color_ae_max_exposure_,
+           OB_PROP_COLOR_AE_MAX_EXPOSURE_INT);
+  sync_int("color", "color_exposure", color_exposure_, OB_PROP_COLOR_EXPOSURE_INT);
+  sync_int("color", "color_gain", color_gain_, OB_PROP_COLOR_GAIN_INT);
+  sync_int("color", "color_brightness", color_brightness_, OB_PROP_COLOR_BRIGHTNESS_INT);
+  sync_bool("color", "enable_color_auto_white_balance", enable_color_auto_white_balance_,
+            OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL);
+  sync_int("color", "color_white_balance", color_white_balance_, OB_PROP_COLOR_WHITE_BALANCE_INT);
+  sync_int("color", "color_sharpness", color_sharpness_, OB_PROP_COLOR_SHARPNESS_INT);
+  sync_int("color", "color_gamma", color_gamma_, OB_PROP_COLOR_GAMMA_INT);
+  sync_int("color", "color_hue", color_hue_, OB_PROP_COLOR_HUE_INT);
+  sync_int("color", "color_backlight_compensation", color_backlight_compensation_,
+           OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT);
+  sync_int("color", "color_contrast", color_contrast_, OB_PROP_COLOR_CONTRAST_INT);
+  sync_int("color", "color_saturation", color_saturation_, OB_PROP_COLOR_SATURATION_INT);
+  if (isConfigJsonLoaded() && can_read(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT)) {
+    try {
+      color_powerline_freq_ = colorPowerLineFrequencyToString(
+          device_->getIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT));
+      log_readback("color", "color_powerline_freq", color_powerline_freq_);
+    } catch (const std::exception&) {
+    }
+  }
+  sync_bool("color", "color_anti_flicker", color_anti_flicker_, OB_PROP_COLOR_ANTI_FLICKER_BOOL);
+  if (isConfigJsonLoaded()) {
+    try {
+      if (device_->isColorPresetSupported()) {
+        const char* color_preset = device_->getCurrentColorPresetName();
+        if (color_preset != nullptr) {
+          color_preset_ = color_preset;
+          log_readback("color", "color_preset", color_preset_);
+        }
+      }
+    } catch (const std::exception&) {
+    }
+  }
+  if (isConfigJsonLoaded() && can_read_struct(OB_STRUCT_COLOR_AE_ROI)) {
+    try {
+      OBRegionOfInterest config{};
+      uint32_t data_size = sizeof(config);
+      device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
+                                 &data_size);
+      color_ae_roi_left_ = config.x0_left;
+      color_ae_roi_top_ = config.y0_top;
+      color_ae_roi_right_ = config.x1_right;
+      color_ae_roi_bottom_ = config.y1_bottom;
+      std::ostringstream fields;
+      fields << "left=" << color_ae_roi_left_ << " top=" << color_ae_roi_top_
+             << " right=" << color_ae_roi_right_ << " bottom=" << color_ae_roi_bottom_;
+      log_readback_fields("color.ae_roi", fields.str());
+    } catch (const std::exception&) {
+    }
+  }
+}
+
+void OBCameraNode::syncConfigJsonFilterSettings(
+    const std::vector<std::shared_ptr<ob::Filter>>& filters, const std::string& sensor_name) {
+  if (!config_json_loaded_) {
+    return;
+  }
+
+  auto filter_scope = [&](const std::string& filter_name) {
+    return "filter." + sensor_name + "." + normalizeDepthFilterName(filter_name);
+  };
+  auto log_readback = [](const std::string& scope, const std::string& name, const auto& value) {
+    std::ostringstream ss;
+    ss << std::boolalpha << value;
+    ROS_INFO_STREAM("Config final readback [" << scope << "] " << name << "=" << ss.str());
+  };
+  auto log_readback_fields = [](const std::string& scope, const std::string& fields) {
+    ROS_INFO_STREAM("Config final readback [" << scope << "] " << fields);
+  };
+  auto sync_filter_enabled = [&](const std::vector<std::shared_ptr<ob::Filter>>& filters,
+                                 const std::string& filter_name, const std::string& param_name,
+                                 bool& member) {
+    auto it = std::find_if(filters.begin(), filters.end(), [&](const auto& filter) {
+      return filter &&
+             normalizeDepthFilterName(filter->type()) == normalizeDepthFilterName(filter_name);
+    });
+    if (it == filters.end()) {
+      return std::shared_ptr<ob::Filter>{};
+    }
+    try {
+      member = (*it)->isEnabled();
+      log_readback(filter_scope(filter_name), param_name, member);
+    } catch (const std::exception&) {
+    }
+    return *it;
+  };
+  if (sensor_name == "depth") {
+    if (auto filter = sync_filter_enabled(filters, "DecimationFilter", "enable_decimation_filter",
+                                          enable_decimation_filter_)) {
+      try {
+        decimation_filter_scale_range_ =
+            static_cast<int>(filter->as<ob::DecimationFilter>()->getScaleValue());
+        log_readback(filter_scope("DecimationFilter"), "scale", decimation_filter_scale_range_);
+      } catch (const std::exception&) {
+      }
+    }
+    if (auto filter = sync_filter_enabled(filters, "ThresholdFilter", "enable_threshold_filter",
+                                          enable_threshold_filter_)) {
+      try {
+        threshold_filter_min_ = static_cast<int>(filter->getConfigValue("min"));
+        threshold_filter_max_ = static_cast<int>(filter->getConfigValue("max"));
+        std::ostringstream fields;
+        fields << "min=" << threshold_filter_min_ << " max=" << threshold_filter_max_;
+        log_readback_fields(filter_scope("ThresholdFilter"), fields.str());
+      } catch (const std::exception&) {
+      }
+    }
+    sync_filter_enabled(filters, "HDRMerge", "enable_hdr_merge", enable_hdr_merge_);
+    if (auto filter = sync_filter_enabled(filters, "SequenceIdFilter", "enable_sequenced_filter",
+                                          enable_sequenced_filter_)) {
+      try {
+        sequence_id_filter_id_ = filter->as<ob::SequenceIdFilter>()->getSelectSequenceId();
+        log_readback(filter_scope("SequenceIdFilter"), "id", sequence_id_filter_id_);
+      } catch (const std::exception&) {
+      }
+    }
+    if (auto filter =
+            sync_filter_enabled(filters, "SpatialFastFilter", "enable_spatial_fast_filter",
+                                enable_spatial_fast_filter_)) {
+      try {
+        spatial_fast_filter_radius_ = filter->as<ob::SpatialFastFilter>()->getFilterParams().radius;
+        log_readback(filter_scope("SpatialFastFilter"), "radius",
+                     static_cast<int>(spatial_fast_filter_radius_));
+      } catch (const std::exception&) {
+      }
+    }
+    if (auto filter =
+            sync_filter_enabled(filters, "SpatialModerateFilter", "enable_spatial_moderate_filter",
+                                enable_spatial_moderate_filter_)) {
+      try {
+        auto params = filter->as<ob::SpatialModerateFilter>()->getFilterParams();
+        spatial_moderate_filter_diff_threshold_ = params.disp_diff;
+        spatial_moderate_filter_magnitude_ = params.magnitude;
+        spatial_moderate_filter_radius_ = params.radius;
+        std::ostringstream fields;
+        fields << "diff_threshold=" << spatial_moderate_filter_diff_threshold_
+               << " magnitude=" << spatial_moderate_filter_magnitude_
+               << " radius=" << spatial_moderate_filter_radius_;
+        log_readback_fields(filter_scope("SpatialModerateFilter"), fields.str());
+      } catch (const std::exception&) {
+      }
+    }
+    if (auto filter = sync_filter_enabled(filters, "SpatialAdvancedFilter", "enable_spatial_filter",
+                                          enable_spatial_filter_)) {
+      try {
+        auto params = filter->as<ob::SpatialAdvancedFilter>()->getFilterParams();
+        spatial_filter_alpha_ = params.alpha;
+        spatial_filter_diff_threshold_ = params.disp_diff;
+        spatial_filter_magnitude_ = params.magnitude;
+        spatial_filter_radius_ = params.radius;
+        std::ostringstream fields;
+        fields << "alpha=" << spatial_filter_alpha_
+               << " diff_threshold=" << spatial_filter_diff_threshold_
+               << " magnitude=" << spatial_filter_magnitude_
+               << " radius=" << spatial_filter_radius_;
+        log_readback_fields(filter_scope("SpatialAdvancedFilter"), fields.str());
+      } catch (const std::exception&) {
+      }
+    }
+    if (auto filter = sync_filter_enabled(filters, "TemporalFilter", "enable_temporal_filter",
+                                          enable_temporal_filter_)) {
+      try {
+        temporal_filter_diff_threshold_ = static_cast<float>(filter->getConfigValue("diff_scale"));
+        temporal_filter_weight_ = static_cast<float>(filter->getConfigValue("weight"));
+        std::ostringstream fields;
+        fields << "diff_threshold=" << temporal_filter_diff_threshold_
+               << " weight=" << temporal_filter_weight_;
+        log_readback_fields(filter_scope("TemporalFilter"), fields.str());
+      } catch (const std::exception&) {
+      }
+    }
+    if (auto filter =
+            sync_filter_enabled(filters, "HoleFillingFilter", "enable_hole_filling_filter",
+                                enable_hole_filling_filter_)) {
+      try {
+        hole_filling_filter_mode_ =
+            std::to_string(static_cast<int>(filter->as<ob::HoleFillingFilter>()->getFilterMode()));
+        log_readback(filter_scope("HoleFillingFilter"), "mode", hole_filling_filter_mode_);
+      } catch (const std::exception&) {
+      }
+    }
+    if (auto filter =
+            sync_filter_enabled(filters, "FalsePositiveFilter", "enable_false_positive_filter",
+                                enable_false_positive_filter_)) {
+      try {
+        const auto config_schema_vec = filter->getConfigSchemaVec();
+        for (const auto& config_schema : config_schema_vec) {
+          if (config_schema.name == nullptr || config_schema.name[0] == '\0') {
+            continue;
+          }
+          try {
+            const auto value = filter->getConfigValue(config_schema.name);
+            log_readback(filter_scope("FalsePositiveFilter"), config_schema.name,
+                         formatFilterConfigValue(config_schema, value));
+          } catch (const std::exception&) {
+          }
+        }
+      } catch (const std::exception&) {
+      }
+    }
+    sync_filter_enabled(filters, "DisparityTransform", "enable_disparity_to_depth",
+                        enable_disparity_to_depth_);
+  } else if (sensor_name == "color") {
+    if (auto filter =
+            sync_filter_enabled(filters, "DecimationFilter", "enable_color_decimation_filter",
+                                enable_color_decimation_filter_)) {
+      try {
+        color_decimation_filter_scale_ =
+            static_cast<int>(filter->as<ob::DecimationFilter>()->getScaleValue());
+        log_readback(filter_scope("DecimationFilter"), "scale", color_decimation_filter_scale_);
+      } catch (const std::exception&) {
+      }
+    }
+  } else if (sensor_name == "left_ir") {
+    if (auto filter =
+            sync_filter_enabled(filters, "SequenceIdFilter", "enable_left_ir_sequence_id_filter",
+                                enable_left_ir_sequence_id_filter_)) {
+      try {
+        left_ir_sequence_id_filter_id_ = filter->as<ob::SequenceIdFilter>()->getSelectSequenceId();
+        log_readback(filter_scope("SequenceIdFilter"), "id", left_ir_sequence_id_filter_id_);
+      } catch (const std::exception&) {
+      }
+    }
+  } else if (sensor_name == "right_ir") {
+    if (auto filter =
+            sync_filter_enabled(filters, "SequenceIdFilter", "enable_right_ir_sequence_id_filter",
+                                enable_right_ir_sequence_id_filter_)) {
+      try {
+        right_ir_sequence_id_filter_id_ = filter->as<ob::SequenceIdFilter>()->getSelectSequenceId();
+        log_readback(filter_scope("SequenceIdFilter"), "id", right_ir_sequence_id_filter_id_);
+      } catch (const std::exception&) {
+      }
+    }
+  }
 }
 
 orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
@@ -96,23 +1227,10 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
   } else if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
     appendDepthFilterParam(filter_state, "threshold",
                            toParamValue(hardware_noise_removal_filter_threshold_));
+  } else if (normalized_filter_name == "DispOutliersFilter") {
+    appendDepthFilterParam(filter_state, "search_mode",
+                           dispOutliersSearchModeToString(disp_outliers_filter_search_mode_));
   } else if (filter && shouldExposeDepthFilterParams(normalized_filter_name)) {
-    auto formatFilterConfigValue = [](const OBFilterConfigSchemaItem& config_schema, double value) {
-      switch (config_schema.type) {
-        case OB_FILTER_CONFIG_VALUE_TYPE_INT: {
-          return std::to_string(static_cast<long long>(value));
-        }
-        case OB_FILTER_CONFIG_VALUE_TYPE_BOOLEAN:
-          return value != 0.0 ? std::string("true") : std::string("false");
-        case OB_FILTER_CONFIG_VALUE_TYPE_FLOAT:
-        default: {
-          std::ostringstream ss;
-          ss << value;
-          return ss.str();
-        }
-      }
-    };
-
     try {
       auto config_schema_vec = filter->getConfigSchemaVec();
       for (const auto& config_schema : config_schema_vec) {
@@ -185,6 +1303,7 @@ void OBCameraNode::publishDepthFiltersStatus() {
   sync_filter_enabled("ThresholdFilter", enable_threshold_filter_);
   sync_filter_enabled("SpatialFastFilter", enable_spatial_fast_filter_);
   sync_filter_enabled("SpatialModerateFilter", enable_spatial_moderate_filter_);
+  sync_filter_enabled("EdgeNoiseRemovalFilter", enable_edge_noise_removal_filter_);
   sync_filter_enabled("FalsePositiveFilter", enable_false_positive_filter_);
   sync_filter_enabled("MgcNoiseRemovalFilter", enable_mgc_noise_removal_filter_);
   sync_filter_enabled("LutNoiseRemovalFilter", enable_lut_noise_removal_filter_);
@@ -224,6 +1343,22 @@ void OBCameraNode::publishDepthFiltersStatus() {
     try {
       hardware_noise_removal_filter_threshold_ =
           device_->getFloatProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT);
+    } catch (const std::exception&) {
+      // Keep the cached value if runtime querying fails.
+    }
+  }
+  if (device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+    try {
+      enable_disp_outliers_filter_ = device_->getBoolProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL);
+    } catch (const std::exception&) {
+      // Keep the cached value if runtime querying fails.
+    }
+  }
+  if (device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                                   OB_PERMISSION_READ_WRITE)) {
+    try {
+      disp_outliers_filter_search_mode_ =
+          device_->getIntProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT);
     } catch (const std::exception&) {
       // Keep the cached value if runtime querying fails.
     }
@@ -303,9 +1438,13 @@ void OBCameraNode::publishDepthFiltersStatus() {
                                    OB_PERMISSION_READ_WRITE) ||
       device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
                                    OB_PERMISSION_READ_WRITE);
+  const bool disp_outliers_filter_supported =
+      device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL, OB_PERMISSION_READ_WRITE) ||
+      device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                                   OB_PERMISSION_READ_WRITE);
 
   std::vector<std::string> ordered_filter_names;
-  ordered_filter_names.reserve(depth_filters_snapshot.size() + 2);
+  ordered_filter_names.reserve(depth_filters_snapshot.size() + 3);
   auto append_unique_filter_name = [&ordered_filter_names](const std::string& filter_name) {
     if (std::find(ordered_filter_names.begin(), ordered_filter_names.end(), filter_name) ==
         ordered_filter_names.end()) {
@@ -324,6 +1463,9 @@ void OBCameraNode::publishDepthFiltersStatus() {
   if (hardware_noise_removal_filter_supported) {
     append_unique_filter_name("HardwareNoiseRemovalFilter");
   }
+  if (disp_outliers_filter_supported) {
+    append_unique_filter_name("DispOutliersFilter");
+  }
 
   msg.filters.reserve(ordered_filter_names.size());
   for (const auto& filter_name : ordered_filter_names) {
@@ -332,9 +1474,11 @@ void OBCameraNode::publishDepthFiltersStatus() {
       enabled = enable_noise_removal_filter_;
     } else if (filter_name == "HardwareNoiseRemovalFilter") {
       enabled = enable_hardware_noise_removal_filter_;
+    } else if (filter_name == "DispOutliersFilter") {
+      enabled = enable_disp_outliers_filter_;
     }
     auto filter = find_depth_filter(filter_name);
-    if (filter) {
+    if (filter && filter_name != "DispOutliersFilter") {
       try {
         enabled = filter->isEnabled();
       } catch (const std::exception&) {
@@ -427,6 +1571,9 @@ void OBCameraNode::selectBaseStream() {
   }
 }
 void OBCameraNode::setupColorPostProcessFilter() {
+  if (!enable_stream_[COLOR] && !enable_stream_[COLOR_LEFT] && !enable_stream_[COLOR_RIGHT]) {
+    return;
+  }
   try {
     auto color_sensor = device_->getSensor(OB_SENSOR_COLOR);
     if (color_sensor) {
@@ -450,7 +1597,7 @@ void OBCameraNode::setupColorPostProcessFilter() {
 
   if (color_filter_list_.empty() && left_color_filter_list_.empty() &&
       right_color_filter_list_.empty()) {
-    ROS_DEBUG("Failed to get any color sensor filter list");
+    ROS_DEBUG("Color sensor filter lists are empty");
     return;
   }
   for (size_t i = 0; i < color_filter_list_.size(); i++) {
@@ -460,7 +1607,8 @@ void OBCameraNode::setupColorPostProcessFilter() {
     };
     std::string filter_name = filter->type();
     ROS_DEBUG_STREAM("Setting color " << filter_name << "......");
-    if (filter_params.find(filter_name) != filter_params.end()) {
+    if (filter_params.find(filter_name) != filter_params.end() &&
+        isLaunchParamProvided("enable_color_decimation_filter")) {
       std::string value = filter_params[filter_name] ? "true" : "false";
       ROS_INFO_STREAM("set color " << filter_name << " to " << value);
       filter->enable(filter_params[filter_name]);
@@ -488,7 +1636,8 @@ void OBCameraNode::setupColorPostProcessFilter() {
     };
     std::string filter_name = filter->type();
     ROS_DEBUG_STREAM("Setting left color " << filter_name << "......");
-    if (filter_params.find(filter_name) != filter_params.end()) {
+    if (filter_params.find(filter_name) != filter_params.end() &&
+        isLaunchParamProvided("enable_left_color_decimation_filter")) {
       std::string value = filter_params[filter_name] ? "true" : "false";
       ROS_INFO_STREAM("set left color " << filter_name << " to " << value);
       filter->enable(filter_params[filter_name]);
@@ -519,7 +1668,8 @@ void OBCameraNode::setupColorPostProcessFilter() {
     };
     std::string filter_name = filter->type();
     ROS_DEBUG_STREAM("Setting right color " << filter_name << "......");
-    if (filter_params.find(filter_name) != filter_params.end()) {
+    if (filter_params.find(filter_name) != filter_params.end() &&
+        isLaunchParamProvided("enable_right_color_decimation_filter")) {
       std::string value = filter_params[filter_name] ? "true" : "false";
       ROS_INFO_STREAM("set right color " << filter_name << " to " << value);
       filter->enable(filter_params[filter_name]);
@@ -543,7 +1693,202 @@ void OBCameraNode::setupColorPostProcessFilter() {
     }
   }
 }
+
+void OBCameraNode::setupIrPostProcessFilter() {
+  if (!enable_stream_[INFRA0]) {
+    return;
+  }
+  try {
+    auto ir_sensor = device_->getSensor(OB_SENSOR_IR);
+    ir_filter_list_ = ir_sensor->createRecommendedFilters();
+    if (ir_filter_list_.empty()) {
+      ROS_DEBUG_STREAM("IR sensor filter list is empty");
+    }
+  } catch (const ob::Error& e) {
+    ROS_WARN_STREAM("Failed to setup ir filters: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to setup ir filters: " << e.what());
+  }
+}
+
+void OBCameraNode::setupUndistortionFilters() {
+  hw_d2c_color_undistortion_filter_.reset();
+  hw_d2c_color_undistortion_configured_ = false;
+
+  auto remove_undistortion_filter = [](std::vector<std::shared_ptr<ob::Filter>>& filters) {
+    filters.erase(std::remove_if(filters.begin(), filters.end(),
+                                 [](const std::shared_ptr<ob::Filter>& filter) {
+                                   return filter &&
+                                          std::string(filter->type()) == "UnDistortionFilter";
+                                 }),
+                  filters.end());
+  };
+
+  auto find_or_create_filter =
+      [&](std::vector<std::shared_ptr<ob::Filter>>& filters,
+          OBStreamType stream_type) -> std::shared_ptr<ob::UnDistortionFilter> {
+    for (auto& filter : filters) {
+      if (filter && std::string(filter->type()) == "UnDistortionFilter") {
+        auto undistortion_filter = filter->as<ob::UnDistortionFilter>();
+        undistortion_filter->setStreamType(stream_type);
+        undistortion_filter->enable(true);
+        return undistortion_filter;
+      }
+    }
+    auto undistortion_filter = std::make_shared<ob::UnDistortionFilter>(stream_type);
+    undistortion_filter->enable(true);
+    filters.push_back(undistortion_filter);
+    return undistortion_filter;
+  };
+
+  auto setup_stream_filter = [&](const stream_index_pair& stream_index,
+                                 std::vector<std::shared_ptr<ob::Filter>>& filters) {
+    if (!enable_stream_[stream_index] || !enable_undistortion_[stream_index]) {
+      return;
+    }
+    if (stream_index == LIDAR) {
+      ROS_WARN_STREAM("Undistortion is not supported for lidar stream");
+      return;
+    }
+    if (stream_index == COLOR && shouldUseHwD2CColorUndistortion()) {
+      remove_undistortion_filter(filters);
+      hw_d2c_color_undistortion_filter_ = std::make_shared<ob::UnDistortionFilter>(OB_STREAM_COLOR);
+      hw_d2c_color_undistortion_filter_->enable(true);
+      ROS_INFO_STREAM("Enable color undistortion with HW D2C depth intrinsic projection");
+      return;
+    }
+    auto undistortion_filter = find_or_create_filter(filters, stream_index.first);
+    undistortion_filter->clearNewCameraMatrix();
+    ROS_INFO_STREAM("Enable " << stream_name_[stream_index] << " undistortion");
+  };
+
+  setup_stream_filter(COLOR, color_filter_list_);
+  setup_stream_filter(COLOR_LEFT, left_color_filter_list_);
+  setup_stream_filter(COLOR_RIGHT, right_color_filter_list_);
+  setup_stream_filter(DEPTH, depth_filter_list_);
+  setup_stream_filter(INFRA0, ir_filter_list_);
+  setup_stream_filter(INFRA1, left_ir_filter_list_);
+  setup_stream_filter(INFRA2, right_ir_filter_list_);
+}
+
+bool OBCameraNode::shouldUseHwD2CColorUndistortion() const {
+  auto color_undistortion = enable_undistortion_.find(COLOR);
+  return color_undistortion != enable_undistortion_.end() && color_undistortion->second &&
+         isDabaiASeriesForHwD2C(device_info_->pid()) && depth_registration_ &&
+         align_mode_ == "HW" && align_target_stream_ == OB_STREAM_COLOR &&
+         enable_stream_.at(COLOR) && enable_stream_.at(DEPTH);
+}
+
+bool OBCameraNode::isHwD2CProfileSupported() const {
+  if (!pipeline_) {
+    return false;
+  }
+  auto color_profile_iter = stream_profile_.find(COLOR);
+  auto depth_profile_iter = stream_profile_.find(DEPTH);
+  if (color_profile_iter == stream_profile_.end() || depth_profile_iter == stream_profile_.end() ||
+      !color_profile_iter->second || !depth_profile_iter->second) {
+    return false;
+  }
+
+  auto supported_profiles =
+      pipeline_->getD2CDepthProfileList(color_profile_iter->second, ALIGN_D2C_HW_MODE);
+  if (!supported_profiles || supported_profiles->count() == 0) {
+    return false;
+  }
+
+  auto selected_depth = depth_profile_iter->second->as<ob::VideoStreamProfile>();
+  if (!selected_depth) {
+    return false;
+  }
+  for (uint32_t i = 0; i < supported_profiles->getCount(); ++i) {
+    auto supported = supported_profiles->getProfile(i)->as<ob::VideoStreamProfile>();
+    if (!supported) {
+      continue;
+    }
+    if (supported->getWidth() == selected_depth->getWidth() &&
+        supported->getHeight() == selected_depth->getHeight() &&
+        supported->getFormat() == selected_depth->getFormat() &&
+        supported->getFps() == selected_depth->getFps()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool OBCameraNode::shouldUseGeneratedCameraInfo(const stream_index_pair& stream_index) const {
+  auto undistortion_iter = enable_undistortion_.find(stream_index);
+  if (undistortion_iter != enable_undistortion_.end() && undistortion_iter->second) {
+    return true;
+  }
+  if (stream_index == COLOR && hw_d2c_color_undistortion_configured_) {
+    return true;
+  }
+  if (!depth_registration_) {
+    return false;
+  }
+  return (stream_index == DEPTH && align_target_stream_ == OB_STREAM_COLOR) ||
+         (stream_index == COLOR && align_target_stream_ == OB_STREAM_DEPTH);
+}
+
+std::string OBCameraNode::getEffectiveOpticalFrameId(const stream_index_pair& stream_index) const {
+  if (depth_registration_ && stream_index == DEPTH && align_target_stream_ == OB_STREAM_COLOR) {
+    return optical_frame_id_.at(COLOR);
+  }
+  if (depth_registration_ && stream_index == COLOR && align_target_stream_ == OB_STREAM_DEPTH) {
+    return optical_frame_id_.at(DEPTH);
+  }
+  return optical_frame_id_.at(stream_index);
+}
+
+void OBCameraNode::configureHwD2CColorUndistortion(const std::shared_ptr<ob::Frame>& depth_frame) {
+  if (!hw_d2c_color_undistortion_filter_ || hw_d2c_color_undistortion_configured_) {
+    return;
+  }
+  if (!depth_frame) {
+    ROS_WARN_ONCE("Skip HW D2C color undistortion setup because depth frame is not available");
+    return;
+  }
+  auto stream_profile = depth_frame->getStreamProfile();
+  if (!stream_profile) {
+    ROS_WARN_ONCE("Skip HW D2C color undistortion setup because depth stream profile is null");
+    return;
+  }
+  auto video_profile = stream_profile->as<ob::VideoStreamProfile>();
+  if (!video_profile) {
+    ROS_WARN_ONCE("Skip HW D2C color undistortion setup because depth profile is not video");
+    return;
+  }
+  hw_d2c_color_undistortion_filter_->setNewCameraMatrix(video_profile->getIntrinsic());
+  hw_d2c_color_undistortion_configured_ = true;
+  ROS_INFO_STREAM("Configured HW D2C color undistortion with depth camera intrinsic");
+}
+
+void OBCameraNode::applyHwD2CColorUndistortion(std::shared_ptr<ob::FrameSet>& frame_set,
+                                               const std::shared_ptr<ob::Frame>& depth_frame) {
+  if (!frame_set || !hw_d2c_color_undistortion_filter_) {
+    return;
+  }
+  configureHwD2CColorUndistortion(depth_frame);
+  if (!hw_d2c_color_undistortion_configured_) {
+    return;
+  }
+  auto undistorted_frame = hw_d2c_color_undistortion_filter_->process(frame_set);
+  if (!undistorted_frame) {
+    ROS_WARN_STREAM("HW D2C color undistortion filter returned null frame");
+    return;
+  }
+  auto undistorted_frame_set = undistorted_frame->as<ob::FrameSet>();
+  if (!undistorted_frame_set) {
+    ROS_WARN_STREAM("HW D2C color undistortion filter returned non-frameset output");
+    return;
+  }
+  frame_set = undistorted_frame_set;
+}
+
 void OBCameraNode::setupLeftIrPostProcessFilter() {
+  if (!enable_stream_[INFRA1]) {
+    return;
+  }
   if (device_preset_ == "Dual Color Streams") {
     ROS_DEBUG_STREAM("Dual Color Streams preset, skip left ir filter setup");
     return;
@@ -555,7 +1900,7 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
     auto left_ir_sensor = device_->getSensor(OB_SENSOR_IR_LEFT);
     left_ir_filter_list_ = left_ir_sensor->createRecommendedFilters();
     if (left_ir_filter_list_.empty()) {
-      ROS_WARN_STREAM("Failed to get left ir sensor filter list");
+      ROS_DEBUG_STREAM("Left IR sensor filter list is empty");
       return;
     }
     for (size_t i = 0; i < left_ir_filter_list_.size(); i++) {
@@ -565,7 +1910,8 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
       };
       std::string filter_name = filter->type();
       ROS_DEBUG_STREAM("Setting " << filter_name << "......");
-      if (filter_params.find(filter_name) != filter_params.end()) {
+      if (filter_params.find(filter_name) != filter_params.end() &&
+          isLaunchParamProvided("enable_left_ir_sequence_id_filter")) {
         std::string value = filter_params[filter_name] ? "true" : "false";
         ROS_INFO_STREAM("set left ir " << filter_name << " to " << value);
         filter->enable(filter_params[filter_name]);
@@ -583,6 +1929,9 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
 }
 
 void OBCameraNode::setupRightIrPostProcessFilter() {
+  if (!enable_stream_[INFRA2]) {
+    return;
+  }
   if (device_preset_ == "Dual Color Streams") {
     ROS_DEBUG_STREAM("Dual Color Streams preset, skip right ir filter setup");
     return;
@@ -594,7 +1943,7 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
     auto right_ir_sensor = device_->getSensor(OB_SENSOR_IR_RIGHT);
     right_ir_filter_list_ = right_ir_sensor->createRecommendedFilters();
     if (right_ir_filter_list_.empty()) {
-      ROS_WARN_STREAM("Failed to get right ir sensor filter list");
+      ROS_DEBUG_STREAM("Right IR sensor filter list is empty");
       return;
     }
     for (size_t i = 0; i < right_ir_filter_list_.size(); i++) {
@@ -604,7 +1953,8 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
       };
       std::string filter_name = filter->type();
       ROS_DEBUG_STREAM("Setting " << filter_name << "......");
-      if (filter_params.find(filter_name) != filter_params.end()) {
+      if (filter_params.find(filter_name) != filter_params.end() &&
+          isLaunchParamProvided("enable_right_ir_sequence_id_filter")) {
         std::string value = filter_params[filter_name] ? "true" : "false";
         ROS_INFO_STREAM("set right ir " << filter_name << " to " << value);
         filter->enable(filter_params[filter_name]);
@@ -635,9 +1985,54 @@ void OBCameraNode::setupDepthPostProcessFilter() {
   auto depth_sensor = device_->getSensor(OB_SENSOR_DEPTH);
   depth_filter_list_ = depth_sensor->createRecommendedFilters();
   if (depth_filter_list_.empty()) {
-    ROS_WARN_STREAM("Failed to get depth sensor filter list");
+    ROS_DEBUG_STREAM("Depth sensor filter list is empty");
     return;
   }
+  auto depth_filter_enable_param = [](const std::string& filter_name) {
+    if (filter_name == "DecimationFilter") {
+      return std::string("enable_decimation_filter");
+    }
+    if (filter_name == "HDRMerge") {
+      return std::string("enable_hdr_merge");
+    }
+    if (filter_name == "SequenceIdFilter") {
+      return std::string("enable_sequenced_filter");
+    }
+    if (filter_name == "SpatialAdvancedFilter") {
+      return std::string("enable_spatial_filter");
+    }
+    if (filter_name == "TemporalFilter") {
+      return std::string("enable_temporal_filter");
+    }
+    if (filter_name == "HoleFillingFilter") {
+      return std::string("enable_hole_filling_filter");
+    }
+    if (filter_name == "DisparityTransform") {
+      return std::string("enable_disparity_to_depth");
+    }
+    if (filter_name == "ThresholdFilter") {
+      return std::string("enable_threshold_filter");
+    }
+    if (filter_name == "SpatialFastFilter") {
+      return std::string("enable_spatial_fast_filter");
+    }
+    if (filter_name == "SpatialModerateFilter") {
+      return std::string("enable_spatial_moderate_filter");
+    }
+    if (filter_name == "EdgeNoiseRemovalFilter") {
+      return std::string("enable_edge_noise_removal_filter");
+    }
+    if (filter_name == "FalsePositiveFilter") {
+      return std::string("enable_false_positive_filter");
+    }
+    if (filter_name == "MgcNoiseRemovalFilter") {
+      return std::string("enable_mgc_noise_removal_filter");
+    }
+    if (filter_name == "LutNoiseRemovalFilter") {
+      return std::string("enable_lut_noise_removal_filter");
+    }
+    return std::string();
+  };
   for (size_t i = 0; i < depth_filter_list_.size(); i++) {
     auto filter = depth_filter_list_[i];
     std::map<std::string, bool> filter_params = {
@@ -651,13 +2046,16 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         {"ThresholdFilter", enable_threshold_filter_},
         {"SpatialFastFilter", enable_spatial_fast_filter_},
         {"SpatialModerateFilter", enable_spatial_moderate_filter_},
+        {"EdgeNoiseRemovalFilter", enable_edge_noise_removal_filter_},
         {"FalsePositiveFilter", enable_false_positive_filter_},
         {"MgcNoiseRemovalFilter", enable_mgc_noise_removal_filter_},
         {"LutNoiseRemovalFilter", enable_lut_noise_removal_filter_},
     };
     std::string filter_name = filter->type();
     ROS_DEBUG_STREAM("Setting " << filter_name << "......");
-    if (filter_params.find(filter_name) != filter_params.end()) {
+    const auto enable_param_name = depth_filter_enable_param(filter_name);
+    if (filter_params.find(filter_name) != filter_params.end() &&
+        isLaunchParamProvided(enable_param_name)) {
       std::string value = filter_params[filter_name] ? "true" : "false";
       ROS_INFO_STREAM("Set depth filter " << filter_name << " to " << value);
       filter->enable(filter_params[filter_name]);
@@ -776,6 +2174,10 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       });
 }
 void OBCameraNode::setupDevices() {
+  auto should_apply_launch_config = [this](const std::string& param_name) {
+    return isLaunchParamProvided(param_name);
+  };
+
   if (!device_preset_.empty()) {
     try {
       ROS_DEBUG_STREAM("Available presets:");
@@ -794,27 +2196,48 @@ void OBCameraNode::setupDevices() {
       ROS_ERROR_STREAM("Failed to load device preset");
     }
   }
-  if (!color_preset_.empty() &&
-      device_->isPropertySupported(OB_PROP_COLOR_PRESET_PRIORITY_INT, OB_PERMISSION_WRITE)) {
-    std::string preset_key = color_preset_;
-    std::transform(preset_key.begin(), preset_key.end(), preset_key.begin(), ::tolower);
-    int preset_value = -1;
-    if (preset_key == "default") {
-      preset_value = 0;
-    } else if (preset_key == "warm biased awb") {
-      preset_value = 1;
-    } else {
-      ROS_WARN_STREAM("Unsupported color_preset: "
-                      << color_preset_ << ". Supported values: Default, Warm Biased AWB");
-    }
-    if (preset_value >= 0) {
-      device_->setIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT, preset_value);
-      auto current_value = device_->getIntProperty(OB_PROP_COLOR_PRESET_PRIORITY_INT);
-      if (current_value == 0) {
-        ROS_INFO_STREAM("Current color preset: Default");
-      } else if (current_value == 1) {
-        ROS_INFO_STREAM("Current color preset: Warm Biased AWB");
+  if (!color_preset_.empty()) {
+    try {
+      if (!device_->isColorPresetSupported()) {
+        ROS_WARN_STREAM("Color preset is not supported by this device");
+      } else {
+        auto color_preset_list = device_->getColorPresetList();
+        std::string selected_preset;
+        std::ostringstream supported_presets;
+        bool has_supported_preset = false;
+        const uint32_t preset_count = color_preset_list ? color_preset_list->getCount() : 0;
+        for (uint32_t i = 0; i < preset_count; ++i) {
+          const char* preset_name = color_preset_list->getName(i);
+          if (preset_name == nullptr) {
+            continue;
+          }
+          if (has_supported_preset) {
+            supported_presets << ", ";
+          }
+          supported_presets << preset_name;
+          has_supported_preset = true;
+          if (equalsIgnoreCase(color_preset_, preset_name)) {
+            selected_preset = preset_name;
+          }
+        }
+
+        if (selected_preset.empty()) {
+          ROS_WARN_STREAM("Unsupported color_preset: " << color_preset_ << ". Supported values: "
+                                                       << supported_presets.str());
+        } else {
+          device_->switchColorPreset(selected_preset.c_str());
+          const char* current_preset = device_->getCurrentColorPresetName();
+          color_preset_ = current_preset != nullptr ? current_preset : selected_preset;
+          ROS_INFO_STREAM("Current color preset: " << color_preset_);
+        }
       }
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM(
+          "Failed to switch color preset: " << orbbec_camera::formatObErrorWithStatus(e));
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM("Failed to switch color preset: " << e.what());
+    } catch (...) {
+      ROS_ERROR_STREAM("Failed to switch color preset");
     }
   }
   if (!preset_resolution_config_.empty()) {
@@ -911,7 +2334,8 @@ void OBCameraNode::setupDevices() {
       } else if (stream_index == INFRA2) {
         flipPropertyID = OB_PROP_IR_RIGHT_FLIP_BOOL;
       }
-      if (device_->isPropertySupported(flipPropertyID, OB_PERMISSION_WRITE)) {
+      if (should_apply_launch_config(stream_name_[stream_index] + "_flip") &&
+          device_->isPropertySupported(flipPropertyID, OB_PERMISSION_WRITE)) {
         device_->setBoolProperty(flipPropertyID, image_flip_[stream_index]);
         ROS_INFO_STREAM("Current " << stream_name_[stream_index] << " flip: "
                                    << (device_->getBoolProperty(flipPropertyID) ? "ON" : "OFF"));
@@ -933,7 +2357,8 @@ void OBCameraNode::setupDevices() {
       } else if (stream_index == INFRA2) {
         mirrorPropertyID = OB_PROP_IR_RIGHT_MIRROR_BOOL;
       }
-      if (device_->isPropertySupported(mirrorPropertyID, OB_PERMISSION_WRITE)) {
+      if (should_apply_launch_config(stream_name_[stream_index] + "_mirror") &&
+          device_->isPropertySupported(mirrorPropertyID, OB_PERMISSION_WRITE)) {
         device_->setBoolProperty(mirrorPropertyID, image_mirror_[stream_index]);
         ROS_INFO_STREAM("Current " << stream_name_[stream_index] << " mirror: "
                                    << (device_->getBoolProperty(mirrorPropertyID) ? "ON" : "OFF"));
@@ -954,35 +2379,55 @@ void OBCameraNode::setupDevices() {
     imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
 
+  if (is_playback_device_) {
+    return;
+  }
+
   try {
-    if (retry_on_usb3_detection_failure_ &&
+    if (should_apply_launch_config("retry_on_usb3_detection_failure") &&
+        retry_on_usb3_detection_failure_ &&
         device_->isPropertySupported(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEVICE_USB3_REPEAT_IDENTIFY_BOOL,
                                retry_on_usb3_detection_failure_);
     }
-    if (enable_noise_removal_filter_ && sensors_.find(DEPTH) != sensors_.end() &&
+    if (sync_io_voltage_level_ != -1 &&
+        device_->isPropertySupported(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT,
+                                     OB_PERMISSION_READ_WRITE)) {
+      auto range = device_->getIntPropertyRange(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT);
+      if (sync_io_voltage_level_ < range.min || sync_io_voltage_level_ > range.max) {
+        ROS_ERROR_STREAM("sync IO voltage level is out of range " << range.min << " - "
+                                                                  << range.max);
+      } else {
+        device_->setIntProperty(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT, sync_io_voltage_level_);
+        ROS_INFO_STREAM("Current sync IO voltage level: "
+                        << device_->getIntProperty(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT));
+      }
+    }
+    if (noise_removal_filter_min_diff_ != -1 && enable_noise_removal_filter_ &&
+        sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
       auto default_noise_removal_filter_min_diff =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-      if (noise_removal_filter_min_diff_ != -1 &&
-          default_noise_removal_filter_min_diff != noise_removal_filter_min_diff_) {
+      if (default_noise_removal_filter_min_diff != noise_removal_filter_min_diff_) {
         device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, noise_removal_filter_min_diff_);
       }
       ROS_INFO_STREAM("Current noise_removal_filter_min_diff: "
                       << device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT));
     }
-    if (enable_noise_removal_filter_ && sensors_.find(DEPTH) != sensors_.end() &&
+    if (noise_removal_filter_max_size_ != -1 && enable_noise_removal_filter_ &&
+        sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE)) {
       auto default_noise_removal_filter_max_size =
           device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-      if (noise_removal_filter_max_size_ != -1 &&
-          default_noise_removal_filter_max_size != noise_removal_filter_max_size_) {
+      if (default_noise_removal_filter_max_size != noise_removal_filter_max_size_) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, noise_removal_filter_max_size_);
       }
       ROS_INFO_STREAM("Current noise_removal_filter_max_size: "
                       << device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT));
     }
-    if (sensors_.find(DEPTH) != sensors_.end() &&
+    if (should_apply_launch_config("enable_noise_removal_filter") &&
+        sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable_noise_removal_filter_);
       ROS_INFO_STREAM("Set noise removal filter to "
@@ -1008,7 +2453,8 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("Current laser energy level: " << new_laser_energy_level);
       }
     }
-    if (device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ_WRITE)) {
+    if (should_apply_launch_config("enable_ldp") &&
+        device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ_WRITE)) {
       if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
         auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
         device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
@@ -1026,19 +2472,22 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM(
           "Current LDP: " << (device_->getBoolProperty(OB_PROP_LDP_BOOL) ? "ON" : "OFF"));
     }
-    device_->enableFirmwareLog(enable_firmware_log_);
-    ROS_INFO_STREAM("Current firmware log: " << (enable_firmware_log_ ? "ON" : "OFF"));
-    if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
+    if (should_apply_launch_config("enable_firmware_log")) {
+      device_->enableFirmwareLog(enable_firmware_log_);
+      ROS_INFO_STREAM("Current firmware log: " << (enable_firmware_log_ ? "ON" : "OFF"));
+    }
+    if (should_apply_launch_config("enable_heartbeat") &&
+        device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);
       ROS_INFO_STREAM("Current heartbeat: "
                       << (device_->getBoolProperty(OB_PROP_HEARTBEAT_BOOL) ? "ON" : "OFF"));
     }
 
-    if (enable_color_hdr_ &&
+    if (should_apply_launch_config("enable_color_hdr") && enable_color_hdr_ &&
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_HDR_BOOL, enable_color_hdr_);
     }
-    if (sensors_.find(DEPTH) != sensors_.end() &&
+    if (!disparity_to_depth_mode_.empty() && sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DISPARITY_TO_DEPTH_BOOL, OB_PERMISSION_READ_WRITE) &&
         device_->isPropertySupported(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
@@ -1084,7 +2533,8 @@ void OBCameraNode::setupDevices() {
       }
     }
 
-    if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT,
+    if (should_apply_launch_config("enable_color_auto_exposure_priority") &&
+        device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT,
                                      OB_PERMISSION_WRITE)) {
       int set_enable_color_auto_exposure_priority = enable_color_auto_exposure_priority_ ? 1 : 0;
       device_->setIntProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT,
@@ -1093,13 +2543,15 @@ void OBCameraNode::setupDevices() {
           "Current color auto exposure priority: "
           << (device_->getIntProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT) ? "ON" : "OFF"));
     }
-    if (device_->isPropertySupported(OB_PROP_COLOR_ANTI_FLICKER_BOOL, OB_PERMISSION_WRITE)) {
+    if (should_apply_launch_config("color_anti_flicker") &&
+        device_->isPropertySupported(OB_PROP_COLOR_ANTI_FLICKER_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_ANTI_FLICKER_BOOL, color_anti_flicker_);
       ROS_INFO_STREAM(
           "Current color anti flicker: "
           << (device_->getBoolProperty(OB_PROP_COLOR_ANTI_FLICKER_BOOL) ? "ON" : "OFF"));
     }
-    if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, OB_PERMISSION_WRITE)) {
+    if (should_apply_launch_config("enable_color_auto_white_balance") &&
+        device_->isPropertySupported(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,
                                enable_color_auto_white_balance_);
       ROS_INFO_STREAM(
@@ -1135,7 +2587,8 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM(
           "Current color powerline freq: " << colorPowerLineFrequencyToString(current_freq));
     }
-    if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
+    if (should_apply_launch_config("enable_color_auto_exposure") &&
+        device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     }
     if (color_exposure_ != -1 &&
@@ -1272,10 +2725,12 @@ void OBCameraNode::setupDevices() {
                         << device_->getIntProperty(OB_PROP_COLOR_AE_MAX_GAIN_INT));
       }
     }
-    if (device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
+    if (should_apply_launch_config("enable_ir_auto_exposure") &&
+        device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     }
-    if (sensors_.find(DEPTH) != sensors_.end() &&
+    if (should_apply_launch_config("enable_depth_auto_exposure_priority") &&
+        sensors_.find(DEPTH) != sensors_.end() &&
         device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT,
                                      OB_PERMISSION_WRITE)) {
       int set_enable_depth_auto_exposure_priority = enable_depth_auto_exposure_priority_ ? 1 : 0;
@@ -1297,7 +2752,8 @@ void OBCameraNode::setupDevices() {
             "Current depth brightness: " << device_->getIntProperty(OB_PROP_IR_BRIGHTNESS_INT));
       }
     }
-    if (device_->isPropertySupported(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
+    if (should_apply_launch_config("enable_ir_auto_exposure") &&
+        device_->isPropertySupported(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     }
     if (ir_exposure_ != -1 &&
@@ -1332,13 +2788,16 @@ void OBCameraNode::setupDevices() {
                         << device_->getIntProperty(OB_PROP_IR_AE_MAX_EXPOSURE_INT));
       }
     }
-    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+    if (should_apply_launch_config("enable_laser") &&
+        device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, enable_laser_);
     }
-    if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+    if (should_apply_launch_config("enable_laser") &&
+        device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
       device_->setBoolProperty(OB_PROP_LASER_BOOL, enable_laser_);
     }
-    if (device_->isPropertySupported(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL,
+    if (should_apply_launch_config("enable_ptp_config") &&
+        device_->isPropertySupported(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL,
                                      OB_PERMISSION_READ_WRITE)) {
       ROS_INFO_STREAM("Set PTP Config: " << (enable_ptp_config_ ? "ON" : "OFF"));
       device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, enable_ptp_config_);
@@ -1371,10 +2830,12 @@ void OBCameraNode::setupDevices() {
                         << "mm");
       }
     }
-    if (device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
+    if (should_apply_launch_config("enable_color_auto_exposure") &&
+        device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enable_color_auto_exposure_);
     }
-    if (device_->isPropertySupported(OB_PROP_IR_LONG_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
+    if (should_apply_launch_config("enable_ir_long_exposure") &&
+        device_->isPropertySupported(OB_PROP_IR_LONG_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_IR_LONG_EXPOSURE_BOOL, enable_ir_long_exposure_);
     }
     if (disparity_range_mode_ != -1 &&
@@ -1391,7 +2852,8 @@ void OBCameraNode::setupDevices() {
       const auto current_mode = device_->getIntProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT);
       ROS_INFO_STREAM("Current disparity range mode: " << disparityRangeModeToString(current_mode));
     }
-    if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+    if (should_apply_launch_config("enable_hardware_noise_removal_filter") &&
+        device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                      OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                enable_hardware_noise_removal_filter_);
@@ -1411,7 +2873,23 @@ void OBCameraNode::setupDevices() {
         }
       }
     }
-    if (exposure_range_mode_ != "default" &&
+    if (should_apply_launch_config("enable_disp_outliers_filter") &&
+        device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL, enable_disp_outliers_filter_);
+      ROS_INFO_STREAM(
+          "Set DispOutliersFilter to "
+          << (device_->getBoolProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL) ? "true" : "false"));
+    }
+    if (disp_outliers_filter_search_mode_ != -1 &&
+        device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                                     OB_PERMISSION_READ_WRITE)) {
+      device_->setIntProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                              disp_outliers_filter_search_mode_);
+      ROS_INFO_STREAM("Current DispOutliersFilter search mode: "
+                      << device_->getIntProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT));
+    }
+    if (!exposure_range_mode_.empty() && exposure_range_mode_ != "default" &&
         device_->isPropertySupported(OB_PROP_DEVICE_PERFORMANCE_MODE_INT, OB_PERMISSION_WRITE)) {
       if (exposure_range_mode_ == "ultimate") {
         device_->setIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT, 1);
@@ -1423,21 +2901,8 @@ void OBCameraNode::setupDevices() {
       const auto current_mode = device_->getIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT);
       ROS_INFO_STREAM("Current exposure range mode: " << exposureRangeModeToString(current_mode));
     }
-    if (!load_config_json_file_path_.empty()) {
-      std::ifstream load_config_file(load_config_json_file_path_);
-      if (load_config_file.good()) {
-        device_->loadPresetFromJsonFile(load_config_json_file_path_.c_str());
-        ROS_INFO_STREAM("Loaded config json file path : " << load_config_json_file_path_);
-      } else {
-        ROS_WARN_STREAM(
-            "Skip loading config json file, file not found: " << load_config_json_file_path_);
-      }
-    }
-    if (!export_config_json_file_path_.empty()) {
-      device_->exportSettingsAsPresetJsonFile(export_config_json_file_path_.c_str());
-      ROS_INFO_STREAM("Exporting config json file path : " << export_config_json_file_path_);
-    }
-    if (device_->isPropertySupported(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL,
+    if (should_apply_launch_config("enable_accel_data_correction") &&
+        device_->isPropertySupported(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL,
                                      OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL,
                                enable_accel_data_correction_);
@@ -1445,7 +2910,8 @@ void OBCameraNode::setupDevices() {
           "Current accel data correction: "
           << (device_->getBoolProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL) ? "ON" : "OFF"));
     }
-    if (device_->isPropertySupported(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL,
+    if (should_apply_launch_config("enable_gyro_data_correction") &&
+        device_->isPropertySupported(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL,
                                      OB_PERMISSION_WRITE)) {
       device_->setBoolProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL,
                                enable_gyro_data_correction_);
@@ -1476,7 +2942,8 @@ void OBCameraNode::setupDevices() {
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("Failed to setup devices: " << e.what());
   }
-  if (device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
+  if (!ae_strategy_.empty() &&
+      device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
     device_->setIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT, ae_strategy_ == "motion" ? 1 : 0);
     ROS_INFO_STREAM("Current AE Strategy: " << ae_strategy_);
   }
@@ -1494,7 +2961,7 @@ void OBCameraNode::setupFrameCallback() {
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
       auto callback = [this, stream_index](std::shared_ptr<ob::Frame> frame) {
-        this->onNewFrameCallback(frame, stream_index);
+        this->onNewStandaloneFrameCallback(frame, stream_index);
       };
       frame_callback_[stream_index] = callback;
     }
@@ -1697,6 +3164,8 @@ void OBCameraNode::setupProfiles() {
   }
   if (depth_registration_ && align_mode_ == "SW") {
     align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
+    align_filter_->setMatchTargetResolution(true);
+    ROS_INFO_STREAM("SW D2C align output resolution will match target stream resolution");
   }
 }
 void OBCameraNode::updateImageConfig(
@@ -1758,10 +3227,19 @@ void OBCameraNode::setupPublishers() {
           this->imageUnsubscribedCallback(stream_index);
         };
 
-    // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
-    // subscriber detection
-    image_publishers_[stream_index] = getGlobalImagePublisher(
-        topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    if (isMjpgColorStream(stream_index) || !enable_image_transport_plugins_) {
+      raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
+          topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
+      if (isMjpgColorStream(stream_index)) {
+        compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
+            topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+      }
+    } else {
+      // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
+      // subscriber detection.
+      image_publishers_[stream_index] = getGlobalImagePublisher(
+          topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    }
 
     topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
@@ -1793,12 +3271,23 @@ void OBCameraNode::setupPublishers() {
   }
 
   if (depth_registration_ && align_mode_ == "SW") {
-    image_transport::SubscriberStatusCallback depth_unaligned_subscribed_cb =
+    ros::SubscriberStatusCallback depth_unaligned_subscribed_cb =
         boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
-    image_transport::SubscriberStatusCallback depth_unaligned_unsubscribed_cb =
+    ros::SubscriberStatusCallback depth_unaligned_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
-    depth_unaligned_publisher_ = image_transport::ImageTransport(nh_).advertise(
-        "depth/image_unaligned", 1, depth_unaligned_subscribed_cb, depth_unaligned_unsubscribed_cb);
+    if (enable_image_transport_plugins_) {
+      image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
+          boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+      image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
+          boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
+      depth_unaligned_publisher_ = image_transport::ImageTransport(nh_).advertise(
+          "depth/image_unaligned", 1, image_transport_subscribed_cb,
+          image_transport_unsubscribed_cb);
+    } else {
+      depth_unaligned_raw_publisher_ = nh_.advertise<sensor_msgs::Image>(
+          "depth/image_unaligned", 1, depth_unaligned_subscribed_cb,
+          depth_unaligned_unsubscribed_cb);
+    }
   }
 
   if (enable_sync_output_accel_gyro_) {
@@ -1856,11 +3345,6 @@ void OBCameraNode::setupPublishers() {
     depth_to_other_extrinsics_publishers_[GYRO] =
         nh_.advertise<orbbec_camera::Extrinsics>("/" + camera_name_ + "/depth_to_gyro", 1, true);
   }
-  filter_status_pub_ =
-      nh_.advertise<std_msgs::String>("/" + camera_name_ + "/filter_status", 1, true);
-  std_msgs::String msg;
-  msg.data = filter_status_.dump(2);
-  filter_status_pub_.publish(msg);
   depth_filters_status_pub_ = nh_.advertise<orbbec_camera::DepthFiltersStatus>(
       "/" + camera_name_ + "/depth_filters/status", 1, true);
   publishDepthFiltersStatus();
@@ -1897,8 +3381,6 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
       global_nh_ = std::make_shared<ros::NodeHandle>();
     }
     global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
-    ROS_DEBUG_STREAM(
-        "Created persistent global image_transport instance to prevent plugin reloading");
   }
 
   // Always recreate publisher with callbacks to ensure rostopic hz detection works
@@ -1985,6 +3467,14 @@ void OBCameraNode::setupPipelineConfig() {
   pipeline_config_ = std::make_shared<ob::Config>();
   if (align_mode_ == "HW" && depth_registration_ && enable_stream_[COLOR] &&
       enable_stream_[DEPTH]) {
+    if (!isHwD2CProfileSupported()) {
+      std::stringstream ss;
+      ss << "Selected profiles do not support HW D2C. color=" << width_[COLOR] << "x"
+         << height_[COLOR] << "@" << fps_[COLOR] << ", depth=" << width_[DEPTH] << "x"
+         << height_[DEPTH] << "@" << fps_[DEPTH]
+         << ". Select a supported profile or use align_mode:=SW.";
+      throw std::runtime_error(ss.str());
+    }
     OBAlignMode align_mode = ALIGN_D2C_HW_MODE;
     ROS_INFO_STREAM("set align mode to " << align_mode_);
     pipeline_config_->setAlignMode(align_mode);
@@ -1995,7 +3485,7 @@ void OBCameraNode::setupPipelineConfig() {
       ROS_DEBUG_STREAM("Enable " << stream_name_[stream_index] << " stream");
       auto profile = stream_profile_[stream_index]->as<ob::VideoStreamProfile>();
 
-      if (stream_index == COLOR && enable_stream_[COLOR] && align_filter_) {
+      if (stream_index.first == align_target_stream_ && align_filter_) {
         auto video_profile = profile;
         align_filter_->setAlignToStreamProfile(video_profile);
       }
@@ -2032,7 +3522,8 @@ void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWra
     stat.add("Chip Bottom Temperature", temperature.chipBottomTemp);
     stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Temperature is normal");
   } catch (const ob::Error& e) {
-    stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR, e.getMessage());
+    stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR,
+                 orbbec_camera::formatObErrorWithStatus(e));
   }
 }
 void OBCameraNode::setupDiagnosticUpdater() {
@@ -2114,6 +3605,11 @@ void OBCameraNode::setDisparitySearchOffset() {
   if (has_run) {
     return;
   }
+  if ((disparity_search_offset_ < 0 || disparity_search_offset_ > 127) &&
+      (offset_index0_ < 0 || offset_index0_ > 127 || offset_index1_ < 0 || offset_index1_ > 127)) {
+    has_run = true;
+    return;
+  }
   if (device_->isPropertySupported(OB_PROP_DISP_SEARCH_OFFSET_INT, OB_PERMISSION_WRITE)) {
     if (disparity_search_offset_ >= 0 && disparity_search_offset_ <= 127) {
       device_->setIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, disparity_search_offset_);
@@ -2139,6 +3635,11 @@ void OBCameraNode::setDisparitySearchOffset() {
 void OBCameraNode::setDepthAutoExposureROI() {
   static bool depth_roi_has_run = false;
   if (depth_roi_has_run) {
+    return;
+  }
+  if (depth_ae_roi_left_ == -1 && depth_ae_roi_top_ == -1 && depth_ae_roi_right_ == -1 &&
+      depth_ae_roi_bottom_ == -1) {
+    depth_roi_has_run = true;
     return;
   }
   if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "color") {
@@ -2185,6 +3686,11 @@ void OBCameraNode::setColorAutoExposureROI() {
   if (color_roi_has_run) {
     return;
   }
+  if (color_ae_roi_left_ == -1 && color_ae_roi_top_ == -1 && color_ae_roi_right_ == -1 &&
+      color_ae_roi_bottom_ == -1) {
+    color_roi_has_run = true;
+    return;
+  }
   if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "depth") {
     ROS_WARN_STREAM("Skip setting color AE ROI because AE Reference Stream is depth");
     color_roi_has_run = true;
@@ -2224,6 +3730,278 @@ void OBCameraNode::setColorAutoExposureROI() {
   color_roi_has_run = true;
 }
 
+void OBCameraNode::updateDepthFilterEnabledCache(const std::string& filter_name, bool enabled) {
+  const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
+  if (normalized_filter_name == "DecimationFilter") {
+    enable_decimation_filter_ = enabled;
+  } else if (normalized_filter_name == "HDRMerge") {
+    enable_hdr_merge_ = enabled;
+  } else if (normalized_filter_name == "SequenceIdFilter") {
+    enable_sequenced_filter_ = enabled;
+  } else if (normalized_filter_name == "ThresholdFilter") {
+    enable_threshold_filter_ = enabled;
+  } else if (normalized_filter_name == "SpatialAdvancedFilter") {
+    enable_spatial_filter_ = enabled;
+  } else if (normalized_filter_name == "TemporalFilter") {
+    enable_temporal_filter_ = enabled;
+  } else if (normalized_filter_name == "HoleFillingFilter") {
+    enable_hole_filling_filter_ = enabled;
+  } else if (normalized_filter_name == "SpatialFastFilter") {
+    enable_spatial_fast_filter_ = enabled;
+  } else if (normalized_filter_name == "SpatialModerateFilter") {
+    enable_spatial_moderate_filter_ = enabled;
+  } else if (normalized_filter_name == "EdgeNoiseRemovalFilter") {
+    enable_edge_noise_removal_filter_ = enabled;
+  } else if (normalized_filter_name == "FalsePositiveFilter") {
+    enable_false_positive_filter_ = enabled;
+  } else if (normalized_filter_name == "MgcNoiseRemovalFilter") {
+    enable_mgc_noise_removal_filter_ = enabled;
+  } else if (normalized_filter_name == "LutNoiseRemovalFilter") {
+    enable_lut_noise_removal_filter_ = enabled;
+  } else if (normalized_filter_name == "DispOutliersFilter") {
+    enable_disp_outliers_filter_ = enabled;
+  } else if (normalized_filter_name == "NoiseRemovalFilter") {
+    enable_noise_removal_filter_ = enabled;
+  } else if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
+    enable_hardware_noise_removal_filter_ = enabled;
+  }
+}
+
+bool OBCameraNode::applyNamedDepthFilterConfig(
+    const std::string& filter_name, bool enabled,
+    const std::vector<orbbec_camera::DepthFilterParam>& params, std::string& message) {
+  const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
+  std::unordered_set<std::string> requested_param_names;
+  auto check_duplicate_param = [&requested_param_names, &message](const std::string& param_name) {
+    if (param_name.empty()) {
+      message = "Filter config param name is empty";
+      return false;
+    }
+    if (!requested_param_names.insert(param_name).second) {
+      message = "Duplicate filter config param '" + param_name + "'";
+      return false;
+    }
+    return true;
+  };
+
+  if (normalized_filter_name == "NoiseRemovalFilter") {
+    const bool supported =
+        device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE) ||
+        device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE) ||
+        device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE);
+    if (!supported) {
+      message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+      return false;
+    }
+
+    bool has_min_diff = false;
+    bool has_max_size = false;
+    int min_diff = 0;
+    int max_size = 0;
+    for (const auto& param : params) {
+      const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
+      if (!check_duplicate_param(param_name)) {
+        return false;
+      }
+
+      double parsed_value = 0.0;
+      if (!parseFilterConfigDouble(param.value, parsed_value, message)) {
+        return false;
+      }
+      if (std::floor(parsed_value) != parsed_value) {
+        message = "Filter config '" + param_name + "' expects an integer value";
+        return false;
+      }
+
+      if (param_name == "min_diff") {
+        if (!device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
+          message = "Filter config 'min_diff' is not supported by this device";
+          return false;
+        }
+        has_min_diff = true;
+        min_diff = static_cast<int>(parsed_value);
+      } else if (param_name == "max_size") {
+        if (!device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT,
+                                          OB_PERMISSION_WRITE)) {
+          message = "Filter config 'max_size' is not supported by this device";
+          return false;
+        }
+        has_max_size = true;
+        max_size = static_cast<int>(parsed_value);
+      } else {
+        message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
+        return false;
+      }
+    }
+
+    if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enabled);
+    }
+    if (has_min_diff) {
+      device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, min_diff);
+      noise_removal_filter_min_diff_ = min_diff;
+    }
+    if (has_max_size) {
+      device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, max_size);
+      noise_removal_filter_max_size_ = max_size;
+    }
+    updateDepthFilterEnabledCache(normalized_filter_name, enabled);
+    return true;
+  }
+
+  if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
+    const bool supported =
+        device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                                     OB_PERMISSION_READ_WRITE) ||
+        device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                     OB_PERMISSION_READ_WRITE);
+    if (!supported) {
+      message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+      return false;
+    }
+
+    bool has_threshold = false;
+    double threshold = 0.0;
+    for (const auto& param : params) {
+      const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
+      if (!check_duplicate_param(param_name)) {
+        return false;
+      }
+      if (param_name != "threshold") {
+        message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
+        return false;
+      }
+      if (!device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                        OB_PERMISSION_READ_WRITE)) {
+        message = "Filter config 'threshold' is not supported by this device";
+        return false;
+      }
+      if (!parseFilterConfigDouble(param.value, threshold, message)) {
+        return false;
+      }
+      has_threshold = true;
+    }
+
+    if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, enabled);
+    }
+    if (has_threshold) {
+      device_->setFloatProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                static_cast<float>(threshold));
+      hardware_noise_removal_filter_threshold_ = static_cast<float>(threshold);
+    }
+    updateDepthFilterEnabledCache(normalized_filter_name, enabled);
+    return true;
+  }
+
+  if (normalized_filter_name == "DispOutliersFilter") {
+    const bool supported =
+        device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
+                                     OB_PERMISSION_READ_WRITE) ||
+        device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                                     OB_PERMISSION_READ_WRITE);
+    if (!supported) {
+      message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+      return false;
+    }
+
+    bool has_search_mode = false;
+    int search_mode = 0;
+    for (const auto& param : params) {
+      const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
+      if (!check_duplicate_param(param_name)) {
+        return false;
+      }
+      if (param_name != "search_mode") {
+        message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
+        return false;
+      }
+      if (!device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                                        OB_PERMISSION_READ_WRITE)) {
+        message = "Filter config 'search_mode' is not supported by this device";
+        return false;
+      }
+
+      if (!parseDispOutliersSearchMode(param.value, search_mode, message)) {
+        return false;
+      }
+      has_search_mode = true;
+    }
+
+    if (device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
+                                     OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL, enabled);
+    }
+    if (has_search_mode) {
+      device_->setIntProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT, search_mode);
+      disp_outliers_filter_search_mode_ = search_mode;
+    }
+    updateDepthFilterEnabledCache(normalized_filter_name, enabled);
+    return true;
+  }
+
+  std::unique_lock<std::mutex> depth_filter_lock(depth_filter_mutex_);
+  auto is_same_filter = [&normalized_filter_name](const std::shared_ptr<ob::Filter>& filter) {
+    if (!filter) {
+      return false;
+    }
+    return normalizeDepthFilterName(filter->getName()) == normalized_filter_name ||
+           normalizeDepthFilterName(filter->type()) == normalized_filter_name;
+  };
+
+  auto first_match_it =
+      std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
+                   [&is_same_filter](const auto& filter) { return is_same_filter(filter); });
+  if (first_match_it == depth_filter_list_.end() || !(*first_match_it)) {
+    message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+    return false;
+  }
+
+  const auto& existing_filter = *first_match_it;
+  std::vector<OBFilterConfigSchemaItem> schema_vec;
+  std::unordered_map<std::string, OBFilterConfigSchemaItem> schema_by_name;
+  if (!params.empty()) {
+    schema_vec = existing_filter->getConfigSchemaVec();
+    for (const auto& schema : schema_vec) {
+      if (schema.name == nullptr || schema.name[0] == '\0') {
+        continue;
+      }
+      schema_by_name.emplace(schema.name, schema);
+    }
+  }
+
+  std::vector<std::pair<std::string, double>> parsed_params;
+  parsed_params.reserve(params.size());
+  for (const auto& param : params) {
+    const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
+    if (!check_duplicate_param(param_name)) {
+      return false;
+    }
+
+    const auto schema_it = schema_by_name.find(param_name);
+    if (schema_it == schema_by_name.end()) {
+      message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
+      return false;
+    }
+
+    double parsed_value = 0.0;
+    if (!parseFilterConfigValue(schema_it->second, param.value, parsed_value, message)) {
+      return false;
+    }
+    parsed_params.emplace_back(param_name, parsed_value);
+  }
+
+  existing_filter->enable(enabled);
+  for (const auto& parsed_param : parsed_params) {
+    existing_filter->setConfigValue(parsed_param.first, parsed_param.second);
+    ROS_INFO_STREAM("Set " << normalized_filter_name << " config " << parsed_param.first << " to "
+                           << parsed_param.second);
+  }
+  updateDepthFilterEnabledCache(normalized_filter_name, enabled);
+  return true;
+}
+
 bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterResponse& response) {
   try {
     response.success = false;
@@ -2238,6 +4016,7 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
     const bool is_noise_removal_filter = (normalized_request_filter_name == "NoiseRemovalFilter");
     const bool is_hardware_noise_removal_filter =
         (normalized_request_filter_name == "HardwareNoiseRemovalFilter");
+    const bool is_disp_outliers_filter = (normalized_request_filter_name == "DispOutliersFilter");
     bool is_supported_by_property = false;
     if (is_noise_removal_filter) {
       is_supported_by_property =
@@ -2250,11 +4029,40 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
                                        OB_PERMISSION_READ_WRITE) ||
           device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
                                        OB_PERMISSION_READ_WRITE);
+    } else if (is_disp_outliers_filter) {
+      is_supported_by_property =
+          device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
+                                       OB_PERMISSION_READ_WRITE) ||
+          device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                                       OB_PERMISSION_READ_WRITE);
     }
 
     ROS_INFO_STREAM("filter_name: " << request.filter_name << "  filter_enable: "
                                     << (request.filter_enable ? "true" : "false"));
-    if (is_noise_removal_filter || is_hardware_noise_removal_filter) {
+    const bool has_positional_params = !request.filter_param.empty();
+    const bool has_named_params = !request.filter_config.empty();
+    if (has_positional_params && has_named_params) {
+      return fail("filter_param and filter_config cannot be used at the same time");
+    }
+    if (is_disp_outliers_filter && has_positional_params) {
+      return fail("DispOutliersFilter search_mode expects filter_config value FULL or OFFSET_80");
+    }
+
+    if (has_named_params || !has_positional_params) {
+      std::string message;
+      if (!applyNamedDepthFilterConfig(normalized_request_filter_name, request.filter_enable,
+                                       request.filter_config, message)) {
+        return fail(message);
+      }
+
+      filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
+      publishDepthFiltersStatus();
+
+      response.success = true;
+      return true;
+    }
+
+    if (is_noise_removal_filter || is_hardware_noise_removal_filter || is_disp_outliers_filter) {
       if (!is_supported_by_property) {
         return fail("Filter '" + normalized_request_filter_name +
                     "' is not supported by this device");
@@ -2503,17 +4311,15 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
         auto lut_noise_filter = existing_filter->as<ob::LutNoiseRemovalFilter>();
         lut_noise_filter->enable(request.filter_enable);
         enable_lut_noise_removal_filter_ = request.filter_enable;
+      } else if (normalized_request_filter_name == "EdgeNoiseRemovalFilter") {
+        existing_filter->enable(request.filter_enable);
+        enable_edge_noise_removal_filter_ = request.filter_enable;
       } else {
         return fail(normalized_request_filter_name + " cannot be set");
       }
     }
 
     filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
-    if (filter_status_pub_) {
-      std_msgs::String msg;
-      msg.data = filter_status_.dump(2);
-      filter_status_pub_.publish(msg);
-    }
     publishDepthFiltersStatus();
 
     response.success = true;

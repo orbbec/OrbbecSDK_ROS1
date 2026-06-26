@@ -27,6 +27,7 @@ namespace ob {
 class DeviceInfo;
 class SensorList;
 class DevicePresetList;
+class ColorPresetList;
 class OBDepthWorkModeList;
 class CameraParamList;
 class DeviceFrameInterleaveList;
@@ -512,6 +513,53 @@ public:
     }
 
     /**
+     * @brief Check if the device supports color preset.
+     *
+     * @return bool Returns true if the device supports color preset.
+     */
+    bool isColorPresetSupported() const {
+        ob_error *error  = nullptr;
+        auto      result = ob_device_is_color_preset_supported(impl_, &error);
+        Error::handle(&error);
+        return result;
+    }
+
+    /**
+     * @brief Get the current color preset name.
+     *
+     * @return const char* The current color preset name.
+     */
+    const char *getCurrentColorPresetName() const {
+        ob_error   *error = nullptr;
+        const char *name  = ob_device_get_current_color_preset_name(impl_, &error);
+        Error::handle(&error);
+        return name;
+    }
+
+    /**
+     * @brief Switch the color preset by name.
+     *
+     * @param[in] presetName The color preset name.
+     */
+    void switchColorPreset(const char *presetName) const {
+        ob_error *error = nullptr;
+        ob_device_switch_color_preset(impl_, presetName, &error);
+        Error::handle(&error);
+    }
+
+    /**
+     * @brief Get the available color preset list.
+     *
+     * @return std::shared_ptr<ColorPresetList> The color preset list.
+     */
+    std::shared_ptr<ColorPresetList> getColorPresetList() const {
+        ob_error *error = nullptr;
+        auto      list  = ob_device_get_color_preset_list(impl_, &error);
+        Error::handle(&error);
+        return std::make_shared<ColorPresetList>(list);
+    }
+
+    /**
      * @brief Device restart
      * @attention The device will be disconnected and reconnected. After the device is disconnected, the access to the Device object interface may be abnormal.
      * Please delete the object directly and obtain it again after the device is reconnected.
@@ -533,6 +581,18 @@ public:
     void reboot(uint32_t delayMs) const {
         setIntProperty(OB_PROP_DEVICE_REBOOT_DELAY_INT, delayMs);
         reboot();
+    }
+
+    /**
+     * @brief synchronization the device time (synchronize hardwarePPS time to device)
+     * @param[in] hardwarePPSTime unit:ms
+     * @return Whether the synchronisation is successful
+     */
+    bool syncDeviceHardwarePPSTime(uint64_t hardwarePPSTime) const {
+        ob_error *error   = nullptr;
+        bool      success = ob_device_sync_hardware_pps_time(impl_, hardwarePPSTime, &error);
+        Error::handle(&error);
+        return success;
     }
 
     /**
@@ -837,6 +897,24 @@ public:
         ob_error *error = nullptr;
         ob_device_load_frame_interleave(impl_, frameInterleaveName, &error);
         Error::handle(&error);
+    }
+
+    /**
+     *
+     * @brief Get current frame interleave name.
+     *
+     * @param[in] device The device object.
+     * @param[out] error Pointer to an error object that will be set if an error occurs.
+     *
+     * @return const char* return the current frame interleave name.
+     *         Returns an empty string ("") if no interleave is loaded.
+     *         Returns nullptr if an error occurs.
+     */
+    OB_EXPORT const char *getCurrentFrameInterleaveName() const {
+        ob_error *error = nullptr;
+        auto      name  = ob_device_get_current_frame_interleave_name(impl_, &error);
+        Error::handle(&error);
+        return name;
     }
 
     /**
@@ -1621,6 +1699,36 @@ public:
     // The following interfaces are deprecated and are retained here for compatibility purposes.
     uint32_t count() {
         return getCount();
+    }
+};
+
+/**
+ * @brief Class representing a list of color presets
+ */
+class ColorPresetList {
+private:
+    ob_color_preset_list *impl_ = nullptr;
+
+public:
+    explicit ColorPresetList(ob_color_preset_list *impl) : impl_(impl) {}
+    ~ColorPresetList() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_color_preset_list(impl_, &error);
+        Error::handle(&error, false);
+    }
+
+    uint32_t getCount() const {
+        ob_error *error = nullptr;
+        auto      count = ob_color_preset_list_get_count(impl_, &error);
+        Error::handle(&error);
+        return count;
+    }
+
+    const char *getName(uint32_t index) const {
+        ob_error   *error = nullptr;
+        const char *name  = ob_color_preset_list_get_name(impl_, index, &error);
+        Error::handle(&error);
+        return name;
     }
 };
 

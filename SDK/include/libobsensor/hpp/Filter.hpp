@@ -482,6 +482,64 @@ public:
 };
 
 /**
+ * @brief UnDistortionFilter removes lens distortion from a chosen stream (Color, IR, or Depth).
+ *
+ */
+class UnDistortionFilter : public Filter {
+public:
+    explicit UnDistortionFilter(OBStreamType streamType = OB_STREAM_COLOR) {
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_filter("UnDistortionFilter", &error);
+        Error::handle(&error);
+        init(impl);
+        setConfigValue("StreamType", static_cast<double>(streamType));
+    }
+
+    virtual ~UnDistortionFilter() noexcept override = default;
+
+    /**
+     * @brief Set which stream to undistort (default: OB_STREAM_COLOR).
+     */
+    void setStreamType(OBStreamType streamType) {
+        setConfigValue("StreamType", static_cast<double>(streamType));
+    }
+
+    OBStreamType getStreamType() const {
+        return static_cast<OBStreamType>(static_cast<int>(getConfigValue("StreamType")));
+    }
+
+    /**
+     * @brief Set the new camera matrix used to project the undistorted image
+     *        (equivalent to OpenCV's `newCameraMatrix` argument in
+     *        `cv::undistort(src, dst, cameraMatrix, distCoeffs, newCameraMatrix)`).
+     *
+     * Pass the raw depth camera intrinsic.  The filter scales fx/fy/cx/cy from
+     * the depth resolution to the actual color frame resolution at process time,
+     * so the caller does NOT need to compute the scale factor.
+     *
+     * The new-camera-matrix mode is enabled as long as depthIntrinsic.width > 0.
+     * Call clearNewCameraMatrix() to return to pure undistortion.
+     *
+     * @param depthIntrinsic  The depth camera intrinsic at its native resolution.
+     */
+    void setNewCameraMatrix(OBCameraIntrinsic depthIntrinsic) {
+        setConfigValue("NewCameraFx", static_cast<double>(depthIntrinsic.fx));
+        setConfigValue("NewCameraFy", static_cast<double>(depthIntrinsic.fy));
+        setConfigValue("NewCameraCx", static_cast<double>(depthIntrinsic.cx));
+        setConfigValue("NewCameraCy", static_cast<double>(depthIntrinsic.cy));
+        setConfigValue("NewCameraWidth", static_cast<double>(depthIntrinsic.width));
+        setConfigValue("NewCameraHeight", static_cast<double>(depthIntrinsic.height));
+    }
+
+    /**
+     * @brief Clear the new camera matrix and return to pure undistortion.
+     */
+    void clearNewCameraMatrix() {
+        setConfigValue("NewCameraWidth", 0.0);
+    }
+};
+
+/**
  * @brief The FormatConvertFilter class is a subclass of Filter that performs format conversion.
  */
 class FormatConvertFilter : public Filter {
@@ -1141,7 +1199,7 @@ public:
      */
     OBUint16PropertyRange getMarginXthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "margin_x_th") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("margin_x_th"));
@@ -1157,7 +1215,7 @@ public:
      */
     OBUint16PropertyRange getMarginYthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "margin_y_th") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("margin_y_th"));
@@ -1173,7 +1231,7 @@ public:
      */
     OBUint16PropertyRange getLimitXthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "limit_x_th") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("limit_x_th"));
@@ -1189,7 +1247,7 @@ public:
      */
     OBUint16PropertyRange getLimitYthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "limit_y_th") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("limit_y_th"));
@@ -1205,7 +1263,7 @@ public:
      */
     OBUint16PropertyRange getVerticalDirectionEnableRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "enable_vertical_direction") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("enable_vertical_direction"));
@@ -1221,7 +1279,7 @@ public:
      */
     OBUint16PropertyRange getWidthRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "width") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("width"));
@@ -1237,7 +1295,7 @@ public:
      */
     OBUint16PropertyRange getHeightRange() {
         OBUint16PropertyRange range{};
-        const auto &          schemaVec = getConfigSchemaVec();
+        const auto           &schemaVec = getConfigSchemaVec();
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "height") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("height"));
@@ -1278,7 +1336,6 @@ public:
         param.height           = static_cast<uint16_t>(getConfigValue("height"));
         return param;
     }
-
 };
 
 /**
@@ -1374,6 +1431,23 @@ public:
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "fpebfROIMaxYRatio") == 0) {
                 range = getPropertyRange<OBFloatPropertyRange>(item, getConfigValue("fpebfROIMaxYRatio"));
+                break;
+            }
+        }
+        return range;
+    }
+
+    /**
+     * @brief Get the FalsePositive filter fpebfMinBleedLength range.
+     *
+     * @return OBUint16PropertyRange the fpebfMinBleedLength value of property range.
+     */
+    OBUint16PropertyRange getfpebfMinBleedLengthRange() {
+        OBUint16PropertyRange range{};
+        const auto           &schemaVec = getConfigSchemaVec();
+        for(const auto &item: schemaVec) {
+            if(strcmp(item.name, "fpebfMinBleedLength") == 0) {
+                range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("fpebfMinBleedLength"));
                 break;
             }
         }
@@ -1612,6 +1686,74 @@ public:
         for(const auto &item: schemaVec) {
             if(strcmp(item.name, "fppafMaxSpeckleSize") == 0) {
                 range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("fppafMaxSpeckleSize"));
+                break;
+            }
+        }
+        return range;
+    }
+
+    /**
+     * @brief Get the FalsePositive filter fppafMaxWidthRatio range.
+     *
+     * @return OBFloatPropertyRange the fppafMaxWidthRatio value of property range.
+     */
+    OBFloatPropertyRange getfppafMaxWidthRatioRange() {
+        OBFloatPropertyRange range{};
+        const auto          &schemaVec = getConfigSchemaVec();
+        for(const auto &item: schemaVec) {
+            if(strcmp(item.name, "fppafMaxWidthRatio") == 0) {
+                range = getPropertyRange<OBFloatPropertyRange>(item, getConfigValue("fppafMaxWidthRatio"));
+                break;
+            }
+        }
+        return range;
+    }
+
+    /**
+     * @brief Get the FalsePositive filter fppafMaxHeightRatio range.
+     *
+     * @return OBFloatPropertyRange the fppafMaxHeightRatio value of property range.
+     */
+    OBFloatPropertyRange getfppafMaxHeightRatioRange() {
+        OBFloatPropertyRange range{};
+        const auto          &schemaVec = getConfigSchemaVec();
+        for(const auto &item: schemaVec) {
+            if(strcmp(item.name, "fppafMaxHeightRatio") == 0) {
+                range = getPropertyRange<OBFloatPropertyRange>(item, getConfigValue("fppafMaxHeightRatio"));
+                break;
+            }
+        }
+        return range;
+    }
+
+    /**
+     * @brief Get the FalsePositive filter fppafTolerance range.
+     *
+     * @return OBFloatPropertyRange the fppafTolerance value of property range.
+     */
+    OBFloatPropertyRange getfppafToleranceRange() {
+        OBFloatPropertyRange range{};
+        const auto          &schemaVec = getConfigSchemaVec();
+        for(const auto &item: schemaVec) {
+            if(strcmp(item.name, "fppafTolerance") == 0) {
+                range = getPropertyRange<OBFloatPropertyRange>(item, getConfigValue("fppafTolerance"));
+                break;
+            }
+        }
+        return range;
+    }
+
+    /**
+     * @brief Get the FalsePositive filter fppafScore range.
+     *
+     * @return OBUint16PropertyRange the fppafScore value of property range.
+     */
+    OBUint16PropertyRange getfppafScoreRange() {
+        OBUint16PropertyRange range{};
+        const auto           &schemaVec = getConfigSchemaVec();
+        for(const auto &item: schemaVec) {
+            if(strcmp(item.name, "fppafScore") == 0) {
+                range = getPropertyRange<OBUint16PropertyRange>(item, getConfigValue("fppafScore"));
                 break;
             }
         }
@@ -1990,17 +2132,25 @@ public:
  */
 inline const std::unordered_map<std::string, std::type_index> &getFilterTypeMap() {
     static const std::unordered_map<std::string, std::type_index> filterTypeMap = {
-        { "PointCloudFilter", typeid(PointCloudFilter) },       { "Align", typeid(Align) },
-        { "FormatConverter", typeid(FormatConvertFilter) },     { "HDRMerge", typeid(HdrMerge) },
-        { "SequenceIdFilter", typeid(SequenceIdFilter) },       { "DecimationFilter", typeid(DecimationFilter) },
-        { "ThresholdFilter", typeid(ThresholdFilter) },         { "SpatialAdvancedFilter", typeid(SpatialAdvancedFilter) },
-        { "HoleFillingFilter", typeid(HoleFillingFilter) },     { "NoiseRemovalFilter", typeid(NoiseRemovalFilter) },
-        { "TemporalFilter", typeid(TemporalFilter) },           { "DisparityTransform", typeid(DisparityTransform) },
-        { "SpatialFastFilter", typeid(SpatialFastFilter) },     { "SpatialModerateFilter", typeid(SpatialModerateFilter) },
+        { "PointCloudFilter", typeid(PointCloudFilter) },
+        { "Align", typeid(Align) },
+        { "FormatConverter", typeid(FormatConvertFilter) },
+        { "HDRMerge", typeid(HdrMerge) },
+        { "SequenceIdFilter", typeid(SequenceIdFilter) },
+        { "DecimationFilter", typeid(DecimationFilter) },
+        { "ThresholdFilter", typeid(ThresholdFilter) },
+        { "SpatialAdvancedFilter", typeid(SpatialAdvancedFilter) },
+        { "HoleFillingFilter", typeid(HoleFillingFilter) },
+        { "NoiseRemovalFilter", typeid(NoiseRemovalFilter) },
+        { "TemporalFilter", typeid(TemporalFilter) },
+        { "DisparityTransform", typeid(DisparityTransform) },
+        { "SpatialFastFilter", typeid(SpatialFastFilter) },
+        { "SpatialModerateFilter", typeid(SpatialModerateFilter) },
         { "EdgeNoiseRemovalFilter", typeid(EdgeNoiseRemovalFilter) },
         { "FalsePositiveFilter", typeid(FalsePositiveFilter) },
         { "MgcNoiseRemovalFilter", typeid(MgcNoiseRemovalFilter) },
         { "LutNoiseRemovalFilter", typeid(LutNoiseRemovalFilter) },
+        { "UnDistortionFilter", typeid(UnDistortionFilter) },
     };
     return filterTypeMap;
 }
