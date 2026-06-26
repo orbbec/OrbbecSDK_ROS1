@@ -444,10 +444,16 @@ rosservice call /camera/set_filter '{filter_name: FalsePositiveFilter, filter_en
 rosservice call /camera/set_filter '{filter_name: MgcNoiseRemovalFilter, filter_enable: true, filter_param: []}'
 rosservice call /camera/set_filter '{filter_name: LutNoiseRemovalFilter, filter_enable: true, filter_param: []}'
 
+# Set EdgeNoiseRemovalFilter: []
+rosservice call /camera/set_filter '{filter_name: EdgeNoiseRemovalFilter, filter_enable: true, filter_param: []}'
+
 # Tune filters with named parameters
 rosservice call /camera/set_filter "{filter_name: NoiseRemovalFilter, filter_enable: true, filter_config: [{name: min_diff, value: '256'}, {name: max_size, value: '80'}]}"
 rosservice call /camera/set_filter "{filter_name: HardwareNoiseRemovalFilter, filter_enable: true, filter_config: [{name: threshold, value: '0.2'}]}"
 rosservice call /camera/set_filter "{filter_name: SpatialAdvancedFilter, filter_enable: true, filter_config: [{name: alpha, value: '0.5'}, {name: disp_diff, value: '160'}, {name: magnitude, value: '1'}, {name: radius, value: '8'}]}"
+
+# Set DispOutliersFilter. search_mode accepts FULL or OFFSET_80, case-insensitive.
+rosservice call /camera/set_filter "{filter_name: DispOutliersFilter, filter_enable: true, filter_config: [{name: search_mode, value: 'FULL'}]}"
 ```
 
 ## Data Capture & Calibration Management

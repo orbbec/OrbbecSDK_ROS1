@@ -115,7 +115,7 @@ The following are the launch parameters available:
 *   **`color_powerline_freq`**
     *   Set the power line freq. The possible values are `disable`, `50hz`, `60hz`, `auto`.
 *   **`color_preset`**
-    *   Set the Color preset for Gemini 330 series devices. Options: `Default`, `Warm Biased AWB`.
+    *   Set the Color preset by name. Supported on Gemini 330 series and Gemini 305 series devices. Common options include `Default`, `Warm Biased AWB`, and `Cold Biased AWB`; the exact list is reported by the device. The name comparison is case-insensitive.
 *   **`color_anti_flicker`**
     *   Enable Color anti-flicker. Supported by Gemini 330 series firmware `1.7.13` and above, and Gemini 305 series firmware `1.0.54` and above.
 *   **`enable_color_decimation_filter`** / **`color_decimation_filter_scale`**
@@ -216,6 +216,15 @@ The following are the launch parameters available:
 * **`enable_false_positive_filter`**
   * Enable this option to reduce ghosting noise.
   > **Supported Modules**: DaBaiA / DaBaiAL / Gemini 330 series / Gemini345 / Gemini345Lg
+* **`enable_edge_noise_removal_filter`**
+  * Enable EdgeNoiseRemovalFilter to reduce edge noise in depth frames.
+  > **Supported Modules**: DaBai Max Pro
+* **`enable_disp_outliers_filter`**
+  * Enable DispOutliersFilter to remove disparity outliers in depth frames.
+  > **Supported Modules**: DaBai Max Pro
+* **`disp_outliers_filter_search_mode`**
+  * Set the DispOutliersFilter search mode. Leave it empty to keep the SDK default. Options: `FULL`, `OFFSET_80`. The value is case-insensitive.
+  > **Supported Modules**: DaBai Max Pro
 ### Disparity
 *   **`disparity_to_depth_mode`**
     *   `HW`: use hardware disparity to depth conversion. `SW`: use software disparity to depth conversion. Use `disable` to turn it off.

@@ -59,6 +59,8 @@ To switch Gemini 2L to dual IR mode, set `config_file_path` to `gemini2L_dual_ir
 > Since the parameter configuration of `Dual Color Streams` mode is quite different from that of `Default` mode, we provide the corresponding YAML configuration file.
 Please set `config_file_path` to `gemini305_dual_color.yaml`, the configuration file is located in the config directory.
 
+Gemini 305 also supports Color preset selection with the `color_preset` parameter. Set the preset by name, for example `Default`, `Warm Biased AWB`, or `Cold Biased AWB`. The available names are reported by the device.
+
 ## Extended presets
 
 ### G33X Close Range High Accuracy (Gemini 330 / Gemini 335 / Gemini 336)
