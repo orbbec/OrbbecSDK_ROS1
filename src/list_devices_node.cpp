@@ -155,17 +155,33 @@ void printIpConfigStatus(const std::shared_ptr<ob::Device> &device) {
 void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
   try {
     auto preset_list = device->getAvailablePresetList();
-    ROS_INFO_STREAM("Preset count: " << preset_list->getCount());
-    for (uint32_t i = 0; i < preset_list->getCount(); ++i) {
-      ROS_INFO_STREAM("  - " << preset_list->getName(i));
+    const uint32_t preset_count = preset_list ? preset_list->getCount() : 0;
+    ROS_INFO_STREAM("device_preset count: " << preset_count);
+    for (uint32_t i = 0; i < preset_count; ++i) {
+      const char *preset_name = preset_list->getName(i);
+      if (preset_name != nullptr && preset_name[0] != '\0') {
+        ROS_INFO_STREAM("  - " << preset_name);
+      }
     }
 
     std::string key = "PresetVer";
     if (device->isExtensionInfoExist(key)) {
       std::string value = device->getExtensionInfo(key);
-      ROS_INFO_STREAM("Preset version: " << value);
+      ROS_INFO_STREAM("device_preset version: " << value);
     } else {
-      ROS_INFO_STREAM("Preset version: not available");
+      ROS_INFO_STREAM("device_preset version: not available");
+    }
+
+    if (device->isColorPresetSupported()) {
+      auto color_preset_list = device->getColorPresetList();
+      const uint32_t color_preset_count = color_preset_list ? color_preset_list->getCount() : 0;
+      ROS_INFO_STREAM("color_preset count: " << color_preset_count);
+      for (uint32_t i = 0; i < color_preset_count; ++i) {
+        const char *preset_name = color_preset_list->getName(i);
+        if (preset_name != nullptr && preset_name[0] != '\0') {
+          ROS_INFO_STREAM("  - " << preset_name);
+        }
+      }
     }
   } catch (ob::Error &e) {
     ROS_WARN_STREAM("Failed to get preset info: " << orbbec_camera::formatObErrorWithStatus(e));
