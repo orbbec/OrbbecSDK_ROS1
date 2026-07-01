@@ -272,6 +272,7 @@ class OBCameraNode {
   orbbec_camera::DepthFilterState buildDepthFilterState(
       const std::string &filter_name, bool enabled,
       const std::shared_ptr<ob::Filter> &filter) const;
+  orbbec_camera::DepthFilterState buildEnhancedDepthFilterState() const;
 
   static std::string normalizeDepthFilterName(const std::string &filter_name);
 
@@ -283,6 +284,17 @@ class OBCameraNode {
   bool applyNamedDepthFilterConfig(const std::string &filter_name, bool enabled,
                                    const std::vector<orbbec_camera::DepthFilterParam> &params,
                                    std::string &message);
+  bool applyEnhancedDepthFilterConfig(bool enabled, const std::vector<float> &positional_params,
+                                      const std::vector<orbbec_camera::DepthFilterParam> &params,
+                                      std::string &message);
+  bool validateEnhancedDepthFilterConfig(std::string &message) const;
+  bool ensureEnhancedDepthFilter(std::string &message);
+  void applyEnhancedDepthConfidenceThreshold();
+  std::shared_ptr<ob::FrameSet> processEnhancedDepthFilter(
+      const std::shared_ptr<ob::FrameSet> &frame_set);
+  bool convertEnhancedDepthColorFrame(const std::shared_ptr<ob::FrameSet> &frame_set);
+  void setupConfidencePublishers();
+  void publishConfidenceFrame(const std::shared_ptr<ob::Frame> &confidence_frame);
 
   // Global publisher management methods
   static image_transport::Publisher getGlobalImagePublisher(
@@ -821,6 +833,14 @@ class OBCameraNode {
   bool enable_laser_ = true;
   std::string align_mode_ = "HW";
   std::shared_ptr<ob::Align> align_filter_ = nullptr;
+  std::shared_ptr<ob::EnhancedDepthFilter> enhanced_depth_filter_ = nullptr;
+  ob::FormatConvertFilter enhanced_depth_format_convert_filter_;
+  std::mutex enhanced_depth_filter_mutex_;
+  std::atomic_bool enable_enhanced_depth_{false};
+  std::string enhanced_depth_model_path_;
+  int enhanced_depth_confidence_threshold_ = -1;
+  ros::Publisher confidence_image_publisher_;
+  cv::Mat confidence_image_;
   OBStreamType align_target_stream_ = OB_STREAM_COLOR;
   bool retry_on_usb3_detection_failure_ = false;
   bool enable_color_hdr_ = false;

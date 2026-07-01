@@ -164,6 +164,9 @@
     <arg name="enable_spatial_fast_filter" default="false"/>
     <arg name="enable_spatial_moderate_filter" default="false"/>
     <arg name="enable_false_positive_filter" default="false"/>
+    <arg name="enable_enhanced_depth" default="false"/>
+    <arg name="enhanced_depth_model_path" default=""/>
+    <arg name="enhanced_depth_confidence_threshold" default="51"/>
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
     <arg name="threshold_filter_min" default="-1"/>
@@ -408,6 +411,9 @@
             <param name="enable_spatial_fast_filter" value="$(arg enable_spatial_fast_filter)"/>
             <param name="enable_spatial_moderate_filter" value="$(arg enable_spatial_moderate_filter)"/>
             <param name="enable_false_positive_filter" value="$(arg enable_false_positive_filter)"/>
+            <param name="enable_enhanced_depth" value="$(arg enable_enhanced_depth)"/>
+            <param name="enhanced_depth_model_path" value="$(arg enhanced_depth_model_path)"/>
+            <param name="enhanced_depth_confidence_threshold" value="$(arg enhanced_depth_confidence_threshold)"/>
             <param name="sequence_id_filter_id" value="$(arg sequence_id_filter_id)"/>
             <param name="threshold_filter_max" value="$(arg threshold_filter_max)"/>
             <param name="threshold_filter_min" value="$(arg threshold_filter_min)"/>
