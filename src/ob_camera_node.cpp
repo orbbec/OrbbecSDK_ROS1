@@ -578,7 +578,7 @@ void OBCameraNode::getParameters() {
       nh_private_.param<int>("spatial_moderate_filter_magnitude", -1);
   spatial_moderate_filter_radius_ = nh_private_.param<int>("spatial_moderate_filter_radius", -1);
 
-  diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
+  diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 0.0);
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
   align_mode_ = normalizeClosedSetParameterValue("align_mode", align_mode_, {"HW", "SW"}, "HW");
