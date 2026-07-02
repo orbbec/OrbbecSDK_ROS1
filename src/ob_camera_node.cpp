@@ -174,6 +174,14 @@ void OBCameraNode::init() {
   setupUndistortionFilters();
   selectBaseStream();
   setupProfiles();
+  if (enable_enhanced_depth_.load()) {
+    std::string message;
+    ROS_INFO_STREAM("Pre-creating enhanced depth filter");
+    if (!ensureEnhancedDepthFilter(message)) {
+      throw std::runtime_error(message);
+    }
+    ROS_INFO_STREAM("Enhanced depth filter pre-created");
+  }
   setupCameraInfo();
   setupTopics();
   setupCameraCtrlServices();
