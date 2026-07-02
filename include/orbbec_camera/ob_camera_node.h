@@ -863,7 +863,7 @@ class OBCameraNode {
   ros::Timer lrm_obstacle_distance_timer_;
   ros::Publisher lrm_obstacle_distance_pub_;
   std::shared_ptr<diagnostic_updater::Updater> diagnostic_updater_ = nullptr;
-  double diagnostics_frequency_ = 1.0;
+  double diagnostics_frequency_ = 0.0;
   std::shared_ptr<std::thread> diagnostics_thread_ = nullptr;
   bool enable_laser_ = true;
   std::string align_mode_ = "HW";
