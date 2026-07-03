@@ -33,6 +33,9 @@ namespace orbbec_camera {
 
 namespace {
 
+constexpr char kEnhancedDepthSupportedTargetResolutions[] = "640x480/1280x720/1280x800";
+constexpr char kEnhancedDepthSupportedDepthFormats[] = "Y10/Y11/Y12/Y14/Y16/Z16";
+
 std::string getDepthFilterStatusName(const std::string& filter_name) {
   if (filter_name == "SpatialAdvancedFilter") {
     return "SpatialFilter";
@@ -3580,16 +3583,17 @@ bool OBCameraNode::validateEnhancedDepthFilterConfig(std::string& message) const
   if (!ob::EnhancedDepthFilter::isSupportedResolution(color_profile->getType(), align_to_stream,
                                                       color_profile->getWidth(),
                                                       color_profile->getHeight())) {
-    message = d2c ? "Enhanced depth filter requires color frame is: 640 * 480 RGB"
-                  : "Enhanced depth filter requires color frame is: RGB";
+    message = std::string("Enhanced depth filter requires supported target resolutions: ") +
+              kEnhancedDepthSupportedTargetResolutions;
     return false;
   }
   if (!ob::EnhancedDepthFilter::isSupportedResolution(depth_profile->getType(), align_to_stream,
                                                       depth_profile->getWidth(),
                                                       depth_profile->getHeight()) ||
       !ob::EnhancedDepthFilter::isSupportedFormat(OB_STREAM_DEPTH, depth_profile->getFormat())) {
-    message = d2c ? "Enhanced depth filter requires depth frame is: Y16"
-                  : "Enhanced depth filter requires depth frame is: 640 * 480 Y16";
+    message = std::string("Enhanced depth filter requires supported target resolutions: ") +
+              kEnhancedDepthSupportedTargetResolutions +
+              " and depth formats: " + kEnhancedDepthSupportedDepthFormats;
     return false;
   }
   if (!isEnhancedDepthColorFormatSupported(color_profile->getFormat())) {
