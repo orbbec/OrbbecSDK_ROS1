@@ -999,6 +999,36 @@ bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enab
   try {
     stopStreams();
     enable_stream_[stream_index] = enabled;
+
+    // When a color stream is being disabled, its worker thread loops on
+    // enable_stream_[stream_index] and exits once it sees the flag go false.
+    // Join the thread and release the shared_ptr so the next startStreams()
+    // can recreate it on re-enable (its creation guard is "if
+    // (!colorFrameThread_ && enable_stream_[COLOR])", which would otherwise
+    // stay false forever because the pointer is non-null but holds a
+    // finished thread).
+    if (!enabled) {
+      if (stream_index == COLOR && colorFrameThread_) {
+        colorFrameCV_.notify_all();
+        if (colorFrameThread_->joinable()) {
+          colorFrameThread_->join();
+        }
+        colorFrameThread_.reset();
+      } else if (stream_index == COLOR_LEFT && leftColorFrameThread_) {
+        leftColorFrameCV_.notify_all();
+        if (leftColorFrameThread_->joinable()) {
+          leftColorFrameThread_->join();
+        }
+        leftColorFrameThread_.reset();
+      } else if (stream_index == COLOR_RIGHT && rightColorFrameThread_) {
+        rightColorFrameCV_.notify_all();
+        if (rightColorFrameThread_->joinable()) {
+          rightColorFrameThread_->join();
+        }
+        rightColorFrameThread_.reset();
+      }
+    }
+
     startStreams();
 
     msg = "Toggling sensor " + stream_name_[stream_index] + (enabled ? " on" : " off");

@@ -1835,10 +1835,11 @@ void OBCameraNode::logFrameInfoOnce(const stream_index_pair& stream_index,
 void OBCameraNode::onNewColorFrameCallback() {
   while (enable_stream_[COLOR] && ros::ok() && is_running_.load()) {
     std::unique_lock<std::mutex> lock(colorFrameMtx_);
-    colorFrameCV_.wait(lock,
-                       [this]() { return !colorFrameQueue_.empty() || !(is_running_.load()); });
+    colorFrameCV_.wait(lock, [this]() {
+      return !colorFrameQueue_.empty() || !(is_running_.load()) || !enable_stream_[COLOR];
+    });
 
-    if (!ros::ok() || !is_running_.load()) {
+    if (!ros::ok() || !is_running_.load() || !enable_stream_[COLOR]) {
       break;
     }
     if (colorFrameQueue_.empty()) {
@@ -1857,10 +1858,12 @@ void OBCameraNode::onNewColorFrameCallback() {
 void OBCameraNode::onNewLeftColorFrameCallback() {
   while (enable_stream_[COLOR_LEFT] && ros::ok() && is_running_.load()) {
     std::unique_lock<std::mutex> lock(leftColorFrameMtx_);
-    leftColorFrameCV_.wait(
-        lock, [this]() { return !leftColorFrameQueue_.empty() || !(is_running_.load()); });
+    leftColorFrameCV_.wait(lock, [this]() {
+      return !leftColorFrameQueue_.empty() || !(is_running_.load()) ||
+             !enable_stream_[COLOR_LEFT];
+    });
 
-    if (!ros::ok() || !is_running_.load()) {
+    if (!ros::ok() || !is_running_.load() || !enable_stream_[COLOR_LEFT]) {
       break;
     }
     if (leftColorFrameQueue_.empty()) {
@@ -1879,10 +1882,12 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
 void OBCameraNode::onNewRightColorFrameCallback() {
   while (enable_stream_[COLOR_RIGHT] && ros::ok() && is_running_.load()) {
     std::unique_lock<std::mutex> lock(rightColorFrameMtx_);
-    rightColorFrameCV_.wait(
-        lock, [this]() { return !rightColorFrameQueue_.empty() || !(is_running_.load()); });
+    rightColorFrameCV_.wait(lock, [this]() {
+      return !rightColorFrameQueue_.empty() || !(is_running_.load()) ||
+             !enable_stream_[COLOR_RIGHT];
+    });
 
-    if (!ros::ok() || !is_running_.load()) {
+    if (!ros::ok() || !is_running_.load() || !enable_stream_[COLOR_RIGHT]) {
       break;
     }
     if (rightColorFrameQueue_.empty()) {
