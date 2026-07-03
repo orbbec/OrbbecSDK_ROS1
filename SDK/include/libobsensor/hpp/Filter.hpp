@@ -2118,12 +2118,12 @@ public:
      *         @ref isSupportedResolution.
      */
     static const std::vector<std::pair<uint32_t, uint32_t>> &getSupportedResolutions() {
-        static const std::vector<std::pair<uint32_t, uint32_t>> supportedResolutions = {
-            { 640, 480 },
-            { 1280, 720 },
-            { 1920, 1080 },
-        };
-        return supportedResolutions;
+      static const std::vector<std::pair<uint32_t, uint32_t>> supportedResolutions = {
+          {640, 480},
+          {1280, 720},
+          {1280, 800},
+      };
+      return supportedResolutions;
     }
 
     /**
@@ -2140,7 +2140,8 @@ public:
             return { OB_FORMAT_RGB };
         }
         if(streamType == OB_STREAM_DEPTH) {
-            return { OB_FORMAT_Y10, OB_FORMAT_Y11, OB_FORMAT_Y12, OB_FORMAT_Y16, OB_FORMAT_Z16 };
+          return {OB_FORMAT_Y10, OB_FORMAT_Y11, OB_FORMAT_Y12,
+                  OB_FORMAT_Y14, OB_FORMAT_Y16, OB_FORMAT_Z16};
         }
         return {};
     }
