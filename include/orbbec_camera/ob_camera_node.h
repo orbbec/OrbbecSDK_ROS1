@@ -179,6 +179,11 @@ class OBCameraNode {
 
   void onNewRightColorFrameCallback();
 
+  void stopColorFrameThread(std::shared_ptr<std::thread> &frame_thread, std::mutex &frame_mutex,
+                            std::condition_variable &frame_cv,
+                            std::queue<std::shared_ptr<ob::FrameSet>> &frame_queue,
+                            bool &stop_requested);
+
   void publishPointCloud(const std::shared_ptr<ob::FrameSet> &frame_set);
 
   void publishDepthPointCloud(const std::shared_ptr<ob::FrameSet> &frame_set);
@@ -667,16 +672,19 @@ class OBCameraNode {
   // For color
   std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
   std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
+  bool stop_color_frame_thread_ = false;
   std::mutex colorFrameMtx_;
   std::condition_variable colorFrameCV_;
   // For left color
   std::queue<std::shared_ptr<ob::FrameSet>> leftColorFrameQueue_;
   std::shared_ptr<std::thread> leftColorFrameThread_ = nullptr;
+  bool stop_left_color_frame_thread_ = false;
   std::mutex leftColorFrameMtx_;
   std::condition_variable leftColorFrameCV_;
   // For right color
   std::queue<std::shared_ptr<ob::FrameSet>> rightColorFrameQueue_;
   std::shared_ptr<std::thread> rightColorFrameThread_ = nullptr;
+  bool stop_right_color_frame_thread_ = false;
   std::mutex rightColorFrameMtx_;
   std::condition_variable rightColorFrameCV_;
   // ordered point cloud

@@ -993,6 +993,34 @@ bool OBCameraNode::toggleSensorCallback(std_srvs::SetBoolRequest& request,
   return true;
 }
 
+void OBCameraNode::stopColorFrameThread(std::shared_ptr<std::thread>& frame_thread,
+                                        std::mutex& frame_mutex, std::condition_variable& frame_cv,
+                                        std::queue<std::shared_ptr<ob::FrameSet>>& frame_queue,
+                                        bool& stop_requested) {
+  if (!frame_thread) {
+    return;
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(frame_mutex);
+    stop_requested = true;
+    while (!frame_queue.empty()) {
+      frame_queue.pop();
+    }
+  }
+  frame_cv.notify_all();
+
+  if (frame_thread->joinable()) {
+    frame_thread->join();
+  }
+  frame_thread.reset();
+
+  {
+    std::lock_guard<std::mutex> lock(frame_mutex);
+    stop_requested = false;
+  }
+}
+
 bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enabled,
                                 std::string& msg) {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
@@ -1000,32 +1028,16 @@ bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enab
     stopStreams();
     enable_stream_[stream_index] = enabled;
 
-    // When a color stream is being disabled, its worker thread loops on
-    // enable_stream_[stream_index] and exits once it sees the flag go false.
-    // Join the thread and release the shared_ptr so the next startStreams()
-    // can recreate it on re-enable (its creation guard is "if
-    // (!colorFrameThread_ && enable_stream_[COLOR])", which would otherwise
-    // stay false forever because the pointer is non-null but holds a
-    // finished thread).
     if (!enabled) {
-      if (stream_index == COLOR && colorFrameThread_) {
-        colorFrameCV_.notify_all();
-        if (colorFrameThread_->joinable()) {
-          colorFrameThread_->join();
-        }
-        colorFrameThread_.reset();
-      } else if (stream_index == COLOR_LEFT && leftColorFrameThread_) {
-        leftColorFrameCV_.notify_all();
-        if (leftColorFrameThread_->joinable()) {
-          leftColorFrameThread_->join();
-        }
-        leftColorFrameThread_.reset();
-      } else if (stream_index == COLOR_RIGHT && rightColorFrameThread_) {
-        rightColorFrameCV_.notify_all();
-        if (rightColorFrameThread_->joinable()) {
-          rightColorFrameThread_->join();
-        }
-        rightColorFrameThread_.reset();
+      if (stream_index == COLOR) {
+        stopColorFrameThread(colorFrameThread_, colorFrameMtx_, colorFrameCV_, colorFrameQueue_,
+                             stop_color_frame_thread_);
+      } else if (stream_index == COLOR_LEFT) {
+        stopColorFrameThread(leftColorFrameThread_, leftColorFrameMtx_, leftColorFrameCV_,
+                             leftColorFrameQueue_, stop_left_color_frame_thread_);
+      } else if (stream_index == COLOR_RIGHT) {
+        stopColorFrameThread(rightColorFrameThread_, rightColorFrameMtx_, rightColorFrameCV_,
+                             rightColorFrameQueue_, stop_right_color_frame_thread_);
       }
     }
 

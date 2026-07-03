@@ -1833,13 +1833,13 @@ void OBCameraNode::logFrameInfoOnce(const stream_index_pair& stream_index,
 }
 
 void OBCameraNode::onNewColorFrameCallback() {
-  while (enable_stream_[COLOR] && ros::ok() && is_running_.load()) {
+  while (ros::ok() && is_running_.load()) {
     std::unique_lock<std::mutex> lock(colorFrameMtx_);
     colorFrameCV_.wait(lock, [this]() {
-      return !colorFrameQueue_.empty() || !(is_running_.load()) || !enable_stream_[COLOR];
+      return stop_color_frame_thread_ || !colorFrameQueue_.empty() || !(is_running_.load());
     });
 
-    if (!ros::ok() || !is_running_.load() || !enable_stream_[COLOR]) {
+    if (stop_color_frame_thread_ || !ros::ok() || !is_running_.load()) {
       break;
     }
     if (colorFrameQueue_.empty()) {
@@ -1847,6 +1847,7 @@ void OBCameraNode::onNewColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
     colorFrameQueue_.pop();
+    lock.unlock();
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
     publishPointCloud(frameSet);
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(0));
@@ -1856,14 +1857,14 @@ void OBCameraNode::onNewColorFrameCallback() {
 }
 
 void OBCameraNode::onNewLeftColorFrameCallback() {
-  while (enable_stream_[COLOR_LEFT] && ros::ok() && is_running_.load()) {
+  while (ros::ok() && is_running_.load()) {
     std::unique_lock<std::mutex> lock(leftColorFrameMtx_);
     leftColorFrameCV_.wait(lock, [this]() {
-      return !leftColorFrameQueue_.empty() || !(is_running_.load()) ||
-             !enable_stream_[COLOR_LEFT];
+      return stop_left_color_frame_thread_ || !leftColorFrameQueue_.empty() ||
+             !(is_running_.load());
     });
 
-    if (!ros::ok() || !is_running_.load() || !enable_stream_[COLOR_LEFT]) {
+    if (stop_left_color_frame_thread_ || !ros::ok() || !is_running_.load()) {
       break;
     }
     if (leftColorFrameQueue_.empty()) {
@@ -1871,6 +1872,7 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = leftColorFrameQueue_.front();
     leftColorFrameQueue_.pop();
+    lock.unlock();
     rgb_left_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_LEFT), rgb_buffer_left_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_LEFT), IMAGE_STREAMS.at(1));
@@ -1880,14 +1882,14 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
 }
 
 void OBCameraNode::onNewRightColorFrameCallback() {
-  while (enable_stream_[COLOR_RIGHT] && ros::ok() && is_running_.load()) {
+  while (ros::ok() && is_running_.load()) {
     std::unique_lock<std::mutex> lock(rightColorFrameMtx_);
     rightColorFrameCV_.wait(lock, [this]() {
-      return !rightColorFrameQueue_.empty() || !(is_running_.load()) ||
-             !enable_stream_[COLOR_RIGHT];
+      return stop_right_color_frame_thread_ || !rightColorFrameQueue_.empty() ||
+             !(is_running_.load());
     });
 
-    if (!ros::ok() || !is_running_.load() || !enable_stream_[COLOR_RIGHT]) {
+    if (stop_right_color_frame_thread_ || !ros::ok() || !is_running_.load()) {
       break;
     }
     if (rightColorFrameQueue_.empty()) {
@@ -1895,6 +1897,7 @@ void OBCameraNode::onNewRightColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = rightColorFrameQueue_.front();
     rightColorFrameQueue_.pop();
+    lock.unlock();
     rgb_right_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), rgb_buffer_right_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), IMAGE_STREAMS.at(2));
