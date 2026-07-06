@@ -122,7 +122,6 @@
             <param name="soft_filter_max_diff" value="$(arg soft_filter_max_diff)"/>
             <param name="soft_filter_speckle_size" value="$(arg soft_filter_speckle_size)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
-            <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="depth_delay_us" value="$(arg depth_delay_us)"/>
             <param name="color_delay_us" value="$(arg color_delay_us)"/>
             <param name="trigger2image_delay_us" value="$(arg trigger2image_delay_us)"/>
