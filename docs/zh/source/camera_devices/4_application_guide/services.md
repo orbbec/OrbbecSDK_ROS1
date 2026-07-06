@@ -399,11 +399,15 @@ rosservice call /camera/set_disparity_search_offset 0
 rosservice call /camera/set_ae_reference_stream color
 ```
 
+> **支持模组**：Gemini 301 系列。
+
 * `/camera/set_ae_strategy`
 
 ```bash
 rosservice call /camera/set_ae_strategy motion
 ```
+
+> **支持模组**：Gemini 301 系列。
 
 ## 深度滤波器配置（Depth Filter Configuration）
 

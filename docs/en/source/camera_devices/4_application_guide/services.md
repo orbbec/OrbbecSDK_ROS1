@@ -398,11 +398,15 @@ rosservice call /camera/set_disparity_search_offset 0
 rosservice call /camera/set_ae_reference_stream color
 ```
 
+> **Supported Modules**: Gemini 301 series.
+
 * `/camera/set_ae_strategy`
 
 ```bash
 rosservice call /camera/set_ae_strategy motion
 ```
+
+> **Supported Modules**: Gemini 301 series.
 
 ## Depth Filter Configuration
 

@@ -115,9 +115,9 @@ The following are the launch parameters available:
 *   **`color_powerline_freq`**
     *   Set the power line freq. The possible values are `disable`, `50hz`, `60hz`, `auto`.
 *   **`color_preset`**
-    *   Set the Color preset by name. Supported on Gemini 330 series and Gemini 305 series devices. Common options include `Default`, `Warm Biased AWB`, and `Cold Biased AWB`; the exact list is reported by the device. The name comparison is case-insensitive.
+    *   Set the Color preset by name. Supported on Gemini 330 series and Gemini 301 series devices. Common options include `Default`, `Warm Biased AWB`, and `Cold Biased AWB`; the exact list is reported by the device. The name comparison is case-insensitive.
 *   **`color_anti_flicker`**
-    *   Enable Color anti-flicker. Supported by Gemini 330 series firmware `1.7.13` and above, and Gemini 305 series firmware `1.0.54` and above.
+    *   Enable Color anti-flicker. Supported by Gemini 330 series firmware `1.7.13` and above, and Gemini 301 series firmware `1.0.54` and above.
 *   **`enable_color_decimation_filter`** / **`color_decimation_filter_scale`**
     *   Enable the Color decimation filter and set its scale.
 *   **`color_ae_roi_[left|right|top|bottom]`**
@@ -237,14 +237,14 @@ The following are the launch parameters available:
   * Preset resolution configuration for the camera device. Format: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". Leave empty to disable.
   > **Supported Modules**: Gemini 435Le
 * **`ae_reference_stream`**
-  * Select the AE reference stream for Gemini 305 series devices. Options: `color`, `depth`.
-  > **Supported Modules**: Gemini 305
+  * Select the AE reference stream for Gemini 301 series devices. Options: `color`, `depth`.
+  > **Supported Modules**: Gemini 301 series
 * **`ae_strategy`**
-  * Select the AE strategy for Gemini 305 series devices. Options: `default`, `motion`.
-  > **Supported Modules**: Gemini 305
+  * Select the AE strategy for Gemini 301 series devices. Options: `default`, `motion`.
+  > **Supported Modules**: Gemini 301 series
 * **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
   * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
-  > **Supported Modules**: Gemini 305
+  > **Supported Modules**: Gemini 301 series
 * **`enable_false_positive_filter`**
   * Enable this option to reduce ghosting noise.
   > **Supported Modules**: DaBaiA / DaBaiAL / Gemini 330 series / Gemini345 / Gemini345Lg

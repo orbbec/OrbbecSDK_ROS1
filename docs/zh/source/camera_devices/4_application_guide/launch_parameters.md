@@ -115,9 +115,9 @@
 *   **`color_powerline_freq`**
     *   设置电源线频率。可能的值为 `disable`、`50hz`、`60hz`、`auto`。
 *   **`color_preset`**
-    *   通过名称设置彩色 preset。Gemini 330 系列和 Gemini 305 系列设备支持。常见可选值包括 `Default`、`Warm Biased AWB`、`Cold Biased AWB`，具体列表以设备返回为准。名称匹配大小写不敏感。
+    *   通过名称设置彩色 preset。Gemini 330 系列和 Gemini 301 系列设备支持。常见可选值包括 `Default`、`Warm Biased AWB`、`Cold Biased AWB`，具体列表以设备返回为准。名称匹配大小写不敏感。
 *   **`color_anti_flicker`**
-    *   启用彩色防闪烁功能。Gemini 330 系列固件 `1.7.13` 及以上、Gemini 305 系列固件 `1.0.54` 及以上支持。
+    *   启用彩色防闪烁功能。Gemini 330 系列固件 `1.7.13` 及以上、Gemini 301 系列固件 `1.0.54` 及以上支持。
 *   **`enable_color_decimation_filter`** / **`color_decimation_filter_scale`**
     *   启用彩色抽取滤波器并设置其比例。
 *   **`color_ae_roi_[left|right|top|bottom]`**
@@ -237,14 +237,14 @@
   * 摄像头设备的预设分辨率配置。格式: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". 留空禁用。
   > **支持模组**：Gemini 435Le。
 * **`ae_reference_stream`**
-  * 设置 Gemini 305 系列设备的 AE 参考流。可选值：`color`、`depth`。
-  > **支持模组**：Gemini 305。
+  * 设置 Gemini 301 系列设备的 AE 参考流。可选值：`color`、`depth`。
+  > **支持模组**：Gemini 301 系列。
 * **`ae_strategy`**
-  * 设置 Gemini 305 系列设备的 AE 策略。可选值：`default`、`motion`。
-  > **支持模组**：Gemini 305。
+  * 设置 Gemini 301 系列设备的 AE 策略。可选值：`default`、`motion`。
+  > **支持模组**：Gemini 301 系列。
 * **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
   * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
-  > **支持模组**：Gemini 305。
+  > **支持模组**：Gemini 301 系列。
 * **`enable_false_positive_filter`**
   * 启用鬼影滤波。可减少重影噪声。
   > **支持模组**：DaBaiA / DaBaiAL / Gemini 330 系列 / Gemini345 / Gemini345Lg。
