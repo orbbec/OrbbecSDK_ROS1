@@ -242,7 +242,7 @@
 * **`ae_strategy`**
   * 设置 Gemini 305 系列设备的 AE 策略。可选值：`default`、`motion`。
   > **支持模组**：Gemini 305。
-* **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
+* **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
   * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
   > **支持模组**：Gemini 305。
 * **`enable_false_positive_filter`**

@@ -242,7 +242,7 @@ The following are the launch parameters available:
 * **`ae_strategy`**
   * Select the AE strategy for Gemini 305 series devices. Options: `default`, `motion`.
   > **Supported Modules**: Gemini 305
-* **`depth_downscale`** / **`left_ir_downscale`** /**`right_ir_downscale`**
+* **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
   * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
   > **Supported Modules**: Gemini 305
 * **`enable_false_positive_filter`**
