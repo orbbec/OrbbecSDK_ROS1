@@ -61,6 +61,8 @@ The following are the launch parameters available:
     *   The resolution and frame rate of the sensor stream.
     *   For Femto Mega / Femto Bolt, depth NFOV and WFOV modes are configured by combining depth and IR resolutions. See [Configuration of depth NFOV and WFOV modes](../5_advanced_guide/configuration/configuration_of_depth_NFOV_and_WFOV_modes.md).
     *   For lower CPU usage, see the `color_format` recommendations in [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md).
+*   **`enable_[color|depth|left_ir|right_ir|ir]`**
+    *   Enable or disable the corresponding image stream.
 *   **`[color|depth|left_ir|right_ir|ir]_rotation`**
     *   Set stream image rotation.
     *   The possible values are `0`, `90`, `180`, `270`.

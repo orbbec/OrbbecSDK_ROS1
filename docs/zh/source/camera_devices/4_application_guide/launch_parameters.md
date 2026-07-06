@@ -61,6 +61,8 @@
     *   传感器流的分辨率和帧率。
     *   Femto Mega / Femto Bolt 的深度 NFOV、WFOV 模式通过深度和 IR 分辨率组合配置，参考 [深度 NFOV 和 WFOV 模式配置](../5_advanced_guide/configuration/configuration_of_depth_NFOV_and_WFOV_modes.md)。
     *   如需降低 CPU 使用率，可参考 [降低 CPU 使用率](../5_advanced_guide/performance/lower_cpu_usage.md) 中的 `color_format` 建议。
+*   **`enable_[color|depth|left_ir|right_ir|ir]`**
+    *   启用或关闭对应图像流。
 *   **`[color|depth|left_ir|right_ir|ir]_rotation`**
     *   设置流图像旋转。
     *   可能的值为 `0`、`90`、`180`、`270`。
