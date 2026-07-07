@@ -30,6 +30,7 @@
 #include <sensor_msgs/distortion_models.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <std_msgs/Int32.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Vector3.h>
@@ -268,6 +269,8 @@ class OBCameraNode {
   void setupPublishers();
 
   void publishDepthFiltersStatus();
+
+  void publishLrmObstacleDistance(const ros::TimerEvent &event);
 
   orbbec_camera::DepthFilterState buildDepthFilterState(
       const std::string &filter_name, bool enabled,
@@ -815,6 +818,8 @@ class OBCameraNode {
   std::string hole_filling_filter_mode_;
   ros::Publisher depth_filters_status_pub_;
   nlohmann::json filter_status_;
+  ros::Timer lrm_obstacle_distance_timer_;
+  ros::Publisher lrm_obstacle_distance_pub_;
   std::shared_ptr<diagnostic_updater::Updater> diagnostic_updater_ = nullptr;
   double diagnostics_frequency_ = 1.0;
   std::shared_ptr<std::thread> diagnostics_thread_ = nullptr;
@@ -826,6 +831,8 @@ class OBCameraNode {
   bool enable_color_hdr_ = false;
   int laser_energy_level_ = -1;
   bool enable_ldp_ = true;
+  bool enable_lrm_obstacle_distance_publish_ = false;
+  double lrm_obstacle_distance_publish_rate_ = 10.0;
   ob::PointCloudFilter depth_point_cloud_filter_;
   ob::PointCloudFilter color_point_cloud_filter_;
   boost::optional<OBCalibrationParam> calibration_param_;
