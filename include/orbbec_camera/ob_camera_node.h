@@ -40,6 +40,7 @@
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
 #include "orbbec_camera/GetCameraParams.h"
+#include "orbbec_camera/SetStreamProfile.h"
 #include <boost/optional.hpp>
 #include <image_transport/image_transport.h>
 #include <orbbec_camera/Metadata.h>
@@ -83,6 +84,14 @@ class OBCameraNode {
     stream_index_pair stream_{};
     Eigen::Vector3d data_{};
     double timestamp_ = -1;  // in nanoseconds
+  };
+
+  struct PendingStreamProfile {
+    stream_index_pair stream_index;
+    int requested_width = 0;
+    int requested_height = 0;
+    int requested_fps = 0;
+    std::shared_ptr<ob::VideoStreamProfile> profile;
   };
 
   void init();
@@ -141,6 +150,18 @@ class OBCameraNode {
   bool setupFormatConvertType(OBFormat type);
 
   void setupProfiles();
+
+  std::shared_ptr<ob::VideoStreamProfile> selectVideoStreamProfile(
+      const stream_index_pair &stream_index, int width, int height, int fps, OBFormat format);
+
+  boost::optional<stream_index_pair> getImageStreamByName(const std::string &stream_name) const;
+
+  bool validateStreamProfileRequest(const SetStreamProfileRequest &request,
+                                    std::vector<PendingStreamProfile> &pending_profiles,
+                                    std::string &message);
+
+  bool applyStreamProfiles(const std::vector<PendingStreamProfile> &pending_profiles,
+                           std::string &message);
 
   void updateImageConfig(const stream_index_pair &stream_index,
                          const std::shared_ptr<ob::VideoStreamProfile> &selected_profile);
@@ -307,6 +328,9 @@ class OBCameraNode {
 
   bool getLaserStatusCallback(GetBoolRequest &request, GetBoolResponse &response);
 
+  bool setStreamProfileCallback(SetStreamProfileRequest &request,
+                                SetStreamProfileResponse &response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -390,6 +414,7 @@ class OBCameraNode {
   ros::ServiceServer switch_ir_data_source_channel_srv_;
   ros::ServiceServer get_ldp_measure_distance_srv_;
   ros::ServiceServer get_laser_status_srv_;
+  ros::ServiceServer set_stream_profile_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;

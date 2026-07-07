@@ -227,6 +227,12 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getLdpMeasureDistanceCallback(request, response);
         return response.success;
       });
+  set_stream_profile_srv_ = nh_.advertiseService<SetStreamProfileRequest, SetStreamProfileResponse>(
+      "/" + camera_name_ + "/" + "set_stream_profile",
+      [this](SetStreamProfileRequest& request, SetStreamProfileResponse& response) {
+        response.success = this->setStreamProfileCallback(request, response);
+        return response.success;
+      });
   get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
       "/" + camera_name_ + "/" + "get_laser_status",
       [this](GetBoolRequest& request, GetBoolResponse& response) {
@@ -636,6 +642,37 @@ bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enab
   enable_stream_[stream_index] = enabled;
   startStreams();
   return true;
+}
+
+bool OBCameraNode::setStreamProfileCallback(SetStreamProfileRequest& request,
+                                            SetStreamProfileResponse& response) {
+  try {
+    std::vector<PendingStreamProfile> pending_profiles;
+    std::string message;
+    if (!validateStreamProfileRequest(request, pending_profiles, message)) {
+      response.success = false;
+      response.message = message;
+      return false;
+    }
+    if (!applyStreamProfiles(pending_profiles, message)) {
+      response.success = false;
+      response.message = message;
+      return false;
+    }
+    response.success = true;
+    response.message = message;
+    return true;
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = e.getMessage();
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return false;
 }
 
 bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,

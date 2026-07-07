@@ -16,7 +16,10 @@
 
 #include "orbbec_camera/ob_camera_node.h"
 #include "orbbec_camera/utils.h"
+#include <algorithm>
+#include <cctype>
 #include <std_msgs/String.h>
+#include <unordered_set>
 
 namespace orbbec_camera {
 
@@ -709,6 +712,178 @@ void OBCameraNode::setupProfiles() {
     align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
   }
 }
+
+std::shared_ptr<ob::VideoStreamProfile> OBCameraNode::selectVideoStreamProfile(
+    const stream_index_pair& stream_index, int width, int height, int fps, OBFormat format) {
+  auto sensor_it = sensors_.find(stream_index);
+  if (sensor_it == sensors_.end() || !sensor_it->second) {
+    throw std::runtime_error("Sensor is not available for stream " + stream_name_[stream_index]);
+  }
+  auto profiles = sensor_it->second->getStreamProfileList();
+  if (!profiles || profiles->count() == 0) {
+    throw std::runtime_error("No stream profiles available for stream " +
+                             stream_name_[stream_index]);
+  }
+
+  std::shared_ptr<ob::VideoStreamProfile> selected_profile;
+  if (width == 0 && height == 0 && fps == 0) {
+    selected_profile = profiles->getProfile(0)->as<ob::VideoStreamProfile>();
+  } else {
+    selected_profile = profiles->getVideoStreamProfile(width, height, format, fps);
+  }
+
+  if (!selected_profile) {
+    throw std::runtime_error("Requested stream profile is not supported");
+  }
+  return selected_profile;
+}
+
+boost::optional<stream_index_pair> OBCameraNode::getImageStreamByName(
+    const std::string& stream_name) const {
+  if (stream_name == "color") {
+    return COLOR;
+  }
+  if (stream_name == "depth") {
+    return DEPTH;
+  }
+  if (stream_name == "ir") {
+    return INFRA0;
+  }
+  if (stream_name == "left_ir") {
+    return INFRA1;
+  }
+  if (stream_name == "right_ir") {
+    return INFRA2;
+  }
+  return boost::none;
+}
+
+bool OBCameraNode::validateStreamProfileRequest(const SetStreamProfileRequest& request,
+                                                std::vector<PendingStreamProfile>& pending_profiles,
+                                                std::string& message) {
+  pending_profiles.clear();
+  if (request.profiles.empty()) {
+    message = "profiles is empty";
+    return false;
+  }
+
+  std::unordered_set<std::string> requested_streams;
+  for (const auto& profile : request.profiles) {
+    const auto stream_index = getImageStreamByName(profile.stream_name);
+    if (!stream_index) {
+      message = "Unsupported stream_name: " + profile.stream_name +
+                ". Supported stream_name values: color, depth, ir, left_ir, right_ir";
+      return false;
+    }
+    if (!requested_streams.insert(profile.stream_name).second) {
+      message = "Duplicated stream_name: " + profile.stream_name;
+      return false;
+    }
+    if (!enable_stream_[*stream_index]) {
+      message = "Stream is not enabled: " + profile.stream_name;
+      return false;
+    }
+    if (profile.width < 0 || profile.height < 0 || profile.fps < 0) {
+      message = profile.stream_name + " width, height and fps must be non-negative";
+      return false;
+    }
+    if ((profile.width > 0) != (profile.height > 0)) {
+      message = profile.stream_name + " width and height must be provided together";
+      return false;
+    }
+    if (profile.width <= 0 && profile.fps <= 0 && profile.format.empty()) {
+      message = profile.stream_name + " must provide resolution, fps or format";
+      return false;
+    }
+
+    const int requested_width = profile.width > 0 ? profile.width : width_[*stream_index];
+    const int requested_height = profile.height > 0 ? profile.height : height_[*stream_index];
+    const int requested_fps = profile.fps > 0 ? profile.fps : fps_[*stream_index];
+    if (requested_width <= 0 || requested_height <= 0 || requested_fps <= 0) {
+      message = profile.stream_name + " current width, height and fps must be positive";
+      return false;
+    }
+
+    OBFormat requested_format = format_[*stream_index];
+    if (!profile.format.empty()) {
+      std::string format_name;
+      format_name.reserve(profile.format.size());
+      std::transform(profile.format.begin(), profile.format.end(), std::back_inserter(format_name),
+                     [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+      if (format_name == "ANY") {
+        requested_format = OB_FORMAT_UNKNOWN;
+      } else {
+        requested_format = OBFormatFromString(format_name);
+        if (requested_format == OB_FORMAT_UNKNOWN) {
+          message = "Unsupported format: " + profile.format;
+          return false;
+        }
+      }
+    }
+
+    try {
+      auto selected_profile = selectVideoStreamProfile(
+          *stream_index, requested_width, requested_height, requested_fps, requested_format);
+      pending_profiles.push_back(
+          {*stream_index, requested_width, requested_height, requested_fps, selected_profile});
+    } catch (const ob::Error& e) {
+      message = "Unsupported profile for " + profile.stream_name + ": " + e.getMessage();
+      return false;
+    } catch (const std::exception& e) {
+      message = "Unsupported profile for " + profile.stream_name + ": " + e.what();
+      return false;
+    }
+  }
+  return true;
+}
+
+bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& pending_profiles,
+                                       std::string& message) {
+  if (pending_profiles.empty()) {
+    message = "profiles is empty";
+    return false;
+  }
+
+  std::lock_guard<std::recursive_mutex> lock(device_lock_);
+  try {
+    const bool restart_pipeline = pipeline_started_.load();
+    if (restart_pipeline) {
+      stopStreams();
+    }
+
+    for (const auto& pending_profile : pending_profiles) {
+      const auto& stream_index = pending_profile.stream_index;
+      auto selected_profile = pending_profile.profile;
+      stream_profile_[stream_index] = selected_profile;
+      width_[stream_index] = static_cast<int>(selected_profile->width());
+      height_[stream_index] = static_cast<int>(selected_profile->height());
+      fps_[stream_index] = static_cast<int>(selected_profile->fps());
+      format_[stream_index] = selected_profile->format();
+      format_str_[stream_index] = OBFormatToString(format_[stream_index]);
+      updateImageConfig(stream_index, selected_profile);
+      images_[stream_index] = cv::Mat(height_[stream_index], width_[stream_index],
+                                      image_format_[stream_index], cv::Scalar(0, 0, 0));
+      ROS_INFO_STREAM("Updated stream profile for "
+                      << stream_name_[stream_index] << " - width: " << width_[stream_index]
+                      << ", height: " << height_[stream_index] << ", fps: " << fps_[stream_index]
+                      << ", format: " << OBFormatToString(format_[stream_index]));
+    }
+
+    if (restart_pipeline) {
+      startStreams();
+    }
+    message = "success";
+    return true;
+  } catch (const ob::Error& e) {
+    message = e.getMessage();
+  } catch (const std::exception& e) {
+    message = e.what();
+  } catch (...) {
+    message = "unknown error";
+  }
+  return false;
+}
+
 void OBCameraNode::updateImageConfig(
     const stream_index_pair& stream_index,
     const std::shared_ptr<ob::VideoStreamProfile>& selected_profile) {
