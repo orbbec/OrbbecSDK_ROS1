@@ -86,7 +86,7 @@ rosrun orbbec_camera service_benchmark_node \
 
 ```bash
 rosrun orbbec_camera service_benchmark_node \
-  _yaml_file:=/path/to/default_service_cpp.yaml
+  _yaml_file:=/path/to/default_service.yaml
 ```
 
 ## 基准测试使用建议

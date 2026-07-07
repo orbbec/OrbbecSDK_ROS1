@@ -86,7 +86,7 @@ Multiple services benchmark (YAML configuration):
 
 ```bash
 rosrun orbbec_camera service_benchmark_node \
-  _yaml_file:=/path/to/default_service_cpp.yaml
+  _yaml_file:=/path/to/default_service.yaml
 ```
 
 ## Benchmark Recommendations
