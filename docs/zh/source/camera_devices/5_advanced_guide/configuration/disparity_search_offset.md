@@ -36,8 +36,8 @@
 
 ## 运行启动文件
 
-设置视差搜索偏移参数，运行启动文件：
+可以在启动时直接设置视差搜索偏移相关参数：
 
 ```bash
-roslaunch orbbec_camera gemini_330_series.launch
+roslaunch orbbec_camera gemini_330_series.launch disparity_range_mode:=128 disparity_search_offset:=45
 ```

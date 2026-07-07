@@ -44,9 +44,9 @@
 | Binned Sparse Default |  小盲区、低功耗、高帧率 |
 | Unbinned Sparse Default |  平衡质量和功耗，提升低反和半室外效果 |
 
-如需将 Gemini 2L 切换为双 IR 模式，请将 `config_file_path` 设置为 `gemini2L_dual_ir.yaml`。该配置文件位于 `config` 目录下。
+如需将 Gemini 2L 切换为双 IR 模式，请将 `config_file_path` 设置为 `$(rospack find orbbec_camera)/config/gemini2L_dual_ir.yaml`。
 
-## Gemini 305
+## Gemini 301 系列
 
 | 预设 | 特点 |
 | --- | --- |
@@ -57,9 +57,9 @@
 | Custom |  自定义修改，例如后处理管道的新配置、深度AE功能的修改 |
 
 > 由于 `Dual Color Streams` 模式的参数配置与 `Default` 模式差异较大，我们提供了对应的 YAML 配置文件。
-请将 `config_file_path` 设置为 `gemini305_dual_color.yaml`，该配置文件位于 config 目录下。
+请将 `config_file_path` 设置为 `$(rospack find orbbec_camera)/config/gemini305_dual_color.yaml`。
 
-Gemini 305 也支持通过 `color_preset` 参数选择彩色 preset。请按名称设置，例如 `Default`、`Warm Biased AWB`、`Cold Biased AWB`，可用名称以设备返回为准。
+Gemini 301 系列也支持通过 `color_preset` 参数选择彩色 preset。请按名称设置，例如 `Default`、`Warm Biased AWB`、`Cold Biased AWB`，可用名称以设备返回为准。
 
 ## 扩展预设
 

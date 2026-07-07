@@ -43,10 +43,10 @@ interleave_ae相关参数在[gemini_330_series.launch](https://github.com/orbbec
 
 ## 运行启动文件
 
-设置 `interleave_ae` 参数后，执行 `catkin_make` 并运行启动文件。
+可以在启动时直接设置 interleave_ae 相关参数：
 
 ```bash
-roslaunch orbbec_camera gemini_330_series.launch
+roslaunch orbbec_camera gemini_330_series.launch interleave_ae_mode:=laser interleave_frame_enable:=true
 ```
 
 **Example Visualization**

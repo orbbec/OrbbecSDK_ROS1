@@ -44,9 +44,9 @@ For example, modify the default device preset to `High Accuracy` in the launch f
 | Binned Sparse Default | Small dead zone, low power consumption, high frame rate |
 | Unbinned Sparse Default | Balance quality and power consumption, improve low-reflection and semi-outdoor effects |
 
-To switch Gemini 2L to dual IR mode, set `config_file_path` to `gemini2L_dual_ir.yaml`. The configuration file is located in the `config` directory.
+To switch Gemini 2L to dual IR mode, set `config_file_path` to `$(rospack find orbbec_camera)/config/gemini2L_dual_ir.yaml`.
 
-## Gemini 305
+## Gemini 301 series
 
 | Defaults | Features |
 | --- | --- |
@@ -57,9 +57,9 @@ To switch Gemini 2L to dual IR mode, set `config_file_path` to `gemini2L_dual_ir
 | Custom | Custom modifications, such as new configurations of post-processing pipelines and modifications to deep AE functions |
 
 > Since the parameter configuration of `Dual Color Streams` mode is quite different from that of `Default` mode, we provide the corresponding YAML configuration file.
-Please set `config_file_path` to `gemini305_dual_color.yaml`, the configuration file is located in the config directory.
+Please set `config_file_path` to `$(rospack find orbbec_camera)/config/gemini305_dual_color.yaml`.
 
-Gemini 305 also supports Color preset selection with the `color_preset` parameter. Set the preset by name, for example `Default`, `Warm Biased AWB`, or `Cold Biased AWB`. The available names are reported by the device.
+The Gemini 301 series also supports Color preset selection with the `color_preset` parameter. Set the preset by name, for example `Default`, `Warm Biased AWB`, or `Cold Biased AWB`. The available names are reported by the device.
 
 ## Extended presets
 

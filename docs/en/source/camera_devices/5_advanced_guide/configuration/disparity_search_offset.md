@@ -36,8 +36,8 @@ The disparity_search_offset related parameters are set in [gemini_330_series.lau
 
 ## Run the launch
 
-Setting the disparity_search_offset parameter,run launch
+You can set the disparity_search_offset related parameters directly when launching:
 
 ```bash
-roslaunch orbbec_camera gemini_330_series.launch
+roslaunch orbbec_camera gemini_330_series.launch disparity_range_mode:=128 disparity_search_offset:=45
 ```

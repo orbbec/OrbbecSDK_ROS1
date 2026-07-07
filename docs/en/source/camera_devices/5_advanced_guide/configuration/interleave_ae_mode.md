@@ -43,10 +43,10 @@ When the `interleave_ae_mode` parameter is set to `laser` and `interleave_frame_
 
 ## Run the launch
 
-After setting the `interleave_ae` parameter, run `catkin_make` and then launch the node.
+You can set the interleave_ae related parameters directly when launching:
 
 ```bash
-roslaunch orbbec_camera gemini_330_series.launch
+roslaunch orbbec_camera gemini_330_series.launch interleave_ae_mode:=laser interleave_frame_enable:=true
 ```
 
 **Example Visualization**
