@@ -142,6 +142,8 @@ class OBCameraNode {
 
   void setupProfiles();
 
+  void syncSoftwareAlignment();
+
   void updateImageConfig(const stream_index_pair &stream_index,
                          const std::shared_ptr<ob::VideoStreamProfile> &selected_profile);
   static void printProfiles(const std::shared_ptr<ob::Sensor> &sensor);
@@ -270,6 +272,8 @@ class OBCameraNode {
   bool toggleSensorCallback(std_srvs::SetBoolRequest &request, std_srvs::SetBoolResponse &response,
                             const stream_index_pair &stream_index);
 
+  bool setImageRegistrationModeCallback(SetStringRequest &request, SetStringResponse &response);
+
   bool saveImagesCallback(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
 
   void saveImageToFile(const stream_index_pair &stream_index, const cv::Mat &image,
@@ -390,6 +394,7 @@ class OBCameraNode {
   ros::ServiceServer switch_ir_data_source_channel_srv_;
   ros::ServiceServer get_ldp_measure_distance_srv_;
   ros::ServiceServer get_laser_status_srv_;
+  ros::ServiceServer set_image_registration_mode_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
