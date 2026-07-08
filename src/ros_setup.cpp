@@ -898,9 +898,8 @@ void OBCameraNode::setupPipelineConfig() {
   }
   pipeline_config_ = std::make_shared<ob::Config>();
 
-  auto pid = device_info_->pid();
-  if (!isGemini335PID(pid) && depth_registration_ && enable_stream_[COLOR] &&
-      enable_stream_[DEPTH] && align_mode_ == "HW") {
+  if (depth_registration_ && enable_stream_[COLOR] && enable_stream_[DEPTH] &&
+      align_mode_ == "HW") {
     OBAlignMode align_mode = ALIGN_D2C_HW_MODE;
     ROS_INFO_STREAM("set align mode to " << align_mode_);
     pipeline_config_->setAlignMode(align_mode);

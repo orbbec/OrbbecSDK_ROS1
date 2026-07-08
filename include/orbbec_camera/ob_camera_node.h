@@ -33,6 +33,7 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <condition_variable>
+#include <cstddef>
 #include <thread>
 #include <atomic>
 #include <camera_info_manager/camera_info_manager.h>
@@ -488,6 +489,7 @@ class OBCameraNode {
   // mjpeg decoder
   std::shared_ptr<JPEGDecoder> mjpeg_decoder_ = nullptr;
   uint8_t *rgb_buffer_ = nullptr;
+  size_t rgb_buffer_size_ = 0;
   std::atomic_bool rgb_is_decoded_{false};
 
   // For color

@@ -233,7 +233,7 @@ void OBCameraNode::setupCameraCtrlServices() {
       "/" + camera_name_ + "/" + "set_image_registration_mode",
       [this](SetStringRequest& request, SetStringResponse& response) {
         response.success = this->setImageRegistrationModeCallback(request, response);
-        return response.success;
+        return true;
       });
   get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
       "/" + camera_name_ + "/" + "get_laser_status",
