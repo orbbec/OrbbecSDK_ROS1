@@ -858,6 +858,7 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
       }
       stopStreams();
     }
+    stopColorFrameThread();
     clearColorFrameQueue();
 
     for (const auto& pending_profile : pending_profiles) {
@@ -879,6 +880,7 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
     }
 
     setupImageBuffers();
+    clearColorFrameQueue();
     if (restart_pipeline) {
       startStreams();
     } else {

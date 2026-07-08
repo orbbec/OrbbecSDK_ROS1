@@ -118,6 +118,8 @@ class OBCameraNode {
 
   std::shared_ptr<ob::Frame> softwareDecodeColorFrame(const std::shared_ptr<ob::Frame> &frame);
 
+  bool isColorFrameDecodeRequired(const std::shared_ptr<ob::Frame> &frame) const;
+
   void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair &stream_index);
 
   void publishMetadata(const std::shared_ptr<ob::Frame> &frame,
@@ -164,6 +166,8 @@ class OBCameraNode {
                            std::string &message);
 
   void clearColorFrameQueue();
+
+  void stopColorFrameThread();
 
   void setupImageBuffers();
 
@@ -517,6 +521,7 @@ class OBCameraNode {
   // For color
   std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
   std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
+  std::atomic_bool stop_color_frame_thread_{false};
   std::mutex colorFrameMtx_;
   std::condition_variable colorFrameCV_;
   // ordered point cloud
