@@ -230,8 +230,8 @@ void OBCameraNode::setupCameraCtrlServices() {
   set_stream_profile_srv_ = nh_.advertiseService<SetStreamProfileRequest, SetStreamProfileResponse>(
       "/" + camera_name_ + "/" + "set_stream_profile",
       [this](SetStreamProfileRequest& request, SetStreamProfileResponse& response) {
-        response.success = this->setStreamProfileCallback(request, response);
-        return response.success;
+        this->setStreamProfileCallback(request, response);
+        return true;
       });
   get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
       "/" + camera_name_ + "/" + "get_laser_status",
