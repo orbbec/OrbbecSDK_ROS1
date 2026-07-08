@@ -847,7 +847,15 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
   std::lock_guard<std::recursive_mutex> lock(device_lock_);
   try {
     const bool restart_pipeline = pipeline_started_.load();
+    std::vector<stream_index_pair> restart_streams;
     if (restart_pipeline) {
+      stopStreams();
+    } else if (!enable_pipeline_) {
+      for (const auto& stream_index : IMAGE_STREAMS) {
+        if (stream_started_[stream_index]) {
+          restart_streams.push_back(stream_index);
+        }
+      }
       stopStreams();
     }
     clearColorFrameQueue();
@@ -873,6 +881,10 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
     setupImageBuffers();
     if (restart_pipeline) {
       startStreams();
+    } else {
+      for (const auto& stream_index : restart_streams) {
+        startStream(stream_index);
+      }
     }
     message = "success";
     return true;
