@@ -3168,29 +3168,264 @@ void OBCameraNode::setupProfiles() {
     ROS_INFO_STREAM("SW D2C align output resolution will match target stream resolution");
   }
 }
+
+std::shared_ptr<ob::VideoStreamProfile> OBCameraNode::selectVideoStreamProfile(
+    const stream_index_pair& stream_index, int width, int height, int fps, OBFormat format) {
+  auto sensor_it = sensors_.find(stream_index);
+  if (sensor_it == sensors_.end() || !sensor_it->second) {
+    throw std::runtime_error("Sensor is not available for stream " + stream_name_[stream_index]);
+  }
+  auto profiles = sensor_it->second->getStreamProfileList();
+  if (!profiles || profiles->count() == 0) {
+    throw std::runtime_error("No stream profiles available for stream " +
+                             stream_name_[stream_index]);
+  }
+
+  std::shared_ptr<ob::VideoStreamProfile> selected_profile;
+  if (width == 0 && height == 0 && fps == 0) {
+    selected_profile = profiles->getProfile(0)->as<ob::VideoStreamProfile>();
+  } else {
+    const auto pid = device_->getDeviceInfo()->getPid();
+    if (isGemini305SeriesPID(pid) && stream_index == DEPTH) {
+      OBHardwareDecimationConfig conf;
+      conf.originWidth = width;
+      conf.originHeight = height;
+      conf.factor = depth_decimation_factor_;
+      selected_profile = profiles->getVideoStreamProfile(conf, format, fps);
+    } else if (isGemini305SeriesPID(pid) && stream_index == INFRA1) {
+      OBHardwareDecimationConfig conf;
+      conf.originWidth = width;
+      conf.originHeight = height;
+      conf.factor = left_ir_decimation_factor_;
+      selected_profile = profiles->getVideoStreamProfile(conf, format, fps);
+    } else if (isGemini305SeriesPID(pid) && stream_index == INFRA2) {
+      OBHardwareDecimationConfig conf;
+      conf.originWidth = width;
+      conf.originHeight = height;
+      conf.factor = right_ir_decimation_factor_;
+      selected_profile = profiles->getVideoStreamProfile(conf, format, fps);
+    } else {
+      selected_profile = profiles->getVideoStreamProfile(width, height, format, fps);
+    }
+  }
+
+  if (!selected_profile) {
+    throw std::runtime_error("Requested stream profile is not supported");
+  }
+  return selected_profile;
+}
+
+boost::optional<stream_index_pair> OBCameraNode::getImageStreamByName(
+    const std::string& stream_name) const {
+  if (stream_name == "color") {
+    return COLOR;
+  }
+  if (stream_name == "left_color") {
+    return COLOR_LEFT;
+  }
+  if (stream_name == "right_color") {
+    return COLOR_RIGHT;
+  }
+  if (stream_name == "depth") {
+    return DEPTH;
+  }
+  if (stream_name == "ir") {
+    return INFRA0;
+  }
+  if (stream_name == "left_ir") {
+    return INFRA1;
+  }
+  if (stream_name == "right_ir") {
+    return INFRA2;
+  }
+  return boost::none;
+}
+
+bool OBCameraNode::validateStreamProfileRequest(const SetStreamProfileRequest& request,
+                                                std::vector<PendingStreamProfile>& pending_profiles,
+                                                std::string& message) {
+  pending_profiles.clear();
+  if (request.profiles.empty()) {
+    message = "profiles is empty";
+    return false;
+  }
+
+  std::unordered_set<std::string> requested_streams;
+  for (const auto& profile : request.profiles) {
+    const auto stream_index = getImageStreamByName(profile.stream_name);
+    if (!stream_index) {
+      message = "Unsupported stream_name: " + profile.stream_name +
+                ". Supported stream_name values: color, left_color, right_color, depth, ir, "
+                "left_ir, right_ir";
+      return false;
+    }
+    if (!requested_streams.insert(profile.stream_name).second) {
+      message = "Duplicated stream_name: " + profile.stream_name;
+      return false;
+    }
+    if (!enable_stream_[*stream_index]) {
+      message = "Stream is not enabled: " + profile.stream_name;
+      return false;
+    }
+    if (profile.width < 0 || profile.height < 0 || profile.fps < 0) {
+      message = profile.stream_name + " width, height and fps must be non-negative";
+      return false;
+    }
+    if ((profile.width > 0) != (profile.height > 0)) {
+      message = profile.stream_name + " width and height must be provided together";
+      return false;
+    }
+    if (profile.width <= 0 && profile.fps <= 0 && profile.format.empty()) {
+      message = profile.stream_name + " must provide resolution, fps or format";
+      return false;
+    }
+
+    const int requested_width = profile.width > 0 ? profile.width : width_[*stream_index];
+    const int requested_height = profile.height > 0 ? profile.height : height_[*stream_index];
+    const int requested_fps = profile.fps > 0 ? profile.fps : fps_[*stream_index];
+    if (requested_width <= 0 || requested_height <= 0 || requested_fps <= 0) {
+      message = profile.stream_name + " current width, height and fps must be positive";
+      return false;
+    }
+
+    OBFormat requested_format = format_[*stream_index];
+    if (!profile.format.empty()) {
+      std::string format_name;
+      format_name.reserve(profile.format.size());
+      std::transform(profile.format.begin(), profile.format.end(), std::back_inserter(format_name),
+                     [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+      if (format_name == "ANY") {
+        requested_format = OB_FORMAT_UNKNOWN;
+      } else {
+        requested_format = OBFormatFromString(format_name);
+        if (requested_format == OB_FORMAT_UNKNOWN) {
+          message = "Unsupported format: " + profile.format;
+          return false;
+        }
+      }
+    }
+
+    try {
+      auto selected_profile = selectVideoStreamProfile(
+          *stream_index, requested_width, requested_height, requested_fps, requested_format);
+      pending_profiles.push_back(
+          {*stream_index, requested_width, requested_height, requested_fps, selected_profile});
+    } catch (const ob::Error& e) {
+      message = "Unsupported profile for " + profile.stream_name + ": " +
+                orbbec_camera::formatObErrorWithStatus(e);
+      return false;
+    } catch (const std::exception& e) {
+      message = "Unsupported profile for " + profile.stream_name + ": " + e.what();
+      return false;
+    }
+  }
+  return true;
+}
+
+bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& pending_profiles,
+                                       std::string& message) {
+  if (pending_profiles.empty()) {
+    message = "profiles is empty";
+    return false;
+  }
+
+  std::lock_guard<std::recursive_mutex> lock(device_lock_);
+  try {
+    const bool restart_pipeline = pipeline_started_.load();
+    if (restart_pipeline) {
+      stopStreams();
+    }
+    stopColorFrameThreads();
+    clearColorFrameQueues();
+
+    for (const auto& pending_profile : pending_profiles) {
+      const auto& stream_index = pending_profile.stream_index;
+      auto selected_profile = pending_profile.profile;
+      const auto old_format = format_[stream_index];
+      stream_profile_[stream_index] = selected_profile;
+      width_[stream_index] = static_cast<int>(selected_profile->width());
+      height_[stream_index] = static_cast<int>(selected_profile->height());
+      fps_[stream_index] = static_cast<int>(selected_profile->fps());
+      format_[stream_index] = selected_profile->format();
+      format_str_[stream_index] = OBFormatToString(format_[stream_index]);
+      updateImageConfig(stream_index, selected_profile);
+      if (old_format != format_[stream_index]) {
+        setupImagePublisher(stream_index);
+      }
+      images_[stream_index] = cv::Mat(height_[stream_index], width_[stream_index],
+                                      image_format_[stream_index], cv::Scalar(0, 0, 0));
+      ROS_INFO_STREAM("Updated stream profile for "
+                      << stream_name_[stream_index] << " - width: " << width_[stream_index]
+                      << ", height: " << height_[stream_index] << ", fps: " << fps_[stream_index]
+                      << ", format: " << OBFormatToString(format_[stream_index]));
+    }
+
+    setupImageBuffers();
+    clearColorFrameQueues();
+    if (restart_pipeline) {
+      startStreams();
+    }
+    message = "success";
+    return true;
+  } catch (const ob::Error& e) {
+    message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    message = e.what();
+  } catch (...) {
+    message = "unknown error";
+  }
+  return false;
+}
+
 void OBCameraNode::updateImageConfig(
     const stream_index_pair& stream_index,
     const std::shared_ptr<ob::VideoStreamProfile>& selected_profile) {
-  if (selected_profile->format() == OB_FORMAT_Y8) {
+  const auto format = selected_profile->format();
+  const bool is_depth_stream = stream_index.first == OB_STREAM_DEPTH;
+  const bool is_ir_stream = stream_index.first == OB_STREAM_IR ||
+                            stream_index.first == OB_STREAM_IR_LEFT ||
+                            stream_index.first == OB_STREAM_IR_RIGHT;
+  const bool is_color_stream =
+      stream_index == COLOR || stream_index == COLOR_LEFT || stream_index == COLOR_RIGHT;
+
+  if (format == OB_FORMAT_Y8 || format == OB_FORMAT_GRAY) {
     image_format_[stream_index] = CV_8UC1;
-    encoding_[stream_index] = stream_index.first == OB_STREAM_DEPTH
-                                  ? sensor_msgs::image_encodings::TYPE_8UC1
-                                  : sensor_msgs::image_encodings::MONO8;
+    encoding_[stream_index] = is_depth_stream ? sensor_msgs::image_encodings::TYPE_8UC1
+                                              : sensor_msgs::image_encodings::MONO8;
     unit_step_size_[stream_index] = sizeof(uint8_t);
-  }
-  if (selected_profile->format() == OB_FORMAT_MJPG) {
-    if (stream_index.first == OB_STREAM_IR || stream_index.first == OB_STREAM_IR_LEFT ||
-        stream_index.first == OB_STREAM_IR_RIGHT) {
+  } else if (format == OB_FORMAT_Y10 || format == OB_FORMAT_Y11 || format == OB_FORMAT_Y12 ||
+             format == OB_FORMAT_Y14 || format == OB_FORMAT_Y16 || format == OB_FORMAT_Z16 ||
+             format == OB_FORMAT_RW16) {
+    image_format_[stream_index] = CV_16UC1;
+    encoding_[stream_index] = is_depth_stream ? sensor_msgs::image_encodings::TYPE_16UC1
+                                              : sensor_msgs::image_encodings::MONO16;
+    unit_step_size_[stream_index] = sizeof(uint16_t);
+  } else if (format == OB_FORMAT_MJPG || format == OB_FORMAT_MJPEG) {
+    if (is_ir_stream) {
       image_format_[stream_index] = CV_8UC1;
       encoding_[stream_index] = sensor_msgs::image_encodings::MONO8;
       unit_step_size_[stream_index] = sizeof(uint8_t);
+    } else if (is_color_stream) {
+      image_format_[stream_index] = CV_8UC3;
+      encoding_[stream_index] = sensor_msgs::image_encodings::RGB8;
+      unit_step_size_[stream_index] = 3 * sizeof(uint8_t);
     }
-  }
-  if (selected_profile->format() == OB_FORMAT_Y16 &&
-      (stream_index == COLOR || stream_index == COLOR_LEFT || stream_index == COLOR_RIGHT)) {
-    image_format_[stream_index] = CV_16UC1;
-    encoding_[stream_index] = sensor_msgs::image_encodings::MONO16;
-    unit_step_size_[stream_index] = sizeof(uint16_t);
+  } else if (format == OB_FORMAT_BGR) {
+    image_format_[stream_index] = CV_8UC3;
+    encoding_[stream_index] = sensor_msgs::image_encodings::BGR8;
+    unit_step_size_[stream_index] = 3 * sizeof(uint8_t);
+  } else if (format == OB_FORMAT_RGB || format == OB_FORMAT_RGB888) {
+    image_format_[stream_index] = CV_8UC3;
+    encoding_[stream_index] = sensor_msgs::image_encodings::RGB8;
+    unit_step_size_[stream_index] = 3 * sizeof(uint8_t);
+  } else if (format == OB_FORMAT_BGRA) {
+    image_format_[stream_index] = CV_8UC4;
+    encoding_[stream_index] = sensor_msgs::image_encodings::BGRA8;
+    unit_step_size_[stream_index] = 4 * sizeof(uint8_t);
+  } else if (format == OB_FORMAT_RGBA) {
+    image_format_[stream_index] = CV_8UC4;
+    encoding_[stream_index] = sensor_msgs::image_encodings::RGBA8;
+    unit_step_size_[stream_index] = 4 * sizeof(uint8_t);
   }
 }
 
@@ -3198,6 +3433,52 @@ void OBCameraNode::setupTopics() {
   setupPublishers();
   if (publish_tf_) {
     publishStaticTransforms();
+  }
+}
+
+void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
+  const std::string topic_name =
+      "/" + camera_name_ + "/" + stream_name_[stream_index] + "/image_raw";
+  releaseGlobalImagePublisher(topic_name);
+  auto raw_it = raw_image_publishers_.find(stream_index);
+  if (raw_it != raw_image_publishers_.end()) {
+    raw_it->second.shutdown();
+    raw_image_publishers_.erase(raw_it);
+  }
+  auto compressed_it = compressed_image_publishers_.find(stream_index);
+  if (compressed_it != compressed_image_publishers_.end()) {
+    compressed_it->second.shutdown();
+    compressed_image_publishers_.erase(compressed_it);
+  }
+  image_publishers_.erase(stream_index);
+
+  if (!enable_stream_[stream_index]) {
+    return;
+  }
+
+  ros::SubscriberStatusCallback image_subscribed_cb =
+      boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
+  ros::SubscriberStatusCallback image_unsubscribed_cb =
+      boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
+  image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
+      [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
+        this->imageSubscribedCallback(stream_index);
+      };
+  image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
+      [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
+        this->imageUnsubscribedCallback(stream_index);
+      };
+
+  if (isMjpgColorStream(stream_index) || !enable_image_transport_plugins_) {
+    raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
+        topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
+    if (isMjpgColorStream(stream_index)) {
+      compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
+          topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+    }
+  } else {
+    image_publishers_[stream_index] = getGlobalImagePublisher(
+        topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
   }
 }
 
