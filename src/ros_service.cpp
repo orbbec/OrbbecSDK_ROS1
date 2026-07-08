@@ -14,6 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 #include "orbbec_camera/ob_camera_node.h"
+#include <algorithm>
+#include <cctype>
 
 namespace orbbec_camera {
 
@@ -322,6 +324,12 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](GetInt32Request& request, GetInt32Response& response) {
         response.success = this->getLrmMeasureDistanceCallback(request, response);
         return response.success;
+      });
+  set_image_registration_mode_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+      "/" + camera_name_ + "/" + "set_image_registration_mode",
+      [this](SetStringRequest& request, SetStringResponse& response) {
+        response.success = this->setImageRegistrationModeCallback(request, response);
+        return true;
       });
 
   set_write_customerdata_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
@@ -1812,5 +1820,115 @@ void OBCameraNode::setAEStrategyCallback(const SetStringRequest& request,
     response.success = false;
     response.message = "exception occurred";
   }
+}
+
+bool OBCameraNode::setImageRegistrationModeCallback(SetStringRequest& request,
+                                                    SetStringResponse& response) {
+  auto mode = request.data;
+  std::transform(mode.begin(), mode.end(), mode.begin(),
+                 [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+  if (mode != "OFF" && mode != "HW_D2C" && mode != "SW_D2C" && mode != "SW_C2D") {
+    response.success = false;
+    response.message = "Invalid image registration mode '" + request.data +
+                       "'. Valid values: OFF, HW_D2C, SW_D2C, SW_C2D";
+    return false;
+  }
+
+  std::lock_guard<std::recursive_mutex> lock(device_lock_);
+
+  if (mode != "OFF" && (!enable_stream_[COLOR] || !enable_stream_[DEPTH])) {
+    response.success = false;
+    response.message =
+        "Image registration mode " + mode + " requires both color and depth streams to be enabled";
+    return false;
+  }
+
+  const bool old_depth_registration = depth_registration_;
+  const std::string old_align_mode = align_mode_;
+  const OBStreamType old_align_target_stream = align_target_stream_;
+  const bool was_running = pipeline_started_.load();
+
+  auto mode_from_state = [](bool depth_registration, const std::string& align_mode,
+                            OBStreamType align_target_stream) {
+    if (!depth_registration) {
+      return std::string("OFF");
+    }
+    if (align_mode == "HW") {
+      return std::string("HW_D2C");
+    }
+    return align_target_stream == OB_STREAM_DEPTH ? std::string("SW_C2D") : std::string("SW_D2C");
+  };
+  const auto old_mode =
+      mode_from_state(old_depth_registration, old_align_mode, old_align_target_stream);
+
+  auto apply_image_registration_mode = [this](const std::string& mode) {
+    if (mode == "OFF") {
+      depth_registration_ = false;
+      align_mode_ = "HW";
+      align_target_stream_ = OB_STREAM_COLOR;
+    } else if (mode == "HW_D2C") {
+      depth_registration_ = true;
+      align_mode_ = "HW";
+      align_target_stream_ = OB_STREAM_COLOR;
+    } else {
+      depth_registration_ = true;
+      align_mode_ = "SW";
+      align_target_stream_ = mode == "SW_C2D" ? OB_STREAM_DEPTH : OB_STREAM_COLOR;
+    }
+    align_filter_.reset();
+    syncSoftwareAlignment();
+  };
+
+  auto restore_old_mode = [this, old_depth_registration, old_align_mode,
+                           old_align_target_stream]() {
+    depth_registration_ = old_depth_registration;
+    align_mode_ = old_align_mode;
+    align_target_stream_ = old_align_target_stream;
+    align_filter_.reset();
+    syncSoftwareAlignment();
+  };
+
+  auto rollback_after_error = [&](const std::string& error_message) {
+    try {
+      restore_old_mode();
+      if (was_running && !pipeline_started_.load()) {
+        startStreams();
+      }
+      response.message = "Failed to set image registration mode to " + mode + ": " + error_message +
+                         ". Rolled back to " + old_mode;
+    } catch (const std::exception& rollback_error) {
+      response.message = "Failed to set image registration mode to " + mode + ": " + error_message +
+                         ". Rollback to " + old_mode + " also failed: " + rollback_error.what();
+    } catch (...) {
+      response.message = "Failed to set image registration mode to " + mode + ": " + error_message +
+                         ". Rollback to " + old_mode + " also failed";
+    }
+    response.success = false;
+  };
+
+  try {
+    if (was_running) {
+      stopStreams();
+    }
+
+    apply_image_registration_mode(mode);
+
+    if (was_running) {
+      startStreams();
+      response.message = "Image registration mode changed from " + old_mode + " to " + mode +
+                         "; streams restarted";
+    } else {
+      response.message = "Image registration mode set to " + mode + "; streams remain stopped";
+    }
+    response.success = true;
+    return true;
+  } catch (const ob::Error& e) {
+    rollback_after_error(orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    rollback_after_error(e.what());
+  } catch (...) {
+    rollback_after_error("unknown error");
+  }
+  return false;
 }
 }  // namespace orbbec_camera

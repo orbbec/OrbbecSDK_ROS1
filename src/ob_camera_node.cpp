@@ -196,33 +196,42 @@ void OBCameraNode::init() {
   if (rgb_buffer_) {
     delete[] rgb_buffer_;
     rgb_buffer_ = nullptr;
+    rgb_buffer_size_ = 0;
   }
   if (rgb_buffer_left_) {
     delete[] rgb_buffer_left_;
     rgb_buffer_left_ = nullptr;
+    rgb_buffer_left_size_ = 0;
   }
   if (rgb_buffer_right_) {
     delete[] rgb_buffer_right_;
     rgb_buffer_right_ = nullptr;
+    rgb_buffer_right_size_ = 0;
   }
 
   if (enable_stream_[COLOR]) {
     CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
-    rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 4];
+    rgb_buffer_size_ = static_cast<size_t>(width_[COLOR]) * height_[COLOR] * 4;
+    rgb_buffer_ = new uint8_t[rgb_buffer_size_];
   } else {
     rgb_buffer_ = nullptr;
+    rgb_buffer_size_ = 0;
   }
   if (enable_stream_[COLOR_LEFT]) {
     CHECK(width_[COLOR_LEFT] > 0 && height_[COLOR_LEFT] > 0);
-    rgb_buffer_left_ = new uint8_t[width_[COLOR_LEFT] * height_[COLOR_LEFT] * 4];
+    rgb_buffer_left_size_ = static_cast<size_t>(width_[COLOR_LEFT]) * height_[COLOR_LEFT] * 4;
+    rgb_buffer_left_ = new uint8_t[rgb_buffer_left_size_];
   } else {
     rgb_buffer_left_ = nullptr;
+    rgb_buffer_left_size_ = 0;
   }
   if (enable_stream_[COLOR_RIGHT]) {
     CHECK(width_[COLOR_RIGHT] > 0 && height_[COLOR_RIGHT] > 0);
-    rgb_buffer_right_ = new uint8_t[width_[COLOR_RIGHT] * height_[COLOR_RIGHT] * 4];
+    rgb_buffer_right_size_ = static_cast<size_t>(width_[COLOR_RIGHT]) * height_[COLOR_RIGHT] * 4;
+    rgb_buffer_right_ = new uint8_t[rgb_buffer_right_size_];
   } else {
     rgb_buffer_right_ = nullptr;
+    rgb_buffer_right_size_ = 0;
   }
   if (enable_colored_point_cloud_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
     CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
@@ -346,14 +355,17 @@ void OBCameraNode::clean() {
   if (rgb_buffer_) {
     delete[] rgb_buffer_;
     rgb_buffer_ = nullptr;
+    rgb_buffer_size_ = 0;
   }
   if (rgb_buffer_left_) {
     delete[] rgb_buffer_left_;
     rgb_buffer_left_ = nullptr;
+    rgb_buffer_left_size_ = 0;
   }
   if (rgb_buffer_right_) {
     delete[] rgb_buffer_right_;
     rgb_buffer_right_ = nullptr;
+    rgb_buffer_right_size_ = 0;
   }
 
   // Don't clear global publisher cache here - let it persist across node recreations
@@ -1724,6 +1736,24 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
       ROS_ERROR_STREAM("Decode frame failed");
       return false;
     }
+    uint8_t** target_buffer = nullptr;
+    size_t* target_buffer_size = nullptr;
+    if (stream_index == COLOR_LEFT) {
+      target_buffer = &rgb_buffer_left_;
+      target_buffer_size = &rgb_buffer_left_size_;
+    } else if (stream_index == COLOR_RIGHT) {
+      target_buffer = &rgb_buffer_right_;
+      target_buffer_size = &rgb_buffer_right_size_;
+    } else {
+      target_buffer = &rgb_buffer_;
+      target_buffer_size = &rgb_buffer_size_;
+    }
+    if (video_frame->dataSize() > *target_buffer_size) {
+      delete[](*target_buffer);
+      *target_buffer_size = video_frame->dataSize();
+      *target_buffer = new uint8_t[*target_buffer_size];
+      dest = *target_buffer;
+    }
     CHECK_NOTNULL(dest);
     memcpy(dest, video_frame->data(), video_frame->dataSize());
 
@@ -1982,13 +2012,47 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
 
     if (depth_registration_ && align_filter_ && depth_frame) {
       publishRawDepthImage(depth_frame);
-      if (auto new_frame = align_filter_->process(frame_set)) {
-        auto new_frame_set = new_frame->as<ob::FrameSet>();
-        CHECK_NOTNULL(new_frame_set.get());
-        frame_set = new_frame_set;
+      auto target_frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(align_target_stream_);
+      if (!frame_set->getFrame(target_frame_type)) {
+        ROS_DEBUG_STREAM("Depth registration target frame is null, skip software alignment");
       } else {
-        ROS_ERROR_STREAM("Depth frame alignment failed");
-        return;
+        if (align_target_stream_ == OB_STREAM_DEPTH && color_frame) {
+          ob::FormatConvertFilter align_color_format_convert_filter;
+          bool need_convert = true;
+          switch (color_frame->format()) {
+            case OB_FORMAT_YUYV:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_YUYV_TO_RGB888);
+              break;
+            case OB_FORMAT_UYVY:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_UYVY_TO_RGB888);
+              break;
+            case OB_FORMAT_MJPG:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_MJPEG_TO_RGB888);
+              break;
+            default:
+              need_convert = false;
+              break;
+          }
+          if (need_convert) {
+            auto converted_color_frame = align_color_format_convert_filter.process(color_frame);
+            if (converted_color_frame) {
+              color_frame = converted_color_frame;
+              frame_set->pushFrame(color_frame);
+            } else {
+              ROS_ERROR_STREAM("Failed to convert color frame for C2D alignment");
+            }
+          }
+        }
+        if (auto new_frame = align_filter_->process(frame_set)) {
+          auto new_frame_set = new_frame->as<ob::FrameSet>();
+          CHECK_NOTNULL(new_frame_set.get());
+          frame_set = new_frame_set;
+          depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+          color_frame = frame_set->getFrame(OB_FRAME_COLOR);
+        } else {
+          ROS_ERROR_STREAM("Depth frame alignment failed");
+          return;
+        }
       }
     }
 

@@ -3168,6 +3168,45 @@ void OBCameraNode::setupProfiles() {
     ROS_INFO_STREAM("SW D2C align output resolution will match target stream resolution");
   }
 }
+
+void OBCameraNode::syncSoftwareAlignment() {
+  if (depth_registration_ && align_mode_ == "SW") {
+    if (!align_filter_) {
+      align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
+      align_filter_->setMatchTargetResolution(true);
+      ROS_INFO_STREAM("SW D2C align output resolution will match target stream resolution");
+    }
+    if (!depth_unaligned_publisher_ && !depth_unaligned_raw_publisher_) {
+      ros::SubscriberStatusCallback depth_unaligned_subscribed_cb =
+          boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+      ros::SubscriberStatusCallback depth_unaligned_unsubscribed_cb =
+          boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
+      if (enable_image_transport_plugins_) {
+        image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
+            boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+        image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
+            boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
+        depth_unaligned_publisher_ = image_transport::ImageTransport(nh_).advertise(
+            "depth/image_unaligned", 1, image_transport_subscribed_cb,
+            image_transport_unsubscribed_cb);
+      } else {
+        depth_unaligned_raw_publisher_ = nh_.advertise<sensor_msgs::Image>(
+            "depth/image_unaligned", 1, depth_unaligned_subscribed_cb,
+            depth_unaligned_unsubscribed_cb);
+      }
+    }
+    return;
+  }
+
+  align_filter_.reset();
+  if (depth_unaligned_publisher_) {
+    depth_unaligned_publisher_.shutdown();
+  }
+  if (depth_unaligned_raw_publisher_) {
+    depth_unaligned_raw_publisher_.shutdown();
+  }
+}
+
 void OBCameraNode::updateImageConfig(
     const stream_index_pair& stream_index,
     const std::shared_ptr<ob::VideoStreamProfile>& selected_profile) {
