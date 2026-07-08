@@ -57,22 +57,7 @@ void OBCameraNode::init() {
   readDefaultExposure();
   readDefaultGain();
   readDefaultWhiteBalance();
-#if defined(USE_RK_HW_DECODER)
-  mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
-#elif defined(USE_NV_HW_DECODER)
-  mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
-#endif
-  if (enable_stream_[COLOR]) {
-    CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
-    rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 3];
-  }
-  if (enable_colored_point_cloud_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
-    CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
-    rgb_point_cloud_buffer_size_ = width_[COLOR] * height_[COLOR] * sizeof(OBColorPoint);
-    rgb_point_cloud_buffer_ = new uint8_t[rgb_point_cloud_buffer_size_];
-    xy_table_data_size_ = width_[COLOR] * height_[COLOR] * 2;
-    xy_table_data_ = new float[xy_table_data_size_];
-  }
+  setupImageBuffers();
   rgb_is_decoded_ = false;
   if (diagnostics_frequency_ > 0.0 && !isOpenNIDevice(device_->getDeviceInfo()->pid())) {
     diagnostics_thread_ = std::make_shared<std::thread>([this]() { setupDiagnosticUpdater(); });
@@ -81,6 +66,45 @@ void OBCameraNode::init() {
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
+
+void OBCameraNode::clearColorFrameQueue() {
+  std::lock_guard<std::mutex> lock(colorFrameMtx_);
+  std::queue<std::shared_ptr<ob::FrameSet>> empty;
+  std::swap(colorFrameQueue_, empty);
+  rgb_is_decoded_ = false;
+}
+
+void OBCameraNode::setupImageBuffers() {
+  delete[] rgb_buffer_;
+  rgb_buffer_ = nullptr;
+  mjpeg_decoder_.reset();
+
+#if defined(USE_RK_HW_DECODER)
+  if (enable_stream_[COLOR] && width_[COLOR] > 0 && height_[COLOR] > 0) {
+    mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
+  }
+#elif defined(USE_NV_HW_DECODER)
+  if (enable_stream_[COLOR] && width_[COLOR] > 0 && height_[COLOR] > 0) {
+    mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
+  }
+#endif
+
+  if (enable_stream_[COLOR]) {
+    CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
+    rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 4];
+  }
+
+  if (enable_colored_point_cloud_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
+    xy_tables_ = boost::none;
+    uint32_t point_cloud_buffer_size = width_[COLOR] * height_[COLOR] * sizeof(OBColorPoint);
+    if (point_cloud_buffer_size > rgb_point_cloud_buffer_size_) {
+      delete[] rgb_point_cloud_buffer_;
+      rgb_point_cloud_buffer_ = new uint8_t[point_cloud_buffer_size];
+      rgb_point_cloud_buffer_size_ = point_cloud_buffer_size;
+    }
+  }
+  rgb_is_decoded_ = false;
+}
 
 void OBCameraNode::rebootDevice() {
   ROS_INFO("Reboot device");

@@ -850,6 +850,7 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
     if (restart_pipeline) {
       stopStreams();
     }
+    clearColorFrameQueue();
 
     for (const auto& pending_profile : pending_profiles) {
       const auto& stream_index = pending_profile.stream_index;
@@ -869,6 +870,7 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
                       << ", format: " << OBFormatToString(format_[stream_index]));
     }
 
+    setupImageBuffers();
     if (restart_pipeline) {
       startStreams();
     }
@@ -887,14 +889,26 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
 void OBCameraNode::updateImageConfig(
     const stream_index_pair& stream_index,
     const std::shared_ptr<ob::VideoStreamProfile>& selected_profile) {
-  if (selected_profile->format() == OB_FORMAT_Y8) {
+  if (stream_index == COLOR) {
+    image_format_[stream_index] = CV_8UC3;
+    encoding_[stream_index] = sensor_msgs::image_encodings::RGB8;
+    unit_step_size_[stream_index] = 3;
+  } else {
+    image_format_[stream_index] = CV_16UC1;
+    encoding_[stream_index] = stream_index == DEPTH ? sensor_msgs::image_encodings::TYPE_16UC1
+                                                    : sensor_msgs::image_encodings::MONO16;
+    unit_step_size_[stream_index] = sizeof(uint16_t);
+  }
+
+  const auto format = selected_profile->format();
+  if (format == OB_FORMAT_Y8) {
     image_format_[stream_index] = CV_8UC1;
     encoding_[stream_index] = stream_index.first == OB_STREAM_DEPTH
                                   ? sensor_msgs::image_encodings::TYPE_8UC1
                                   : sensor_msgs::image_encodings::MONO8;
     unit_step_size_[stream_index] = sizeof(uint8_t);
   }
-  if (selected_profile->format() == OB_FORMAT_MJPG) {
+  if (format == OB_FORMAT_MJPG) {
     if (stream_index.first == OB_STREAM_IR || stream_index.first == OB_STREAM_IR_LEFT ||
         stream_index.first == OB_STREAM_IR_RIGHT) {
       image_format_[stream_index] = CV_8UC1;
@@ -902,7 +916,7 @@ void OBCameraNode::updateImageConfig(
       unit_step_size_[stream_index] = sizeof(uint8_t);
     }
   }
-  if (selected_profile->format() == OB_FORMAT_Y16 && stream_index == COLOR) {
+  if (format == OB_FORMAT_Y16 && stream_index == COLOR) {
     image_format_[stream_index] = CV_16UC1;
     encoding_[stream_index] = sensor_msgs::image_encodings::MONO16;
     unit_step_size_[stream_index] = sizeof(uint16_t);

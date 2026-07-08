@@ -163,6 +163,10 @@ class OBCameraNode {
   bool applyStreamProfiles(const std::vector<PendingStreamProfile> &pending_profiles,
                            std::string &message);
 
+  void clearColorFrameQueue();
+
+  void setupImageBuffers();
+
   void updateImageConfig(const stream_index_pair &stream_index,
                          const std::shared_ptr<ob::VideoStreamProfile> &selected_profile);
   static void printProfiles(const std::shared_ptr<ob::Sensor> &sensor);
