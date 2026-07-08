@@ -412,6 +412,8 @@ rosservice call /camera/set_ae_strategy motion
 
 * `/camera/set_filter`
 
+For `FalsePositiveFilter` startup parameters, status checks, and named-parameter tuning examples, see [False Positive Filtering for Gemini 330 Series](../5_advanced_guide/configuration/false_positive_filter.md).
+
 ```bash
 # filter_name is the filter name, and filter_enable indicates whether the filter is enabled.
 # filter_param is the legacy positional parameter form; filter_config is the new named parameter form.

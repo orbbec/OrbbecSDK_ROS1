@@ -248,8 +248,8 @@
   * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
   > **支持模组**：Gemini 301 系列。
 * **`enable_false_positive_filter`**
-  * 启用鬼影滤波。可减少重影噪声。
-  > **支持模组**：DaBaiA / DaBaiAL / Gemini 330 系列 / Gemini345 / Gemini345Lg。
+  * 启用鬼影滤波。可减少重影噪声，使用示例和运行时调参方法请参考 [Gemini 330 系列鬼影滤波](../5_advanced_guide/configuration/false_positive_filter.md)。
+  > **支持模组**：Gemini 330 系列 / Gemini 340 系列。
 * **`enable_edge_noise_removal_filter`**
   * 启用 EdgeNoiseRemovalFilter，用于减少深度图边缘噪声。
   > **支持模组**：DaBai Max Pro。

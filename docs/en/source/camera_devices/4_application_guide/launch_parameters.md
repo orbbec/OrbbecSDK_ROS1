@@ -248,8 +248,8 @@ The following are the launch parameters available:
   * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
   > **Supported Modules**: Gemini 301 series
 * **`enable_false_positive_filter`**
-  * Enable this option to reduce ghosting noise.
-  > **Supported Modules**: DaBaiA / DaBaiAL / Gemini 330 series / Gemini345 / Gemini345Lg
+  * Enable this option to reduce ghosting noise. For usage examples and runtime tuning, see [False Positive Filtering for Gemini 330 Series](../5_advanced_guide/configuration/false_positive_filter.md).
+  > **Supported Modules**: Gemini 330 series / Gemini 340 series
 * **`enable_edge_noise_removal_filter`**
   * Enable EdgeNoiseRemovalFilter to reduce edge noise in depth frames.
   > **Supported Modules**: DaBai Max Pro
