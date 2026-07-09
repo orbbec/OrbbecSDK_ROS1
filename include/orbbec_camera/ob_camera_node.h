@@ -37,6 +37,7 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <condition_variable>
+#include <cstddef>
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -316,6 +317,8 @@ class OBCameraNode {
                                    const std::vector<orbbec_camera::DepthFilterParam> &params,
                                    std::string &message);
 
+  void syncSoftwareAlignment();
+
   // Global publisher management methods
   static image_transport::Publisher getGlobalImagePublisher(
       const std::string &topic_name, const image_transport::SubscriberStatusCallback &connect_cb,
@@ -521,6 +524,7 @@ class OBCameraNode {
 
   bool setStreamProfileCallback(SetStreamProfileRequest &request,
                                 SetStreamProfileResponse &response);
+  bool setImageRegistrationModeCallback(SetStringRequest &request, SetStringResponse &response);
 
   // Set ROI
   void setColorAutoExposureROI();
@@ -645,6 +649,7 @@ class OBCameraNode {
   ros::ServiceServer set_ae_reference_stream_srv_;
   ros::ServiceServer set_ae_strategy_srv_;
   ros::ServiceServer set_stream_profile_srv_;
+  ros::ServiceServer set_image_registration_mode_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
@@ -784,6 +789,9 @@ class OBCameraNode {
   uint8_t *rgb_buffer_ = nullptr;
   uint8_t *rgb_buffer_left_ = nullptr;
   uint8_t *rgb_buffer_right_ = nullptr;
+  size_t rgb_buffer_size_ = 0;
+  size_t rgb_buffer_left_size_ = 0;
+  size_t rgb_buffer_right_size_ = 0;
   std::atomic_bool rgb_is_decoded_{false};
   std::atomic_bool rgb_left_is_decoded_{false};
   std::atomic_bool rgb_right_is_decoded_{false};
