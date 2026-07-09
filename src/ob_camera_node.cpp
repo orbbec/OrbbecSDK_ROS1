@@ -1148,55 +1148,54 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
     has_first_color_frame_ = has_first_color_frame_ || (enable_stream_[COLOR] && color_frame);
     if (isGemini335PID(device_info_->pid()) && enable_stream_[DEPTH]) {
       depth_frame_ = processDepthFrameFilter(depth_frame_);
-      if (depth_registration_ && align_filter_ && depth_frame_ && color_frame) {
-        auto target_frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(align_target_stream_);
-        if (!aligned_frame_set->getFrame(target_frame_type)) {
-          ROS_DEBUG_STREAM("Depth registration target frame is null, skip software alignment");
-        } else {
-          if (align_target_stream_ == OB_STREAM_DEPTH) {
-            ob::FormatConvertFilter align_color_format_convert_filter;
-            bool need_convert = true;
-            switch (color_frame->format()) {
-              case OB_FORMAT_YUYV:
-                align_color_format_convert_filter.setFormatConvertType(FORMAT_YUYV_TO_RGB888);
-                break;
-              case OB_FORMAT_UYVY:
-                align_color_format_convert_filter.setFormatConvertType(FORMAT_UYVY_TO_RGB888);
-                break;
-              case OB_FORMAT_MJPG:
-                align_color_format_convert_filter.setFormatConvertType(FORMAT_MJPEG_TO_RGB888);
-                break;
-              default:
-                need_convert = false;
-                break;
-            }
-            if (need_convert) {
-              auto converted_color_frame = align_color_format_convert_filter.process(color_frame);
-              if (converted_color_frame) {
-                ob::FrameHelper::pushFrame(aligned_frame_set, OB_FRAME_COLOR,
-                                           converted_color_frame);
-                color_frame = converted_color_frame;
-              } else {
-                ROS_ERROR_STREAM("Failed to convert color frame for C2D alignment");
-              }
+    }
+    if (depth_registration_ && align_filter_ && depth_frame_ && color_frame) {
+      auto target_frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(align_target_stream_);
+      if (!aligned_frame_set->getFrame(target_frame_type)) {
+        ROS_DEBUG_STREAM("Depth registration target frame is null, skip software alignment");
+      } else {
+        if (align_target_stream_ == OB_STREAM_DEPTH) {
+          ob::FormatConvertFilter align_color_format_convert_filter;
+          bool need_convert = true;
+          switch (color_frame->format()) {
+            case OB_FORMAT_YUYV:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_YUYV_TO_RGB888);
+              break;
+            case OB_FORMAT_UYVY:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_UYVY_TO_RGB888);
+              break;
+            case OB_FORMAT_MJPG:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_MJPEG_TO_RGB888);
+              break;
+            default:
+              need_convert = false;
+              break;
+          }
+          if (need_convert) {
+            auto converted_color_frame = align_color_format_convert_filter.process(color_frame);
+            if (converted_color_frame) {
+              ob::FrameHelper::pushFrame(aligned_frame_set, OB_FRAME_COLOR, converted_color_frame);
+              color_frame = converted_color_frame;
+            } else {
+              ROS_ERROR_STREAM("Failed to convert color frame for C2D alignment");
             }
           }
-          auto new_frame = align_filter_->process(aligned_frame_set);
-          if (new_frame) {
-            auto new_frame_set = new_frame->as<ob::FrameSet>();
-            if (new_frame_set) {
-              aligned_frame_set = new_frame_set;
-              depth_frame_ = aligned_frame_set->getFrame(OB_FRAME_DEPTH);
-              color_frame = aligned_frame_set->getFrame(OB_FRAME_COLOR);
-              has_first_color_frame_ = has_first_color_frame_ || color_frame;
-            } else {
-              ROS_ERROR_STREAM("cast to FrameSet failed");
-              return;
-            }
+        }
+        auto new_frame = align_filter_->process(aligned_frame_set);
+        if (new_frame) {
+          auto new_frame_set = new_frame->as<ob::FrameSet>();
+          if (new_frame_set) {
+            aligned_frame_set = new_frame_set;
+            depth_frame_ = aligned_frame_set->getFrame(OB_FRAME_DEPTH);
+            color_frame = aligned_frame_set->getFrame(OB_FRAME_COLOR);
+            has_first_color_frame_ = has_first_color_frame_ || color_frame;
           } else {
-            ROS_ERROR_STREAM("Depth frame alignment failed");
+            ROS_ERROR_STREAM("cast to FrameSet failed");
             return;
           }
+        } else {
+          ROS_ERROR_STREAM("Depth frame alignment failed");
+          return;
         }
       }
     }

@@ -705,17 +705,25 @@ void OBCameraNode::setupProfiles() {
       ROS_ERROR_STREAM("set d2c error " << e.getMessage());
     }
   }
-  if (depth_registration_ && align_mode_ == "SW") {
+  if (depth_registration_ && (align_mode_ == "SW" || isGemini335PID(device_info_->pid()))) {
     align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
-    ROS_INFO_STREAM("set align mode to " << align_mode_);
+    if (align_mode_ == "SW") {
+      ROS_INFO_STREAM("set align mode to " << align_mode_);
+    }
   }
 }
 
 void OBCameraNode::syncSoftwareAlignment() {
-  if (depth_registration_ && align_mode_ == "SW") {
+  bool use_software_alignment = depth_registration_ && align_mode_ == "SW";
+  if (depth_registration_ && align_mode_ == "HW" && device_info_) {
+    use_software_alignment = isGemini335PID(device_info_->pid());
+  }
+  if (use_software_alignment) {
     if (!align_filter_) {
       align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
-      ROS_INFO_STREAM("set align mode to " << align_mode_);
+      if (align_mode_ == "SW") {
+        ROS_INFO_STREAM("set align mode to " << align_mode_);
+      }
     }
     return;
   }
