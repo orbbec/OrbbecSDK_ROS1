@@ -81,6 +81,7 @@ set(SERVICE_FILES
   GetString.srv
   SetInt32.srv
   SetString.srv
+  SetStreamProfile.srv
 )
 
 find_package(OpenCV REQUIRED)
@@ -113,7 +114,7 @@ if (USE_RK_HW_DECODER)
 endif ()
 
 # Message generation
-add_message_files(FILES DeviceInfo.msg Extrinsics.msg Metadata.msg IMUInfo.msg)
+add_message_files(FILES DeviceInfo.msg Extrinsics.msg Metadata.msg IMUInfo.msg StreamProfile.msg)
 add_service_files(FILES ${SERVICE_FILES})
 generate_messages(DEPENDENCIES std_msgs sensor_msgs)
 

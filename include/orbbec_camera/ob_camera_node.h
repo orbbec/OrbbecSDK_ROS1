@@ -42,6 +42,7 @@
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
 #include "orbbec_camera/GetCameraParams.h"
+#include "orbbec_camera/SetStreamProfile.h"
 #include <boost/optional.hpp>
 #include <image_transport/image_transport.h>
 #include <orbbec_camera/Metadata.h>
@@ -87,6 +88,14 @@ class OBCameraNode {
     double timestamp_ = -1;  // in nanoseconds
   };
 
+  struct PendingStreamProfile {
+    stream_index_pair stream_index;
+    int requested_width = 0;
+    int requested_height = 0;
+    int requested_fps = 0;
+    std::shared_ptr<ob::VideoStreamProfile> profile;
+  };
+
   void init();
 
   void setupCameraCtrlServices();
@@ -110,6 +119,8 @@ class OBCameraNode {
   void readDefaultWhiteBalance();
 
   std::shared_ptr<ob::Frame> softwareDecodeColorFrame(const std::shared_ptr<ob::Frame> &frame);
+
+  bool isColorFrameDecodeRequired(const std::shared_ptr<ob::Frame> &frame) const;
 
   void onNewFrameCallback(std::shared_ptr<ob::Frame> frame, const stream_index_pair &stream_index);
 
@@ -145,6 +156,24 @@ class OBCameraNode {
   void setupProfiles();
 
   void syncSoftwareAlignment();
+
+  std::shared_ptr<ob::VideoStreamProfile> selectVideoStreamProfile(
+      const stream_index_pair &stream_index, int width, int height, int fps, OBFormat format);
+
+  boost::optional<stream_index_pair> getImageStreamByName(const std::string &stream_name) const;
+
+  bool validateStreamProfileRequest(const SetStreamProfileRequest &request,
+                                    std::vector<PendingStreamProfile> &pending_profiles,
+                                    std::string &message);
+
+  bool applyStreamProfiles(const std::vector<PendingStreamProfile> &pending_profiles,
+                           std::string &message);
+
+  void clearColorFrameQueue();
+
+  void stopColorFrameThread();
+
+  void setupImageBuffers();
 
   void updateImageConfig(const stream_index_pair &stream_index,
                          const std::shared_ptr<ob::VideoStreamProfile> &selected_profile);
@@ -315,6 +344,9 @@ class OBCameraNode {
 
   bool getLaserStatusCallback(GetBoolRequest &request, GetBoolResponse &response);
 
+  bool setStreamProfileCallback(SetStreamProfileRequest &request,
+                                SetStreamProfileResponse &response);
+
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -399,6 +431,7 @@ class OBCameraNode {
   ros::ServiceServer get_ldp_measure_distance_srv_;
   ros::ServiceServer get_laser_status_srv_;
   ros::ServiceServer set_image_registration_mode_srv_;
+  ros::ServiceServer set_stream_profile_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
@@ -500,6 +533,7 @@ class OBCameraNode {
   // For color
   std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
   std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
+  std::atomic_bool stop_color_frame_thread_{false};
   std::mutex colorFrameMtx_;
   std::condition_variable colorFrameCV_;
   // ordered point cloud
