@@ -14,7 +14,7 @@ gemini_330_series_sdk_json.launch
 
 This launch file is designed for SDK JSON workflows. It keeps only the parameters required for ROS runtime and device management, reducing the chance that default camera parameters from launch override the JSON configuration.
 
-Full launch files such as `gemini_330_series.launch`, `gemini_330_series_low_cpu.launch`, and `gemini_330_series_nodelet.launch` also provide `load_config_json_file_path` and `export_config_json_file_path`, but they contain many camera parameters. When parameters conflict, launch or YAML parameters that have already been passed to the node take precedence over the corresponding configuration in the JSON file.
+Full launch files such as `gemini_330_series.launch`, `gemini_330_series_low_cpu.launch`, and `gemini_330_series_nodelet.launch` also provide `load_config_json_file_path`, but they contain many camera parameters. When parameters conflict, launch or YAML parameters that have already been passed to the node take precedence over the corresponding configuration in the JSON file.
 
 ## Parameter Priority
 
@@ -103,17 +103,6 @@ Exported config json file path: /tmp/orbbec_camera_config.json
 ```
 
 If the path is empty or export fails, the service returns failure information and the log contains the error reason.
-
-## Export Automatically at Startup
-
-In addition to the runtime service, you can set `export_config_json_file_path` at startup. The node exports the current configuration once after initialization:
-
-```bash
-roslaunch orbbec_camera gemini_330_series_sdk_json.launch \
-  export_config_json_file_path:=/tmp/orbbec_camera_config.json
-```
-
-During field debugging, it is usually better to start the node, confirm the camera state, and then export with `/camera/export_config_json`, so the saved file reflects a confirmed configuration.
 
 ## Condensed Field Mapping
 

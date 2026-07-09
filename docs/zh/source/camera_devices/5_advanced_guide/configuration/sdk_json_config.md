@@ -14,7 +14,7 @@ gemini_330_series_sdk_json.launch
 
 该启动文件面向 SDK JSON 使用场景，只保留 ROS 运行和设备管理所需参数，尽量避免 launch 默认相机参数覆盖 JSON 中的配置。
 
-`gemini_330_series.launch`、`gemini_330_series_low_cpu.launch`、`gemini_330_series_nodelet.launch` 等完整启动文件也提供 `load_config_json_file_path` 和 `export_config_json_file_path` 参数，但这些启动文件包含较多相机参数。参数冲突时，launch 或 YAML 中已经传入节点的参数会优先于 JSON 中的对应配置。
+`gemini_330_series.launch`、`gemini_330_series_low_cpu.launch`、`gemini_330_series_nodelet.launch` 等完整启动文件也提供 `load_config_json_file_path` 参数，但这些启动文件包含较多相机参数。参数冲突时，launch 或 YAML 中已经传入节点的参数会优先于 JSON 中的对应配置。
 
 ## 参数优先级
 
@@ -103,17 +103,6 @@ Exported config json file path: /tmp/orbbec_camera_config.json
 ```
 
 如果路径为空或导出失败，服务会返回失败信息，并在日志中输出错误原因。
-
-## 启动时自动导出
-
-除运行时 service 外，也可以在启动时通过 `export_config_json_file_path` 指定导出路径。节点初始化完成后会自动导出一次当前配置：
-
-```bash
-roslaunch orbbec_camera gemini_330_series_sdk_json.launch \
-  export_config_json_file_path:=/tmp/orbbec_camera_config.json
-```
-
-现场调试时更推荐先启动节点并确认相机状态，再使用 `/camera/export_config_json` 导出，避免在配置尚未确认时保存文件。
 
 ## 精简字段映射
 
