@@ -39,5 +39,6 @@
     configuration/disparity_search_offset.md
     configuration/interleave_ae_mode.md
     configuration/predefined_presets.md
+    configuration/sdk_json_config.md
     configuration/false_positive_filter.md
     configuration/net_camera.md

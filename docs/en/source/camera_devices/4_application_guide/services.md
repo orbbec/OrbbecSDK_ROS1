@@ -330,6 +330,8 @@ rosservice call /camera/get_camera_params
 
 * `/camera/export_config_json`
 
+Export the current device configuration to an SDK JSON file. For the Gemini 330 series JSON import and export workflow, see [SDK JSON Import and Export for Gemini 330 Series](../5_advanced_guide/configuration/sdk_json_config.md).
+
 ```bash
 rosservice call /camera/export_config_json "data: '/tmp/orbbec_camera_config.json'"
 ```

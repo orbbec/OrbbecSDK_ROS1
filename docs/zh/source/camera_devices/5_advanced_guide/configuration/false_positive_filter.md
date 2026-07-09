@@ -41,41 +41,12 @@ device_preset: "<preset_name>"
 
 ## 可选：导入 SDK JSON
 
-如果已提供 SDK JSON 配置文件，可通过 `load_config_json_file_path` 导入：
-
-```bash
-roslaunch orbbec_camera gemini_330_series.launch \
-  load_config_json_file_path:=/path/to/config.json
-```
-
-如果 JSON 中包含深度配置，launch 或 YAML 中对应的深度参数应置空或不设置，避免覆盖 JSON 中的深度配置。
+如果鬼影滤波参数已经写入 SDK JSON，可通过 `load_config_json_file_path` 导入。Gemini 330 系列 SDK JSON 的导入导出流程、参数优先级和日志确认方法，请参考 [Gemini 330 系列 SDK JSON 配置导入与导出](sdk_json_config.md)。
 
 常见情况：
 
 * JSON 中包含 `parameters.sensor_depth.depth_preset` 时，`device_preset` 应置空。
 * JSON 中包含鬼影滤波详细参数时，优先以 JSON 中的参数为准。
-* JSON 中包含深度引擎参数时，通过 JSON 导入生效。
-
-示例：
-
-```bash
-roslaunch orbbec_camera gemini_330_series.launch \
-  device_preset:="" \
-  load_config_json_file_path:=/path/to/config.json
-```
-
-如果使用 YAML 管理参数，可写为：
-
-```yaml
-device_preset: ""
-load_config_json_file_path: "/path/to/config.json"
-```
-
-验证 JSON 是否加载成功，可查看启动日志：
-
-```text
-Config JSON loaded file=/path/to/config.json
-```
 
 如果 JSON 中配置了鬼影滤波，请继续通过 `/camera/depth_filters/status` 确认 `FalsePositiveFilter` 的 `enabled` 和 `params` 是否符合预期。
 

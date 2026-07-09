@@ -41,41 +41,12 @@ Notes:
 
 ## Optional: Import an SDK JSON File
 
-If you already have an SDK JSON configuration file, import it with `load_config_json_file_path`:
-
-```bash
-roslaunch orbbec_camera gemini_330_series.launch \
-  load_config_json_file_path:=/path/to/config.json
-```
-
-If the JSON file contains depth configuration, leave the corresponding launch or YAML depth parameters empty or unset to avoid overriding the depth configuration from the JSON file.
+If false positive filter parameters are already written in an SDK JSON file, import it with `load_config_json_file_path`. For the Gemini 330 series SDK JSON import and export workflow, parameter priority, and log checks, see [SDK JSON Import and Export for Gemini 330 Series](sdk_json_config.md).
 
 Common cases:
 
 * If the JSON file contains `parameters.sensor_depth.depth_preset`, set `device_preset` to an empty value.
 * If the JSON file contains detailed false positive filter parameters, the parameters from the JSON file take precedence.
-* If the JSON file contains depth engine parameters, they take effect through the JSON import.
-
-Example:
-
-```bash
-roslaunch orbbec_camera gemini_330_series.launch \
-  device_preset:="" \
-  load_config_json_file_path:=/path/to/config.json
-```
-
-If you manage parameters with YAML, set:
-
-```yaml
-device_preset: ""
-load_config_json_file_path: "/path/to/config.json"
-```
-
-To verify that the JSON file was loaded successfully, check the startup log:
-
-```text
-Config JSON loaded file=/path/to/config.json
-```
 
 If the JSON file configures false positive filtering, continue to check `/camera/depth_filters/status` and confirm that the `enabled` and `params` fields for `FalsePositiveFilter` match expectations.
 
