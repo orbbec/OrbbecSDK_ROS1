@@ -27,6 +27,7 @@
 #include <sensor_msgs/distortion_models.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <std_msgs/Int32.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Vector3.h>
@@ -154,6 +155,8 @@ class OBCameraNode {
   void setupPipelineConfig();
 
   void setupPublishers();
+
+  void publishLrmObstacleDistance(const ros::TimerEvent &event);
 
   void setupDiagnosticUpdater();
 
@@ -418,6 +421,8 @@ class OBCameraNode {
   std::shared_ptr<ob::Config> pipeline_config_ = nullptr;
   ros::Publisher depth_cloud_pub_;
   ros::Publisher depth_registered_cloud_pub_;
+  ros::Timer lrm_obstacle_distance_timer_;
+  ros::Publisher lrm_obstacle_distance_pub_;
   sensor_msgs::PointCloud2 cloud_msg_;
   std::recursive_mutex cloud_mutex_;
   std::atomic_bool pipeline_started_{false};
@@ -542,6 +547,8 @@ class OBCameraNode {
   bool enable_color_hdr_ = false;
   int laser_energy_level_ = -1;
   bool enable_ldp_ = true;
+  bool enable_lrm_obstacle_distance_publish_ = false;
+  double lrm_obstacle_distance_publish_rate_ = 10.0;
   std::string industry_mode_ = "";
   ob::PointCloudFilter depth_point_cloud_filter_;
   boost::optional<OBCalibrationParam> calibration_param_;
