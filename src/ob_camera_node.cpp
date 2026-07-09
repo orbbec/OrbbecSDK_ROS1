@@ -300,6 +300,9 @@ void OBCameraNode::clean() {
     std::lock_guard<std::mutex> lk(frame_info_logged_mutex_);
     frame_info_logged_.clear();
   }
+  if (lrm_obstacle_distance_timer_.isValid()) {
+    lrm_obstacle_distance_timer_.stop();
+  }
   ROS_DEBUG_STREAM("OBCameraNode::clean() stop tf thread");
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
@@ -599,6 +602,19 @@ void OBCameraNode::getParameters() {
       nh_private_.param<bool>("retry_on_usb3_detection_failure", false);
   laser_energy_level_ = nh_private_.param<int>("laser_energy_level", -1);
   enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
+  enable_lrm_obstacle_distance_publish_ =
+      nh_private_.param<bool>("enable_lrm_obstacle_distance_publish", false);
+  lrm_obstacle_distance_publish_rate_ =
+      nh_private_.param<double>("lrm_obstacle_distance_publish_rate", 10.0);
+  if (enable_lrm_obstacle_distance_publish_ && !enable_ldp_) {
+    ROS_INFO_STREAM("enable_lrm_obstacle_distance_publish is true, enabling LDP");
+    enable_ldp_ = true;
+  }
+  if (lrm_obstacle_distance_publish_rate_ <= 0.0) {
+    ROS_WARN_STREAM("Invalid lrm_obstacle_distance_publish_rate "
+                    << lrm_obstacle_distance_publish_rate_ << ", reset to 10.0");
+    lrm_obstacle_distance_publish_rate_ = 10.0;
+  }
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   enable_firmware_log_ = nh_private_.param<bool>("enable_firmware_log", false);

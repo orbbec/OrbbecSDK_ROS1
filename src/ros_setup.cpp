@@ -3348,6 +3348,15 @@ void OBCameraNode::setupPublishers() {
   depth_filters_status_pub_ = nh_.advertise<orbbec_camera::DepthFiltersStatus>(
       "/" + camera_name_ + "/depth_filters/status", 1, true);
   publishDepthFiltersStatus();
+  if (enable_lrm_obstacle_distance_publish_) {
+    lrm_obstacle_distance_pub_ =
+        nh_.advertise<std_msgs::Int32>("/" + camera_name_ + "/lrm/obstacle_distance", 10);
+    ROS_INFO_STREAM("Publishing LRM obstacle distance on lrm/obstacle_distance at "
+                    << lrm_obstacle_distance_publish_rate_ << " Hz");
+    lrm_obstacle_distance_timer_ =
+        nh_private_.createTimer(ros::Duration(1.0 / lrm_obstacle_distance_publish_rate_),
+                                &OBCameraNode::publishLrmObstacleDistance, this);
+  }
   sdk_version_pub_ = nh_.advertise<std_msgs::String>("/" + camera_name_ + "/sdk_version", 1, true);
   auto device_info = device_->getDeviceInfo();
   nlohmann::json data;
@@ -3362,6 +3371,31 @@ void OBCameraNode::setupPublishers() {
   data["ob_sdk_version"] = version;
   sdk_msg.data = data.dump(2);
   sdk_version_pub_.publish(sdk_msg);
+}
+
+void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
+  (void)event;
+  if (!lrm_obstacle_distance_pub_) {
+    return;
+  }
+  if (lrm_obstacle_distance_pub_.getNumSubscribers() == 0) {
+    return;
+  }
+  try {
+    std_msgs::Int32 msg;
+    {
+      std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+      msg.data = device_->getIntProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT);
+    }
+    lrm_obstacle_distance_pub_.publish(msg);
+  } catch (const ob::Error& e) {
+    auto message = orbbec_camera::formatObErrorWithStatus(e);
+    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", message.c_str());
+  } catch (const std::exception& e) {
+    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", e.what());
+  } catch (...) {
+    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: unknown error");
+  }
 }
 
 // Global topic-based publisher cache to prevent plugin reloading
