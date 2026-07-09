@@ -1,0 +1,4 @@
+StreamProfile[] profiles
+---
+bool success
+string message

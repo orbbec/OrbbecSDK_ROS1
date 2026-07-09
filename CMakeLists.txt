@@ -86,6 +86,7 @@ set(SERVICE_FILES
   SetString.srv
   SetArrays.srv
   SetBagRecording.srv
+  SetStreamProfile.srv
 )
 
 find_package(OpenCV REQUIRED)
@@ -128,6 +129,7 @@ add_message_files(FILES
   DepthFilterParam.msg
   DepthFilterState.msg
   DepthFiltersStatus.msg
+  StreamProfile.msg
 )
 add_service_files(FILES ${SERVICE_FILES})
 generate_messages(DEPENDENCIES std_msgs sensor_msgs)
