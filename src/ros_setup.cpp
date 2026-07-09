@@ -707,6 +707,7 @@ void OBCameraNode::setupProfiles() {
   }
   if (depth_registration_ && align_mode_ == "SW") {
     align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
+    ROS_INFO_STREAM("set align mode to " << align_mode_);
   }
 }
 
@@ -714,6 +715,7 @@ void OBCameraNode::syncSoftwareAlignment() {
   if (depth_registration_ && align_mode_ == "SW") {
     if (!align_filter_) {
       align_filter_ = std::make_shared<ob::Align>(align_target_stream_);
+      ROS_INFO_STREAM("set align mode to " << align_mode_);
     }
     return;
   }
