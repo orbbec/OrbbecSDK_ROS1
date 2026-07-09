@@ -932,37 +932,51 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
 void OBCameraNode::updateImageConfig(
     const stream_index_pair& stream_index,
     const std::shared_ptr<ob::VideoStreamProfile>& selected_profile) {
-  if (stream_index == COLOR) {
-    image_format_[stream_index] = CV_8UC3;
-    encoding_[stream_index] = sensor_msgs::image_encodings::RGB8;
-    unit_step_size_[stream_index] = 3;
-  } else {
-    image_format_[stream_index] = CV_16UC1;
-    encoding_[stream_index] = stream_index == DEPTH ? sensor_msgs::image_encodings::TYPE_16UC1
-                                                    : sensor_msgs::image_encodings::MONO16;
-    unit_step_size_[stream_index] = sizeof(uint16_t);
-  }
-
   const auto format = selected_profile->format();
-  if (format == OB_FORMAT_Y8) {
+  const bool is_depth_stream = stream_index.first == OB_STREAM_DEPTH;
+  const bool is_ir_stream = stream_index.first == OB_STREAM_IR ||
+                            stream_index.first == OB_STREAM_IR_LEFT ||
+                            stream_index.first == OB_STREAM_IR_RIGHT;
+  const bool is_color_stream = stream_index == COLOR;
+
+  if (format == OB_FORMAT_Y8 || format == OB_FORMAT_GRAY) {
     image_format_[stream_index] = CV_8UC1;
-    encoding_[stream_index] = stream_index.first == OB_STREAM_DEPTH
-                                  ? sensor_msgs::image_encodings::TYPE_8UC1
-                                  : sensor_msgs::image_encodings::MONO8;
+    encoding_[stream_index] = is_depth_stream ? sensor_msgs::image_encodings::TYPE_8UC1
+                                              : sensor_msgs::image_encodings::MONO8;
     unit_step_size_[stream_index] = sizeof(uint8_t);
-  }
-  if (format == OB_FORMAT_MJPG) {
-    if (stream_index.first == OB_STREAM_IR || stream_index.first == OB_STREAM_IR_LEFT ||
-        stream_index.first == OB_STREAM_IR_RIGHT) {
+  } else if (format == OB_FORMAT_Y10 || format == OB_FORMAT_Y11 || format == OB_FORMAT_Y12 ||
+             format == OB_FORMAT_Y14 || format == OB_FORMAT_Y16 || format == OB_FORMAT_Z16 ||
+             format == OB_FORMAT_RW16) {
+    image_format_[stream_index] = CV_16UC1;
+    encoding_[stream_index] = is_depth_stream ? sensor_msgs::image_encodings::TYPE_16UC1
+                                              : sensor_msgs::image_encodings::MONO16;
+    unit_step_size_[stream_index] = sizeof(uint16_t);
+  } else if (format == OB_FORMAT_MJPG || format == OB_FORMAT_MJPEG) {
+    if (is_ir_stream) {
       image_format_[stream_index] = CV_8UC1;
       encoding_[stream_index] = sensor_msgs::image_encodings::MONO8;
       unit_step_size_[stream_index] = sizeof(uint8_t);
+    } else if (is_color_stream) {
+      image_format_[stream_index] = CV_8UC3;
+      encoding_[stream_index] = sensor_msgs::image_encodings::RGB8;
+      unit_step_size_[stream_index] = 3 * sizeof(uint8_t);
     }
-  }
-  if (format == OB_FORMAT_Y16 && stream_index == COLOR) {
-    image_format_[stream_index] = CV_16UC1;
-    encoding_[stream_index] = sensor_msgs::image_encodings::MONO16;
-    unit_step_size_[stream_index] = sizeof(uint16_t);
+  } else if (format == OB_FORMAT_BGR) {
+    image_format_[stream_index] = CV_8UC3;
+    encoding_[stream_index] = sensor_msgs::image_encodings::BGR8;
+    unit_step_size_[stream_index] = 3 * sizeof(uint8_t);
+  } else if (format == OB_FORMAT_RGB || format == OB_FORMAT_RGB888) {
+    image_format_[stream_index] = CV_8UC3;
+    encoding_[stream_index] = sensor_msgs::image_encodings::RGB8;
+    unit_step_size_[stream_index] = 3 * sizeof(uint8_t);
+  } else if (format == OB_FORMAT_BGRA) {
+    image_format_[stream_index] = CV_8UC4;
+    encoding_[stream_index] = sensor_msgs::image_encodings::BGRA8;
+    unit_step_size_[stream_index] = 4 * sizeof(uint8_t);
+  } else if (format == OB_FORMAT_RGBA) {
+    image_format_[stream_index] = CV_8UC4;
+    encoding_[stream_index] = sensor_msgs::image_encodings::RGBA8;
+    unit_step_size_[stream_index] = 4 * sizeof(uint8_t);
   }
 }
 

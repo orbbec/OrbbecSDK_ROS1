@@ -90,6 +90,7 @@ void OBCameraNode::stopColorFrameThread() {
 void OBCameraNode::setupImageBuffers() {
   delete[] rgb_buffer_;
   rgb_buffer_ = nullptr;
+  rgb_buffer_size_ = 0;
   mjpeg_decoder_.reset();
 
 #if defined(USE_RK_HW_DECODER)
@@ -104,7 +105,8 @@ void OBCameraNode::setupImageBuffers() {
 
   if (enable_stream_[COLOR]) {
     CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
-    rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 4];
+    rgb_buffer_size_ = static_cast<size_t>(width_[COLOR]) * height_[COLOR] * 4;
+    rgb_buffer_ = new uint8_t[rgb_buffer_size_];
   }
 
   if (enable_colored_point_cloud_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
