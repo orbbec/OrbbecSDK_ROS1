@@ -266,7 +266,7 @@
 *   **`upgrade_firmware`**
     *   输入参数为固件路径。新版本建议使用独立工具 `firmware_update_tool` 进行固件升级，参考 [firmware_update_tool 工具](../6_benchmark/firmware_update_tool.md)。
 *   **`preset_firmware_path`**
-    *   输入参数为预设固件路径。如果输入多个路径，每个路径需要用 `,` 分隔，最多可输入3个固件路径。新版本建议使用独立工具烧录 preset，参考 [firmware_update_tool 工具](../6_benchmark/firmware_update_tool.md)。
+    *   输入参数为预设固件路径。如果输入多个路径，每个路径需要用 `,` 分隔，最多可输入3个固件路径。该参数只用于烧录或升级 preset 固件；烧录后如需切换使用某个 preset，请设置 `device_preset`。新版本建议使用独立工具烧录 preset，参考 [firmware_update_tool 工具](../6_benchmark/firmware_update_tool.md)。
 *   **`uvc_backend`**
     *   可选值：`v4l2`、`libuvc`。低 CPU 场景建议参考 [降低 CPU 使用率](../5_advanced_guide/performance/lower_cpu_usage.md)。
 *   **`connection_delay`**
