@@ -61,22 +61,34 @@ find_package(OpenCV REQUIRED)
 
 ### How to Collect and Save Logs
 
-#### SDK Logs
+Follow these steps to collect logs:
 
-- Set the launch parameter `log_level` to `debug`. After running, the SDK will generate log files under `~/.ros/Log/<camera_name>/`.
-- When `log_file_name` is empty, the SDK log file is named after the node startup time in the format `<YYYYMMDD_HHMMSS>.log`, for example `~/.ros/Log/camera/20260713_143025.log`. You can also use `log_file_name` to specify the file name; the resulting path is `~/.ros/Log/<camera_name>/<log_file_name>`.
-- If the node crashes unexpectedly, the crash stack trace file is also saved under the corresponding camera directory.
-- If firmware logs are required, set `log_level` to `debug` and set `enable_heartbeat` to `true`.
-- In multi-camera setups, SDK logs are stored in separate directories by `camera_name`. Each launch creates a new log file named with that launch's startup time.
-- When submitting an issue, provide the SDK log file that corresponds to the time when the issue occurred.
+1. Set the launch parameter `log_level` to `debug`. To save ROS 1 logs, also change the node's `output="screen"` to "log" or "both".
+2. Start the camera, reproduce the issue, and note when the issue occurred.
+3. Send both of the following to technical support:
 
-#### ROS Logs
+   - **SDK logs**: the log files under `~/.ros/Log/<camera_name>/` that match the time of the issue.
+   - **ROS 1 logs**: the entire `~/.ros/log/<run_id>/` directory created by this run.
 
-- If you do not want too much terminal output, change `output="screen"` to `output="log"` in the launch file, then check the corresponding ROS1 logs under `~/.ros/log/<run_id>/`.
-- `roslaunch-*.log` records the full `roslaunch` startup flow and node launch information, and usually includes all cameras.
+SDK log files are named with the startup time by default. For multiple cameras, or if you are unsure which files are relevant, send all logs newly generated during the test. If the node crashed, also send the crash stack trace from the camera's log directory. Set `enable_heartbeat` to `true` only when technical support asks for firmware logs.
+
+#### Details for Developers
+
+**SDK logs**
+
+- SDK logs are stored under `~/.ros/Log/<camera_name>/`.
+- When `log_file_name` is empty, the log file is named after the node startup time in the format `<YYYYMMDD_HHMMSS>.log`, for example `~/.ros/Log/camera/20260713_143025.log`.
+- When `log_file_name` is specified, the resulting path is `~/.ros/Log/<camera_name>/<log_file_name>`.
+- In multi-camera setups, SDK logs are stored in separate directories by `camera_name`.
+- If the node crashes unexpectedly, the crash stack trace is also saved in the corresponding camera directory.
+- To collect firmware logs, set `log_level` to `debug` and `enable_heartbeat` to `true`.
+
+**ROS 1 logs**
+
+- After changing the node's `output="screen"` to `output="log"`, logs are stored under `~/.ros/log/<run_id>/`.
+- `roslaunch-*.log` records the `roslaunch` startup flow and node launch information.
 - `master.log` is the ROS master log.
-- `rosout.log` aggregates output from all nodes. In multi-camera setups, logs from multiple cameras are mixed in the same file, so distinguish them by namespace or node name, for example `/ob_camera_01/camera` and `/ob_camera_02/camera`.
-- When submitting an issue, it is recommended to provide both the SDK logs under `~/.ros/Log/` and the ROS1 logs under `~/.ros/log/<run_id>/` for the same time period.
+- `rosout.log` aggregates output from all nodes. In multi-camera setups, identify each camera by its namespace or node name, for example `/ob_camera_01/camera` and `/ob_camera_02/camera`.
 
 ### Why Are There So Many Launch Files?
 

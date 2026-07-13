@@ -60,23 +60,34 @@ find_package(OpenCV REQUIRED)
 
 ### 如何采集和保存日志
 
-#### SDK 日志
+请按以下步骤采集日志：
 
-- 将 launch 参数 `log_level` 设为 `debug` 运行后，会在 `~/.ros/Log/<camera_name>/` 目录下生成 SDK 日志文件。
-- `log_file_name` 为空时，SDK 日志默认以节点启动时间命名，格式为 `<YYYYMMDD_HHMMSS>.log`，例如 `~/.ros/Log/camera/20260713_143025.log`。也可以通过 `log_file_name` 指定文件名，实际路径为 `~/.ros/Log/<camera_name>/<log_file_name>`。
-- 如果节点异常崩溃，崩溃堆栈文件也会保存在对应相机目录下。
-- 如果需要固件日志，可在将 `log_level` 设置为 `debug` 的同时，将 `enable_heartbeat` 设置为 `true`。
-- 多相机场景下，SDK 日志按 `camera_name` 分目录保存。每次启动会生成带有本次启动时间的新日志文件。
-- 提交问题时，请根据问题发生时间提供对应的 SDK 日志文件。
+1. 将 launch 参数 `log_level` 设为 `debug`。如需保存 ROS1 日志，再将节点的 `output="screen"` 改为 "log" 或 "both"。
+2. 启动相机并重新复现问题，同时记下问题发生时间。
+3. 将以下两类日志一起提供给技术支持：
 
-#### ROS 日志
+   - **SDK 日志**：`~/.ros/Log/<camera_name>/` 中与问题发生时间对应的日志文件。
+   - **ROS1 日志**：`~/.ros/log/<run_id>/` 中本次运行生成的整个目录。
 
-- 如果不希望终端输出过多日志，可在 `launch` 中将 `output="screen"` 改为 `output="log"`，然后到 `~/.ros/log/<run_id>/` 查看对应 ROS1 日志。
-- `roslaunch-*.log` 记录整次 `roslaunch` 的启动流程和各节点拉起信息，通常包含所有相机。
+SDK 日志默认以启动时间命名。多相机或无法确定具体文件时，可提供本次测试新生成的全部日志。节点崩溃时，请同时提供相机目录中的崩溃堆栈文件；仅在技术支持要求采集固件日志时，再将 `enable_heartbeat` 设为 `true`。
+
+#### 开发者排查说明
+
+**SDK 日志**
+
+- SDK 日志保存在 `~/.ros/Log/<camera_name>/`。
+- `log_file_name` 为空时，日志默认以节点启动时间命名，格式为 `<YYYYMMDD_HHMMSS>.log`，例如 `~/.ros/Log/camera/20260713_143025.log`。
+- 指定 `log_file_name` 后，实际路径为 `~/.ros/Log/<camera_name>/<log_file_name>`。
+- 多相机场景下，SDK 日志按 `camera_name` 分目录保存。
+- 节点异常崩溃时，崩溃堆栈文件也会保存在对应的相机目录下。
+- 如需固件日志，可在将 `log_level` 设为 `debug` 的同时，将 `enable_heartbeat` 设为 `true`。
+
+**ROS1 日志**
+
+- 将节点的 `output="screen"` 改为 `output="log"` 后，日志保存在 `~/.ros/log/<run_id>/`。
+- `roslaunch-*.log` 记录本次 `roslaunch` 的启动流程和节点启动信息。
 - `master.log` 是 ROS master 日志。
-- `rosout.log` 汇总所有节点输出，多相机场景下会包含多路相机日志，需要根据命名空间或节点名区分，例如 `/ob_camera_01/camera`、`/ob_camera_02/camera`。
-- 提交问题时，建议同时提供 `~/.ros/Log/` 下的 SDK 日志，以及同一时间段 `~/.ros/log/<run_id>/` 下的 ROS1 日志。
-
+- `rosout.log` 汇总所有节点输出。多相机场景下，可根据命名空间或节点名区分相机，例如 `/ob_camera_01/camera`、`/ob_camera_02/camera`。
 
 ### 为什么有这么多启动文件？
 
