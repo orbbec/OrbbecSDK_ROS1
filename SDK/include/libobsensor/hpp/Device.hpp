@@ -303,6 +303,51 @@ public:
     }
 
     /**
+     * @brief Check whether the device supports license authorization.
+     *
+     * @return true if the device supports license authorization, false otherwise.
+     */
+    bool isLicenseAuthorizationSupported() const {
+        ob_error *error = nullptr;
+        auto      res   = ob_device_is_license_authorization_supported(impl_, &error);
+        Error::handle(&error);
+        return res;
+    }
+
+    /**
+     * @brief Write signed device license information.
+     *
+     * @param[in] licenseInfo SDK license_info JSON string
+     */
+    void writeLicenseInfo(const std::string &licenseInfo) const {
+        ob_error *error = nullptr;
+        ob_device_write_license_info(impl_, licenseInfo.c_str(), static_cast<uint32_t>(licenseInfo.size()), &error);
+        Error::handle(&error);
+    }
+
+    /**
+     * @brief Clear license information stored on the device.
+     */
+    void clearLicenseInfo() const {
+        ob_error *error = nullptr;
+        ob_device_clear_license_info(impl_, &error);
+        Error::handle(&error);
+    }
+
+    /**
+     * @brief Read signed device license information as SDK license_info JSON.
+     *
+     * @return std::string SDK license_info JSON string
+     */
+    std::string readLicenseInfo() const {
+        ob_error *error     = nullptr;
+        char      buf[4096] = {};
+        ob_device_read_license_info(impl_, buf, sizeof(buf), &error);
+        Error::handle(&error);
+        return std::string(buf);
+    }
+
+    /**
      * @brief Set the customer data type of a device property
      *
      * @param[in] data The data to set
@@ -393,6 +438,8 @@ public:
     /**
      * @brief Update the device firmware
      *
+     * @attention Only one firmware/preset update may run per device at a time
+     *
      * @param[in] filePath Firmware path
      * @param[in] callback Firmware Update progress and status callback
      * @param[in] async Whether to execute asynchronously
@@ -406,6 +453,8 @@ public:
 
     /**
      * @brief Update the device firmware from data
+     *
+     * @attention Only one firmware/preset update may run per device at a time
      *
      * @param[in] firmwareData Firmware data
      * @param[in] firmwareDataSize Firmware data size
@@ -422,6 +471,8 @@ public:
     /**
      * @brief Update the device optional depth presets
      *
+     * @attention Only one firmware/preset update may run per device at a time
+     *
      * @param[in] filePathList A list(2D array) of preset file paths, each up to OB_PATH_MAX characters.
      * @param[in] pathCount The number of the preset file paths.
      * @param[in] callback Preset update progress and status callback
@@ -430,6 +481,27 @@ public:
         ob_error *error   = nullptr;
         fwUpdateCallback_ = callback;
         ob_device_update_optional_depth_presets(impl_, filePathList, pathCount, &Device::firmwareUpdateCallback, this, &error);
+        Error::handle(&error);
+    }
+
+    /**
+     * @brief Update the device optional depth presets from data loaded in memory
+     *
+     * @attention Only one firmware/preset update may run per device at a time
+     *
+     * @param[in] dataList A list of preset data blocks, each holding the raw bytes of one preset.
+     * @param[in] callback Preset update progress and status callback
+     */
+    void updateOptionalDepthPresets(const std::vector<std::vector<uint8_t>> &dataList, DeviceFwUpdateCallback callback) {
+        ob_error                      *error = nullptr;
+        std::vector<OBDataView> presets;
+        presets.reserve(dataList.size());
+        for(const auto &data: dataList) {
+            presets.push_back({data.data(), static_cast<uint32_t>(data.size())});
+        }
+        fwUpdateCallback_ = callback;
+        auto count        = static_cast<uint8_t>(presets.size());
+        ob_device_update_optional_depth_presets_from_data(impl_, presets.data(), count, &Device::firmwareUpdateCallback, this, &error);
         Error::handle(&error);
     }
 
@@ -618,6 +690,18 @@ public:
         ob_error *error = nullptr;
         ob_device_enable_firmware_log(impl_, enable, &error);
         Error::handle(&error);
+    }
+
+    /**
+     * @brief Check whether the device firmware log is enabled.
+     *
+     * @return bool Whether the firmware log is enabled.
+     */
+    bool isFirmwareLogEnabled() const {
+        ob_error *error  = nullptr;
+        bool      enable = ob_device_is_firmware_log_enabled(impl_, &error);
+        Error::handle(&error);
+        return enable;
     }
 
     /**
@@ -1449,9 +1533,9 @@ public:
      *
      * @return const char* The host network interface name (e.g., "eth0", "en0").
      */
-    const char* getLocalNetInterfaceName(uint32_t index) const {
-        ob_error *error = nullptr;
-        auto netItfName = ob_device_list_get_device_local_net_if_name(impl_, index, &error);
+    const char *getLocalNetInterfaceName(uint32_t index) const {
+        ob_error *error      = nullptr;
+        auto      netItfName = ob_device_list_get_device_local_net_if_name(impl_, index, &error);
         Error::handle(&error);
         return netItfName;
     }
@@ -1486,6 +1570,49 @@ public:
         auto      userName = ob_device_list_get_device_user_name(impl_, index, &error);
         Error::handle(&error);
         return userName;
+    }
+
+    /**
+     * @brief Query the current device access state without opening the device.
+     *
+     * @attention This is a non-invasive GVCP CCP query for supported Ethernet devices. It reports device-side CCP state, not the owner process or host.
+     * CONTROLLED means monitor access may still be available, while default/control access may still fail.
+     * This call is synchronous and blocks while waiting for the device's GVCP response over the network; querying an unreachable device blocks until the
+     * underlying retry logic gives up, so prefer calling it off the UI thread when querying multiple devices.
+     * The returned state reflects the device access state only at the moment of the query and does not guarantee that a subsequent access (such as creating
+     * or opening the device) will succeed, as another client may change the state in between.
+     *
+     * @param[in] index The index of the device.
+     *
+     * @return OBDeviceAccessState The current access state of the device.
+     */
+    OBDeviceAccessState queryDeviceAccessState(uint32_t index) const {
+        ob_error *error = nullptr;
+        auto      state = ob_device_list_query_device_access_state(impl_, index, &error);
+        Error::handle(&error);
+        return state;
+    }
+
+    /**
+     * @brief Query the current device access state by serial number without opening the device.
+     *
+     * @attention This is a non-invasive GVCP CCP query for supported Ethernet devices. It reports device-side CCP state, not the owner process or host.
+     * CONTROLLED means monitor access may still be available, while default/control access may still fail.
+     * This call is synchronous and blocks while waiting for the device's GVCP response over the network; querying an unreachable device blocks until the
+     * underlying retry logic gives up, so prefer calling it off the UI thread when querying multiple devices.
+     * The returned state reflects the device access state only at the moment of the query and does not guarantee that a subsequent access (such as creating
+     * or opening the device) will succeed, as another client may change the state in between.
+     * If no device in the list matches the given serial number, this throws an ob::Error.
+     *
+     * @param[in] serialNumber The serial number of the device.
+     *
+     * @return OBDeviceAccessState The current access state of the device.
+     */
+    OBDeviceAccessState queryDeviceAccessStateBySN(const char *serialNumber) const {
+        ob_error *error = nullptr;
+        auto      state = ob_device_list_query_device_access_state_by_serial_number(impl_, serialNumber, &error);
+        Error::handle(&error);
+        return state;
     }
 
     /**
