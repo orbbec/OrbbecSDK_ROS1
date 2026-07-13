@@ -2517,6 +2517,12 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Current heartbeat: "
                       << (device_->getBoolProperty(OB_PROP_HEARTBEAT_BOOL) ? "ON" : "OFF"));
     }
+    if (should_apply_launch_config("enable_fps_boost") &&
+        device_->isPropertySupported(OB_PROP_FPS_BOOST_BOOL, OB_PERMISSION_READ_WRITE)) {
+      device_->setBoolProperty(OB_PROP_FPS_BOOST_BOOL, enable_fps_boost_);
+      ROS_INFO_STREAM("Current fps boost: "
+                      << (device_->getBoolProperty(OB_PROP_FPS_BOOST_BOOL) ? "ON" : "OFF"));
+    }
 
     if (should_apply_launch_config("enable_color_hdr") && enable_color_hdr_ &&
         device_->isPropertySupported(OB_PROP_COLOR_HDR_BOOL, OB_PERMISSION_READ_WRITE)) {

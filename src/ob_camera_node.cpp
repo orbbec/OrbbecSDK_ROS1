@@ -685,6 +685,7 @@ void OBCameraNode::getParameters() {
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   enable_firmware_log_ = nh_private_.param<bool>("enable_firmware_log", false);
+  enable_fps_boost_ = nh_private_.param<bool>("enable_fps_boost", false);
   for (const auto& stream_index : IMAGE_STREAMS) {
     const auto param_name = "enable_" + stream_name_[stream_index] + "_undistortion";
     enable_undistortion_[stream_index] = nh_private_.param<bool>(param_name, false);

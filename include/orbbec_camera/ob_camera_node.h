@@ -907,6 +907,7 @@ class OBCameraNode {
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
   bool enable_firmware_log_ = false;
+  bool enable_fps_boost_ = false;
   std::map<stream_index_pair, bool> enable_undistortion_;
   std::shared_ptr<ob::UnDistortionFilter> hw_d2c_color_undistortion_filter_;
   bool hw_d2c_color_undistortion_configured_ = false;
