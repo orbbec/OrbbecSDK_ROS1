@@ -174,6 +174,14 @@ void OBCameraNode::init() {
   setupUndistortionFilters();
   selectBaseStream();
   setupProfiles();
+  if (enable_enhanced_depth_.load()) {
+    std::string message;
+    ROS_INFO_STREAM("Pre-creating enhanced depth filter");
+    if (!ensureEnhancedDepthFilter(message)) {
+      throw std::runtime_error(message);
+    }
+    ROS_INFO_STREAM("Enhanced depth filter pre-created");
+  }
   setupCameraInfo();
   setupTopics();
   setupCameraCtrlServices();
@@ -470,6 +478,10 @@ void OBCameraNode::getParameters() {
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
   enable_image_transport_plugins_ = nh_private_.param<bool>("enable_image_transport_plugins", true);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
+  enable_enhanced_depth_.store(nh_private_.param<bool>("enable_enhanced_depth", false));
+  enhanced_depth_model_path_ = nh_private_.param<std::string>("enhanced_depth_model_path", "");
+  enhanced_depth_confidence_threshold_ =
+      nh_private_.param<int>("enhanced_depth_confidence_threshold", 51);
   enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", false);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");
@@ -2115,6 +2127,12 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
           return;
         }
       }
+    }
+
+    if (enable_enhanced_depth_.load()) {
+      frame_set = processEnhancedDepthFilter(frame_set);
+      depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+      color_frame = frame_set->getFrame(OB_FRAME_COLOR);
     }
 
     // Refresh frame from current frameset before logging to reflect post-filter/alignment output.

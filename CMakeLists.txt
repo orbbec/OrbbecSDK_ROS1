@@ -89,7 +89,7 @@ set(SERVICE_FILES
   SetStreamProfile.srv
 )
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs highgui)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -162,7 +162,7 @@ set(COMMON_INCLUDE_DIRS
   $<INSTALL_INTERFACE:include>
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
-  ${OpenCV_INCLUDED_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
   ${ORBBEC_INCLUDE_DIR}
 )
 if (USE_NV_HW_DECODER)
@@ -176,6 +176,30 @@ if (USE_RK_HW_DECODER)
   list(APPEND COMMON_INCLUDE_DIRS
     ${RK_MPP_INCLUDE_DIRS}
     ${RGA_INCLUDE_DIR})
+endif ()
+
+set(FILTERED_CATKIN_LIBRARIES)
+set(CATKIN_OPENCV_LIBRARIES)
+foreach (LIBRARY ${catkin_LIBRARIES})
+  set(IS_OPENCV_LIBRARY FALSE)
+  if (LIBRARY MATCHES "(^|/)libopencv_" OR LIBRARY MATCHES "^opencv_")
+    set(IS_OPENCV_LIBRARY TRUE)
+  endif ()
+
+  if (IS_OPENCV_LIBRARY)
+    if (LIBRARY MATCHES "(^|/)libopencv_(core|imgproc|imgcodecs|highgui)(\\.|$)" OR
+        LIBRARY MATCHES "^opencv_(core|imgproc|imgcodecs|highgui)$")
+      list(APPEND CATKIN_OPENCV_LIBRARIES ${LIBRARY})
+    endif ()
+  else ()
+    list(APPEND FILTERED_CATKIN_LIBRARIES ${LIBRARY})
+  endif ()
+endforeach ()
+
+if (CATKIN_OPENCV_LIBRARIES)
+  set(ORBBEC_OPENCV_LIBRARIES ${CATKIN_OPENCV_LIBRARIES})
+else ()
+  set(ORBBEC_OPENCV_LIBRARIES ${OpenCV_LIBS})
 endif ()
 
 # Source files
@@ -221,8 +245,8 @@ endif ()
 
 # Link libraries
 set(COMMON_LINK_LIBRARIES
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
+  ${FILTERED_CATKIN_LIBRARIES}
+  ${ORBBEC_OPENCV_LIBRARIES}
   ${Boost_LIBRARIES}
   -lOrbbecSDK
   -L${ORBBEC_LIBS_DIR}

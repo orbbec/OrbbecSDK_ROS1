@@ -33,6 +33,9 @@ namespace orbbec_camera {
 
 namespace {
 
+constexpr char kEnhancedDepthSupportedTargetResolutions[] = "640x480/1280x720/1280x800";
+constexpr char kEnhancedDepthSupportedDepthFormats[] = "Y10/Y11/Y12/Y14/Y16/Z16";
+
 std::string getDepthFilterStatusName(const std::string& filter_name) {
   if (filter_name == "SpatialAdvancedFilter") {
     return "SpatialFilter";
@@ -41,6 +44,20 @@ std::string getDepthFilterStatusName(const std::string& filter_name) {
     return "DisparityToDepth";
   }
   return filter_name;
+}
+
+const std::unordered_map<OBFormat, OBConvertFormat>& enhancedDepthColorFormatMap() {
+  static const std::unordered_map<OBFormat, OBConvertFormat> kFormatMap = {
+      {OB_FORMAT_YUYV, FORMAT_YUYV_TO_RGB}, {OB_FORMAT_UYVY, FORMAT_UYVY_TO_RGB},
+      {OB_FORMAT_MJPG, FORMAT_MJPG_TO_RGB}, {OB_FORMAT_BGR, FORMAT_BGR_TO_RGB},
+      {OB_FORMAT_RGBA, FORMAT_RGBA_TO_RGB}, {OB_FORMAT_Y16, FORMAT_Y16_TO_RGB},
+      {OB_FORMAT_Y8, FORMAT_Y8_TO_RGB},
+  };
+  return kFormatMap;
+}
+
+bool isEnhancedDepthColorFormatSupported(OBFormat format) {
+  return format == OB_FORMAT_RGB || enhancedDepthColorFormatMap().count(format) > 0;
 }
 
 boost::filesystem::path resolveConfigJsonFilePath(const std::string& file_path) {
@@ -272,6 +289,9 @@ std::string OBCameraNode::normalizeDepthFilterName(const std::string& filter_nam
   }
   if (filter_name == "DepthOutliersFilter" || filter_name == "DisparityOutliersFilter") {
     return "DispOutliersFilter";
+  }
+  if (filter_name == "EnhancedDepth" || filter_name == "EnhancedDepthFilter") {
+    return "EnhancedDepthFilter";
   }
   return filter_name;
 }
@@ -1256,6 +1276,15 @@ orbbec_camera::DepthFilterState OBCameraNode::buildDepthFilterState(
   return filter_state;
 }
 
+orbbec_camera::DepthFilterState OBCameraNode::buildEnhancedDepthFilterState() const {
+  orbbec_camera::DepthFilterState filter_state;
+  filter_state.filter_name = "EnhancedDepthFilter";
+  filter_state.enabled = enable_enhanced_depth_.load();
+  appendDepthFilterParam(filter_state, "confidence_threshold",
+                         std::to_string(enhanced_depth_confidence_threshold_));
+  return filter_state;
+}
+
 void OBCameraNode::publishDepthFiltersStatus() {
   if (!depth_filters_status_pub_) {
     return;
@@ -1467,9 +1496,14 @@ void OBCameraNode::publishDepthFiltersStatus() {
   if (disp_outliers_filter_supported) {
     append_unique_filter_name("DispOutliersFilter");
   }
+  append_unique_filter_name("EnhancedDepthFilter");
 
   msg.filters.reserve(ordered_filter_names.size());
   for (const auto& filter_name : ordered_filter_names) {
+    if (filter_name == "EnhancedDepthFilter") {
+      msg.filters.push_back(buildEnhancedDepthFilterState());
+      continue;
+    }
     bool enabled = false;
     if (filter_name == "NoiseRemovalFilter") {
       enabled = enable_noise_removal_filter_;
@@ -3707,737 +3741,1369 @@ void OBCameraNode::setupPublishers() {
     lrm_obstacle_distance_timer_ =
         nh_private_.createTimer(ros::Duration(1.0 / lrm_obstacle_distance_publish_rate_),
                                 &OBCameraNode::publishLrmObstacleDistance, this);
-  }
-  sdk_version_pub_ = nh_.advertise<std_msgs::String>("/" + camera_name_ + "/sdk_version", 1, true);
-  auto device_info = device_->getDeviceInfo();
-  nlohmann::json data;
-  std_msgs::String sdk_msg;
-  data["firmware_version"] = device_info->firmwareVersion();
-  data["supported_min_sdk_version"] = device_info->supportedMinSdkVersion();
-  data["ros_sdk_version"] = OB_ROS_VERSION_STR;
-  std::string major = std::to_string(ob::Version::getMajor());
-  std::string minor = std::to_string(ob::Version::getMinor());
-  std::string patch = std::to_string(ob::Version::getPatch());
-  std::string version = major + "." + minor + "." + patch;
-  data["ob_sdk_version"] = version;
-  sdk_msg.data = data.dump(2);
-  sdk_version_pub_.publish(sdk_msg);
-}
-
-void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
-  (void)event;
-  if (!lrm_obstacle_distance_pub_) {
-    return;
-  }
-  if (lrm_obstacle_distance_pub_.getNumSubscribers() == 0) {
-    return;
-  }
-  try {
-    std_msgs::Int32 msg;
-    {
-      std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-      msg.data = device_->getIntProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT);
+    if (enable_enhanced_depth_.load()) {
+      setupConfidencePublishers();
     }
-    lrm_obstacle_distance_pub_.publish(msg);
-  } catch (const ob::Error& e) {
-    auto message = orbbec_camera::formatObErrorWithStatus(e);
-    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", message.c_str());
-  } catch (const std::exception& e) {
-    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", e.what());
-  } catch (...) {
-    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: unknown error");
-  }
-}
-
-// Global topic-based publisher cache to prevent plugin reloading
-std::map<std::string, image_transport::Publisher> OBCameraNode::global_image_publishers_;
-std::shared_ptr<image_transport::ImageTransport> OBCameraNode::global_image_transport_;
-std::shared_ptr<ros::NodeHandle> OBCameraNode::global_nh_;
-std::mutex OBCameraNode::global_publisher_mutex_;
-
-image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
-    const std::string& topic_name, const image_transport::SubscriberStatusCallback& connect_cb,
-    const image_transport::SubscriberStatusCallback& disconnect_cb) {
-  std::lock_guard<std::mutex> lock(global_publisher_mutex_);
-
-  // Initialize global image transport if needed
-  if (!global_image_transport_) {
-    if (!global_nh_) {
-      global_nh_ = std::make_shared<ros::NodeHandle>();
-    }
-    global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
+    sdk_version_pub_ =
+        nh_.advertise<std_msgs::String>("/" + camera_name_ + "/sdk_version", 1, true);
+    auto device_info = device_->getDeviceInfo();
+    nlohmann::json data;
+    std_msgs::String sdk_msg;
+    data["firmware_version"] = device_info->firmwareVersion();
+    data["supported_min_sdk_version"] = device_info->supportedMinSdkVersion();
+    data["ros_sdk_version"] = OB_ROS_VERSION_STR;
+    std::string major = std::to_string(ob::Version::getMajor());
+    std::string minor = std::to_string(ob::Version::getMinor());
+    std::string patch = std::to_string(ob::Version::getPatch());
+    std::string version = major + "." + minor + "." + patch;
+    data["ob_sdk_version"] = version;
+    sdk_msg.data = data.dump(2);
+    sdk_version_pub_.publish(sdk_msg);
   }
 
-  // Always recreate publisher with callbacks to ensure rostopic hz detection works
-  auto it = global_image_publishers_.find(topic_name);
-  if (it != global_image_publishers_.end()) {
-    ROS_DEBUG_STREAM("Recreating image publisher for topic with callbacks: " << topic_name);
-    it->second.shutdown();
-    global_image_publishers_.erase(it);
-  }
-
-  // Create new publisher with callbacks for this topic and cache it
-  image_transport::Publisher pub =
-      global_image_transport_->advertise(topic_name, 1, connect_cb, disconnect_cb);
-  global_image_publishers_[topic_name] = pub;
-
-  ROS_DEBUG_STREAM("Created new image publisher with callbacks for topic: " << topic_name);
-  return pub;
-}
-
-void OBCameraNode::releaseGlobalImagePublisher(const std::string& topic_name) {
-  std::lock_guard<std::mutex> lock(global_publisher_mutex_);
-
-  auto it = global_image_publishers_.find(topic_name);
-  if (it != global_image_publishers_.end()) {
-    it->second.shutdown();
-    global_image_publishers_.erase(it);
-    ROS_DEBUG_STREAM("Released image publisher for topic: " << topic_name);
-  }
-}
-
-void OBCameraNode::initializeGlobalImageTransport() {
-  // Note: This function should be called only when global_publisher_mutex_ is already locked
-
-  if (!global_image_transport_) {
-    if (!global_nh_) {
-      global_nh_ = std::make_shared<ros::NodeHandle>();
-    }
-    global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
-    ROS_INFO_STREAM(
-        "Created persistent global image_transport instance to prevent plugin reloading");
-  }
-}
-
-void OBCameraNode::forceCleanupGlobalResources() {
-  std::lock_guard<std::mutex> lock(global_publisher_mutex_);
-
-  // Force shutdown all publishers
-  for (auto& pair : global_image_publishers_) {
-    pair.second.shutdown();
-  }
-  global_image_publishers_.clear();
-
-  global_image_transport_.reset();
-  global_nh_.reset();
-  ROS_INFO_STREAM("Force cleanup of global image_transport resources completed");
-}
-
-void OBCameraNode::setupCameraInfo() {
-  if (!color_info_uri_.empty()) {
-    color_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
-        nh_rgb_, camera_name_ + "_" + stream_name_[COLOR], color_info_uri_);
-  }
-  if (!ir_info_uri_.empty()) {
-    ir_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
-        nh_ir_, camera_name_ + "_" + stream_name_[INFRA0], ir_info_uri_);
-  }
-  auto param = getCameraParam();
-  if (param) {
-    camera_infos_[DEPTH] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
-                                               param->depthIntrinsic.width);
-    camera_infos_[INFRA0] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
-                                                param->depthIntrinsic.width);
-    camera_infos_[COLOR] =
-        convertToCameraInfo(param->rgbIntrinsic, param->rgbDistortion, param->rgbIntrinsic.width);
-  } else {
-    // ROS_WARN_STREAM("Failed to get camera parameters");
-  }
-}
-
-void OBCameraNode::setupPipelineConfig() {
-  if (pipeline_config_) {
-    pipeline_config_.reset();
-  }
-  pipeline_config_ = std::make_shared<ob::Config>();
-  if (align_mode_ == "HW" && depth_registration_ && enable_stream_[COLOR] &&
-      enable_stream_[DEPTH]) {
-    if (!isHwD2CProfileSupported()) {
-      std::stringstream ss;
-      ss << "Selected profiles do not support HW D2C. color=" << width_[COLOR] << "x"
-         << height_[COLOR] << "@" << fps_[COLOR] << ", depth=" << width_[DEPTH] << "x"
-         << height_[DEPTH] << "@" << fps_[DEPTH]
-         << ". Select a supported profile or use align_mode:=SW.";
-      throw std::runtime_error(ss.str());
-    }
-    OBAlignMode align_mode = ALIGN_D2C_HW_MODE;
-    ROS_INFO_STREAM("set align mode to " << align_mode_);
-    pipeline_config_->setAlignMode(align_mode);
-    pipeline_config_->setDepthScaleRequire(enable_depth_scale_);
-  }
-  for (const auto& stream_index : IMAGE_STREAMS) {
-    if (enable_stream_[stream_index]) {
-      ROS_DEBUG_STREAM("Enable " << stream_name_[stream_index] << " stream");
-      auto profile = stream_profile_[stream_index]->as<ob::VideoStreamProfile>();
-
-      if (stream_index.first == align_target_stream_ && align_filter_) {
-        auto video_profile = profile;
-        align_filter_->setAlignToStreamProfile(video_profile);
-      }
-      pipeline_config_->enableStream(stream_profile_[stream_index]);
-    }
-  }
-  if (frame_aggregate_mode_ == "full_frame") {
-    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE);
-  } else if (frame_aggregate_mode_ == "color_frame") {
-    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_COLOR_FRAME_REQUIRE);
-  } else if (frame_aggregate_mode_ == "disable") {
-    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_DISABLE);
-  } else {
-    pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION);
-  }
-}
-
-void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWrapper& stat) {
-  try {
-    OBDeviceTemperature temperature{};
-    uint32_t data_size = sizeof(OBDeviceTemperature);
-    device_->getStructuredData(OB_STRUCT_DEVICE_TEMPERATURE,
-                               reinterpret_cast<uint8_t*>(&temperature), &data_size);
-    stat.add("CPU Temperature", temperature.cpuTemp);
-    stat.add("IR Temperature", temperature.irTemp);
-    stat.add("LDM Temperature", temperature.ldmTemp);
-    stat.add("MainBoard Temperature", temperature.mainBoardTemp);
-    stat.add("TEC Temperature", temperature.tecTemp);
-    stat.add("IMU Temperature", temperature.imuTemp);
-    stat.add("RGB Temperature", temperature.rgbTemp);
-    stat.add("Left IR Temperature", temperature.irLeftTemp);
-    stat.add("Right IR Temperature", temperature.irRightTemp);
-    stat.add("Chip Top Temperature", temperature.chipTopTemp);
-    stat.add("Chip Bottom Temperature", temperature.chipBottomTemp);
-    stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Temperature is normal");
-  } catch (const ob::Error& e) {
-    stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR,
-                 orbbec_camera::formatObErrorWithStatus(e));
-  }
-}
-void OBCameraNode::setupDiagnosticUpdater() {
-  if (!device_->isPropertySupported(OB_STRUCT_DEVICE_TEMPERATURE, OB_PERMISSION_READ)) {
-    ROS_WARN_STREAM("Device does not support temperature reading");
-    return;
-  }
-  std::string serial_number = device_info_->serialNumber();
-  diagnostic_updater_ =
-      std::make_shared<diagnostic_updater::Updater>(nh_, nh_private_, "ob_camera_" + serial_number);
-  diagnostic_updater_->setHardwareID(serial_number);
-  ros::WallRate rate(diagnostics_frequency_);
-  diagnostic_updater_->add("Temperature", this, &OBCameraNode::diagnosticTemperature);
-  while (is_running_ && ros::ok()) {
-    diagnostic_updater_->force_update();
-    rate.sleep();
-  }
-}
-
-void OBCameraNode::readDefaultGain() {
-  for (const auto& stream_index : IMAGE_STREAMS) {
-    if (!enable_stream_[stream_index]) {
-      continue;
-    }
-    try {
-      auto sensor = sensors_[stream_index];
-      CHECK_NOTNULL(sensor.get());
-      auto gain = sensor->getGain();
-      ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " gain " << gain);
-      default_gain_[stream_index] = gain;
-    } catch (ob::Error& e) {
-      default_gain_[stream_index] = 0;
-      ROS_DEBUG_STREAM("get gain error " << orbbec_camera::formatObErrorWithStatus(e));
-    }
-  }
-}
-
-void OBCameraNode::readDefaultExposure() {
-  for (const auto& stream_index : IMAGE_STREAMS) {
-    if (!enable_stream_[stream_index]) {
-      continue;
-    }
-    try {
-      auto sensor = sensors_[stream_index];
-      CHECK_NOTNULL(sensor.get());
-      auto exposure = sensor->getExposure();
-      bool is_auto_exposure = sensor->getAutoExposure();
-      ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure
-                                 << " auto exposure " << is_auto_exposure);
-      ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure);
-      default_exposure_[stream_index] = exposure;
-    } catch (ob::Error& e) {
-      default_exposure_[stream_index] = 0;
-      ROS_DEBUG_STREAM("get " << stream_name_[stream_index] << " exposure error "
-                              << orbbec_camera::formatObErrorWithStatus(e));
-    }
-  }
-}
-
-void OBCameraNode::readDefaultWhiteBalance() {
-  try {
-    auto sensor = sensors_[COLOR];
-    if (!sensor) {
-      ROS_DEBUG_STREAM("does not have color sensor");
+  void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
+    (void)event;
+    if (!lrm_obstacle_distance_pub_) {
       return;
     }
-    CHECK_NOTNULL(sensor.get());
-    auto wb = sensor->getWhiteBalance();
-    ROS_DEBUG_STREAM("stream " << stream_name_[COLOR] << " wb " << wb);
-    default_white_balance_ = wb;
-  } catch (ob::Error& e) {
-    default_white_balance_ = 0;
-    ROS_DEBUG_STREAM("get white balance error " << orbbec_camera::formatObErrorWithStatus(e));
+    if (lrm_obstacle_distance_pub_.getNumSubscribers() == 0) {
+      return;
+    }
+    try {
+      std_msgs::Int32 msg;
+      {
+        std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+        msg.data = device_->getIntProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT);
+      }
+      lrm_obstacle_distance_pub_.publish(msg);
+    } catch (const ob::Error& e) {
+      auto message = orbbec_camera::formatObErrorWithStatus(e);
+      ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", message.c_str());
+    } catch (const std::exception& e) {
+      ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", e.what());
+    } catch (...) {
+      ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: unknown error");
+    }
   }
-}
 
-void OBCameraNode::setDisparitySearchOffset() {
-  static bool has_run = false;
-  if (has_run) {
-    return;
-  }
-  if ((disparity_search_offset_ < 0 || disparity_search_offset_ > 127) &&
-      (offset_index0_ < 0 || offset_index0_ > 127 || offset_index1_ < 0 || offset_index1_ > 127)) {
-    has_run = true;
-    return;
-  }
-  if (device_->isPropertySupported(OB_PROP_DISP_SEARCH_OFFSET_INT, OB_PERMISSION_WRITE)) {
-    if (disparity_search_offset_ >= 0 && disparity_search_offset_ <= 127) {
-      device_->setIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, disparity_search_offset_);
-      ROS_INFO_STREAM("disparity_search_offset: " << disparity_search_offset_);
-    }
-    if (offset_index0_ >= 0 && offset_index0_ <= 127 && offset_index1_ >= 0 &&
-        offset_index1_ <= 127) {
-      auto config = OBDispOffsetConfig();
-      config.enable = disparity_offset_config_;
-      config.offset0 = offset_index0_;
-      config.offset1 = offset_index1_;
-      config.reserved = 0;
-      device_->setStructuredData(OB_STRUCT_DISP_OFFSET_CONFIG,
-                                 reinterpret_cast<const uint8_t*>(&config), sizeof(config));
-      ROS_INFO_STREAM("disparity_offset_config: " << disparity_offset_config_
-                                                  << "  offset_index0: " << offset_index0_
-                                                  << "  offset_index1: " << offset_index1_);
-    }
-  }
-  has_run = true;
-}
+  // Global topic-based publisher cache to prevent plugin reloading
+  std::map<std::string, image_transport::Publisher> OBCameraNode::global_image_publishers_;
+  std::shared_ptr<image_transport::ImageTransport> OBCameraNode::global_image_transport_;
+  std::shared_ptr<ros::NodeHandle> OBCameraNode::global_nh_;
+  std::mutex OBCameraNode::global_publisher_mutex_;
 
-void OBCameraNode::setDepthAutoExposureROI() {
-  static bool depth_roi_has_run = false;
-  if (depth_roi_has_run) {
-    return;
-  }
-  if (depth_ae_roi_left_ == -1 && depth_ae_roi_top_ == -1 && depth_ae_roi_right_ == -1 &&
-      depth_ae_roi_bottom_ == -1) {
-    depth_roi_has_run = true;
-    return;
-  }
-  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "color") {
-    ROS_WARN_STREAM("Skip setting depth AE ROI because AE Reference Stream is color");
-    depth_roi_has_run = true;
-    return;
-  }
-  if (device_->isPropertySupported(OB_STRUCT_DEPTH_AE_ROI, OB_PERMISSION_READ_WRITE)) {
-    auto config = OBRegionOfInterest();
-    uint32_t data_size = sizeof(config);
-    device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
-                               &data_size);
-    if (depth_ae_roi_left_ != -1) {
-      config.x0_left = (depth_ae_roi_left_ < 0) ? 0 : depth_ae_roi_left_;
-      config.x0_left =
-          (depth_ae_roi_left_ > width_[DEPTH] - 1) ? width_[DEPTH] - 1 : config.x0_left;
-    }
-    if (depth_ae_roi_top_ != -1) {
-      config.y0_top = (depth_ae_roi_top_ < 0) ? 0 : depth_ae_roi_top_;
-      config.y0_top = (depth_ae_roi_top_ > height_[DEPTH] - 1) ? height_[DEPTH] - 1 : config.y0_top;
-    }
-    if (depth_ae_roi_right_ != -1) {
-      config.x1_right = (depth_ae_roi_right_ < 0) ? 0 : depth_ae_roi_right_;
-      config.x1_right =
-          (depth_ae_roi_right_ > width_[DEPTH] - 1) ? width_[DEPTH] - 1 : config.x1_right;
-    }
-    if (depth_ae_roi_bottom_ != -1) {
-      config.y1_bottom = (depth_ae_roi_bottom_ < 0) ? 0 : depth_ae_roi_bottom_;
-      config.y1_bottom =
-          (depth_ae_roi_bottom_ > height_[DEPTH] - 1) ? height_[DEPTH] - 1 : config.y1_bottom;
-    }
-    device_->setStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<const uint8_t*>(&config),
-                               sizeof(config));
-    device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
-                               &data_size);
-    ROS_INFO_STREAM("Set depth AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
-                                           << config.x1_right << ", " << config.y1_bottom);
-  }
-  depth_roi_has_run = true;
-}
+  image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
+      const std::string& topic_name, const image_transport::SubscriberStatusCallback& connect_cb,
+      const image_transport::SubscriberStatusCallback& disconnect_cb) {
+    std::lock_guard<std::mutex> lock(global_publisher_mutex_);
 
-void OBCameraNode::setColorAutoExposureROI() {
-  static bool color_roi_has_run = false;
-  if (color_roi_has_run) {
-    return;
-  }
-  if (color_ae_roi_left_ == -1 && color_ae_roi_top_ == -1 && color_ae_roi_right_ == -1 &&
-      color_ae_roi_bottom_ == -1) {
-    color_roi_has_run = true;
-    return;
-  }
-  if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "depth") {
-    ROS_WARN_STREAM("Skip setting color AE ROI because AE Reference Stream is depth");
-    color_roi_has_run = true;
-    return;
-  }
-  if (device_->isPropertySupported(OB_STRUCT_COLOR_AE_ROI, OB_PERMISSION_READ_WRITE)) {
-    auto config = OBRegionOfInterest();
-    uint32_t data_size = sizeof(config);
-    device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
-                               &data_size);
-    if (color_ae_roi_left_ != -1) {
-      config.x0_left = (color_ae_roi_left_ < 0) ? 0 : color_ae_roi_left_;
-      config.x0_left =
-          (color_ae_roi_left_ > width_[COLOR] - 1) ? width_[COLOR] - 1 : config.x0_left;
+    // Initialize global image transport if needed
+    if (!global_image_transport_) {
+      if (!global_nh_) {
+        global_nh_ = std::make_shared<ros::NodeHandle>();
+      }
+      global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
     }
-    if (color_ae_roi_top_ != -1) {
-      config.y0_top = (color_ae_roi_top_ < 0) ? 0 : color_ae_roi_top_;
-      config.y0_top = (color_ae_roi_top_ > height_[COLOR] - 1) ? height_[COLOR] - 1 : config.y0_top;
-    }
-    if (color_ae_roi_right_ != -1) {
-      config.x1_right = (color_ae_roi_right_ < 0) ? 0 : color_ae_roi_right_;
-      config.x1_right =
-          (color_ae_roi_right_ > width_[COLOR] - 1) ? width_[COLOR] - 1 : config.x1_right;
-    }
-    if (color_ae_roi_bottom_ != -1) {
-      config.y1_bottom = (color_ae_roi_bottom_ < 0) ? 0 : color_ae_roi_bottom_;
-      config.y1_bottom =
-          (color_ae_roi_bottom_ > height_[COLOR] - 1) ? height_[COLOR] - 1 : config.y1_bottom;
-    }
-    device_->setStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<const uint8_t*>(&config),
-                               sizeof(config));
-    device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
-                               &data_size);
-    ROS_INFO_STREAM("Set color AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
-                                           << config.x1_right << ", " << config.y1_bottom);
-  }
-  color_roi_has_run = true;
-}
 
-void OBCameraNode::updateDepthFilterEnabledCache(const std::string& filter_name, bool enabled) {
-  const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
-  if (normalized_filter_name == "DecimationFilter") {
-    enable_decimation_filter_ = enabled;
-  } else if (normalized_filter_name == "HDRMerge") {
-    enable_hdr_merge_ = enabled;
-  } else if (normalized_filter_name == "SequenceIdFilter") {
-    enable_sequenced_filter_ = enabled;
-  } else if (normalized_filter_name == "ThresholdFilter") {
-    enable_threshold_filter_ = enabled;
-  } else if (normalized_filter_name == "SpatialAdvancedFilter") {
-    enable_spatial_filter_ = enabled;
-  } else if (normalized_filter_name == "TemporalFilter") {
-    enable_temporal_filter_ = enabled;
-  } else if (normalized_filter_name == "HoleFillingFilter") {
-    enable_hole_filling_filter_ = enabled;
-  } else if (normalized_filter_name == "SpatialFastFilter") {
-    enable_spatial_fast_filter_ = enabled;
-  } else if (normalized_filter_name == "SpatialModerateFilter") {
-    enable_spatial_moderate_filter_ = enabled;
-  } else if (normalized_filter_name == "EdgeNoiseRemovalFilter") {
-    enable_edge_noise_removal_filter_ = enabled;
-  } else if (normalized_filter_name == "FalsePositiveFilter") {
-    enable_false_positive_filter_ = enabled;
-  } else if (normalized_filter_name == "MgcNoiseRemovalFilter") {
-    enable_mgc_noise_removal_filter_ = enabled;
-  } else if (normalized_filter_name == "LutNoiseRemovalFilter") {
-    enable_lut_noise_removal_filter_ = enabled;
-  } else if (normalized_filter_name == "DispOutliersFilter") {
-    enable_disp_outliers_filter_ = enabled;
-  } else if (normalized_filter_name == "NoiseRemovalFilter") {
-    enable_noise_removal_filter_ = enabled;
-  } else if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
-    enable_hardware_noise_removal_filter_ = enabled;
-  }
-}
+    // Always recreate publisher with callbacks to ensure rostopic hz detection works
+    auto it = global_image_publishers_.find(topic_name);
+    if (it != global_image_publishers_.end()) {
+      ROS_DEBUG_STREAM("Recreating image publisher for topic with callbacks: " << topic_name);
+      it->second.shutdown();
+      global_image_publishers_.erase(it);
+    }
 
-bool OBCameraNode::applyNamedDepthFilterConfig(
-    const std::string& filter_name, bool enabled,
-    const std::vector<orbbec_camera::DepthFilterParam>& params, std::string& message) {
-  const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
-  std::unordered_set<std::string> requested_param_names;
-  auto check_duplicate_param = [&requested_param_names, &message](const std::string& param_name) {
-    if (param_name.empty()) {
-      message = "Filter config param name is empty";
+    // Create new publisher with callbacks for this topic and cache it
+    image_transport::Publisher pub =
+        global_image_transport_->advertise(topic_name, 1, connect_cb, disconnect_cb);
+    global_image_publishers_[topic_name] = pub;
+
+    ROS_DEBUG_STREAM("Created new image publisher with callbacks for topic: " << topic_name);
+    return pub;
+  }
+
+  void OBCameraNode::releaseGlobalImagePublisher(const std::string& topic_name) {
+    std::lock_guard<std::mutex> lock(global_publisher_mutex_);
+
+    auto it = global_image_publishers_.find(topic_name);
+    if (it != global_image_publishers_.end()) {
+      it->second.shutdown();
+      global_image_publishers_.erase(it);
+      ROS_DEBUG_STREAM("Released image publisher for topic: " << topic_name);
+    }
+  }
+
+  void OBCameraNode::initializeGlobalImageTransport() {
+    // Note: This function should be called only when global_publisher_mutex_ is already locked
+
+    if (!global_image_transport_) {
+      if (!global_nh_) {
+        global_nh_ = std::make_shared<ros::NodeHandle>();
+      }
+      global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
+      ROS_INFO_STREAM(
+          "Created persistent global image_transport instance to prevent plugin reloading");
+    }
+  }
+
+  void OBCameraNode::forceCleanupGlobalResources() {
+    std::lock_guard<std::mutex> lock(global_publisher_mutex_);
+
+    // Force shutdown all publishers
+    for (auto& pair : global_image_publishers_) {
+      pair.second.shutdown();
+    }
+    global_image_publishers_.clear();
+
+    global_image_transport_.reset();
+    global_nh_.reset();
+    ROS_INFO_STREAM("Force cleanup of global image_transport resources completed");
+  }
+
+  void OBCameraNode::setupCameraInfo() {
+    if (!color_info_uri_.empty()) {
+      color_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
+          nh_rgb_, camera_name_ + "_" + stream_name_[COLOR], color_info_uri_);
+    }
+    if (!ir_info_uri_.empty()) {
+      ir_camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
+          nh_ir_, camera_name_ + "_" + stream_name_[INFRA0], ir_info_uri_);
+    }
+    auto param = getCameraParam();
+    if (param) {
+      camera_infos_[DEPTH] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
+                                                 param->depthIntrinsic.width);
+      camera_infos_[INFRA0] = convertToCameraInfo(param->depthIntrinsic, param->depthDistortion,
+                                                  param->depthIntrinsic.width);
+      camera_infos_[COLOR] =
+          convertToCameraInfo(param->rgbIntrinsic, param->rgbDistortion, param->rgbIntrinsic.width);
+    } else {
+      // ROS_WARN_STREAM("Failed to get camera parameters");
+    }
+  }
+
+  void OBCameraNode::setupPipelineConfig() {
+    if (pipeline_config_) {
+      pipeline_config_.reset();
+    }
+    pipeline_config_ = std::make_shared<ob::Config>();
+    if (align_mode_ == "HW" && depth_registration_ && enable_stream_[COLOR] &&
+        enable_stream_[DEPTH]) {
+      if (!isHwD2CProfileSupported()) {
+        std::stringstream ss;
+        ss << "Selected profiles do not support HW D2C. color=" << width_[COLOR] << "x"
+           << height_[COLOR] << "@" << fps_[COLOR] << ", depth=" << width_[DEPTH] << "x"
+           << height_[DEPTH] << "@" << fps_[DEPTH]
+           << ". Select a supported profile or use align_mode:=SW.";
+        throw std::runtime_error(ss.str());
+      }
+      OBAlignMode align_mode = ALIGN_D2C_HW_MODE;
+      ROS_INFO_STREAM("set align mode to " << align_mode_);
+      pipeline_config_->setAlignMode(align_mode);
+      pipeline_config_->setDepthScaleRequire(enable_depth_scale_);
+    }
+    for (const auto& stream_index : IMAGE_STREAMS) {
+      if (enable_stream_[stream_index]) {
+        ROS_DEBUG_STREAM("Enable " << stream_name_[stream_index] << " stream");
+        auto profile = stream_profile_[stream_index]->as<ob::VideoStreamProfile>();
+
+        if (stream_index.first == align_target_stream_ && align_filter_) {
+          auto video_profile = profile;
+          align_filter_->setAlignToStreamProfile(video_profile);
+        }
+        pipeline_config_->enableStream(stream_profile_[stream_index]);
+      }
+    }
+    if (frame_aggregate_mode_ == "full_frame") {
+      pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE);
+    } else if (frame_aggregate_mode_ == "color_frame") {
+      pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_COLOR_FRAME_REQUIRE);
+    } else if (frame_aggregate_mode_ == "disable") {
+      pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_DISABLE);
+    } else {
+      pipeline_config_->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION);
+    }
+  }
+
+  bool OBCameraNode::validateEnhancedDepthFilterConfig(std::string & message) const {
+    if (!enable_stream_.count(COLOR) || !enable_stream_.at(COLOR) || !enable_stream_.count(DEPTH) ||
+        !enable_stream_.at(DEPTH)) {
+      message = "Enhanced depth filter requires color and depth streams";
       return false;
     }
-    if (!requested_param_names.insert(param_name).second) {
-      message = "Duplicate filter config param '" + param_name + "'";
+    if (!depth_registration_) {
+      message = "Enhanced depth filter requires D2C/C2D align mode";
+      return false;
+    }
+    if (align_mode_ != "HW" && align_mode_ != "SW") {
+      message = "Enhanced depth filter requires D2C/C2D align mode";
+      return false;
+    }
+    if (align_mode_ == "HW" && align_target_stream_ != OB_STREAM_COLOR) {
+      message = "Enhanced depth filter requires HW D2C align target COLOR";
+      return false;
+    }
+    if (align_mode_ == "SW" && align_target_stream_ != OB_STREAM_COLOR &&
+        align_target_stream_ != OB_STREAM_DEPTH) {
+      message = "Enhanced depth filter requires D2C/C2D align mode";
+      return false;
+    }
+
+    auto color_it = stream_profile_.find(COLOR);
+    auto depth_it = stream_profile_.find(DEPTH);
+    if (color_it == stream_profile_.end() || !color_it->second ||
+        depth_it == stream_profile_.end() || !depth_it->second) {
+      message = "Enhanced depth filter requires color and depth stream profiles";
+      return false;
+    }
+    auto color_profile = color_it->second->as<ob::VideoStreamProfile>();
+    auto depth_profile = depth_it->second->as<ob::VideoStreamProfile>();
+    if (!color_profile || !depth_profile) {
+      message = "Enhanced depth filter requires video stream profiles";
+      return false;
+    }
+
+    const bool d2c = align_mode_ == "HW" || align_target_stream_ == OB_STREAM_COLOR;
+    const OBStreamType align_to_stream = d2c ? OB_STREAM_COLOR : OB_STREAM_DEPTH;
+    if (!ob::EnhancedDepthFilter::isSupportedResolution(color_profile->getType(), align_to_stream,
+                                                        color_profile->getWidth(),
+                                                        color_profile->getHeight())) {
+      message = std::string("Enhanced depth filter requires supported target resolutions: ") +
+                kEnhancedDepthSupportedTargetResolutions;
+      return false;
+    }
+    if (!ob::EnhancedDepthFilter::isSupportedResolution(depth_profile->getType(), align_to_stream,
+                                                        depth_profile->getWidth(),
+                                                        depth_profile->getHeight()) ||
+        !ob::EnhancedDepthFilter::isSupportedFormat(OB_STREAM_DEPTH, depth_profile->getFormat())) {
+      message = std::string("Enhanced depth filter requires supported target resolutions: ") +
+                kEnhancedDepthSupportedTargetResolutions +
+                " and depth formats: " + kEnhancedDepthSupportedDepthFormats;
+      return false;
+    }
+    if (!isEnhancedDepthColorFormatSupported(color_profile->getFormat())) {
+      message =
+          "Unsupported color stream format for enhanced depth filter. Supported formats are: YUYV "
+          "UYVY MJPG BGR RGBA Y16 Y8 RGB";
       return false;
     }
     return true;
-  };
+  }
 
-  if (normalized_filter_name == "NoiseRemovalFilter") {
-    const bool supported =
-        device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE) ||
-        device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE) ||
-        device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE);
-    if (!supported) {
-      message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+  void OBCameraNode::applyEnhancedDepthConfidenceThreshold() {
+    if (!enhanced_depth_filter_ || enhanced_depth_confidence_threshold_ < 0) {
+      return;
+    }
+    auto range = enhanced_depth_filter_->getConfidenceThresholdRange();
+    const int confidence_threshold = enhanced_depth_confidence_threshold_;
+    if (confidence_threshold < range.min || confidence_threshold > range.max) {
+      std::ostringstream ss;
+      ss << "Enhanced depth confidence threshold is out of range " << range.min << " - "
+         << range.max;
+      throw std::runtime_error(ss.str());
+    }
+    enhanced_depth_filter_->setConfidenceThreshold(static_cast<uint32_t>(confidence_threshold));
+  }
+
+  bool OBCameraNode::ensureEnhancedDepthFilter(std::string & message) {
+    if (!validateEnhancedDepthFilterConfig(message)) {
       return false;
     }
 
-    bool has_min_diff = false;
-    bool has_max_size = false;
-    int min_diff = 0;
-    int max_size = 0;
-    for (const auto& param : params) {
-      const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
-      if (!check_duplicate_param(param_name)) {
-        return false;
-      }
-
-      double parsed_value = 0.0;
-      if (!parseFilterConfigDouble(param.value, parsed_value, message)) {
-        return false;
-      }
-      if (std::floor(parsed_value) != parsed_value) {
-        message = "Filter config '" + param_name + "' expects an integer value";
-        return false;
-      }
-
-      if (param_name == "min_diff") {
-        if (!device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
-          message = "Filter config 'min_diff' is not supported by this device";
+    std::lock_guard<std::mutex> lock(enhanced_depth_filter_mutex_);
+    try {
+      if (!enhanced_depth_filter_) {
+        if (enhanced_depth_model_path_.empty()) {
+          message = "Enhanced depth filter requires enhanced_depth_model_path";
           return false;
         }
-        has_min_diff = true;
-        min_diff = static_cast<int>(parsed_value);
-      } else if (param_name == "max_size") {
-        if (!device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT,
-                                          OB_PERMISSION_WRITE)) {
-          message = "Filter config 'max_size' is not supported by this device";
+        std::ifstream model_file(enhanced_depth_model_path_);
+        if (!model_file.good()) {
+          message = "Enhanced depth model file not found: " + enhanced_depth_model_path_;
           return false;
         }
-        has_max_size = true;
-        max_size = static_cast<int>(parsed_value);
-      } else {
-        message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
-        return false;
+        if (!device_->isLicenseAuthorizationSupported()) {
+          message = "Enhanced depth filter requires device license authorization support";
+          return false;
+        }
+        auto license_info = device_->readLicenseInfo();
+        ROS_INFO_STREAM("Enhanced depth license info: " << license_info);
+        if (license_info.empty()) {
+          message = "Enhanced depth filter requires device license info";
+          return false;
+        }
+        ROS_INFO_STREAM(
+            "Creating enhanced depth filter with model path: " << enhanced_depth_model_path_);
+        enhanced_depth_filter_ =
+            std::make_shared<ob::EnhancedDepthFilter>(device_, enhanced_depth_model_path_);
       }
+      const bool d2c = align_mode_ == "HW" || align_target_stream_ == OB_STREAM_COLOR;
+      auto target_profile = d2c ? stream_profile_.at(COLOR)->as<ob::VideoStreamProfile>()
+                                : stream_profile_.at(DEPTH)->as<ob::VideoStreamProfile>();
+      enhanced_depth_filter_->setResolution(target_profile->getWidth(),
+                                            target_profile->getHeight());
+      applyEnhancedDepthConfidenceThreshold();
+      setupConfidencePublishers();
+    } catch (const ob::Error& e) {
+      message =
+          "Failed to create enhanced depth filter: " + orbbec_camera::formatObErrorWithStatus(e);
+      return false;
+    } catch (const std::exception& e) {
+      message = "Failed to create enhanced depth filter: " + std::string(e.what());
+      return false;
     }
-
-    if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
-      device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enabled);
-    }
-    if (has_min_diff) {
-      device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, min_diff);
-      noise_removal_filter_min_diff_ = min_diff;
-    }
-    if (has_max_size) {
-      device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, max_size);
-      noise_removal_filter_max_size_ = max_size;
-    }
-    updateDepthFilterEnabledCache(normalized_filter_name, enabled);
     return true;
   }
 
-  if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
-    const bool supported =
-        device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
-                                     OB_PERMISSION_READ_WRITE) ||
-        device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
-                                     OB_PERMISSION_READ_WRITE);
-    if (!supported) {
-      message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+  bool OBCameraNode::convertEnhancedDepthColorFrame(
+      const std::shared_ptr<ob::FrameSet>& frame_set) {
+    auto color_frame = frame_set ? frame_set->getFrame(OB_FRAME_COLOR) : nullptr;
+    if (!color_frame) {
+      return false;
+    }
+    const auto color_format = color_frame->format();
+    if (color_format == OB_FORMAT_RGB) {
+      return true;
+    }
+    const auto& format_map = enhancedDepthColorFormatMap();
+    auto it = format_map.find(color_format);
+    if (it == format_map.end()) {
+      ROS_ERROR_STREAM_THROTTLE(
+          1.0, "Unsupported color stream format for enhanced depth filter: " << color_format);
       return false;
     }
 
-    bool has_threshold = false;
-    double threshold = 0.0;
-    for (const auto& param : params) {
-      const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
-      if (!check_duplicate_param(param_name)) {
+    try {
+      enhanced_depth_format_convert_filter_.setFormatConvertType(it->second);
+      auto converted = enhanced_depth_format_convert_filter_.process(color_frame);
+      if (!converted) {
+        ROS_ERROR_THROTTLE(1.0, "Enhanced depth color format conversion failed");
         return false;
       }
-      if (param_name != "threshold") {
-        message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
-        return false;
-      }
-      if (!device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
-                                        OB_PERMISSION_READ_WRITE)) {
-        message = "Filter config 'threshold' is not supported by this device";
-        return false;
-      }
-      if (!parseFilterConfigDouble(param.value, threshold, message)) {
-        return false;
-      }
-      has_threshold = true;
+      frame_set->pushFrame(converted);
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "Enhanced depth color format conversion failed: "
+                                         << orbbec_camera::formatObErrorWithStatus(e));
+      return false;
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "Enhanced depth color format conversion failed: " << e.what());
+      return false;
     }
-
-    if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
-                                     OB_PERMISSION_READ_WRITE)) {
-      device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, enabled);
-    }
-    if (has_threshold) {
-      device_->setFloatProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
-                                static_cast<float>(threshold));
-      hardware_noise_removal_filter_threshold_ = static_cast<float>(threshold);
-    }
-    updateDepthFilterEnabledCache(normalized_filter_name, enabled);
     return true;
   }
 
-  if (normalized_filter_name == "DispOutliersFilter") {
-    const bool supported =
-        device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
-                                     OB_PERMISSION_READ_WRITE) ||
-        device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
-                                     OB_PERMISSION_READ_WRITE);
-    if (!supported) {
-      message = "Filter '" + normalized_filter_name + "' is not supported by this device";
-      return false;
+  std::shared_ptr<ob::FrameSet> OBCameraNode::processEnhancedDepthFilter(
+      const std::shared_ptr<ob::FrameSet>& frame_set) {
+    if (!frame_set) {
+      return frame_set;
+    }
+    {
+      std::lock_guard<std::mutex> lock(enhanced_depth_filter_mutex_);
+      if (!enable_enhanced_depth_.load()) {
+        return frame_set;
+      }
     }
 
-    bool has_search_mode = false;
-    int search_mode = 0;
-    for (const auto& param : params) {
-      const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
-      if (!check_duplicate_param(param_name)) {
-        return false;
-      }
-      if (param_name != "search_mode") {
-        message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
-        return false;
-      }
-      if (!device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
-                                        OB_PERMISSION_READ_WRITE)) {
-        message = "Filter config 'search_mode' is not supported by this device";
-        return false;
-      }
-
-      if (!parseDispOutliersSearchMode(param.value, search_mode, message)) {
-        return false;
-      }
-      has_search_mode = true;
+    std::string message;
+    if (!ensureEnhancedDepthFilter(message)) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, message);
+      return frame_set;
+    }
+    if (!frame_set->getFrame(OB_FRAME_COLOR) || !frame_set->getFrame(OB_FRAME_DEPTH)) {
+      ROS_ERROR_THROTTLE(1.0, "Enhanced depth filter requires color and depth frames");
+      return frame_set;
+    }
+    if (!convertEnhancedDepthColorFrame(frame_set)) {
+      return frame_set;
     }
 
-    if (device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
-                                     OB_PERMISSION_READ_WRITE)) {
-      device_->setBoolProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL, enabled);
+    std::shared_ptr<ob::EnhancedDepthFilter> filter;
+    {
+      std::lock_guard<std::mutex> lock(enhanced_depth_filter_mutex_);
+      if (!enable_enhanced_depth_.load()) {
+        return frame_set;
+      }
+      filter = enhanced_depth_filter_;
     }
-    if (has_search_mode) {
-      device_->setIntProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT, search_mode);
-      disp_outliers_filter_search_mode_ = search_mode;
+
+    try {
+      auto processed = filter->process(frame_set);
+      if (!processed || !processed->is<ob::FrameSet>()) {
+        ROS_ERROR_THROTTLE(1.0, "Enhanced depth filter returned invalid frameset");
+        return frame_set;
+      }
+      auto processed_frame_set = processed->as<ob::FrameSet>();
+      publishConfidenceFrame(processed_frame_set->getFrame(OB_FRAME_CONFIDENCE));
+      return processed_frame_set;
+    } catch (const ob::Error& e) {
+      ROS_ERROR_STREAM_THROTTLE(
+          1.0, "Enhanced depth filter failed: " << orbbec_camera::formatObErrorWithStatus(e));
+    } catch (const std::exception& e) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "Enhanced depth filter failed: " << e.what());
     }
-    updateDepthFilterEnabledCache(normalized_filter_name, enabled);
-    return true;
+    return frame_set;
   }
 
-  std::unique_lock<std::mutex> depth_filter_lock(depth_filter_mutex_);
-  auto is_same_filter = [&normalized_filter_name](const std::shared_ptr<ob::Filter>& filter) {
-    if (!filter) {
-      return false;
+  void OBCameraNode::setupConfidencePublishers() {
+    if (confidence_image_publisher_) {
+      return;
     }
-    return normalizeDepthFilterName(filter->getName()) == normalized_filter_name ||
-           normalizeDepthFilterName(filter->type()) == normalized_filter_name;
-  };
-
-  auto first_match_it =
-      std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
-                   [&is_same_filter](const auto& filter) { return is_same_filter(filter); });
-  if (first_match_it == depth_filter_list_.end() || !(*first_match_it)) {
-    message = "Filter '" + normalized_filter_name + "' is not supported by this device";
-    return false;
+    confidence_image_publisher_ =
+        nh_.advertise<sensor_msgs::Image>("/" + camera_name_ + "/confidence/image_raw", 1);
   }
 
-  const auto& existing_filter = *first_match_it;
-  std::vector<OBFilterConfigSchemaItem> schema_vec;
-  std::unordered_map<std::string, OBFilterConfigSchemaItem> schema_by_name;
-  if (!params.empty()) {
-    schema_vec = existing_filter->getConfigSchemaVec();
-    for (const auto& schema : schema_vec) {
-      if (schema.name == nullptr || schema.name[0] == '\0') {
+  void OBCameraNode::publishConfidenceFrame(const std::shared_ptr<ob::Frame>& confidence_frame) {
+    if (!confidence_frame || !confidence_frame->is<ob::VideoFrame>()) {
+      return;
+    }
+    setupConfidencePublishers();
+    if (!confidence_image_publisher_ || confidence_image_publisher_.getNumSubscribers() == 0) {
+      return;
+    }
+
+    auto video_frame = confidence_frame->as<ob::VideoFrame>();
+    const int width = static_cast<int>(video_frame->width());
+    const int height = static_cast<int>(video_frame->height());
+    int image_type = CV_8UC1;
+    std::string encoding = sensor_msgs::image_encodings::MONO8;
+    int unit_step_size = sizeof(uint8_t);
+    if (confidence_frame->format() == OB_FORMAT_Y16) {
+      image_type = CV_16UC1;
+      encoding = sensor_msgs::image_encodings::MONO16;
+      unit_step_size = sizeof(uint16_t);
+    } else if (confidence_frame->format() != OB_FORMAT_Y8) {
+      ROS_ERROR_STREAM_THROTTLE(
+          1.0, "Unsupported confidence frame format: " << confidence_frame->format());
+      return;
+    }
+
+    if (confidence_image_.empty() || confidence_image_.cols != width ||
+        confidence_image_.rows != height || confidence_image_.type() != image_type) {
+      confidence_image_.create(height, width, image_type);
+    }
+    memcpy(confidence_image_.data, video_frame->data(), video_frame->dataSize());
+
+    auto timestamp = fromUsToROSTime(getFrameTimestampUs(confidence_frame));
+    std::string frame_id =
+        depth_registration_ ? depth_aligned_frame_id_[DEPTH] : optical_frame_id_[DEPTH];
+
+    auto image_msg =
+        cv_bridge::CvImage(std_msgs::Header(), encoding, confidence_image_).toImageMsg();
+    image_msg->header.stamp = timestamp;
+    image_msg->header.frame_id = frame_id;
+    image_msg->is_bigendian = false;
+    image_msg->step = width * unit_step_size;
+    confidence_image_publisher_.publish(image_msg);
+  }
+
+  void OBCameraNode::diagnosticTemperature(diagnostic_updater::DiagnosticStatusWrapper & stat) {
+    try {
+      OBDeviceTemperature temperature{};
+      uint32_t data_size = sizeof(OBDeviceTemperature);
+      device_->getStructuredData(OB_STRUCT_DEVICE_TEMPERATURE,
+                                 reinterpret_cast<uint8_t*>(&temperature), &data_size);
+      stat.add("CPU Temperature", temperature.cpuTemp);
+      stat.add("IR Temperature", temperature.irTemp);
+      stat.add("LDM Temperature", temperature.ldmTemp);
+      stat.add("MainBoard Temperature", temperature.mainBoardTemp);
+      stat.add("TEC Temperature", temperature.tecTemp);
+      stat.add("IMU Temperature", temperature.imuTemp);
+      stat.add("RGB Temperature", temperature.rgbTemp);
+      stat.add("Left IR Temperature", temperature.irLeftTemp);
+      stat.add("Right IR Temperature", temperature.irRightTemp);
+      stat.add("Chip Top Temperature", temperature.chipTopTemp);
+      stat.add("Chip Bottom Temperature", temperature.chipBottomTemp);
+      stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Temperature is normal");
+    } catch (const ob::Error& e) {
+      stat.summary(diagnostic_msgs::DiagnosticStatus::ERROR,
+                   orbbec_camera::formatObErrorWithStatus(e));
+    }
+  }
+  void OBCameraNode::setupDiagnosticUpdater() {
+    if (!device_->isPropertySupported(OB_STRUCT_DEVICE_TEMPERATURE, OB_PERMISSION_READ)) {
+      ROS_WARN_STREAM("Device does not support temperature reading");
+      return;
+    }
+    std::string serial_number = device_info_->serialNumber();
+    diagnostic_updater_ = std::make_shared<diagnostic_updater::Updater>(
+        nh_, nh_private_, "ob_camera_" + serial_number);
+    diagnostic_updater_->setHardwareID(serial_number);
+    ros::WallRate rate(diagnostics_frequency_);
+    diagnostic_updater_->add("Temperature", this, &OBCameraNode::diagnosticTemperature);
+    while (is_running_ && ros::ok()) {
+      diagnostic_updater_->force_update();
+      rate.sleep();
+    }
+  }
+
+  void OBCameraNode::readDefaultGain() {
+    for (const auto& stream_index : IMAGE_STREAMS) {
+      if (!enable_stream_[stream_index]) {
         continue;
       }
-      schema_by_name.emplace(schema.name, schema);
+      try {
+        auto sensor = sensors_[stream_index];
+        CHECK_NOTNULL(sensor.get());
+        auto gain = sensor->getGain();
+        ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " gain " << gain);
+        default_gain_[stream_index] = gain;
+      } catch (ob::Error& e) {
+        default_gain_[stream_index] = 0;
+        ROS_DEBUG_STREAM("get gain error " << orbbec_camera::formatObErrorWithStatus(e));
+      }
     }
   }
 
-  std::vector<std::pair<std::string, double>> parsed_params;
-  parsed_params.reserve(params.size());
-  for (const auto& param : params) {
-    const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
-    if (!check_duplicate_param(param_name)) {
-      return false;
+  void OBCameraNode::readDefaultExposure() {
+    for (const auto& stream_index : IMAGE_STREAMS) {
+      if (!enable_stream_[stream_index]) {
+        continue;
+      }
+      try {
+        auto sensor = sensors_[stream_index];
+        CHECK_NOTNULL(sensor.get());
+        auto exposure = sensor->getExposure();
+        bool is_auto_exposure = sensor->getAutoExposure();
+        ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure
+                                   << " auto exposure " << is_auto_exposure);
+        ROS_DEBUG_STREAM("stream " << stream_name_[stream_index] << " exposure " << exposure);
+        default_exposure_[stream_index] = exposure;
+      } catch (ob::Error& e) {
+        default_exposure_[stream_index] = 0;
+        ROS_DEBUG_STREAM("get " << stream_name_[stream_index] << " exposure error "
+                                << orbbec_camera::formatObErrorWithStatus(e));
+      }
     }
-
-    const auto schema_it = schema_by_name.find(param_name);
-    if (schema_it == schema_by_name.end()) {
-      message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
-      return false;
-    }
-
-    double parsed_value = 0.0;
-    if (!parseFilterConfigValue(schema_it->second, param.value, parsed_value, message)) {
-      return false;
-    }
-    parsed_params.emplace_back(param_name, parsed_value);
   }
 
-  existing_filter->enable(enabled);
-  for (const auto& parsed_param : parsed_params) {
-    existing_filter->setConfigValue(parsed_param.first, parsed_param.second);
-    ROS_INFO_STREAM("Set " << normalized_filter_name << " config " << parsed_param.first << " to "
-                           << parsed_param.second);
+  void OBCameraNode::readDefaultWhiteBalance() {
+    try {
+      auto sensor = sensors_[COLOR];
+      if (!sensor) {
+        ROS_DEBUG_STREAM("does not have color sensor");
+        return;
+      }
+      CHECK_NOTNULL(sensor.get());
+      auto wb = sensor->getWhiteBalance();
+      ROS_DEBUG_STREAM("stream " << stream_name_[COLOR] << " wb " << wb);
+      default_white_balance_ = wb;
+    } catch (ob::Error& e) {
+      default_white_balance_ = 0;
+      ROS_DEBUG_STREAM("get white balance error " << orbbec_camera::formatObErrorWithStatus(e));
+    }
   }
-  updateDepthFilterEnabledCache(normalized_filter_name, enabled);
-  return true;
-}
 
-bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterResponse& response) {
-  try {
-    response.success = false;
-    response.message.clear();
-    auto fail = [&response](const std::string& msg) {
-      response.success = false;
-      response.message = msg;
+  void OBCameraNode::setDisparitySearchOffset() {
+    static bool has_run = false;
+    if (has_run) {
+      return;
+    }
+    if ((disparity_search_offset_ < 0 || disparity_search_offset_ > 127) &&
+        (offset_index0_ < 0 || offset_index0_ > 127 || offset_index1_ < 0 ||
+         offset_index1_ > 127)) {
+      has_run = true;
+      return;
+    }
+    if (device_->isPropertySupported(OB_PROP_DISP_SEARCH_OFFSET_INT, OB_PERMISSION_WRITE)) {
+      if (disparity_search_offset_ >= 0 && disparity_search_offset_ <= 127) {
+        device_->setIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, disparity_search_offset_);
+        ROS_INFO_STREAM("disparity_search_offset: " << disparity_search_offset_);
+      }
+      if (offset_index0_ >= 0 && offset_index0_ <= 127 && offset_index1_ >= 0 &&
+          offset_index1_ <= 127) {
+        auto config = OBDispOffsetConfig();
+        config.enable = disparity_offset_config_;
+        config.offset0 = offset_index0_;
+        config.offset1 = offset_index1_;
+        config.reserved = 0;
+        device_->setStructuredData(OB_STRUCT_DISP_OFFSET_CONFIG,
+                                   reinterpret_cast<const uint8_t*>(&config), sizeof(config));
+        ROS_INFO_STREAM("disparity_offset_config: " << disparity_offset_config_
+                                                    << "  offset_index0: " << offset_index0_
+                                                    << "  offset_index1: " << offset_index1_);
+      }
+    }
+    has_run = true;
+  }
+
+  void OBCameraNode::setDepthAutoExposureROI() {
+    static bool depth_roi_has_run = false;
+    if (depth_roi_has_run) {
+      return;
+    }
+    if (depth_ae_roi_left_ == -1 && depth_ae_roi_top_ == -1 && depth_ae_roi_right_ == -1 &&
+        depth_ae_roi_bottom_ == -1) {
+      depth_roi_has_run = true;
+      return;
+    }
+    if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "color") {
+      ROS_WARN_STREAM("Skip setting depth AE ROI because AE Reference Stream is color");
+      depth_roi_has_run = true;
+      return;
+    }
+    if (device_->isPropertySupported(OB_STRUCT_DEPTH_AE_ROI, OB_PERMISSION_READ_WRITE)) {
+      auto config = OBRegionOfInterest();
+      uint32_t data_size = sizeof(config);
+      device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
+                                 &data_size);
+      if (depth_ae_roi_left_ != -1) {
+        config.x0_left = (depth_ae_roi_left_ < 0) ? 0 : depth_ae_roi_left_;
+        config.x0_left =
+            (depth_ae_roi_left_ > width_[DEPTH] - 1) ? width_[DEPTH] - 1 : config.x0_left;
+      }
+      if (depth_ae_roi_top_ != -1) {
+        config.y0_top = (depth_ae_roi_top_ < 0) ? 0 : depth_ae_roi_top_;
+        config.y0_top =
+            (depth_ae_roi_top_ > height_[DEPTH] - 1) ? height_[DEPTH] - 1 : config.y0_top;
+      }
+      if (depth_ae_roi_right_ != -1) {
+        config.x1_right = (depth_ae_roi_right_ < 0) ? 0 : depth_ae_roi_right_;
+        config.x1_right =
+            (depth_ae_roi_right_ > width_[DEPTH] - 1) ? width_[DEPTH] - 1 : config.x1_right;
+      }
+      if (depth_ae_roi_bottom_ != -1) {
+        config.y1_bottom = (depth_ae_roi_bottom_ < 0) ? 0 : depth_ae_roi_bottom_;
+        config.y1_bottom =
+            (depth_ae_roi_bottom_ > height_[DEPTH] - 1) ? height_[DEPTH] - 1 : config.y1_bottom;
+      }
+      device_->setStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<const uint8_t*>(&config),
+                                 sizeof(config));
+      device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
+                                 &data_size);
+      ROS_INFO_STREAM("Set depth AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
+                                             << config.x1_right << ", " << config.y1_bottom);
+    }
+    depth_roi_has_run = true;
+  }
+
+  void OBCameraNode::setColorAutoExposureROI() {
+    static bool color_roi_has_run = false;
+    if (color_roi_has_run) {
+      return;
+    }
+    if (color_ae_roi_left_ == -1 && color_ae_roi_top_ == -1 && color_ae_roi_right_ == -1 &&
+        color_ae_roi_bottom_ == -1) {
+      color_roi_has_run = true;
+      return;
+    }
+    if (isGemini305SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "depth") {
+      ROS_WARN_STREAM("Skip setting color AE ROI because AE Reference Stream is depth");
+      color_roi_has_run = true;
+      return;
+    }
+    if (device_->isPropertySupported(OB_STRUCT_COLOR_AE_ROI, OB_PERMISSION_READ_WRITE)) {
+      auto config = OBRegionOfInterest();
+      uint32_t data_size = sizeof(config);
+      device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
+                                 &data_size);
+      if (color_ae_roi_left_ != -1) {
+        config.x0_left = (color_ae_roi_left_ < 0) ? 0 : color_ae_roi_left_;
+        config.x0_left =
+            (color_ae_roi_left_ > width_[COLOR] - 1) ? width_[COLOR] - 1 : config.x0_left;
+      }
+      if (color_ae_roi_top_ != -1) {
+        config.y0_top = (color_ae_roi_top_ < 0) ? 0 : color_ae_roi_top_;
+        config.y0_top =
+            (color_ae_roi_top_ > height_[COLOR] - 1) ? height_[COLOR] - 1 : config.y0_top;
+      }
+      if (color_ae_roi_right_ != -1) {
+        config.x1_right = (color_ae_roi_right_ < 0) ? 0 : color_ae_roi_right_;
+        config.x1_right =
+            (color_ae_roi_right_ > width_[COLOR] - 1) ? width_[COLOR] - 1 : config.x1_right;
+      }
+      if (color_ae_roi_bottom_ != -1) {
+        config.y1_bottom = (color_ae_roi_bottom_ < 0) ? 0 : color_ae_roi_bottom_;
+        config.y1_bottom =
+            (color_ae_roi_bottom_ > height_[COLOR] - 1) ? height_[COLOR] - 1 : config.y1_bottom;
+      }
+      device_->setStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<const uint8_t*>(&config),
+                                 sizeof(config));
+      device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
+                                 &data_size);
+      ROS_INFO_STREAM("Set color AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
+                                             << config.x1_right << ", " << config.y1_bottom);
+    }
+    color_roi_has_run = true;
+  }
+
+  void OBCameraNode::updateDepthFilterEnabledCache(const std::string& filter_name, bool enabled) {
+    const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
+    if (normalized_filter_name == "DecimationFilter") {
+      enable_decimation_filter_ = enabled;
+    } else if (normalized_filter_name == "HDRMerge") {
+      enable_hdr_merge_ = enabled;
+    } else if (normalized_filter_name == "SequenceIdFilter") {
+      enable_sequenced_filter_ = enabled;
+    } else if (normalized_filter_name == "ThresholdFilter") {
+      enable_threshold_filter_ = enabled;
+    } else if (normalized_filter_name == "SpatialAdvancedFilter") {
+      enable_spatial_filter_ = enabled;
+    } else if (normalized_filter_name == "TemporalFilter") {
+      enable_temporal_filter_ = enabled;
+    } else if (normalized_filter_name == "HoleFillingFilter") {
+      enable_hole_filling_filter_ = enabled;
+    } else if (normalized_filter_name == "SpatialFastFilter") {
+      enable_spatial_fast_filter_ = enabled;
+    } else if (normalized_filter_name == "SpatialModerateFilter") {
+      enable_spatial_moderate_filter_ = enabled;
+    } else if (normalized_filter_name == "EdgeNoiseRemovalFilter") {
+      enable_edge_noise_removal_filter_ = enabled;
+    } else if (normalized_filter_name == "FalsePositiveFilter") {
+      enable_false_positive_filter_ = enabled;
+    } else if (normalized_filter_name == "MgcNoiseRemovalFilter") {
+      enable_mgc_noise_removal_filter_ = enabled;
+    } else if (normalized_filter_name == "LutNoiseRemovalFilter") {
+      enable_lut_noise_removal_filter_ = enabled;
+    } else if (normalized_filter_name == "DispOutliersFilter") {
+      enable_disp_outliers_filter_ = enabled;
+    } else if (normalized_filter_name == "NoiseRemovalFilter") {
+      enable_noise_removal_filter_ = enabled;
+    } else if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
+      enable_hardware_noise_removal_filter_ = enabled;
+    }
+  }
+
+  bool OBCameraNode::applyNamedDepthFilterConfig(
+      const std::string& filter_name, bool enabled,
+      const std::vector<orbbec_camera::DepthFilterParam>& params, std::string& message) {
+    const auto normalized_filter_name = normalizeDepthFilterName(filter_name);
+    std::unordered_set<std::string> requested_param_names;
+    auto check_duplicate_param = [&requested_param_names, &message](const std::string& param_name) {
+      if (param_name.empty()) {
+        message = "Filter config param name is empty";
+        return false;
+      }
+      if (!requested_param_names.insert(param_name).second) {
+        message = "Duplicate filter config param '" + param_name + "'";
+        return false;
+      }
       return true;
     };
 
-    const auto normalized_request_filter_name = normalizeDepthFilterName(request.filter_name);
-    const bool is_noise_removal_filter = (normalized_request_filter_name == "NoiseRemovalFilter");
-    const bool is_hardware_noise_removal_filter =
-        (normalized_request_filter_name == "HardwareNoiseRemovalFilter");
-    const bool is_disp_outliers_filter = (normalized_request_filter_name == "DispOutliersFilter");
-    bool is_supported_by_property = false;
-    if (is_noise_removal_filter) {
-      is_supported_by_property =
+    if (normalized_filter_name == "NoiseRemovalFilter") {
+      const bool supported =
           device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE) ||
           device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE) ||
           device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE);
-    } else if (is_hardware_noise_removal_filter) {
-      is_supported_by_property =
+      if (!supported) {
+        message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+        return false;
+      }
+
+      bool has_min_diff = false;
+      bool has_max_size = false;
+      int min_diff = 0;
+      int max_size = 0;
+      for (const auto& param : params) {
+        const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
+        if (!check_duplicate_param(param_name)) {
+          return false;
+        }
+
+        double parsed_value = 0.0;
+        if (!parseFilterConfigDouble(param.value, parsed_value, message)) {
+          return false;
+        }
+        if (std::floor(parsed_value) != parsed_value) {
+          message = "Filter config '" + param_name + "' expects an integer value";
+          return false;
+        }
+
+        if (param_name == "min_diff") {
+          if (!device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
+            message = "Filter config 'min_diff' is not supported by this device";
+            return false;
+          }
+          has_min_diff = true;
+          min_diff = static_cast<int>(parsed_value);
+        } else if (param_name == "max_size") {
+          if (!device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT,
+                                            OB_PERMISSION_WRITE)) {
+            message = "Filter config 'max_size' is not supported by this device";
+            return false;
+          }
+          has_max_size = true;
+          max_size = static_cast<int>(parsed_value);
+        } else {
+          message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
+          return false;
+        }
+      }
+
+      if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, enabled);
+      }
+      if (has_min_diff) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, min_diff);
+        noise_removal_filter_min_diff_ = min_diff;
+      }
+      if (has_max_size) {
+        device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, max_size);
+        noise_removal_filter_max_size_ = max_size;
+      }
+      updateDepthFilterEnabledCache(normalized_filter_name, enabled);
+      return true;
+    }
+
+    if (normalized_filter_name == "HardwareNoiseRemovalFilter") {
+      const bool supported =
           device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
                                        OB_PERMISSION_READ_WRITE) ||
           device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
                                        OB_PERMISSION_READ_WRITE);
-    } else if (is_disp_outliers_filter) {
-      is_supported_by_property =
+      if (!supported) {
+        message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+        return false;
+      }
+
+      bool has_threshold = false;
+      double threshold = 0.0;
+      for (const auto& param : params) {
+        const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
+        if (!check_duplicate_param(param_name)) {
+          return false;
+        }
+        if (param_name != "threshold") {
+          message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
+          return false;
+        }
+        if (!device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                          OB_PERMISSION_READ_WRITE)) {
+          message = "Filter config 'threshold' is not supported by this device";
+          return false;
+        }
+        if (!parseFilterConfigDouble(param.value, threshold, message)) {
+          return false;
+        }
+        has_threshold = true;
+      }
+
+      if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                                       OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL, enabled);
+      }
+      if (has_threshold) {
+        device_->setFloatProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                  static_cast<float>(threshold));
+        hardware_noise_removal_filter_threshold_ = static_cast<float>(threshold);
+      }
+      updateDepthFilterEnabledCache(normalized_filter_name, enabled);
+      return true;
+    }
+
+    if (normalized_filter_name == "DispOutliersFilter") {
+      const bool supported =
           device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
                                        OB_PERMISSION_READ_WRITE) ||
           device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
                                        OB_PERMISSION_READ_WRITE);
+      if (!supported) {
+        message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+        return false;
+      }
+
+      bool has_search_mode = false;
+      int search_mode = 0;
+      for (const auto& param : params) {
+        const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
+        if (!check_duplicate_param(param_name)) {
+          return false;
+        }
+        if (param_name != "search_mode") {
+          message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
+          return false;
+        }
+        if (!device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                                          OB_PERMISSION_READ_WRITE)) {
+          message = "Filter config 'search_mode' is not supported by this device";
+          return false;
+        }
+
+        if (!parseDispOutliersSearchMode(param.value, search_mode, message)) {
+          return false;
+        }
+        has_search_mode = true;
+      }
+
+      if (device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
+                                       OB_PERMISSION_READ_WRITE)) {
+        device_->setBoolProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL, enabled);
+      }
+      if (has_search_mode) {
+        device_->setIntProperty(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT, search_mode);
+        disp_outliers_filter_search_mode_ = search_mode;
+      }
+      updateDepthFilterEnabledCache(normalized_filter_name, enabled);
+      return true;
     }
 
-    ROS_INFO_STREAM("filter_name: " << request.filter_name << "  filter_enable: "
-                                    << (request.filter_enable ? "true" : "false"));
-    const bool has_positional_params = !request.filter_param.empty();
-    const bool has_named_params = !request.filter_config.empty();
-    if (has_positional_params && has_named_params) {
-      return fail("filter_param and filter_config cannot be used at the same time");
-    }
-    if (is_disp_outliers_filter && has_positional_params) {
-      return fail("DispOutliersFilter search_mode expects filter_config value FULL or OFFSET_80");
+    std::unique_lock<std::mutex> depth_filter_lock(depth_filter_mutex_);
+    auto is_same_filter = [&normalized_filter_name](const std::shared_ptr<ob::Filter>& filter) {
+      if (!filter) {
+        return false;
+      }
+      return normalizeDepthFilterName(filter->getName()) == normalized_filter_name ||
+             normalizeDepthFilterName(filter->type()) == normalized_filter_name;
+    };
+
+    auto first_match_it =
+        std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
+                     [&is_same_filter](const auto& filter) { return is_same_filter(filter); });
+    if (first_match_it == depth_filter_list_.end() || !(*first_match_it)) {
+      message = "Filter '" + normalized_filter_name + "' is not supported by this device";
+      return false;
     }
 
-    if (has_named_params || !has_positional_params) {
-      std::string message;
-      if (!applyNamedDepthFilterConfig(normalized_request_filter_name, request.filter_enable,
-                                       request.filter_config, message)) {
-        return fail(message);
+    const auto& existing_filter = *first_match_it;
+    std::vector<OBFilterConfigSchemaItem> schema_vec;
+    std::unordered_map<std::string, OBFilterConfigSchemaItem> schema_by_name;
+    if (!params.empty()) {
+      schema_vec = existing_filter->getConfigSchemaVec();
+      for (const auto& schema : schema_vec) {
+        if (schema.name == nullptr || schema.name[0] == '\0') {
+          continue;
+        }
+        schema_by_name.emplace(schema.name, schema);
+      }
+    }
+
+    std::vector<std::pair<std::string, double>> parsed_params;
+    parsed_params.reserve(params.size());
+    for (const auto& param : params) {
+      const auto param_name = getDepthFilterConfigParamName(normalized_filter_name, param.name);
+      if (!check_duplicate_param(param_name)) {
+        return false;
+      }
+
+      const auto schema_it = schema_by_name.find(param_name);
+      if (schema_it == schema_by_name.end()) {
+        message = "Unknown filter config '" + param.name + "' for " + normalized_filter_name;
+        return false;
+      }
+
+      double parsed_value = 0.0;
+      if (!parseFilterConfigValue(schema_it->second, param.value, parsed_value, message)) {
+        return false;
+      }
+      parsed_params.emplace_back(param_name, parsed_value);
+    }
+
+    existing_filter->enable(enabled);
+    for (const auto& parsed_param : parsed_params) {
+      existing_filter->setConfigValue(parsed_param.first, parsed_param.second);
+      ROS_INFO_STREAM("Set " << normalized_filter_name << " config " << parsed_param.first << " to "
+                             << parsed_param.second);
+    }
+    updateDepthFilterEnabledCache(normalized_filter_name, enabled);
+    return true;
+  }
+
+  bool OBCameraNode::applyEnhancedDepthFilterConfig(
+      bool enabled, const std::vector<float>& positional_params,
+      const std::vector<orbbec_camera::DepthFilterParam>& named_params, std::string& message) {
+    if (positional_params.size() > 1) {
+      message = "EnhancedDepthFilter only supports one positional parameter";
+      return false;
+    }
+    if (!positional_params.empty() && !named_params.empty()) {
+      message = "filter_param and filter_config cannot be used at the same time";
+      return false;
+    }
+
+    bool has_confidence_threshold = false;
+    int confidence_threshold = enhanced_depth_confidence_threshold_;
+    auto parse_confidence_threshold = [&message](double value, int& threshold) {
+      if (std::floor(value) != value || value < 0.0 || value > 255.0) {
+        message =
+            "EnhancedDepthFilter confidence_threshold expects an integer value in range 0 - 255";
+        return false;
+      }
+      threshold = static_cast<int>(value);
+      return true;
+    };
+    if (!positional_params.empty()) {
+      if (!parse_confidence_threshold(positional_params[0], confidence_threshold)) {
+        return false;
+      }
+      has_confidence_threshold = true;
+    }
+    for (const auto& param : named_params) {
+      if (param.name != "confidence_threshold") {
+        message = "Unknown filter config '" + param.name + "' for EnhancedDepthFilter";
+        return false;
+      }
+      double parsed_value = 0.0;
+      if (!parseFilterConfigDouble(param.value, parsed_value, message)) {
+        return false;
+      }
+      if (!parse_confidence_threshold(parsed_value, confidence_threshold)) {
+        return false;
+      }
+      has_confidence_threshold = true;
+    }
+
+    std::string validate_message;
+    if (enabled && !validateEnhancedDepthFilterConfig(validate_message)) {
+      message = validate_message;
+      return false;
+    }
+
+    const int previous_threshold = enhanced_depth_confidence_threshold_;
+    if (has_confidence_threshold) {
+      enhanced_depth_confidence_threshold_ = confidence_threshold;
+    }
+
+    if (enabled) {
+      if (!ensureEnhancedDepthFilter(message)) {
+        enhanced_depth_confidence_threshold_ = previous_threshold;
+        return false;
+      }
+    } else if (has_confidence_threshold && enhanced_depth_filter_) {
+      try {
+        applyEnhancedDepthConfidenceThreshold();
+      } catch (const std::exception& e) {
+        enhanced_depth_confidence_threshold_ = previous_threshold;
+        message = e.what();
+        return false;
+      }
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(enhanced_depth_filter_mutex_);
+      enable_enhanced_depth_.store(enabled);
+    }
+    filter_status_["EnhancedDepthFilter"] = enabled;
+    publishDepthFiltersStatus();
+    return true;
+  }
+
+  bool OBCameraNode::setFilterCallback(SetFilterRequest & request, SetFilterResponse & response) {
+    try {
+      response.success = false;
+      response.message.clear();
+      auto fail = [&response](const std::string& msg) {
+        response.success = false;
+        response.message = msg;
+        return true;
+      };
+
+      const auto normalized_request_filter_name = normalizeDepthFilterName(request.filter_name);
+      const bool is_noise_removal_filter = (normalized_request_filter_name == "NoiseRemovalFilter");
+      const bool is_hardware_noise_removal_filter =
+          (normalized_request_filter_name == "HardwareNoiseRemovalFilter");
+      const bool is_disp_outliers_filter = (normalized_request_filter_name == "DispOutliersFilter");
+      bool is_supported_by_property = false;
+      if (is_noise_removal_filter) {
+        is_supported_by_property =
+            device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL,
+                                         OB_PERMISSION_READ_WRITE) ||
+            device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE) ||
+            device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, OB_PERMISSION_WRITE);
+      } else if (is_hardware_noise_removal_filter) {
+        is_supported_by_property =
+            device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                                         OB_PERMISSION_READ_WRITE) ||
+            device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                         OB_PERMISSION_READ_WRITE);
+      } else if (is_disp_outliers_filter) {
+        is_supported_by_property =
+            device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_BOOL,
+                                         OB_PERMISSION_READ_WRITE) ||
+            device_->isPropertySupported(OB_PROP_DEPTH_OUTLIERS_FILTER_SEARCH_MODE_INT,
+                                         OB_PERMISSION_READ_WRITE);
+      }
+
+      ROS_INFO_STREAM("filter_name: " << request.filter_name << "  filter_enable: "
+                                      << (request.filter_enable ? "true" : "false"));
+      const bool has_positional_params = !request.filter_param.empty();
+      const bool has_named_params = !request.filter_config.empty();
+      if (has_positional_params && has_named_params) {
+        return fail("filter_param and filter_config cannot be used at the same time");
+      }
+      if (is_disp_outliers_filter && has_positional_params) {
+        return fail("DispOutliersFilter search_mode expects filter_config value FULL or OFFSET_80");
+      }
+
+      if (normalized_request_filter_name == "EnhancedDepthFilter") {
+        std::string message;
+        if (!applyEnhancedDepthFilterConfig(request.filter_enable, request.filter_param,
+                                            request.filter_config, message)) {
+          return fail(message);
+        }
+        response.success = true;
+        return true;
+      }
+
+      if (has_named_params || !has_positional_params) {
+        std::string message;
+        if (!applyNamedDepthFilterConfig(normalized_request_filter_name, request.filter_enable,
+                                         request.filter_config, message)) {
+          return fail(message);
+        }
+
+        filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
+        publishDepthFiltersStatus();
+
+        response.success = true;
+        return true;
+      }
+
+      if (is_noise_removal_filter || is_hardware_noise_removal_filter || is_disp_outliers_filter) {
+        if (!is_supported_by_property) {
+          return fail("Filter '" + normalized_request_filter_name +
+                      "' is not supported by this device");
+        }
+        if (is_noise_removal_filter) {
+          if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL,
+                                           OB_PERMISSION_READ_WRITE)) {
+            device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, request.filter_enable);
+            ROS_INFO_STREAM("enable_noise_removal_filter:" << request.filter_enable);
+          }
+          if (request.filter_param.size() > 1) {
+            if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
+              auto default_noise_removal_filter_min_diff =
+                  device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
+              ROS_INFO_STREAM("default_noise_removal_filter_min_diff: "
+                              << default_noise_removal_filter_min_diff);
+              device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, request.filter_param[0]);
+              auto new_noise_removal_filter_min_diff =
+                  device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
+              ROS_INFO_STREAM(
+                  "after set noise_removal_filter_min_diff: " << new_noise_removal_filter_min_diff);
+              noise_removal_filter_min_diff_ = request.filter_param[0];
+            }
+            if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT,
+                                             OB_PERMISSION_WRITE)) {
+              auto default_noise_removal_filter_max_size =
+                  device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+              ROS_INFO_STREAM("default_noise_removal_filter_max_size: "
+                              << default_noise_removal_filter_max_size);
+              device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, request.filter_param[1]);
+              auto new_noise_removal_filter_max_size =
+                  device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
+              ROS_INFO_STREAM(
+                  "after set noise_removal_filter_max_size: " << new_noise_removal_filter_max_size);
+              noise_removal_filter_max_size_ = request.filter_param[1];
+            }
+          }
+          enable_noise_removal_filter_ = request.filter_enable;
+        } else if (is_hardware_noise_removal_filter) {
+          if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                                           OB_PERMISSION_READ_WRITE)) {
+            device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
+                                     request.filter_enable);
+            ROS_INFO_STREAM("Setting hardware_noise_removal_filter:" << request.filter_enable);
+            if (request.filter_param.size() > 0 &&
+                device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                             OB_PERMISSION_READ_WRITE)) {
+              if (request.filter_enable) {
+                device_->setFloatProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
+                                          request.filter_param[0]);
+                ROS_INFO_STREAM(
+                    "Setting hardware_noise_removal_filter_threshold :" << request.filter_param[0]);
+                hardware_noise_removal_filter_threshold_ = request.filter_param[0];
+              }
+            } else {
+              return fail(
+                  "The filter switch setting is successful, but the filter parameter setting "
+                  "fails");
+            }
+          }
+          enable_hardware_noise_removal_filter_ = request.filter_enable;
+        }
+      } else {
+        std::unique_lock<std::mutex> depth_filter_lock(depth_filter_mutex_);
+        auto is_same_filter = [&normalized_request_filter_name](
+                                  const std::shared_ptr<ob::Filter>& filter) {
+          if (!filter) {
+            return false;
+          }
+          return normalizeDepthFilterName(filter->getName()) == normalized_request_filter_name ||
+                 normalizeDepthFilterName(filter->type()) == normalized_request_filter_name;
+        };
+
+        auto first_match_it =
+            std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
+                         [&is_same_filter](const auto& filter) { return is_same_filter(filter); });
+        if (first_match_it == depth_filter_list_.end()) {
+          return fail("Filter '" + normalized_request_filter_name +
+                      "' is not supported by this device");
+        }
+        const auto& existing_filter = *first_match_it;
+        if (!existing_filter) {
+          return fail("Filter '" + normalized_request_filter_name +
+                      "' is not supported by this device");
+        }
+
+        if (normalized_request_filter_name == "DecimationFilter") {
+          auto decimation_filter = existing_filter->as<ob::DecimationFilter>();
+          decimation_filter->enable(request.filter_enable);
+          if (request.filter_param.size() > 0) {
+            auto range = decimation_filter->getScaleRange();
+            auto decimation_filter_scale = request.filter_param[0];
+            if (decimation_filter_scale <= range.max && decimation_filter_scale >= range.min) {
+              ROS_INFO_STREAM("Set decimation filter scale value to " << decimation_filter_scale);
+              decimation_filter->setScaleValue(decimation_filter_scale);
+            }
+            if (decimation_filter_scale != -1 &&
+                (decimation_filter_scale < range.min || decimation_filter_scale > range.max)) {
+              ROS_ERROR_STREAM("Decimation filter scale value is out of range "
+                               << range.min << " - " << range.max);
+              return fail("Decimation filter scale value is out of range");
+            }
+            if (decimation_filter_scale <= range.max && decimation_filter_scale >= range.min) {
+              decimation_filter_scale_range_ = decimation_filter_scale;
+            }
+          } else {
+            return fail(
+                "The filter switch setting is successful, but the filter parameter setting fails");
+          }
+          enable_decimation_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "HDRMerge") {
+          auto hdr_merge_filter = existing_filter->as<ob::HdrMerge>();
+          hdr_merge_filter->enable(request.filter_enable);
+          if (request.filter_param.size() > 3) {
+            auto config = OBHdrConfig();
+            config.enable = true;
+            config.exposure_1 = request.filter_param[0];
+            config.gain_1 = request.filter_param[1];
+            config.exposure_2 = request.filter_param[2];
+            config.gain_2 = request.filter_param[3];
+            device_->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG,
+                                       reinterpret_cast<const uint8_t*>(&config), sizeof(config));
+            ROS_INFO_STREAM("Set HDR merge filter params: "
+                            << "\nexposure_1: " << request.filter_param[0]
+                            << "\ngain_1: " << request.filter_param[1] << "\nexposure_2: "
+                            << request.filter_param[2] << "\ngain_2: " << request.filter_param[3]);
+            hdr_merge_exposure_1_ = request.filter_param[0];
+            hdr_merge_gain_1_ = request.filter_param[1];
+            hdr_merge_exposure_2_ = request.filter_param[2];
+            hdr_merge_gain_2_ = request.filter_param[3];
+          } else {
+            return fail(
+                "The filter switch setting is successful, but the filter parameter setting fails");
+          }
+          enable_hdr_merge_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "SequenceIdFilter") {
+          auto sequenced_filter = existing_filter->as<ob::SequenceIdFilter>();
+          sequenced_filter->enable(request.filter_enable);
+          if (request.filter_param.size() > 0) {
+            sequenced_filter->selectSequenceId(request.filter_param[0]);
+            ROS_INFO_STREAM("Set sequenced filter selectSequenceId value to "
+                            << request.filter_param[0]);
+            sequence_id_filter_id_ = request.filter_param[0];
+          } else {
+            return fail(
+                "The filter switch setting is successful, but the filter parameter setting fails");
+          }
+          enable_sequenced_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "ThresholdFilter") {
+          auto threshold_filter = existing_filter->as<ob::ThresholdFilter>();
+          threshold_filter->enable(request.filter_enable);
+          if (request.filter_param.size() > 1) {
+            auto threshold_filter_min = request.filter_param[0];
+            auto threshold_filter_max = request.filter_param[1];
+            threshold_filter->setValueRange(threshold_filter_min, threshold_filter_max);
+            ROS_INFO_STREAM("Set threshold filter value range to " << threshold_filter_min << " - "
+                                                                   << threshold_filter_max);
+            threshold_filter_min_ = threshold_filter_min;
+            threshold_filter_max_ = threshold_filter_max;
+          } else {
+            return fail(
+                "The filter switch setting is successful, but the filter parameter setting fails");
+          }
+          enable_threshold_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "SpatialAdvancedFilter") {
+          auto spatial_filter = existing_filter->as<ob::SpatialAdvancedFilter>();
+          spatial_filter->enable(request.filter_enable);
+          if (request.filter_param.size() > 3) {
+            OBSpatialAdvancedFilterParams params{};
+            params.alpha = request.filter_param[0];
+            params.disp_diff = request.filter_param[1];
+            params.magnitude = request.filter_param[2];
+            params.radius = request.filter_param[3];
+            spatial_filter->setFilterParams(params);
+            ROS_INFO_STREAM("Set SpatialFilter params: "
+                            << "\nalpha:" << params.alpha << "\ndisp_diff:" << params.disp_diff
+                            << "\nmagnitude:" << static_cast<int>(params.magnitude)
+                            << "\nradius:" << params.radius);
+            spatial_filter_alpha_ = params.alpha;
+            spatial_filter_diff_threshold_ = params.disp_diff;
+            spatial_filter_magnitude_ = params.magnitude;
+            spatial_filter_radius_ = params.radius;
+          } else {
+            return fail(
+                "The filter switch setting is successful, but the filter parameter setting fails");
+          }
+          enable_spatial_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "TemporalFilter") {
+          auto temporal_filter = existing_filter->as<ob::TemporalFilter>();
+          temporal_filter->enable(request.filter_enable);
+          if (request.filter_param.size() > 1) {
+            temporal_filter->setDiffScale(request.filter_param[0]);
+            temporal_filter->setWeight(request.filter_param[1]);
+            ROS_INFO_STREAM("Set temporal filter value to " << request.filter_param[0] << " - "
+                                                            << request.filter_param[1]);
+            temporal_filter_diff_threshold_ = request.filter_param[0];
+            temporal_filter_weight_ = request.filter_param[1];
+          } else {
+            return fail(
+                "The filter switch setting is successful, but the filter parameter setting fails");
+          }
+          enable_temporal_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "SpatialFastFilter") {
+          auto spatial_fast_filter = existing_filter->as<ob::SpatialFastFilter>();
+          spatial_fast_filter->enable(request.filter_enable);
+          if (request.filter_param.size() > 0) {
+            OBSpatialFastFilterParams params{};
+            params.radius = request.filter_param[0];
+            spatial_fast_filter->setFilterParams(params);
+            ROS_INFO_STREAM("Set SpatialFastFilter radius to " << static_cast<int>(params.radius));
+            spatial_fast_filter_radius_ = params.radius;
+          } else {
+            return fail(
+                "The filter switch setting is successful, but the filter parameter setting fails");
+          }
+          enable_spatial_fast_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "SpatialModerateFilter") {
+          auto spatial_moderate_filter = existing_filter->as<ob::SpatialModerateFilter>();
+          spatial_moderate_filter->enable(request.filter_enable);
+          if (request.filter_param.size() > 2) {
+            OBSpatialModerateFilterParams params{};
+            params.disp_diff = request.filter_param[0];
+            params.magnitude = request.filter_param[1];
+            params.radius = request.filter_param[2];
+            spatial_moderate_filter->setFilterParams(params);
+            ROS_INFO_STREAM("Set SpatialModerateFilter params: "
+                            << "\ndisp_diff:" << params.disp_diff
+                            << "\nmagnitude:" << static_cast<int>(params.magnitude)
+                            << "\nradius:" << static_cast<int>(params.radius));
+            spatial_moderate_filter_diff_threshold_ = params.disp_diff;
+            spatial_moderate_filter_magnitude_ = params.magnitude;
+            spatial_moderate_filter_radius_ = params.radius;
+          } else {
+            return fail(
+                "The filter switch setting is successful, but the filter parameter setting fails");
+          }
+          enable_spatial_moderate_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "FalsePositiveFilter") {
+          auto false_positive_filter = existing_filter->as<ob::FalsePositiveFilter>();
+          false_positive_filter->enable(request.filter_enable);
+          enable_false_positive_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "MgcNoiseRemovalFilter") {
+          auto mgc_noise_filter = existing_filter->as<ob::MgcNoiseRemovalFilter>();
+          mgc_noise_filter->enable(request.filter_enable);
+          enable_mgc_noise_removal_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "LutNoiseRemovalFilter") {
+          auto lut_noise_filter = existing_filter->as<ob::LutNoiseRemovalFilter>();
+          lut_noise_filter->enable(request.filter_enable);
+          enable_lut_noise_removal_filter_ = request.filter_enable;
+        } else if (normalized_request_filter_name == "EdgeNoiseRemovalFilter") {
+          existing_filter->enable(request.filter_enable);
+          enable_edge_noise_removal_filter_ = request.filter_enable;
+        } else {
+          return fail(normalized_request_filter_name + " cannot be set");
+        }
       }
 
       filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
@@ -4445,285 +5111,21 @@ bool OBCameraNode::setFilterCallback(SetFilterRequest& request, SetFilterRespons
 
       response.success = true;
       return true;
+    } catch (const ob::Error& e) {
+      response.success = false;
+      response.message = "Failed to set filter: " + orbbec_camera::formatObErrorWithStatus(e);
+      ROS_ERROR_STREAM("Failed to set filter: " << orbbec_camera::formatObErrorWithStatus(e));
+      return false;
+    } catch (const std::exception& e) {
+      response.success = false;
+      response.message = std::string("Failed to set filter: ") + e.what();
+      ROS_ERROR_STREAM("Failed to set filter: " << e.what());
+      return false;
+    } catch (...) {
+      response.success = false;
+      response.message = "unknown error";
+      ROS_ERROR_STREAM("unknown error");
+      return false;
     }
-
-    if (is_noise_removal_filter || is_hardware_noise_removal_filter || is_disp_outliers_filter) {
-      if (!is_supported_by_property) {
-        return fail("Filter '" + normalized_request_filter_name +
-                    "' is not supported by this device");
-      }
-      if (is_noise_removal_filter) {
-        if (device_->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL,
-                                         OB_PERMISSION_READ_WRITE)) {
-          device_->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, request.filter_enable);
-          ROS_INFO_STREAM("enable_noise_removal_filter:" << request.filter_enable);
-        }
-        if (request.filter_param.size() > 1) {
-          if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_DIFF_INT, OB_PERMISSION_WRITE)) {
-            auto default_noise_removal_filter_min_diff =
-                device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-            ROS_INFO_STREAM(
-                "default_noise_removal_filter_min_diff: " << default_noise_removal_filter_min_diff);
-            device_->setIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT, request.filter_param[0]);
-            auto new_noise_removal_filter_min_diff =
-                device_->getIntProperty(OB_PROP_DEPTH_MAX_DIFF_INT);
-            ROS_INFO_STREAM(
-                "after set noise_removal_filter_min_diff: " << new_noise_removal_filter_min_diff);
-            noise_removal_filter_min_diff_ = request.filter_param[0];
-          }
-          if (device_->isPropertySupported(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT,
-                                           OB_PERMISSION_WRITE)) {
-            auto default_noise_removal_filter_max_size =
-                device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-            ROS_INFO_STREAM(
-                "default_noise_removal_filter_max_size: " << default_noise_removal_filter_max_size);
-            device_->setIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, request.filter_param[1]);
-            auto new_noise_removal_filter_max_size =
-                device_->getIntProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT);
-            ROS_INFO_STREAM(
-                "after set noise_removal_filter_max_size: " << new_noise_removal_filter_max_size);
-            noise_removal_filter_max_size_ = request.filter_param[1];
-          }
-        }
-        enable_noise_removal_filter_ = request.filter_enable;
-      } else if (is_hardware_noise_removal_filter) {
-        if (device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
-                                         OB_PERMISSION_READ_WRITE)) {
-          device_->setBoolProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_ENABLE_BOOL,
-                                   request.filter_enable);
-          ROS_INFO_STREAM("Setting hardware_noise_removal_filter:" << request.filter_enable);
-          if (request.filter_param.size() > 0 &&
-              device_->isPropertySupported(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
-                                           OB_PERMISSION_READ_WRITE)) {
-            if (request.filter_enable) {
-              device_->setFloatProperty(OB_PROP_HW_NOISE_REMOVE_FILTER_THRESHOLD_FLOAT,
-                                        request.filter_param[0]);
-              ROS_INFO_STREAM(
-                  "Setting hardware_noise_removal_filter_threshold :" << request.filter_param[0]);
-              hardware_noise_removal_filter_threshold_ = request.filter_param[0];
-            }
-          } else {
-            return fail(
-                "The filter switch setting is successful, but the filter parameter setting fails");
-          }
-        }
-        enable_hardware_noise_removal_filter_ = request.filter_enable;
-      }
-    } else {
-      std::unique_lock<std::mutex> depth_filter_lock(depth_filter_mutex_);
-      auto is_same_filter =
-          [&normalized_request_filter_name](const std::shared_ptr<ob::Filter>& filter) {
-            if (!filter) {
-              return false;
-            }
-            return normalizeDepthFilterName(filter->getName()) == normalized_request_filter_name ||
-                   normalizeDepthFilterName(filter->type()) == normalized_request_filter_name;
-          };
-
-      auto first_match_it =
-          std::find_if(depth_filter_list_.begin(), depth_filter_list_.end(),
-                       [&is_same_filter](const auto& filter) { return is_same_filter(filter); });
-      if (first_match_it == depth_filter_list_.end()) {
-        return fail("Filter '" + normalized_request_filter_name +
-                    "' is not supported by this device");
-      }
-      const auto& existing_filter = *first_match_it;
-      if (!existing_filter) {
-        return fail("Filter '" + normalized_request_filter_name +
-                    "' is not supported by this device");
-      }
-
-      if (normalized_request_filter_name == "DecimationFilter") {
-        auto decimation_filter = existing_filter->as<ob::DecimationFilter>();
-        decimation_filter->enable(request.filter_enable);
-        if (request.filter_param.size() > 0) {
-          auto range = decimation_filter->getScaleRange();
-          auto decimation_filter_scale = request.filter_param[0];
-          if (decimation_filter_scale <= range.max && decimation_filter_scale >= range.min) {
-            ROS_INFO_STREAM("Set decimation filter scale value to " << decimation_filter_scale);
-            decimation_filter->setScaleValue(decimation_filter_scale);
-          }
-          if (decimation_filter_scale != -1 &&
-              (decimation_filter_scale < range.min || decimation_filter_scale > range.max)) {
-            ROS_ERROR_STREAM("Decimation filter scale value is out of range " << range.min << " - "
-                                                                              << range.max);
-            return fail("Decimation filter scale value is out of range");
-          }
-          if (decimation_filter_scale <= range.max && decimation_filter_scale >= range.min) {
-            decimation_filter_scale_range_ = decimation_filter_scale;
-          }
-        } else {
-          return fail(
-              "The filter switch setting is successful, but the filter parameter setting fails");
-        }
-        enable_decimation_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "HDRMerge") {
-        auto hdr_merge_filter = existing_filter->as<ob::HdrMerge>();
-        hdr_merge_filter->enable(request.filter_enable);
-        if (request.filter_param.size() > 3) {
-          auto config = OBHdrConfig();
-          config.enable = true;
-          config.exposure_1 = request.filter_param[0];
-          config.gain_1 = request.filter_param[1];
-          config.exposure_2 = request.filter_param[2];
-          config.gain_2 = request.filter_param[3];
-          device_->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG,
-                                     reinterpret_cast<const uint8_t*>(&config), sizeof(config));
-          ROS_INFO_STREAM("Set HDR merge filter params: "
-                          << "\nexposure_1: " << request.filter_param[0] << "\ngain_1: "
-                          << request.filter_param[1] << "\nexposure_2: " << request.filter_param[2]
-                          << "\ngain_2: " << request.filter_param[3]);
-          hdr_merge_exposure_1_ = request.filter_param[0];
-          hdr_merge_gain_1_ = request.filter_param[1];
-          hdr_merge_exposure_2_ = request.filter_param[2];
-          hdr_merge_gain_2_ = request.filter_param[3];
-        } else {
-          return fail(
-              "The filter switch setting is successful, but the filter parameter setting fails");
-        }
-        enable_hdr_merge_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "SequenceIdFilter") {
-        auto sequenced_filter = existing_filter->as<ob::SequenceIdFilter>();
-        sequenced_filter->enable(request.filter_enable);
-        if (request.filter_param.size() > 0) {
-          sequenced_filter->selectSequenceId(request.filter_param[0]);
-          ROS_INFO_STREAM("Set sequenced filter selectSequenceId value to "
-                          << request.filter_param[0]);
-          sequence_id_filter_id_ = request.filter_param[0];
-        } else {
-          return fail(
-              "The filter switch setting is successful, but the filter parameter setting fails");
-        }
-        enable_sequenced_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "ThresholdFilter") {
-        auto threshold_filter = existing_filter->as<ob::ThresholdFilter>();
-        threshold_filter->enable(request.filter_enable);
-        if (request.filter_param.size() > 1) {
-          auto threshold_filter_min = request.filter_param[0];
-          auto threshold_filter_max = request.filter_param[1];
-          threshold_filter->setValueRange(threshold_filter_min, threshold_filter_max);
-          ROS_INFO_STREAM("Set threshold filter value range to " << threshold_filter_min << " - "
-                                                                 << threshold_filter_max);
-          threshold_filter_min_ = threshold_filter_min;
-          threshold_filter_max_ = threshold_filter_max;
-        } else {
-          return fail(
-              "The filter switch setting is successful, but the filter parameter setting fails");
-        }
-        enable_threshold_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "SpatialAdvancedFilter") {
-        auto spatial_filter = existing_filter->as<ob::SpatialAdvancedFilter>();
-        spatial_filter->enable(request.filter_enable);
-        if (request.filter_param.size() > 3) {
-          OBSpatialAdvancedFilterParams params{};
-          params.alpha = request.filter_param[0];
-          params.disp_diff = request.filter_param[1];
-          params.magnitude = request.filter_param[2];
-          params.radius = request.filter_param[3];
-          spatial_filter->setFilterParams(params);
-          ROS_INFO_STREAM("Set SpatialFilter params: "
-                          << "\nalpha:" << params.alpha << "\ndisp_diff:" << params.disp_diff
-                          << "\nmagnitude:" << static_cast<int>(params.magnitude)
-                          << "\nradius:" << params.radius);
-          spatial_filter_alpha_ = params.alpha;
-          spatial_filter_diff_threshold_ = params.disp_diff;
-          spatial_filter_magnitude_ = params.magnitude;
-          spatial_filter_radius_ = params.radius;
-        } else {
-          return fail(
-              "The filter switch setting is successful, but the filter parameter setting fails");
-        }
-        enable_spatial_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "TemporalFilter") {
-        auto temporal_filter = existing_filter->as<ob::TemporalFilter>();
-        temporal_filter->enable(request.filter_enable);
-        if (request.filter_param.size() > 1) {
-          temporal_filter->setDiffScale(request.filter_param[0]);
-          temporal_filter->setWeight(request.filter_param[1]);
-          ROS_INFO_STREAM("Set temporal filter value to " << request.filter_param[0] << " - "
-                                                          << request.filter_param[1]);
-          temporal_filter_diff_threshold_ = request.filter_param[0];
-          temporal_filter_weight_ = request.filter_param[1];
-        } else {
-          return fail(
-              "The filter switch setting is successful, but the filter parameter setting fails");
-        }
-        enable_temporal_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "SpatialFastFilter") {
-        auto spatial_fast_filter = existing_filter->as<ob::SpatialFastFilter>();
-        spatial_fast_filter->enable(request.filter_enable);
-        if (request.filter_param.size() > 0) {
-          OBSpatialFastFilterParams params{};
-          params.radius = request.filter_param[0];
-          spatial_fast_filter->setFilterParams(params);
-          ROS_INFO_STREAM("Set SpatialFastFilter radius to " << static_cast<int>(params.radius));
-          spatial_fast_filter_radius_ = params.radius;
-        } else {
-          return fail(
-              "The filter switch setting is successful, but the filter parameter setting fails");
-        }
-        enable_spatial_fast_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "SpatialModerateFilter") {
-        auto spatial_moderate_filter = existing_filter->as<ob::SpatialModerateFilter>();
-        spatial_moderate_filter->enable(request.filter_enable);
-        if (request.filter_param.size() > 2) {
-          OBSpatialModerateFilterParams params{};
-          params.disp_diff = request.filter_param[0];
-          params.magnitude = request.filter_param[1];
-          params.radius = request.filter_param[2];
-          spatial_moderate_filter->setFilterParams(params);
-          ROS_INFO_STREAM("Set SpatialModerateFilter params: "
-                          << "\ndisp_diff:" << params.disp_diff
-                          << "\nmagnitude:" << static_cast<int>(params.magnitude)
-                          << "\nradius:" << static_cast<int>(params.radius));
-          spatial_moderate_filter_diff_threshold_ = params.disp_diff;
-          spatial_moderate_filter_magnitude_ = params.magnitude;
-          spatial_moderate_filter_radius_ = params.radius;
-        } else {
-          return fail(
-              "The filter switch setting is successful, but the filter parameter setting fails");
-        }
-        enable_spatial_moderate_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "FalsePositiveFilter") {
-        auto false_positive_filter = existing_filter->as<ob::FalsePositiveFilter>();
-        false_positive_filter->enable(request.filter_enable);
-        enable_false_positive_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "MgcNoiseRemovalFilter") {
-        auto mgc_noise_filter = existing_filter->as<ob::MgcNoiseRemovalFilter>();
-        mgc_noise_filter->enable(request.filter_enable);
-        enable_mgc_noise_removal_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "LutNoiseRemovalFilter") {
-        auto lut_noise_filter = existing_filter->as<ob::LutNoiseRemovalFilter>();
-        lut_noise_filter->enable(request.filter_enable);
-        enable_lut_noise_removal_filter_ = request.filter_enable;
-      } else if (normalized_request_filter_name == "EdgeNoiseRemovalFilter") {
-        existing_filter->enable(request.filter_enable);
-        enable_edge_noise_removal_filter_ = request.filter_enable;
-      } else {
-        return fail(normalized_request_filter_name + " cannot be set");
-      }
-    }
-
-    filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
-    publishDepthFiltersStatus();
-
-    response.success = true;
-    return true;
-  } catch (const ob::Error& e) {
-    response.success = false;
-    response.message = "Failed to set filter: " + orbbec_camera::formatObErrorWithStatus(e);
-    ROS_ERROR_STREAM("Failed to set filter: " << orbbec_camera::formatObErrorWithStatus(e));
-    return false;
-  } catch (const std::exception& e) {
-    response.success = false;
-    response.message = std::string("Failed to set filter: ") + e.what();
-    ROS_ERROR_STREAM("Failed to set filter: " << e.what());
-    return false;
-  } catch (...) {
-    response.success = false;
-    response.message = "unknown error";
-    ROS_ERROR_STREAM("unknown error");
-    return false;
   }
-}
 }  // namespace orbbec_camera
