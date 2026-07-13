@@ -79,6 +79,7 @@
     <arg name="color_ae_roi_top" default="-1"/>
     <arg name="color_ae_roi_bottom" default="-1"/>
     <arg name="color_gain" default="-1"/>
+    <arg name="color_mjpeg_quality" default="-1"/>
     <arg name="enable_color_auto_white_balance" default="true"/>
     <arg name="color_white_balance" default="-1"/>
     <arg name="color_ae_max_exposure" default="-1"/>
@@ -337,6 +338,7 @@
             <param name="color_ae_roi_top" value="$(arg color_ae_roi_top)"/>
             <param name="color_ae_roi_bottom" value="$(arg color_ae_roi_bottom)"/>
             <param name="color_gain" value="$(arg color_gain)"/>
+            <param name="color_mjpeg_quality" value="$(arg color_mjpeg_quality)"/>
             <param name="enable_color_auto_white_balance" value="$(arg enable_color_auto_white_balance)"/>
             <param name="color_white_balance" value="$(arg color_white_balance)"/>
             <param name="color_ae_max_exposure" value="$(arg color_ae_max_exposure)"/>

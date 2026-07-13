@@ -974,6 +974,7 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
            OB_PROP_COLOR_AE_MAX_EXPOSURE_INT);
   sync_int("color", "color_exposure", color_exposure_, OB_PROP_COLOR_EXPOSURE_INT);
   sync_int("color", "color_gain", color_gain_, OB_PROP_COLOR_GAIN_INT);
+  sync_int("color", "color_mjpeg_quality", color_mjpeg_quality_, OB_PROP_MJPEG_QUALITY_INT);
   sync_int("color", "color_brightness", color_brightness_, OB_PROP_COLOR_BRIGHTNESS_INT);
   sync_bool("color", "enable_color_auto_white_balance", enable_color_auto_white_balance_,
             OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL);
@@ -2604,6 +2605,21 @@ void OBCameraNode::setupDevices() {
       } else {
         device_->setIntProperty(OB_PROP_COLOR_GAIN_INT, color_gain_);
         ROS_INFO_STREAM("Current color gain: " << device_->getIntProperty(OB_PROP_COLOR_GAIN_INT));
+      }
+    }
+    if (color_mjpeg_quality_ != -1) {
+      if (!device_->isPropertySupported(OB_PROP_MJPEG_QUALITY_INT, OB_PERMISSION_WRITE)) {
+        ROS_WARN_STREAM("color_mjpeg_quality is not supported by this device");
+      } else {
+        auto range = device_->getIntPropertyRange(OB_PROP_MJPEG_QUALITY_INT);
+        if (color_mjpeg_quality_ < range.min || color_mjpeg_quality_ > range.max) {
+          ROS_ERROR_STREAM("color MJPEG quality value is out of range ["
+                           << range.min << "," << range.max << "] please check the value");
+        } else {
+          device_->setIntProperty(OB_PROP_MJPEG_QUALITY_INT, color_mjpeg_quality_);
+          ROS_INFO_STREAM("Current color MJPEG quality: "
+                          << device_->getIntProperty(OB_PROP_MJPEG_QUALITY_INT));
+        }
       }
     }
     if (color_brightness_ != -1 &&
