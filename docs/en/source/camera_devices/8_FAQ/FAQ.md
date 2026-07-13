@@ -63,13 +63,12 @@ find_package(OpenCV REQUIRED)
 
 #### SDK Logs
 
-- Set the launch parameter `log_level` to `debug`. After running, the SDK will generate log files under `~/.ros/Log/<camera_name>/`. If you want a more recognizable file name for this test, you can set the parameter `log_file_name`.
-- The actual path corresponding to `log_file_name` is usually `~/.ros/Log/<camera_name>/<log_file_name>`.
+- Set the launch parameter `log_level` to `debug`. After running, the SDK will generate log files under `~/.ros/Log/<camera_name>/`.
+- When `log_file_name` is empty, the SDK log file is named after the node startup time in the format `<YYYYMMDD_HHMMSS>.log`, for example `~/.ros/Log/camera/20260713_143025.log`. You can also use `log_file_name` to specify the file name; the resulting path is `~/.ros/Log/<camera_name>/<log_file_name>`.
 - If the node crashes unexpectedly, the crash stack trace file is also saved under the corresponding camera directory.
 - If firmware logs are required, set `log_level` to `debug` and set `enable_heartbeat` to `true`.
-- In multi-camera setups, SDK logs are stored in separate directories by `camera_name`, for example `~/.ros/Log/ob_camera_01/camera_01.log` and `~/.ros/Log/ob_camera_02/camera_02.log`.
-- SDK logs are appended to the same file: multiple launches will continue writing into the same file.
-- Recommendation: before packaging logs to send to technical support, delete old log files, then reproduce the issue and collect new logs. This keeps the logs cleaner and makes troubleshooting more accurate.
+- In multi-camera setups, SDK logs are stored in separate directories by `camera_name`. Each launch creates a new log file named with that launch's startup time.
+- When submitting an issue, provide the SDK log file that corresponds to the time when the issue occurred.
 
 #### ROS Logs
 

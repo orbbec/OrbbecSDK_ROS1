@@ -308,7 +308,7 @@ The following are the launch parameters available:
   * SDK log level. Default output keeps only the current device status; use `debug` for more detailed logs. Optional values: `debug`, `info`, `warn`, `error`, `fatal`.
   * SDK logs and crash files are stored in `~/.ros/Log`; ROS1 runtime logs are stored in `~/.ros/log/<run_id>`.
 * **`log_file_name`**
-  * Saved SDK log file name. Effective when `log_level` is `debug`; the actual path is usually `~/.ros/Log/<camera_name>/<log_file_name>`. In multi-camera setups, different `camera_name` values write into separate directories.
+  * SDK log file name. When empty, the log file is named after the node startup time in the format `<YYYYMMDD_HHMMSS>.log`. When specified, the resulting path is `~/.ros/Log/<camera_name>/<log_file_name>`. In multi-camera setups, different `camera_name` values write into separate directories.
 * **`diagnostic_period`**
   * Diagnostic period in seconds.
 * **`enable_heartbeat`**

@@ -62,13 +62,12 @@ find_package(OpenCV REQUIRED)
 
 #### SDK 日志
 
-- 将 launch 参数 `log_level` 设为 `debug` 运行后，会在 `~/.ros/Log/<camera_name>/` 目录下生成 SDK 日志文件。如果需要为本次测试指定一个更易识别的日志文件名，可以修改参数 `log_file_name`。
-- `log_file_name` 对应的实际文件路径通常为 `~/.ros/Log/<camera_name>/<log_file_name>`。
+- 将 launch 参数 `log_level` 设为 `debug` 运行后，会在 `~/.ros/Log/<camera_name>/` 目录下生成 SDK 日志文件。
+- `log_file_name` 为空时，SDK 日志默认以节点启动时间命名，格式为 `<YYYYMMDD_HHMMSS>.log`，例如 `~/.ros/Log/camera/20260713_143025.log`。也可以通过 `log_file_name` 指定文件名，实际路径为 `~/.ros/Log/<camera_name>/<log_file_name>`。
 - 如果节点异常崩溃，崩溃堆栈文件也会保存在对应相机目录下。
 - 如果需要固件日志，可在将 `log_level` 设置为 `debug` 的同时，将 `enable_heartbeat` 设置为 `true`。
-- 多相机场景下，SDK 日志按 `camera_name` 分目录保存，例如 `~/.ros/Log/ob_camera_01/camera_01.log`、`~/.ros/Log/ob_camera_02/camera_02.log`。
-- SDK 日志是追加写入的：多次启动会在同一个文件里不断累积日志。
-- 建议：在准备打包日志发给技术支持前，先删除旧的日志文件，然后重新复现问题并采集新的日志，这样日志更干净、定位更准确。
+- 多相机场景下，SDK 日志按 `camera_name` 分目录保存。每次启动会生成带有本次启动时间的新日志文件。
+- 提交问题时，请根据问题发生时间提供对应的 SDK 日志文件。
 
 #### ROS 日志
 
