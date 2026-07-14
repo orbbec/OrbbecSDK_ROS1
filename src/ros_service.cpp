@@ -76,6 +76,28 @@ std::string disparityToDepthModeToString(bool hardware_enabled, bool software_en
   return "disable";
 }
 
+bool isPropertySupported(const std::shared_ptr<ob::Device>& device, OBPropertyID property_id,
+                         OBPermissionType permission) {
+  if (!device) {
+    return false;
+  }
+  try {
+    return device->isPropertySupported(property_id, permission);
+  } catch (...) {
+    return false;
+  }
+}
+
+bool isPropertyReadable(const std::shared_ptr<ob::Device>& device, OBPropertyID property_id) {
+  return isPropertySupported(device, property_id, OB_PERMISSION_READ) ||
+         isPropertySupported(device, property_id, OB_PERMISSION_READ_WRITE);
+}
+
+bool isPropertyWritable(const std::shared_ptr<ob::Device>& device, OBPropertyID property_id) {
+  return isPropertySupported(device, property_id, OB_PERMISSION_WRITE) ||
+         isPropertySupported(device, property_id, OB_PERMISSION_READ_WRITE);
+}
+
 }  // namespace
 
 void OBCameraNode::setupCameraCtrlServices() {
@@ -212,49 +234,70 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->resetCameraWhiteBalanceCallback(request, response);
       });
-  set_ptp_config_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_ptp_config",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setPtpConfigCallback(request, response);
-        return response.success;
-      });
-  get_ptp_config_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
-      "/" + camera_name_ + "/" + "get_ptp_config",
-      [this](GetBoolRequest& request, GetBoolResponse& response) {
-        response.success = this->getPtpConfigCallback(request, response);
-        return response.success;
-      });
-  set_fan_work_mode_srv_ =
-      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-          "/" + camera_name_ + "/" + "set_fan_work_mode",
-          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-            response.success = this->setFanWorkModeCallback(request, response);
-            return response.success;
-          });
-  set_flood_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_flood",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setFloodCallback(request, response);
-        return response.success;
-      });
-  set_laser_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_laser",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setLaserCallback(request, response);
-        return response.success;
-      });
-  set_ldp_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_ldp",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setLdpEnableCallback(request, response);
-        return response.success;
-      });
-  get_ldp_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
-      "/" + camera_name_ + "/" + "get_ldp_status",
-      [this](GetBoolRequest& request, GetBoolResponse& response) {
-        response.success = this->getLdpStatusCallback(request, response);
-        return response.success;
-      });
+  if (isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL) &&
+      isPropertyWritable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
+    set_ptp_config_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        "/" + camera_name_ + "/" + "set_ptp_config",
+        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+          response.success = this->setPtpConfigCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
+    get_ptp_config_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+        "/" + camera_name_ + "/" + "get_ptp_config",
+        [this](GetBoolRequest& request, GetBoolResponse& response) {
+          response.success = this->getPtpConfigCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_FAN_WORK_MODE_INT)) {
+    set_fan_work_mode_srv_ =
+        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+            "/" + camera_name_ + "/" + "set_fan_work_mode",
+            [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+              response.success = this->setFanWorkModeCallback(request, response);
+              return response.success;
+            });
+  }
+  if (isPropertyWritable(device_, OB_PROP_FLOOD_BOOL)) {
+    set_flood_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        "/" + camera_name_ + "/" + "set_flood",
+        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+          response.success = this->setFloodCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT) ||
+      isPropertyWritable(device_, OB_PROP_LASER_BOOL)) {
+    set_laser_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        "/" + camera_name_ + "/" + "set_laser",
+        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+          response.success = this->setLaserCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_LDP_BOOL) &&
+      ((isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT) &&
+        isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT)) ||
+       (isPropertyReadable(device_, OB_PROP_LASER_BOOL) &&
+        isPropertyWritable(device_, OB_PROP_LASER_BOOL)))) {
+    set_ldp_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        "/" + camera_name_ + "/" + "set_ldp",
+        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+          response.success = this->setLdpEnableCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyReadable(device_, OB_PROP_LDP_BOOL) &&
+      isPropertyReadable(device_, OB_PROP_LDP_STATUS_BOOL)) {
+    get_ldp_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+        "/" + camera_name_ + "/" + "get_ldp_status",
+        [this](GetBoolRequest& request, GetBoolResponse& response) {
+          response.success = this->getLdpStatusCallback(request, response);
+          return response.success;
+        });
+  }
   get_device_info_srv_ = nh_.advertiseService<GetDeviceInfoRequest, GetDeviceInfoResponse>(
       "/" + camera_name_ + "/" + "get_device_info",
       [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
@@ -313,18 +356,22 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->switchIRModeCallback(request, response);
         return response.success;
       });
-  switch_ir_data_source_channel_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
-      "/" + camera_name_ + "/" + "switch_ir",
-      [this](SetStringRequest& request, SetStringResponse& response) {
-        response.success = this->switchIRDataSourceChannelCallback(request, response);
-        return response.success;
-      });
-  get_lrm_measure_distance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
-      "/" + camera_name_ + "/" + "get_lrm_measure_distance",
-      [this](GetInt32Request& request, GetInt32Response& response) {
-        response.success = this->getLrmMeasureDistanceCallback(request, response);
-        return response.success;
-      });
+  if (isPropertyWritable(device_, OB_PROP_IR_CHANNEL_DATA_SOURCE_INT)) {
+    switch_ir_data_source_channel_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+        "/" + camera_name_ + "/" + "switch_ir",
+        [this](SetStringRequest& request, SetStringResponse& response) {
+          response.success = this->switchIRDataSourceChannelCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyReadable(device_, OB_PROP_LDP_MEASURE_DISTANCE_INT)) {
+    get_lrm_measure_distance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+        "/" + camera_name_ + "/" + "get_lrm_measure_distance",
+        [this](GetInt32Request& request, GetInt32Response& response) {
+          response.success = this->getLrmMeasureDistanceCallback(request, response);
+          return response.success;
+        });
+  }
   set_stream_profile_srv_ = nh_.advertiseService<SetStreamProfileRequest, SetStreamProfileResponse>(
       "/" + camera_name_ + "/" + "set_stream_profile",
       [this](SetStreamProfileRequest& request, SetStreamProfileResponse& response) {
@@ -350,12 +397,15 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->setReadCustomerData(request, response);
         return response.success;
       });
-  get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
-      "/" + camera_name_ + "/" + "get_laser_status",
-      [this](GetBoolRequest& request, GetBoolResponse& response) {
-        response.success = this->getLaserStatusCallback(request, response);
-        return response.success;
-      });
+  if (isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT) ||
+      isPropertyReadable(device_, OB_PROP_LASER_BOOL)) {
+    get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+        "/" + camera_name_ + "/" + "get_laser_status",
+        [this](GetBoolRequest& request, GetBoolResponse& response) {
+          response.success = this->getLaserStatusCallback(request, response);
+          return response.success;
+        });
+  }
   set_point_cloud_decimation_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "set_point_cloud_decimation",
       [this](SetInt32Request& request, SetInt32Response& response) {
@@ -368,21 +418,27 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getPointCloudDecimationCallback(request, response);
         return response.success;
       });
-  set_disparity_range_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
-      "/" + camera_name_ + "/" + "set_disparity_range_mode",
-      [this](SetInt32Request& request, SetInt32Response& response) {
-        return this->setDisparityRangeModeCallback(request, response);
-      });
-  set_disparity_search_offset_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
-      "/" + camera_name_ + "/" + "set_disparity_search_offset",
-      [this](SetInt32Request& request, SetInt32Response& response) {
-        return this->setDisparitySearchOffsetCallback(request, response);
-      });
-  set_sync_io_voltage_level_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
-      "/" + camera_name_ + "/" + "set_sync_io_voltage_level",
-      [this](SetInt32Request& request, SetInt32Response& response) {
-        return this->setSyncIoVoltageLevelCallback(request, response);
-      });
+  if (isPropertyWritable(device_, OB_PROP_DISP_SEARCH_RANGE_MODE_INT)) {
+    set_disparity_range_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+        "/" + camera_name_ + "/" + "set_disparity_range_mode",
+        [this](SetInt32Request& request, SetInt32Response& response) {
+          return this->setDisparityRangeModeCallback(request, response);
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_DISP_SEARCH_OFFSET_INT)) {
+    set_disparity_search_offset_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+        "/" + camera_name_ + "/" + "set_disparity_search_offset",
+        [this](SetInt32Request& request, SetInt32Response& response) {
+          return this->setDisparitySearchOffsetCallback(request, response);
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT)) {
+    set_sync_io_voltage_level_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+        "/" + camera_name_ + "/" + "set_sync_io_voltage_level",
+        [this](SetInt32Request& request, SetInt32Response& response) {
+          return this->setSyncIoVoltageLevelCallback(request, response);
+        });
+  }
   set_ae_reference_stream_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
       "/" + camera_name_ + "/" + "set_ae_reference_stream",
       [this](const SetStringRequest& request, SetStringResponse& response) {
@@ -910,10 +966,10 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
   try {
     int data = request.data ? 1 : 0;
     bool cache_updated = false;
-    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+    if (isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT)) {
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
       cache_updated = true;
-    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+    } else if (isPropertyWritable(device_, OB_PROP_LASER_BOOL)) {
       device_->setBoolProperty(OB_PROP_LASER_BOOL, data);
       cache_updated = true;
     }
@@ -930,9 +986,13 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
 
 bool OBCameraNode::setPtpConfigCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response) {
-  (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
+    if (!isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL) ||
+        !isPropertyWritable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
+      response.message = "PTP clock sync property is not supported or not writable";
+      return false;
+    }
     device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, request.data);
     enable_ptp_config_ = request.data;
   } catch (const ob::Error& e) {
@@ -947,6 +1007,11 @@ bool OBCameraNode::getPtpConfigCallback(GetBoolRequest& request, GetBoolResponse
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
+    if (!isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
+      response.message = "PTP clock sync property is not supported or not readable";
+      response.success = false;
+      return false;
+    }
     response.data = device_->getBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM(
@@ -959,17 +1024,22 @@ bool OBCameraNode::getPtpConfigCallback(GetBoolRequest& request, GetBoolResponse
 
 bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response) {
-  (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   bool ldp_enable = request.data;
   try {
     bool cache_updated = false;
-    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+    if (!isPropertyWritable(device_, OB_PROP_LDP_BOOL)) {
+      response.message = "LDP property is not supported";
+      return false;
+    }
+    if (isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT) &&
+        isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT)) {
       auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
       device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, laser_enable);
       cache_updated = true;
-    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+    } else if (isPropertyReadable(device_, OB_PROP_LASER_BOOL) &&
+               isPropertyWritable(device_, OB_PROP_LASER_BOOL)) {
       if (!ldp_enable) {
         auto laser_enable = device_->getBoolProperty(OB_PROP_LASER_BOOL);
         device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
@@ -982,6 +1052,9 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
     }
     if (cache_updated) {
       enable_ldp_ = ldp_enable;
+    } else {
+      response.message = "Laser property is not supported";
+      return false;
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set LDP: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -995,8 +1068,8 @@ bool OBCameraNode::getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
-    if (!device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ) ||
-        !device_->isPropertySupported(OB_PROP_LDP_STATUS_BOOL, OB_PERMISSION_READ)) {
+    if (!isPropertyReadable(device_, OB_PROP_LDP_BOOL) ||
+        !isPropertyReadable(device_, OB_PROP_LDP_STATUS_BOOL)) {
       response.message = "LDP property is not supported";
       response.success = false;
       return false;
@@ -1610,10 +1683,14 @@ bool OBCameraNode::getLaserStatusCallback(GetBoolRequest& request, GetBoolRespon
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
-    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+    if (isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT)) {
       response.data = device_->getBoolProperty(OB_PROP_LASER_CONTROL_INT) ? true : false;
-    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+    } else if (isPropertyReadable(device_, OB_PROP_LASER_BOOL)) {
       response.data = device_->getBoolProperty(OB_PROP_LASER_BOOL) ? true : false;
+    } else {
+      response.message = "Laser property is not supported";
+      response.success = false;
+      return false;
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to get laser status: " << orbbec_camera::formatObErrorWithStatus(e));
