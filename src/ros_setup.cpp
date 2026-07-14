@@ -3747,50 +3747,50 @@ void OBCameraNode::setupPublishers() {
     lrm_obstacle_distance_timer_ =
         nh_private_.createTimer(ros::Duration(1.0 / lrm_obstacle_distance_publish_rate_),
                                 &OBCameraNode::publishLrmObstacleDistance, this);
-    if (enable_enhanced_depth_.load()) {
-      setupConfidencePublishers();
-    }
-    sdk_version_pub_ =
-        nh_.advertise<std_msgs::String>("/" + camera_name_ + "/sdk_version", 1, true);
-    auto device_info = device_->getDeviceInfo();
-    nlohmann::json data;
-    std_msgs::String sdk_msg;
-    data["firmware_version"] = device_info->firmwareVersion();
-    data["supported_min_sdk_version"] = device_info->supportedMinSdkVersion();
-    data["ros_sdk_version"] = OB_ROS_VERSION_STR;
-    std::string major = std::to_string(ob::Version::getMajor());
-    std::string minor = std::to_string(ob::Version::getMinor());
-    std::string patch = std::to_string(ob::Version::getPatch());
-    std::string version = major + "." + minor + "." + patch;
-    data["ob_sdk_version"] = version;
-    sdk_msg.data = data.dump(2);
-    sdk_version_pub_.publish(sdk_msg);
   }
+  if (enable_enhanced_depth_.load()) {
+    setupConfidencePublishers();
+  }
+  sdk_version_pub_ = nh_.advertise<std_msgs::String>("/" + camera_name_ + "/sdk_version", 1, true);
+  auto device_info = device_->getDeviceInfo();
+  nlohmann::json data;
+  std_msgs::String sdk_msg;
+  data["firmware_version"] = device_info->firmwareVersion();
+  data["supported_min_sdk_version"] = device_info->supportedMinSdkVersion();
+  data["ros_sdk_version"] = OB_ROS_VERSION_STR;
+  std::string major = std::to_string(ob::Version::getMajor());
+  std::string minor = std::to_string(ob::Version::getMinor());
+  std::string patch = std::to_string(ob::Version::getPatch());
+  std::string version = major + "." + minor + "." + patch;
+  data["ob_sdk_version"] = version;
+  sdk_msg.data = data.dump(2);
+  sdk_version_pub_.publish(sdk_msg);
+}
 
-  void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
-    (void)event;
-    if (!lrm_obstacle_distance_pub_) {
-      return;
-    }
-    if (lrm_obstacle_distance_pub_.getNumSubscribers() == 0) {
-      return;
-    }
-    try {
-      std_msgs::Int32 msg;
-      {
-        std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-        msg.data = device_->getIntProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT);
-      }
-      lrm_obstacle_distance_pub_.publish(msg);
-    } catch (const ob::Error& e) {
-      auto message = orbbec_camera::formatObErrorWithStatus(e);
-      ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", message.c_str());
-    } catch (const std::exception& e) {
-      ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", e.what());
-    } catch (...) {
-      ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: unknown error");
-    }
+void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
+  (void)event;
+  if (!lrm_obstacle_distance_pub_) {
+    return;
   }
+  if (lrm_obstacle_distance_pub_.getNumSubscribers() == 0) {
+    return;
+  }
+  try {
+    std_msgs::Int32 msg;
+    {
+      std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+      msg.data = device_->getIntProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT);
+    }
+    lrm_obstacle_distance_pub_.publish(msg);
+  } catch (const ob::Error& e) {
+    auto message = orbbec_camera::formatObErrorWithStatus(e);
+    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", message.c_str());
+  } catch (const std::exception& e) {
+    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: %s", e.what());
+  } catch (...) {
+    ROS_WARN_THROTTLE(5.0, "Failed to publish LRM obstacle distance: unknown error");
+  }
+}
 
   // Global topic-based publisher cache to prevent plugin reloading
   std::map<std::string, image_transport::Publisher> OBCameraNode::global_image_publishers_;
