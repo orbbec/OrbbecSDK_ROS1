@@ -23,6 +23,21 @@ This section explains how to align depth images with color images to create an o
 
    This launches the camera node with depth to color registration and opens a viewer to display the overlay image.
 
+### Switching Registration Mode at Runtime
+
+After the camera node starts, use `/camera/set_image_registration_mode` to switch registration mode without restarting the node. The supported modes are:
+
+* `OFF`: Disable image registration.
+* `HW_D2C`: Align depth to color in hardware.
+* `SW_D2C`: Align depth to color in software.
+* `SW_C2D`: Align color to depth in software.
+
+Both color and depth streams must be enabled for every mode except `OFF`. The service stops and restarts streams automatically during the switch and restores the previous mode if the operation fails.
+
+```bash
+rosservice call /camera/set_image_registration_mode "{data: 'SW_D2C'}"
+```
+
 ### Selecting Topics in RViz
 
 To visualize the aligned images in RViz:

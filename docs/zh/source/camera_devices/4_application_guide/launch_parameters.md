@@ -160,6 +160,10 @@
     *   设置激光能量级别。
 *   **`enable_ldp`** / **`ldp_power_level`**
     *   启用LDP并设置其功率级别。
+*   **`enable_lrm_obstacle_distance_publish`**
+    *   发布 LRM 障碍物距离话题 `/camera/lrm/obstacle_distance`。默认值为 `false`；启用时会同时启用 LDP。
+*   **`lrm_obstacle_distance_publish_rate`**
+    *   设置 LRM 障碍物距离话题的发布频率，单位为 Hz。默认值为 `10.0`；非正数会回退为 `10.0`。
 
 ## 设备、同步与高级功能
 
@@ -247,9 +251,15 @@
 * **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
   * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
   > **支持模组**：Gemini 301 系列。
+* **`color_mjpeg_quality`**
+  * 设置彩色 MJPEG 编码质量。**范围：** `1–100`，**默认值：** `-1`（不修改设备当前值）。需要固件版本大于等于 `1.8.11`。
+  > **支持模组**：Gemini 330 系列。
 * **`enable_false_positive_filter`**
   * 启用鬼影滤波。可减少重影噪声，使用示例和运行时调参方法请参考 [Gemini 330 系列鬼影滤波](../5_advanced_guide/configuration/false_positive_filter.md)。
   > **支持模组**：Gemini 330 系列 / Gemini 340 系列。
+* **`enable_fps_boost`**
+  * 启用设备 FPS Boost。默认值为 `false`；仅在设备支持 `FPS Boost` 属性时生效。
+  > **支持模组**：Gemini 330 系列。
 * **`enable_edge_noise_removal_filter`**
   * 启用 EdgeNoiseRemovalFilter，用于减少深度图边缘噪声。
   > **支持模组**：DaBai Max Pro。

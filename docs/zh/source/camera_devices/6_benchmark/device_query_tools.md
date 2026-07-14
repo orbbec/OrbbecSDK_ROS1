@@ -10,6 +10,8 @@
 
 v2.8.x 之后，该工具会额外输出固件版本、preset 列表、preset 版本、网口设备本地网卡名和 IP 来源类型（`NONE`、`LLA`、`DHCP`、`PERSISTENT`）。当某个设备枚举失败时，工具会继续枚举其他设备。
 
+对于网络设备，该工具还会输出设备访问状态，包括 `UNKNOWN`、`UNSUPPORTED`、`AVAILABLE`、`CONTROLLED`、`EXCLUSIVE`、`UNREACHABLE` 和 `FW_NOT_SUPPORTED`。可通过该状态判断设备当前是否可访问、已被其他客户端控制或暂时不可达。
+
 ```bash
 rosrun orbbec_camera list_devices_node
 ```

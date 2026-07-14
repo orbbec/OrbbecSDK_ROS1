@@ -159,6 +159,10 @@ The following are the launch parameters available:
     *   Set the laser energy level.
 *   **`enable_ldp`** / **`ldp_power_level`**
     *   Enable the LDP and set its power level.
+*   **`enable_lrm_obstacle_distance_publish`**
+    *   Publish LRM obstacle distance on `/camera/lrm/obstacle_distance`. The default is `false`. Enabling this parameter also enables LDP.
+*   **`lrm_obstacle_distance_publish_rate`**
+    *   Set the LRM obstacle distance topic rate in Hz. The default is `10.0`; non-positive values fall back to `10.0`.
 
 ## Device, Sync & Advanced Features
 
@@ -247,9 +251,15 @@ The following are the launch parameters available:
 * **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
   * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
   > **Supported Modules**: Gemini 301 series
+* **`color_mjpeg_quality`**
+  * Set the color MJPEG encoding quality. **Range:** `1–100`; **Default:** `-1` (leave the current device value unchanged). Firmware version `1.8.11` or later is required.
+  > **Supported Modules**: Gemini 330 series
 * **`enable_false_positive_filter`**
   * Enable this option to reduce ghosting noise. For usage examples and runtime tuning, see [False Positive Filtering for Gemini 330 Series](../5_advanced_guide/configuration/false_positive_filter.md).
   > **Supported Modules**: Gemini 330 series / Gemini 340 series
+* **`enable_fps_boost`**
+  * Enable device FPS Boost. The default is `false`; this parameter only takes effect when the device supports the `FPS Boost` property.
+  > **Supported Modules**: Gemini 330 series
 * **`enable_edge_noise_removal_filter`**
   * Enable EdgeNoiseRemovalFilter to reduce edge noise in depth frames.
   > **Supported Modules**: DaBai Max Pro

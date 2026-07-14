@@ -38,6 +38,12 @@ These topics provide the raw image data and corresponding calibration informatio
 *   `/camera/right_ir/metadata`
     *   Low-level metadata from Right IR stream firmware.
 
+### LRM Obstacle Distance
+
+*   `/camera/lrm/obstacle_distance`
+    *   Publishes the obstacle distance measured by LRM. The message type is `std_msgs/Int32`, and the unit is millimeters.
+    *   **Condition:** Published only when `enable_lrm_obstacle_distance_publish` is `true`. Set the rate with `lrm_obstacle_distance_publish_rate`; the default is `10.0` Hz.
+
 ### Point Cloud Topics
 
 *   `/camera/depth/points`
