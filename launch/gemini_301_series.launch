@@ -35,7 +35,7 @@
     <arg name="trigger2image_delay_us" default="0"/>
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="true"/>
-    <arg name="frames_per_trigger" default="2"/>
+    <arg name="frames_per_trigger" default="1"/>
     <arg name="software_trigger_period" default="33"/>
     <arg name="enable_ptp_config" default="false"/><!-- Only for Gemini 335Le -->
     <arg name="upgrade_firmware" default=""/>
