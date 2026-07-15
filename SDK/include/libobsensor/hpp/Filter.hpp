@@ -35,15 +35,25 @@ typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
 /**
  * @brief Get the type of a PropertyRange member
  */
-template <typename T> struct RangeTraits { using valueType = void; };
+template <typename T> struct RangeTraits {
+    using valueType = void;
+};
 
-template <> struct RangeTraits<OBUint8PropertyRange> { using valueType = uint8_t; };
+template <> struct RangeTraits<OBUint8PropertyRange> {
+    using valueType = uint8_t;
+};
 
-template <> struct RangeTraits<OBUint16PropertyRange> { using valueType = uint16_t; };
+template <> struct RangeTraits<OBUint16PropertyRange> {
+    using valueType = uint16_t;
+};
 
-template <> struct RangeTraits<OBIntPropertyRange> { using valueType = uint32_t; };
+template <> struct RangeTraits<OBIntPropertyRange> {
+    using valueType = uint32_t;
+};
 
-template <> struct RangeTraits<OBFloatPropertyRange> { using valueType = float; };
+template <> struct RangeTraits<OBFloatPropertyRange> {
+    using valueType = float;
+};
 
 /**
  * @brief Get T Property Range
