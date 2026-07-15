@@ -21,12 +21,11 @@
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <arg name="enable_sync_host_time" default="false"/>
     <arg name="sync_io_voltage_level" default="-1"/>
-    <!-- The default value of device_preset is `Default`. Only the G330 series is supported. For more information, refer to -->
-    <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
+    <!-- Gemini 305 series preset names are provided by firmware. Use
+         config/gemini305_dual_color.yaml for Dual Color Streams. -->
     <arg name="device_preset" default="Default"/>
     <arg name="color_preset" default="Default"/> <!-- color preset: Default, Warm Biased AWB, Cold Biased AWB -->
     <arg name="diagnostics_frequency" default="1.0"/>
-    <arg name="enable_laser" default="true"/>
     <arg name="depth_precision" default=""/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="disparity_to_depth_mode" default="HW"/><!-- HW, SW, disable -->
@@ -37,7 +36,6 @@
     <arg name="trigger_out_enabled" default="true"/>
     <arg name="frames_per_trigger" default="1"/>
     <arg name="software_trigger_period" default="33"/>
-    <arg name="enable_ptp_config" default="false"/><!-- Only for Gemini 335Le -->
     <arg name="upgrade_firmware" default=""/>
     <arg name="preset_firmware_path" default=""/>
     <arg name="config_file_path" default=""/>
@@ -45,14 +43,6 @@
     <arg name="export_config_json_file_path" default=""/>
     <arg name="ae_reference_stream" default="depth"/> <!-- depth or color -->
     <arg name="ae_strategy" default="motion"/> <!-- default or motion -->
-    <!-- Network device settings: default enumerate_net_device is set to true, which will automatically enumerate network devices -->
-    <!-- If you do not want to automatically enumerate network devices, -->
-    <!-- you can set enumerate_net_device to true, ip_address to the device's IP address, and port to the default value of 8090 -->
-    <arg name="enumerate_net_device" default="true"/>
-    <arg name="device_access_mode" default="default"/><!-- default, EA, CA or MR -->
-    <arg name="ip_address" default=""/>
-    <arg name="port" default="0"/>
-    <arg name="exposure_range_mode" default="default"/><!-- default, ultimate or regular -->
     <arg name="ir_info_uri" default=""/>
     <arg name="color_info_uri" default=""/>
 
@@ -145,8 +135,8 @@
     <!-- Depth/IR/Left IR/Right IR exposure is same -->
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in us-->
     <arg name="ir_exposure" default="-1"/>
+    <arg name="ir_gain" default="-1"/>
     <arg name="ir_brightness" default="-1"/>
-    <arg name="enable_ir_long_exposure" default="false"/>
 
     <!-- Point cloud parameters -->
     <arg name="enable_point_cloud" default="true"/>
@@ -161,15 +151,15 @@
     <arg name="enable_hdr_merge" default="false"/>
     <arg name="enable_sequenced_filter" default="false"/>
     <arg name="enable_threshold_filter" default="false"/>
-    <arg name="enable_hardware_noise_removal_filter" default="false"/>
-    <arg name="enable_noise_removal_filter" default="true"/>
+    <arg name="enable_hardware_noise_removal_filter" default="true"/>
+    <arg name="enable_noise_removal_filter" default="false"/>
     <arg name="enable_spatial_filter" default="false"/>
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_disparity_to_depth" default="true"/>
     <arg name="enable_hole_filling_filter" default="false"/>
     <arg name="enable_spatial_fast_filter" default="false"/>
     <arg name="enable_spatial_moderate_filter" default="false"/>
-    <arg name="sequence_id_filter_id" default="1"/>
+    <arg name="sequence_id_filter_id" default="-1"/>
     <arg name="threshold_filter_max" default="-1"/>
     <arg name="threshold_filter_min" default="-1"/>
     <arg name="hardware_noise_removal_filter_threshold" default="-1.0"/>
@@ -191,18 +181,6 @@
     <arg name="spatial_moderate_filter_diff_threshold" default="-1"/>
     <arg name="spatial_moderate_filter_magnitude" default="-1"/>
     <arg name="spatial_moderate_filter_radius" default="-1"/>
-    <!-- IMU parameters -->
-    <arg name="enable_sync_output_accel_gyro" default="false"/>
-    <arg name="enable_accel" default="false"/>
-    <arg name="enable_accel_data_correction" default="true"/>
-    <arg name="accel_rate" default="200hz"/>
-    <arg name="accel_range" default="4g"/>
-    <arg name="enable_gyro" default="false"/>
-    <arg name="enable_gyro_data_correction" default="true"/>
-    <arg name="gyro_rate" default="200hz"/>
-    <arg name="gyro_range" default="1000dps"/>
-    <arg name="linear_accel_cov" default="0.01"/>
-
     <!-- Misc parameters -->
     <arg name="usb_port" default=""/>
     <arg name="serial_number" default=""/>
@@ -214,8 +192,6 @@
     <arg name="retry_on_usb3_detection_failure" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
     <arg name="enable_image_transport_plugins" default="true"/>
-    <arg name="laser_energy_level" default="-1"/>
-    <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
     <arg name="enable_firmware_log" default="false"/>
     <arg name="enable_hardware_reset" default="false"/>
@@ -228,39 +204,18 @@
     <arg name="offset_index0" default="-1"/>
     <arg name="offset_index1" default="-1"/>
 
-    <arg name="interleave_ae_mode" default="laser"/><!-- hdr or laser -->
+    <!-- Firmware >= 1.0.0.72; Gemini 309g does not support frame interleave. -->
+    <arg name="interleave_ae_mode" default="hdr"/>
     <arg name="interleave_frame_enable" default="false"/>
-    <arg name="interleave_skip_enable" default="false"/>
-    <arg name="interleave_skip_index" default="1"/><!-- 0:skip pattern ir  1: skip flood ir -->
 
-    <arg name="hdr_index1_laser_control" default="1"/><!-- interleave_hdr_param -->
     <arg name="hdr_index1_depth_exposure" default="7500"/>
     <arg name="hdr_index1_depth_gain" default="16"/>
     <arg name="hdr_index1_ir_brightness" default="30"/>
     <arg name="hdr_index1_ir_ae_max_exposure" default="30458"/>
-    <arg name="hdr_index0_laser_control" default="1"/>
     <arg name="hdr_index0_depth_exposure" default="7500"/>
     <arg name="hdr_index0_depth_gain" default="16"/>
     <arg name="hdr_index0_ir_brightness" default="90"/>
     <arg name="hdr_index0_ir_ae_max_exposure" default="30458"/>
-
-    <arg name="laser_index1_laser_control" default="0"/><!-- interleave_hdr_param -->
-    <arg name="laser_index1_depth_exposure" default="3000"/>
-    <arg name="laser_index1_depth_gain" default="16"/>
-    <arg name="laser_index1_ir_brightness" default="60"/>
-    <arg name="laser_index1_ir_ae_max_exposure" default="17000"/>
-    <arg name="laser_index0_laser_control" default="1"/>
-    <arg name="laser_index0_depth_exposure" default="3000"/>
-    <arg name="laser_index0_depth_gain" default="16"/>
-    <arg name="laser_index0_ir_brightness" default="60"/>
-    <arg name="laser_index0_ir_ae_max_exposure" default="30000"/>
-
-    <!-- Force IP parameters -->
-    <arg name="force_ip_enable" default="false"/> <!-- Whether to enable the Force IP function -->
-    <arg name="force_ip_mac" default=""/> <!-- you need to specify it yourself. For example, "54:14:FD:06:07:DA" -->
-    <arg name="force_ip_address" default="192.168.1.10"/> <!-- Static IP address to assign -->
-    <arg name="force_ip_subnet_mask" default="255.255.255.0"/> <!-- Subnet mask for the static IP -->
-    <arg name="force_ip_gateway" default="192.168.1.1"/> <!-- Gateway address for the static IP -->
 
     <arg name="intra_camera_sync_reference" default=""/> <!-- #Start, Middle or End -->
 
@@ -294,15 +249,9 @@
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="align_target_stream" value="$(arg align_target_stream)"/>
-            <param name="enable_laser" value="$(arg enable_laser)"/>
             <param name="depth_precision" value="$(arg depth_precision)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
             <param name="disparity_to_depth_mode" value="$(arg disparity_to_depth_mode)"/>
-            <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
-            <param name="device_access_mode" value="$(arg device_access_mode)"/>
-            <param name="ip_address" value="$(arg ip_address)"/>
-            <param name="port" value="$(arg port)"/>
-            <param name="exposure_range_mode" value="$(arg exposure_range_mode)"/>
             <param name="depth_delay_us" value="$(arg depth_delay_us)"/>
             <param name="color_delay_us" value="$(arg color_delay_us)"/>
             <param name="trigger2image_delay_us" value="$(arg trigger2image_delay_us)"/>
@@ -310,7 +259,6 @@
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="frames_per_trigger" value="$(arg frames_per_trigger)"/>
             <param name="software_trigger_period" value="$(arg software_trigger_period)"/>
-            <param name="enable_ptp_config" value="$(arg enable_ptp_config)"/>
             <param name="upgrade_firmware" value="$(arg upgrade_firmware)"/>
             <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
             <param name="config_file_path" value="$(arg config_file_path)"/>
@@ -319,8 +267,8 @@
             <param name="ae_reference_stream" value="$(arg ae_reference_stream)"/>
             <param name="ae_strategy" value="$(arg ae_strategy)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
+            <param name="ir_gain" value="$(arg ir_gain)"/>
             <param name="ir_brightness" value="$(arg ir_brightness)"/>
-            <param name="enable_ir_long_exposure" value="$(arg enable_ir_long_exposure)"/>
             <param name="ir_info_uri" value="$(arg ir_info_uri)"/>
             <param name="color_info_uri" value="$(arg color_info_uri)"/>
 
@@ -441,25 +389,12 @@
             <param name="spatial_moderate_filter_magnitude" value="$(arg spatial_moderate_filter_magnitude)"/>
             <param name="spatial_moderate_filter_radius" value="$(arg spatial_moderate_filter_radius)"/>
 
-            <param name="enable_sync_output_accel_gyro" value="$(arg enable_sync_output_accel_gyro)"/>
-            <param name="enable_accel" value="$(arg enable_accel)"/>
-            <param name="enable_accel_data_correction" value="$(arg enable_accel_data_correction)"/>
-            <param name="accel_rate" value="$(arg accel_rate)"/>
-            <param name="accel_range" value="$(arg accel_range)"/>
-            <param name="enable_gyro" value="$(arg enable_gyro)"/>
-            <param name="enable_gyro_data_correction" value="$(arg enable_gyro_data_correction)"/>
-            <param name="gyro_rate" value="$(arg gyro_rate)"/>
-            <param name="gyro_range" value="$(arg gyro_range)"/>
-            <param name="linear_accel_cov" value="$(arg linear_accel_cov)"/>
-
             <param name="usb_port" value="$(arg usb_port)"/>
             <param name="serial_number" value="$(arg serial_number)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
             <param name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
-            <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
-            <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
             <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
@@ -473,36 +408,15 @@
 
             <param name="interleave_ae_mode" value="$(arg interleave_ae_mode)"/>
             <param name="interleave_frame_enable" value="$(arg interleave_frame_enable)"/>
-            <param name="interleave_skip_enable" value="$(arg interleave_skip_enable)"/>
-            <param name="interleave_skip_index" value="$(arg interleave_skip_index)"/>
 
-            <param name="hdr_index1_laser_control" value="$(arg hdr_index1_laser_control)"/>
             <param name="hdr_index1_depth_exposure" value="$(arg hdr_index1_depth_exposure)"/>
             <param name="hdr_index1_depth_gain" value="$(arg hdr_index1_depth_gain)"/>
             <param name="hdr_index1_ir_brightness" value="$(arg hdr_index1_ir_brightness)"/>
             <param name="hdr_index1_ir_ae_max_exposure" value="$(arg hdr_index1_ir_ae_max_exposure)"/>
-            <param name="hdr_index0_laser_control" value="$(arg hdr_index0_laser_control)"/>
             <param name="hdr_index0_depth_exposure" value="$(arg hdr_index0_depth_exposure)"/>
             <param name="hdr_index0_depth_gain" value="$(arg hdr_index0_depth_gain)"/>
             <param name="hdr_index0_ir_brightness" value="$(arg hdr_index0_ir_brightness)"/>
             <param name="hdr_index0_ir_ae_max_exposure" value="$(arg hdr_index0_ir_ae_max_exposure)"/>
-
-            <param name="laser_index1_laser_control" value="$(arg laser_index1_laser_control)"/>
-            <param name="laser_index1_depth_exposure" value="$(arg laser_index1_depth_exposure)"/>
-            <param name="laser_index1_depth_gain" value="$(arg laser_index1_depth_gain)"/>
-            <param name="laser_index1_ir_brightness" value="$(arg laser_index1_ir_brightness)"/>
-            <param name="laser_index1_ir_ae_max_exposure" value="$(arg laser_index1_ir_ae_max_exposure)"/>
-            <param name="laser_index0_laser_control" value="$(arg laser_index0_laser_control)"/>
-            <param name="laser_index0_depth_exposure" value="$(arg laser_index0_depth_exposure)"/>
-            <param name="laser_index0_depth_gain" value="$(arg laser_index0_depth_gain)"/>
-            <param name="laser_index0_ir_brightness" value="$(arg laser_index0_ir_brightness)"/>
-            <param name="laser_index0_ir_ae_max_exposure" value="$(arg laser_index0_ir_ae_max_exposure)"/>
-
-            <param name="force_ip_enable" value="$(arg force_ip_enable)"/>
-            <param name="force_ip_mac" value="$(arg force_ip_mac)"/>
-            <param name="force_ip_address" value="$(arg force_ip_address)"/>
-            <param name="force_ip_subnet_mask" value="$(arg force_ip_subnet_mask)"/>
-            <param name="force_ip_gateway" value="$(arg force_ip_gateway)"/>
 
             <param name="intra_camera_sync_reference" value="$(arg intra_camera_sync_reference)"/>
 
