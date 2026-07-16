@@ -45,8 +45,20 @@ device_preset: "<preset_name>"
 
 常见情况：
 
-* JSON 中包含 `parameters.sensor_depth.depth_preset` 时，`device_preset` 应置空。
-* JSON 中包含鬼影滤波详细参数时，优先以 JSON 中的参数为准。
+* 使用完整启动文件且 JSON 中包含 `parameters.sensor_depth.depth_preset` 时，应将 launch / YAML 中传入的 `device_preset` 置空，避免它覆盖 JSON 中的 depth preset。
+* SDK JSON 支持部分导入，可以删除不需要的模块和参数，只保留 depth preset、鬼影滤波等本次需要导入的配置。
+* JSON 中包含鬼影滤波详细参数时，详细参数以 JSON 中保留的字段为准；滤波器开关仍需按下面的启动文件差异处理。
+
+使用 `gemini_330_series_sdk_json.launch` 时，启动文件不会传入 `enable_false_positive_filter`，JSON 中的鬼影滤波开关可以直接生效。使用 `gemini_330_series.launch` 等完整启动文件时，其默认的 `enable_false_positive_filter=false` 会覆盖 JSON 中的开关。如果 JSON 需要开启鬼影滤波，应同时设置：
+
+```bash
+roslaunch orbbec_camera gemini_330_series.launch \
+  device_preset:="" \
+  enable_false_positive_filter:=true \
+  load_config_json_file_path:=/path/to/camera_config.json
+```
+
+其中 `enable_false_positive_filter` 只控制开关，不会替代 JSON 中的鬼影滤波详细参数。
 
 如果 JSON 中配置了鬼影滤波，请继续通过 `/camera/depth_filters/status` 确认 `FalsePositiveFilter` 的 `enabled` 和 `params` 是否符合预期。
 

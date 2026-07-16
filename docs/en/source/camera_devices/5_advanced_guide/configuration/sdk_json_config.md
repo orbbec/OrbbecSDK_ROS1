@@ -16,6 +16,14 @@ This launch file is designed for SDK JSON workflows. It keeps only the parameter
 
 Full launch files such as `gemini_330_series.launch`, `gemini_330_series_low_cpu.launch`, and `gemini_330_series_nodelet.launch` also provide `load_config_json_file_path`, but they contain many camera parameters. When parameters conflict, launch or YAML parameters that have already been passed to the node take precedence over the corresponding configuration in the JSON file.
 
+## Partial Import
+
+SDK JSON supports partial import. You can remove modules and parameters that are not needed and keep only the content to be imported. Configuration items omitted from the JSON file are not modified by that JSON import; their final values are still determined by launch / YAML parameters, the current device state, or defaults.
+
+It is recommended to minimize the JSON file for the actual use case. This reduces duplicate configuration and override relationships between JSON and launch / YAML parameters. For example, if only a depth preset and one depth post-processing filter are required, other sensor, point cloud, and unrelated filter configuration can be removed.
+
+After removing modules or parameters, the file must remain valid JSON, and the hierarchy and field names that remain must conform to the SDK JSON format supported by the current device and firmware. Re-import the minimized file and verify the final effective configuration as described below.
+
 ## Parameter Priority
 
 When SDK JSON and ROS launch / YAML parameters configure the same item, use the following rule to understand the final effective value:
@@ -84,6 +92,19 @@ For depth filters, you can also check the current enabled state and parameters f
 rostopic echo /camera/depth_filters/status
 ```
 
+## Recommended On-Site Workflow
+
+Use the following sequence to configure, verify, and persist settings during on-site debugging:
+
+1. Minimize the SDK JSON file so it contains only the modules and parameters that need to be imported.
+2. Start the node with `load_config_json_file_path`. When using a full launch file, check every launch / YAML parameter that overlaps with JSON and set it to the intended value. For example, if the JSON file retains a depth preset or false positive filter configuration, handle `device_preset` and `enable_false_positive_filter` as described above.
+3. Check the `Config JSON loaded ...` and `Config final readback ...` logs. For configuration with a query or status interface, use that interface to verify the final state and parameters. For example, depth filters can be verified through `/camera/depth_filters/status`.
+4. If on-site tuning is required, use the runtime parameters or services provided for that configuration. For example, depth post-processing filters can be adjusted temporarily through `/camera/set_filter`.
+5. After confirming the state, export the current final configuration through `/camera/export_config_json`.
+6. If only part of the exported configuration is needed for delivery, remove unrelated modules and parameters, then re-import the file to verify it.
+
+Runtime parameters and services are intended for verification and tuning while the current node is running. To reuse a confirmed configuration after restarting the node, export the state to SDK JSON and import it again on subsequent startup.
+
 ## Export an SDK JSON File
 
 After the camera node is running, use the `/camera/export_config_json` service to export the current configuration:
@@ -119,7 +140,7 @@ The table below lists common SDK JSON fields and their related ROS parameters. I
 | `application_config.point_cloud.*` | `enable_point_cloud`, `enable_colored_point_cloud`, `point_cloud_decimation_filter_factor`, `depth_registration`, `align_mode`, `align_target_stream`, `enable_frame_sync`, `frame_aggregate_mode` | Point cloud, colored point cloud, alignment, frame sync, and frame aggregation. |
 | `application_config.hdr_merge.*` | `enable_hdr_merge` | HDR merge configuration. |
 | `application_config.device_decimation.*` | `preset_resolution_config` | Device-level decimation configuration. |
-| `parameters.sensor_depth.depth_preset` | `device_preset` | Depth preset. When importing JSON with a full launch file, avoid overriding JSON with `device_preset`. |
+| `parameters.sensor_depth.depth_preset` | `device_preset` | Depth preset. When importing JSON with a full launch file, set the `device_preset` passed through launch / YAML to an empty value so that it does not override JSON. |
 | Exposure, gain, AE ROI, depth unit, laser, disparity, and image orientation fields under `parameters.sensor_depth` | `depth_exposure`, `depth_gain`, `enable_ir_auto_exposure`, `ir_ae_max_exposure`, `depth_ae_roi_*`, `depth_precision`, `enable_laser`, `laser_energy_level`, `disparity_to_depth_mode`, `disparity_range_mode`, `disparity_search_offset`, `depth_rotation`, `depth_flip`, `depth_mirror`, etc. | Depth-related device configuration. |
 | `parameters.sensor_depth.frame_interleave.*` | `interleave_frame_enable`, `interleave_ae_mode`, `interleave_skip_index`, `hdr_index*_*`, `laser_index*_*` | HDR / laser interleave configuration. |
 | `parameters.sensor_depth.post_processing_filter.*` | `enable_*_filter` and related filter parameters | Depth post-processing filter configuration. Detailed `FalsePositiveFilter` parameters are configured through JSON or `/camera/set_filter` `filter_config`. |

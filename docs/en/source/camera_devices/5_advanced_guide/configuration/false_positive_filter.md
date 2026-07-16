@@ -45,8 +45,20 @@ If false positive filter parameters are already written in an SDK JSON file, imp
 
 Common cases:
 
-* If the JSON file contains `parameters.sensor_depth.depth_preset`, set `device_preset` to an empty value.
-* If the JSON file contains detailed false positive filter parameters, the parameters from the JSON file take precedence.
+* When using a full launch file, if the JSON file contains `parameters.sensor_depth.depth_preset`, set the `device_preset` passed through launch / YAML to an empty value so that it does not override the depth preset in JSON.
+* SDK JSON supports partial import. You can remove modules and parameters that are not needed and keep only the depth preset, false positive filter, or other configuration required for the current import.
+* When the JSON file contains detailed false positive filter parameters, those parameters come from the fields retained in JSON. Handle the filter enable state according to the launch-file differences below.
+
+When `gemini_330_series_sdk_json.launch` is used, the launch file does not pass `enable_false_positive_filter`, so the filter enable state in JSON can take effect directly. When a full launch file such as `gemini_330_series.launch` is used, its default `enable_false_positive_filter=false` overrides the enable state in JSON. If the JSON configuration requires the false positive filter to be enabled, also set:
+
+```bash
+roslaunch orbbec_camera gemini_330_series.launch \
+  device_preset:="" \
+  enable_false_positive_filter:=true \
+  load_config_json_file_path:=/path/to/camera_config.json
+```
+
+Here, `enable_false_positive_filter` controls only the enable state. It does not replace the detailed false positive filter parameters in JSON.
 
 If the JSON file configures false positive filtering, continue to check `/camera/depth_filters/status` and confirm that the `enabled` and `params` fields for `FalsePositiveFilter` match expectations.
 

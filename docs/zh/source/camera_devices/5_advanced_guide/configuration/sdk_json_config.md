@@ -16,6 +16,14 @@ gemini_330_series_sdk_json.launch
 
 `gemini_330_series.launch`、`gemini_330_series_low_cpu.launch`、`gemini_330_series_nodelet.launch` 等完整启动文件也提供 `load_config_json_file_path` 参数，但这些启动文件包含较多相机参数。参数冲突时，launch 或 YAML 中已经传入节点的参数会优先于 JSON 中的对应配置。
 
+## 部分导入
+
+SDK JSON 支持部分导入。可以从 JSON 中删除不需要配置的模块和参数，只保留本次需要导入的内容。未写入 JSON 的配置项不会由本次 JSON 导入修改，其最终值仍由 launch / YAML 参数、设备当前状态或默认配置决定。
+
+建议根据实际需求精简 JSON，减少它与 launch / YAML 参数之间的重复配置和覆盖关系。例如，只需要配置 depth preset 和某个深度后处理滤波器时，可以删除其他传感器、点云及无关滤波器的配置。
+
+删除模块或参数后，JSON 必须保持合法格式，保留内容的层级和字段名称也必须符合当前设备及固件支持的 SDK JSON 格式。精简后应重新导入，并按下文方法确认最终生效配置。
+
 ## 参数优先级
 
 当 SDK JSON 与 ROS launch / YAML 参数同时配置同一项时，可以按下面的规则理解最终生效值：
@@ -84,6 +92,19 @@ Config final readback [filter.depth.DecimationFilter] scale=2
 rostopic echo /camera/depth_filters/status
 ```
 
+## 现场推荐闭环
+
+现场调试建议按以下顺序完成配置、验证和固化：
+
+1. 精简 SDK JSON，只保留本次需要导入的模块和参数。
+2. 使用 `load_config_json_file_path` 启动节点。如果使用完整启动文件，应检查所有与 JSON 重复的 launch / YAML 参数并按预期设置。例如，JSON 中保留了 depth preset 或鬼影滤波配置时，可参考上文处理 `device_preset` 和 `enable_false_positive_filter`。
+3. 检查 `Config JSON loaded ...` 和 `Config final readback ...` 日志。对于提供查询或状态接口的配置，再通过相应接口确认最终状态和参数；例如，深度滤波器可以通过 `/camera/depth_filters/status` 确认。
+4. 如需现场微调，使用对应配置提供的运行时参数或 service。例如，深度后处理滤波器可以通过 `/camera/set_filter` 临时调整。
+5. 状态确认后，通过 `/camera/export_config_json` 导出当前最终配置。
+6. 如交付时只需要部分配置，可再次删除导出文件中无关的模块和参数，然后重新导入验证。
+
+运行时参数和 service 适合当前节点运行期间的验证和微调。需要跨节点重启复用配置时，应将确认后的状态导出为 SDK JSON，并在后续启动时重新导入。
+
 ## 导出 SDK JSON
 
 相机节点运行后，可以通过 `/camera/export_config_json` 服务导出当前配置：
@@ -119,7 +140,7 @@ Exported config json file path: /tmp/orbbec_camera_config.json
 | `application_config.point_cloud.*` | `enable_point_cloud`、`enable_colored_point_cloud`、`point_cloud_decimation_filter_factor`、`depth_registration`、`align_mode`、`align_target_stream`、`enable_frame_sync`、`frame_aggregate_mode` | 点云、彩色点云、对齐、帧同步和帧聚合配置。 |
 | `application_config.hdr_merge.*` | `enable_hdr_merge` | HDR merge 配置。 |
 | `application_config.device_decimation.*` | `preset_resolution_config` | 设备级下采样配置。 |
-| `parameters.sensor_depth.depth_preset` | `device_preset` | 深度 preset。使用完整启动文件导入 JSON 时，避免用 `device_preset` 覆盖 JSON。 |
+| `parameters.sensor_depth.depth_preset` | `device_preset` | 深度 preset。使用完整启动文件导入 JSON 时，应将 launch / YAML 中传入的 `device_preset` 置空，避免覆盖 JSON。 |
 | `parameters.sensor_depth` 中的曝光、增益、AE ROI、深度单位、激光、视差、图像方向等字段 | `depth_exposure`、`depth_gain`、`enable_ir_auto_exposure`、`ir_ae_max_exposure`、`depth_ae_roi_*`、`depth_precision`、`enable_laser`、`laser_energy_level`、`disparity_to_depth_mode`、`disparity_range_mode`、`disparity_search_offset`、`depth_rotation`、`depth_flip`、`depth_mirror` 等 | 深度相关设备配置。 |
 | `parameters.sensor_depth.frame_interleave.*` | `interleave_frame_enable`、`interleave_ae_mode`、`interleave_skip_index`、`hdr_index*_*`、`laser_index*_*` | HDR / laser interleave 配置。 |
 | `parameters.sensor_depth.post_processing_filter.*` | `enable_*_filter` 和对应滤波器参数 | 深度后处理滤波配置。`FalsePositiveFilter` 的详细参数通过 JSON 或 `/camera/set_filter` 的 `filter_config` 配置。 |
