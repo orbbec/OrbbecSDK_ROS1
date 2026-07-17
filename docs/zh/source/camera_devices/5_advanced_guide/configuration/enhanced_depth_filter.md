@@ -23,7 +23,7 @@ LingBot 增强深度滤波器（`EnhancedDepthFilter`）同时使用彩色和深
 
 ## 模型文件
 
-从 [OrbbecSDK Releases](https://github.com/orbbec/OrbbecSDK_v2/releases) 下载 `model.sm4`。模型文件必须与当前 ROS1 包使用的 OrbbecSDK 和 EnhancedDepthFilter 扩展库来自同一版本。GitHub 自动生成的 Source Code 压缩包不包含该模型文件。
+从 [OrbbecSDK_ROS2 v2.9.3 Release](https://github.com/orbbec/OrbbecSDK_ROS2/releases/tag/v2.9.3) 下载 `model.sm4`。模型文件必须与当前 ROS1 包使用的 OrbbecSDK 和 EnhancedDepthFilter 扩展库来自同一版本。GitHub 自动生成的 Source Code 压缩包不包含该模型文件。
 
 通过 ROS launch 参数传入模型文件路径：
 

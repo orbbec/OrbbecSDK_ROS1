@@ -23,7 +23,7 @@ Before creating the filter, the driver checks whether the device supports Licens
 
 ## Model File
 
-Download `model.sm4` from the [OrbbecSDK Releases](https://github.com/orbbec/OrbbecSDK_v2/releases). The model must come from the same release as the OrbbecSDK and EnhancedDepthFilter extension used by the current ROS1 package. GitHub-generated Source Code archives do not include the model file.
+Download `model.sm4` from the [OrbbecSDK_ROS2 v2.9.3 Release](https://github.com/orbbec/OrbbecSDK_ROS2/releases/tag/v2.9.3). The model must come from the same release as the OrbbecSDK and EnhancedDepthFilter extension used by the current ROS1 package. GitHub-generated Source Code archives do not include the model file.
 
 Pass the model path through a ROS launch parameter:
 
