@@ -19,6 +19,9 @@
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="sync_mode" default="standalone"/>
+    <arg name="software_trigger_enabled" default="true"/>
+    <arg name="frames_per_trigger" default="1"/>
+    <arg name="software_trigger_period" default="33"/>
     <arg name="disparity_to_depth_mode" default="SW"/><!-- HW, SW, disable -->
     <arg name="config_file_path" default=""/>
     <arg name="ir_info_uri" default=""/>
@@ -155,6 +158,9 @@
             <param name="diagnostics_frequency" value="$(arg diagnostics_frequency)"/>
             <param name="align_mode" value="$(arg align_mode)"/>
             <param name="sync_mode" value="$(arg sync_mode)"/>
+            <param name="software_trigger_enabled" value="$(arg software_trigger_enabled)"/>
+            <param name="frames_per_trigger" value="$(arg frames_per_trigger)"/>
+            <param name="software_trigger_period" value="$(arg software_trigger_period)"/>
             <param name="disparity_to_depth_mode" value="$(arg disparity_to_depth_mode)"/>
             <param name="config_file_path" value="$(arg config_file_path)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>

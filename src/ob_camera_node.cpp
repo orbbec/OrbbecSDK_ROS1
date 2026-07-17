@@ -263,6 +263,9 @@ void OBCameraNode::clean() {
   if (lrm_obstacle_distance_timer_.isValid()) {
     lrm_obstacle_distance_timer_.stop();
   }
+  if (software_trigger_timer_.isValid()) {
+    software_trigger_timer_.stop();
+  }
   ROS_DEBUG_STREAM("OBCameraNode::clean() stop tf thread");
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
@@ -553,6 +556,7 @@ void OBCameraNode::getParameters() {
   trigger2image_delay_us_ = nh_private_.param<int>("trigger2image_delay_us", 0);
   trigger_out_delay_us_ = nh_private_.param<int>("trigger_out_delay_us", 0);
   trigger_out_enabled_ = nh_private_.param<bool>("trigger_out_enabled", false);
+  software_trigger_enabled_ = nh_private_.param<bool>("software_trigger_enabled", true);
   frames_per_trigger_ = nh_private_.param<int>("frames_per_trigger", 1);
   software_trigger_period_ = nh_private_.param<int>("software_trigger_period", 33);
   enable_ptp_config_ = nh_private_.param<bool>("enable_ptp_config", false);

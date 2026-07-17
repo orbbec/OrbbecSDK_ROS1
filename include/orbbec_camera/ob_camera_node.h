@@ -461,6 +461,9 @@ class OBCameraNode {
 
   bool getPtpConfigCallback(GetBoolRequest &request, GetBoolResponse &response);
 
+  bool sendSoftwareTriggerCallback(std_srvs::SetBoolRequest &request,
+                                   std_srvs::SetBoolResponse &response);
+
   bool setFanWorkModeCallback(std_srvs::SetBoolRequest &request,
                               std_srvs::SetBoolResponse &response);
 
@@ -652,6 +655,7 @@ class OBCameraNode {
   ros::ServiceServer set_read_customerdata_srv_;
   ros::ServiceServer set_ptp_config_srv_;
   ros::ServiceServer get_ptp_config_srv_;
+  ros::ServiceServer send_software_trigger_srv_;
   ros::ServiceServer get_laser_status_srv_;
   ros::ServiceServer set_point_cloud_decimation_srv_;
   ros::ServiceServer get_point_cloud_decimation_srv_;
@@ -771,6 +775,7 @@ class OBCameraNode {
   int trigger2image_delay_us_ = 0;
   int trigger_out_delay_us_ = 0;
   bool trigger_out_enabled_ = false;
+  bool software_trigger_enabled_ = false;
   bool enable_ptp_config_ = false;
   int frames_per_trigger_ = 1;
   int software_trigger_period_ = 33;
@@ -923,6 +928,7 @@ class OBCameraNode {
   bool enable_sync_host_time_ = true;
   bool is_playback_device_ = false;
   ros::Timer sync_host_time_timer_;
+  ros::Timer software_trigger_timer_;
 
   int disparity_range_mode_ = -1;
   int disparity_search_offset_ = -1;

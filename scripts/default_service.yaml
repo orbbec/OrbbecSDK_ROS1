@@ -231,6 +231,9 @@ services:
     type: std_srvs/Empty
   - name: /camera/get_lrm_measure_distance
     type: orbbec_camera/GetInt32
+  - name: /camera/send_software_trigger
+    type: std_srvs/SetBool
+    request: {data: false}
 
 # Others
   - name: /camera/set_fan_work_mode

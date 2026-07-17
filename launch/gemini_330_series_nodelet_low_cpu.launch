@@ -40,6 +40,7 @@
     <arg name="trigger_out_delay_us" default="0"/>
     <arg name="trigger_out_enabled" default="true"/>
     <arg name="enable_fps_boost" default="false"/>
+    <arg name="software_trigger_enabled" default="true"/>
     <arg name="frames_per_trigger" default="1"/>
     <arg name="software_trigger_period" default="33"/>
     <arg name="enable_ptp_config" default="false"/><!-- Only for Gemini 335Le -->
@@ -315,6 +316,7 @@
             <param name="trigger_out_delay_us" value="$(arg trigger_out_delay_us)"/>
             <param name="trigger_out_enabled" value="$(arg trigger_out_enabled)"/>
             <param name="enable_fps_boost" value="$(arg enable_fps_boost)"/>
+            <param name="software_trigger_enabled" value="$(arg software_trigger_enabled)"/>
             <param name="frames_per_trigger" value="$(arg frames_per_trigger)"/>
             <param name="software_trigger_period" value="$(arg software_trigger_period)"/>
             <param name="enable_ptp_config" value="$(arg enable_ptp_config)"/>

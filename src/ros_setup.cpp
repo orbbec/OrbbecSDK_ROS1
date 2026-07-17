@@ -2568,9 +2568,22 @@ void OBCameraNode::setupDevices() {
       ROS_INFO_STREAM("Current sync mode: " << sync_config.syncMode);
       if (sync_mode_ == OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING) {
         ROS_INFO_STREAM("Frames per trigger: " << sync_config.framesPerTrigger);
-        sync_host_time_timer_ =
-            nh_private_.createTimer(ros::Duration(0, software_trigger_period_ * 1000000),
-                                    [this](const ros::TimerEvent&) { device_->triggerCapture(); });
+        ROS_INFO_STREAM("Software trigger period: " << software_trigger_period_ << " ms");
+        software_trigger_timer_ = nh_private_.createTimer(
+            ros::Duration(0, software_trigger_period_ * 1000000), [this](const ros::TimerEvent&) {
+              if (software_trigger_enabled_) {
+                try {
+                  device_->triggerCapture();
+                } catch (const ob::Error& e) {
+                  ROS_ERROR_STREAM("Failed to send automatic software trigger: "
+                                   << orbbec_camera::formatObErrorWithStatus(e));
+                } catch (const std::exception& e) {
+                  ROS_ERROR_STREAM("Failed to send automatic software trigger: " << e.what());
+                } catch (...) {
+                  ROS_ERROR_STREAM("Failed to send automatic software trigger: unknown error");
+                }
+              }
+            });
       }
     }
 

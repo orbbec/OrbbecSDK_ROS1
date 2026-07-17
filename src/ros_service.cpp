@@ -251,6 +251,12 @@ void OBCameraNode::setupCameraCtrlServices() {
           return response.success;
         });
   }
+  send_software_trigger_srv_ =
+      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+          "/" + camera_name_ + "/" + "send_software_trigger",
+          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+            return this->sendSoftwareTriggerCallback(request, response);
+          });
   if (isPropertyWritable(device_, OB_PROP_FAN_WORK_MODE_INT)) {
     set_fan_work_mode_srv_ =
         nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
@@ -1018,6 +1024,26 @@ bool OBCameraNode::getPtpConfigCallback(GetBoolRequest& request, GetBoolResponse
         "Failed to get config sync status: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
     return false;
+  }
+  return true;
+}
+
+bool OBCameraNode::sendSoftwareTriggerCallback(std_srvs::SetBoolRequest& request,
+                                               std_srvs::SetBoolResponse& response) {
+  try {
+    if (request.data) {
+      device_->triggerCapture();
+    }
+    response.success = true;
+  } catch (const ob::Error& e) {
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+    response.success = false;
+  } catch (const std::exception& e) {
+    response.message = e.what();
+    response.success = false;
+  } catch (...) {
+    response.message = "unknown error";
+    response.success = false;
   }
   return true;
 }
