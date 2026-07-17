@@ -2261,7 +2261,6 @@ void OBCameraNode::onNewColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
     colorFrameQueue_.pop();
-    lock.unlock();
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
     publishPointCloud(frameSet);
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(0));
@@ -2287,7 +2286,6 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = leftColorFrameQueue_.front();
     leftColorFrameQueue_.pop();
-    lock.unlock();
     rgb_left_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_LEFT), rgb_buffer_left_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_LEFT), IMAGE_STREAMS.at(1));
@@ -2313,7 +2311,6 @@ void OBCameraNode::onNewRightColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = rightColorFrameQueue_.front();
     rightColorFrameQueue_.pop();
-    lock.unlock();
     rgb_right_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), rgb_buffer_right_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), IMAGE_STREAMS.at(2));
