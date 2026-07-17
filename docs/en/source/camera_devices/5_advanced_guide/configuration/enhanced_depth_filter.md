@@ -1,61 +1,99 @@
 # ROS1 EnhancedDepthFilter Usage Guide
 
-## Scope
+The LingBot Enhanced Depth Filter (`EnhancedDepthFilter`) uses both color and depth information to improve depth image quality by reducing noise, filling depth holes, and refining object edges.
 
-`EnhancedDepthFilter` provides enhanced depth output for the Gemini 330 series. In the current ROS1 package, the SDK includes the enhanced depth filter extension library only in the Linux ARM64 directory. If the filter is enabled on another platform, the SDK may report an error directly.
+## Scope and Environment Requirements
 
-## Prerequisites
+EnhancedDepthFilter requires:
 
-1. The new LingBot License must be written to the device.
+* an NVIDIA Jetson running Linux ARM64;
+* a supported Gemini 330 series camera;
+* CUDA Runtime 12;
+* TensorRT 10 Runtime;
+* a valid LingBot-Depth License;
+* the EnhancedDepthFilter extension and `model.sm4` from the same OrbbecSDK release.
 
-2. An external model file must be prepared.
+The current ROS1 package includes the EnhancedDepthFilter libraries only in the Linux ARM64 directory. Enabling the filter on another platform causes the node to fail during startup.
 
-3. Both the color and depth streams must be enabled at startup.
+## License
 
-4. D2C/C2D alignment and frame aggregation must be enabled so that color and depth are available in the same frameset.
+The device must support License authorization and contain a valid LingBot-Depth License. For LicenseTool downloads, License applications, and device activation, see [LingBot-Depth-LicenseTool](https://github.com/orbbec/LingBot-Depth-LicenseTool).
 
-Pass the model file path through a ROS launch parameter:
+Before creating the filter, the driver checks whether the device supports License authorization and whether License information exists on the device. The filter still fails to initialize if the License is invalid, expired, or does not match the device.
 
-```plaintext
-enhanced_depth_model_path:=/path/to/model/file
+## Model File
+
+Download `model.sm4` from the [OrbbecSDK Releases](https://github.com/orbbec/OrbbecSDK_v2/releases). The model must come from the same release as the OrbbecSDK and EnhancedDepthFilter extension used by the current ROS1 package. GitHub-generated Source Code archives do not include the model file.
+
+Pass the model path through a ROS launch parameter:
+
+```text
+enhanced_depth_model_path:=/path/to/model.sm4
 ```
 
-If enhanced depth is enabled but the model path is empty or the file does not exist, the node fails to start.
+The ROS1 driver requires `enhanced_depth_model_path` to be set explicitly. An absolute path is recommended. If enhanced depth is enabled while the model path is empty or the file does not exist, the node fails to start. The model file cannot be changed at runtime.
+
+## Startup Requirements
+
+The filter input must be an aligned frameset containing both Color and Depth frames:
+
+* both the Color and Depth streams must be enabled;
+* software alignment (`align_mode:=SW`) supports both D2C and C2D;
+* hardware alignment (`align_mode:=HW`) supports only alignment to Color, that is, D2C;
+* `frame_aggregate_mode:=full_frame` is recommended to ensure that each frameset contains both Color and Depth. EnhancedDepthFilter is skipped for a frameset if either frame is missing.
 
 ## Launch Examples
 
+For initial verification, use Color `640x480 RGB` and Depth `640x480 Y16`.
+
 Standard node:
 
-```plaintext
+```bash
 roslaunch orbbec_camera gemini_330_series.launch \
-  enable_enhanced_depth:=true \
-  enhanced_depth_model_path:=/path/to/model/file \
-  enhanced_depth_confidence_threshold:=51 \
+  enable_color:=true \
+  color_width:=640 \
+  color_height:=480 \
+  color_format:=RGB \
+  enable_depth:=true \
+  depth_width:=640 \
+  depth_height:=480 \
+  depth_format:=Y16 \
   depth_registration:=true \
   align_mode:=SW \
   align_target_stream:=COLOR \
-  frame_aggregate_mode:=full_frame
+  frame_aggregate_mode:=full_frame \
+  enable_enhanced_depth:=true \
+  enhanced_depth_model_path:=/path/to/model.sm4 \
+  enhanced_depth_confidence_threshold:=51
 ```
 
 Nodelet:
 
-```plaintext
+```bash
 roslaunch orbbec_camera gemini_330_series_nodelet.launch \
-  enable_enhanced_depth:=true \
-  enhanced_depth_model_path:=/path/to/model/file \
-  enhanced_depth_confidence_threshold:=51 \
+  enable_color:=true \
+  color_width:=640 \
+  color_height:=480 \
+  color_format:=RGB \
+  enable_depth:=true \
+  depth_width:=640 \
+  depth_height:=480 \
+  depth_format:=Y16 \
   depth_registration:=true \
   align_mode:=SW \
   align_target_stream:=COLOR \
-  frame_aggregate_mode:=full_frame
+  frame_aggregate_mode:=full_frame \
+  enable_enhanced_depth:=true \
+  enhanced_depth_model_path:=/path/to/model.sm4 \
+  enhanced_depth_confidence_threshold:=51
 ```
 
-When using hardware D2C, the alignment target must be `COLOR`:
+When using hardware D2C, the alignment target must be Color:
 
-```plaintext
+```bash
 roslaunch orbbec_camera gemini_330_series.launch \
   enable_enhanced_depth:=true \
-  enhanced_depth_model_path:=/path/to/model/file \
+  enhanced_depth_model_path:=/path/to/model.sm4 \
   depth_registration:=true \
   align_mode:=HW \
   align_target_stream:=COLOR \
@@ -65,86 +103,81 @@ roslaunch orbbec_camera gemini_330_series.launch \
 ## Parameters
 
 * `enable_enhanced_depth`: Whether to enable enhanced depth filtering. The default is `false`.
-
 * `enhanced_depth_model_path`: Path to the LingBot model file. This parameter is required when enhanced depth is enabled.
-
-* `enhanced_depth_confidence_threshold`: Confidence threshold. The default is `51`.
-
-* `depth_registration`: Whether to enable alignment. `EnhancedDepthFilter` requires this parameter to be `true`.
-
-* `align_mode`: Alignment mode. Supported values are `HW` and `SW`. `HW` supports only D2C.
-
-* `align_target_stream`: Alignment target. Supported values are `COLOR` and `DEPTH`. `COLOR` means D2C, and `DEPTH` means C2D.
-
-* `frame_aggregate_mode`: Frame aggregation mode. The recommended value is `full_frame`.
+* `enhanced_depth_confidence_threshold`: Depth confidence threshold. It must be an integer from `0` to `255`. The default is `51`.
+* `depth_registration`: Must be `true` so that aligned images enter EnhancedDepthFilter.
+* `align_mode`: Alignment method. It can be `SW` or `HW`.
+* `align_target_stream`: Software alignment accepts `COLOR` or `DEPTH`; hardware alignment requires `COLOR`.
+* `frame_aggregate_mode`: The recommended value is `full_frame`, which ensures that Color and Depth frames are received together.
 
 ## Image Requirements
 
-For D2C, where depth is aligned to color:
+For D2C, where Depth is aligned to Color:
 
-* Use `align_mode:=HW` or `align_target_stream:=COLOR`.
+* the Color resolution must be `640x480`, `1280x720`, or `1280x800`;
+* the Depth resolution is not constrained by EnhancedDepthFilter, but the selected configuration must support D2C.
 
-* The color resolution must be one of `640x480`, `1280x720`, or `1280x800`.
+For C2D, where Color is aligned to Depth:
 
-* The depth resolution is unrestricted, but the depth format must be an enhanced depth format supported by the SDK.
+* the Depth resolution must be `640x480`, `1280x720`, or `1280x800`;
+* the Color resolution is not constrained by EnhancedDepthFilter.
 
-For C2D, where color is aligned to depth:
+Supported Depth input formats are:
 
-* Use `align_mode:=SW align_target_stream:=DEPTH`.
+```text
+Y10, Y11, Y12, Y14, Y16, Z16
+```
 
-* The depth resolution must be one of `640x480`, `1280x720`, or `1280x800`.
+EnhancedDepthFilter requires RGB Color input. The ROS1 driver also accepts the following Color stream formats and converts them to RGB in the frameset copy used only by the filter:
 
-* The color resolution is unrestricted.
+```text
+RGB, YUYV, UYVY, MJPG, BGR, RGBA, Y16, Y8
+```
 
-Format requirements:
-
-* The final color input to `EnhancedDepthFilter` is `RGB`. The driver attempts to convert `YUYV`, `UYVY`, `MJPG`, `BGR`, `RGBA`, `Y16`, and `Y8` to `RGB`.
-
-* Supported depth formats are `Y10`, `Y11`, `Y12`, `Y14`, `Y16`, and `Z16`.
+This conversion is used only by EnhancedDepthFilter and does not change the Color image format published to downstream consumers.
 
 ## SDK JSON Configuration
 
-When an SDK JSON file is loaded through `load_config_json_file_path`, the profiles and `point_cloud.align_mode` in the JSON file affect the final color/depth resolutions and alignment mode.
+When an SDK JSON file is loaded through `load_config_json_file_path`, the stream profiles and alignment configuration under `application_config.point_cloud` affect the final Color/Depth resolutions, formats, alignment method, and frame aggregation mode.
 
-When EnhancedDepthFilter is enabled, make sure that:
+When EnhancedDepthFilter is enabled, the final effective configuration must still meet these requirements:
 
-* color and depth are enabled in the effective JSON or launch configuration;
+* both Color and Depth are enabled;
+* D2C or C2D alignment is enabled;
+* the D2C Color target resolution or C2D Depth target resolution is one of `640x480/1280x720/1280x800`;
+* the Depth format is one of `Y10/Y11/Y12/Y14/Y16/Z16`.
 
-* D2C/C2D alignment is enabled in the effective JSON or launch configuration;
-
-* the D2C color target resolution or C2D depth target resolution is one of `640x480/1280x720/1280x800`.
-
-If a launch parameter and SDK JSON configure the same setting, the explicitly passed launch parameter takes precedence.
+If launch/YAML parameters and SDK JSON configure the same item, parameters already passed to the node take precedence. Default parameters written through `<param>` by a full launch file also count as passed parameters and may override the corresponding JSON configuration. For details, see [SDK JSON Import and Export for Gemini 330 Series](sdk_json_config.md).
 
 ## Output Topics
 
-The enhanced depth image is published on:
+The following topic names assume the default `camera_name:=camera`. If `camera_name` is changed, replace `/camera` with the actual namespace.
 
-```plaintext
-/camera/depth/image_raw
+| Topic | Description |
+| --- | --- |
+| `/camera/depth/image_raw` | Publishes the enhanced aligned depth image when filtering succeeds. If filtering fails at runtime, the driver continues to publish the current unenhanced aligned depth image. |
+| `/camera/depth/image_unaligned` | Publishes the depth image before software alignment. This topic is not published in hardware D2C mode. |
+| `/camera/confidence/image_raw` | Publishes the confidence image when filtering succeeds. Its encoding can be `mono8` or `mono16`. |
+
+The standard node and Nodelet use the same topic names and publishing behavior.
+
+## Check the Runtime Status
+
+Use the depth filter status topic to confirm whether EnhancedDepthFilter is enabled and check its current confidence threshold:
+
+```bash
+rostopic echo /camera/depth_filters/status
 ```
 
-The original depth image before alignment is published on:
-
-```plaintext
-/camera/depth/image_unaligned
-```
-
-The confidence image is published on:
-
-```plaintext
-/camera/confidence/image_raw
-```
-
-If `camera_name` is not the default `camera`, the topic prefix changes with `camera_name`.
+Find `filter_name: "EnhancedDepthFilter"` in the output and check `enabled` and `confidence_threshold`.
 
 ## Runtime Adjustment
 
-Use the filter service to enable or disable EnhancedDepthFilter or adjust `confidence_threshold`.
+Use `/camera/set_filter` to enable or disable EnhancedDepthFilter or adjust `confidence_threshold`. Positional and named parameters cannot be used together, and the threshold must be an integer from `0` to `255`.
 
-Set the threshold with a positional parameter:
+Enable the filter and set the threshold to `60` with a positional parameter:
 
-```plaintext
+```bash
 rosservice call /camera/set_filter "filter_name: 'EnhancedDepthFilter'
 filter_enable: true
 filter_param: [60]
@@ -153,36 +186,33 @@ filter_config: []"
 
 Set the threshold with a named parameter:
 
-```plaintext
-rosservice call /camera/set_filter "filter_name: 'EnhancedDepthFilter'filter_enable: truefilter_param: []filter_config:- name: 'confidence_threshold'  value: '60'"
+```bash
+rosservice call /camera/set_filter "filter_name: 'EnhancedDepthFilter'
+filter_enable: true
+filter_param: []
+filter_config:
+- name: 'confidence_threshold'
+  value: '60'"
 ```
 
 Disable EnhancedDepthFilter:
 
-```plaintext
-rosservice call /camera/set_filter "filter_name: 'EnhancedDepthFilter'filter_enable: falsefilter_param: []filter_config: []"
+```bash
+rosservice call /camera/set_filter "filter_name: 'EnhancedDepthFilter'
+filter_enable: false
+filter_param: []
+filter_config: []"
 ```
 
-Changing `model_path` at runtime is not supported. To use a different model file, change the launch parameter and restart the node.
+This service cannot change the model path, stream configuration, or alignment mode. To use a different model file, change the launch parameter and restart the node.
 
-## Common Errors
+## Troubleshooting
 
-`Enhanced depth filter requires enhanced_depth_model_path`
-
-EnhancedDepthFilter is enabled, but no model file path was provided.
-
-`Enhanced depth model file not found`
-
-The supplied model file path does not exist or cannot be accessed by the node process.
-
-`Enhanced depth filter requires D2C/C2D align mode`
-
-`depth_registration` is not enabled, or the alignment mode is not `HW`/`SW`.
-
-`Enhanced depth filter requires supported target resolutions: 640x480/1280x720/1280x800`
-
-The current alignment target stream resolution is not in the supported list. For D2C, check the color resolution. For C2D, check the depth resolution.
-
-`Enhanced depth filter requires supported target resolutions: 640x480/1280x720/1280x800 and depth formats: Y10/Y11/Y12/Y14/Y16/Z16`
-
-The depth resolution or depth format does not meet the requirements.
+| Symptom | Recommended action |
+| --- | --- |
+| The node fails to start because EnhancedDepthFilter cannot be found | Confirm that the system is NVIDIA Jetson/Linux ARM64 and that the ROS1 package contains the EnhancedDepthFilter extension. |
+| A missing or unsupported License is reported | Use LicenseTool to check device support and apply for or activate a valid LingBot-Depth License. |
+| `model.sm4` cannot be found or model initialization fails | Check `enhanced_depth_model_path` and confirm that the model, SDK, and extension come from the same release. |
+| The resolution or format is not supported | Verify the feature first with Color `640x480 RGB` and Depth `640x480 Y16`. |
+| D2C/C2D is required | Confirm `depth_registration:=true`, then check `align_mode` and `align_target_stream`. |
+| `/camera/depth/image_raw` has data but no confidence image is published | Check the node log and `/camera/depth_filters/status`. If filtering fails at runtime, the driver falls back to the unenhanced depth frame. |
