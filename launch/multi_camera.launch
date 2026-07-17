@@ -11,10 +11,16 @@
     <arg name="camera2_log_file_name" default="camera_02.log"/>
 
     <arg name="device_num" default="2"/>
+    <arg name="timestamp_clock_type" default=""/><!-- "realtime" or "monotonic", default is realtime. -->
+    <arg name="enable_color_undistortion" default="false"/>
+    <arg name="enable_image_transport_plugins" default="true"/>
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
         <arg name="device_num" value="$(arg device_num)"/>
+        <arg name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
+        <arg name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
+        <arg name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
         <arg name="log_level" value="$(arg camera1_log_level)"/>
         <arg name="log_file_name" value="$(arg camera1_log_file_name)"/>
     </include>
@@ -23,6 +29,9 @@
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
         <arg name="usb_port" value="$(arg camera2_usb_port)"/>
         <arg name="device_num" value="$(arg device_num)"/>
+        <arg name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
+        <arg name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
+        <arg name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
         <arg name="log_level" value="$(arg camera2_log_level)"/>
         <arg name="log_file_name" value="$(arg camera2_log_file_name)"/>
     </include>

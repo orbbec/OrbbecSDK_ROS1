@@ -28,7 +28,7 @@
 
 namespace {
 
-constexpr int kFirmwareLogDrainDelaySec = 3;
+constexpr int kFirmwareLogDrainDelaySec = 5;
 
 struct CliArgs {
   bool help = false;
@@ -118,20 +118,105 @@ std::string ipSourceTypeToString(int type) {
   }
 }
 
+std::string deviceAccessStateToString(OBDeviceAccessState state) {
+  switch (state) {
+    case OB_DEVICE_ACCESS_STATE_UNKNOWN:
+      return "UNKNOWN";
+    case OB_DEVICE_ACCESS_STATE_UNSUPPORTED:
+      return "UNSUPPORTED";
+    case OB_DEVICE_ACCESS_STATE_AVAILABLE:
+      return "AVAILABLE";
+    case OB_DEVICE_ACCESS_STATE_CONTROLLED:
+      return "CONTROLLED";
+    case OB_DEVICE_ACCESS_STATE_EXCLUSIVE:
+      return "EXCLUSIVE";
+    case OB_DEVICE_ACCESS_STATE_UNREACHABLE:
+      return "UNREACHABLE";
+    case OB_DEVICE_ACCESS_STATE_FW_NOT_SUPPORTED:
+      return "FW_NOT_SUPPORTED";
+    default:
+      return "UNKNOWN(" + std::to_string(static_cast<int>(state)) + ")";
+  }
+}
+
+void printDeviceAccessState(const std::shared_ptr<ob::DeviceList> &list, uint32_t index) {
+  try {
+    const auto state = list->queryDeviceAccessState(index);
+    ROS_INFO_STREAM("device access state [serial: " << list->getSerialNumber(index)
+                                                    << ", ip: " << list->getIpAddress(index)
+                                                    << "]: " << deviceAccessStateToString(state));
+  } catch (const ob::Error &e) {
+    ROS_WARN_STREAM("device access state: UNKNOWN (" << orbbec_camera::formatObErrorWithStatus(e)
+                                                     << ")");
+  } catch (const std::exception &e) {
+    ROS_WARN_STREAM("device access state: UNKNOWN (" << e.what() << ")");
+  }
+}
+
+std::string boolToString(bool value) { return value ? "true" : "false"; }
+
+bool isPropertyReadable(const std::shared_ptr<ob::Device> &device, OBPropertyID property_id) {
+  return device->isPropertySupported(property_id, OB_PERMISSION_READ) ||
+         device->isPropertySupported(property_id, OB_PERMISSION_READ_WRITE);
+}
+
+void printIpConfigStatus(const std::shared_ptr<ob::Device> &device) {
+  ROS_INFO_STREAM("IP config status:");
+
+  const bool v2_read_supported = isPropertyReadable(device, OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2);
+  const bool legacy_read_supported = isPropertyReadable(device, OB_STRUCT_DEVICE_IP_ADDR_CONFIG);
+
+  if (v2_read_supported) {
+    OBNetIpConfigV2 ip_config_v2{};
+    uint32_t data_size = sizeof(ip_config_v2);
+    device->getStructuredData(OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2,
+                              reinterpret_cast<uint8_t *>(&ip_config_v2), &data_size);
+    ROS_INFO_STREAM("  DHCP: " << boolToString(ip_config_v2.flags & OB_NET_IP_FLAG_DHCP));
+    ROS_INFO_STREAM(
+        "  persistent IP: " << boolToString(ip_config_v2.flags & OB_NET_IP_FLAG_PERSISTENT));
+  } else if (legacy_read_supported) {
+    OBNetIpConfig ip_config{};
+    uint32_t data_size = sizeof(ip_config);
+    device->getStructuredData(OB_STRUCT_DEVICE_IP_ADDR_CONFIG,
+                              reinterpret_cast<uint8_t *>(&ip_config), &data_size);
+    ROS_INFO_STREAM("  DHCP: " << boolToString(ip_config.dhcp != 0));
+    ROS_INFO_STREAM("  persistent IP: " << boolToString(ip_config.dhcp == 0));
+  } else {
+    ROS_INFO_STREAM("  DHCP: not supported");
+    ROS_INFO_STREAM("  persistent IP: not supported");
+  }
+}
+
 void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
   try {
     auto preset_list = device->getAvailablePresetList();
-    ROS_INFO_STREAM("Preset count: " << preset_list->getCount());
-    for (uint32_t i = 0; i < preset_list->getCount(); ++i) {
-      ROS_INFO_STREAM("  - " << preset_list->getName(i));
+    const uint32_t preset_count = preset_list ? preset_list->getCount() : 0;
+    ROS_INFO_STREAM("device_preset count: " << preset_count);
+    for (uint32_t i = 0; i < preset_count; ++i) {
+      const char *preset_name = preset_list->getName(i);
+      if (preset_name != nullptr && preset_name[0] != '\0') {
+        ROS_INFO_STREAM("  - " << preset_name);
+      }
+    }
+
+    if (device->isColorPresetSupported()) {
+      auto color_preset_list = device->getColorPresetList();
+      const uint32_t color_preset_count = color_preset_list ? color_preset_list->getCount() : 0;
+      ROS_INFO_STREAM("color_preset count: " << color_preset_count);
+      for (uint32_t i = 0; i < color_preset_count; ++i) {
+        const char *preset_name = color_preset_list->getName(i);
+        if (preset_name != nullptr && preset_name[0] != '\0') {
+          ROS_INFO_STREAM("  - " << preset_name);
+        }
+      }
     }
 
     std::string key = "PresetVer";
     if (device->isExtensionInfoExist(key)) {
       std::string value = device->getExtensionInfo(key);
-      ROS_INFO_STREAM("Preset version: " << value);
+      ROS_INFO_STREAM("preset version: " << value);
     } else {
-      ROS_INFO_STREAM("Preset version: not available");
+      ROS_INFO_STREAM("preset version: not available");
     }
   } catch (ob::Error &e) {
     ROS_WARN_STREAM("Failed to get preset info: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -188,49 +273,64 @@ int main(int argc, char **argv) {
     auto list = context->queryDeviceList();
     bool firmware_log_enabled = false;
     for (size_t i = 0; i < list->deviceCount(); i++) {
-      auto device_ = list->getDevice(i);
-      if (isSdkLogEnabled(args.sdk_log_level)) {
-        firmware_log_enabled = enableFirmwareLog(device_) || firmware_log_enabled;
-      }
-      auto device_info_ = device_->getDeviceInfo();
-      if (std::string(list->getConnectionType(i)) != "Ethernet") {
-        std::string serial = list->serialNumber(i);
-        std::string uid = list->uid(i);
-        auto usb_port = parseUsbPort(uid);
-        auto connection_type = list->getConnectionType(i);
-        auto firmware_version = device_info_->getFirmwareVersion();
-        std::stringstream pid_hex;
-        pid_hex << std::hex << std::setw(4) << std::setfill('0') << list->getPid(i);
-        ROS_INFO_STREAM("name: " << list->getName(i));
-        ROS_INFO_STREAM("pid: 0x" << pid_hex.str());
-        ROS_INFO_STREAM("serial: " << serial);
-        ROS_INFO_STREAM("connection: " << connection_type);
-        ROS_INFO_STREAM("firmware version: " << firmware_version);
-        ROS_INFO_STREAM("usb port: " << usb_port);
-        printPresetInfo(device_);
-        std::cout << std::endl;
-      } else {
-        std::string serial = list->serialNumber(i);
-        auto connection_type = list->getConnectionType(i);
-        auto ip_address = list->getIpAddress(i);
-        std::stringstream pid_hex;
-        auto firmware_version = device_info_->getFirmwareVersion();
-        pid_hex << std::hex << std::setw(4) << std::setfill('0') << list->getPid(i);
-        ROS_INFO_STREAM("name: " << list->getName(i));
-        ROS_INFO_STREAM("pid: 0x" << pid_hex.str());
-        ROS_INFO_STREAM("serial: " << serial);
-        ROS_INFO_STREAM("connection: " << connection_type);
-        ROS_INFO_STREAM("firmware version: " << firmware_version);
-        ROS_INFO_STREAM("ip address: " << ip_address);
-        ROS_INFO_STREAM("MAC address: " << list->getUid(i));
-        ROS_INFO_STREAM("subnet mask: " << list->getSubnetMask(i));
-        ROS_INFO_STREAM("gateway: " << list->getGateway(i));
-        ROS_INFO_STREAM(
-            "local net interface: " << list->getLocalNetInterfaceName(static_cast<uint32_t>(i)));
-        ROS_INFO_STREAM("ip source type: " << ipSourceTypeToString(
-                            static_cast<int>(list->getIpSourceType(static_cast<uint32_t>(i)))));
-        printPresetInfo(device_);
-        std::cout << std::endl;
+      try {
+        if (std::string(list->getConnectionType(i)) == "Ethernet") {
+          printDeviceAccessState(list, static_cast<uint32_t>(i));
+        }
+        auto device_ = list->getDevice(i);
+        if (isSdkLogEnabled(args.sdk_log_level)) {
+          firmware_log_enabled = enableFirmwareLog(device_) || firmware_log_enabled;
+        }
+        auto device_info_ = device_->getDeviceInfo();
+        if (std::string(list->getConnectionType(i)) != "Ethernet") {
+          std::string serial = list->serialNumber(i);
+          std::string uid = list->uid(i);
+          auto usb_port = parseUsbPort(uid);
+          auto connection_type = list->getConnectionType(i);
+          auto firmware_version = device_info_->getFirmwareVersion();
+          std::stringstream pid_hex;
+          pid_hex << std::hex << std::setw(4) << std::setfill('0') << list->getPid(i);
+          ROS_INFO_STREAM("name: " << list->getName(i));
+          ROS_INFO_STREAM("pid: 0x" << pid_hex.str());
+          ROS_INFO_STREAM("serial: " << serial);
+          ROS_INFO_STREAM("connection: " << connection_type);
+          ROS_INFO_STREAM("firmware version: " << firmware_version);
+          ROS_INFO_STREAM("usb port: " << usb_port);
+          printPresetInfo(device_);
+          std::cout << std::endl;
+        } else {
+          std::string serial = list->serialNumber(i);
+          auto connection_type = list->getConnectionType(i);
+          auto ip_address = list->getIpAddress(i);
+          std::stringstream pid_hex;
+          auto firmware_version = device_info_->getFirmwareVersion();
+          pid_hex << std::hex << std::setw(4) << std::setfill('0') << list->getPid(i);
+          ROS_INFO_STREAM("name: " << list->getName(i));
+          ROS_INFO_STREAM("pid: 0x" << pid_hex.str());
+          ROS_INFO_STREAM("serial: " << serial);
+          ROS_INFO_STREAM("connection: " << connection_type);
+          ROS_INFO_STREAM("firmware version: " << firmware_version);
+          ROS_INFO_STREAM("ip address: " << ip_address);
+          ROS_INFO_STREAM("MAC address: " << list->getUid(i));
+          ROS_INFO_STREAM("subnet mask: " << list->getSubnetMask(i));
+          ROS_INFO_STREAM("gateway: " << list->getGateway(i));
+          ROS_INFO_STREAM(
+              "local net interface: " << list->getLocalNetInterfaceName(static_cast<uint32_t>(i)));
+          ROS_INFO_STREAM(
+              "local MAC address: " << list->getLocalMacAddress(static_cast<uint32_t>(i)));
+          ROS_INFO_STREAM("ip source type: " << ipSourceTypeToString(
+                              static_cast<int>(list->getIpSourceType(static_cast<uint32_t>(i)))));
+          printIpConfigStatus(device_);
+          printPresetInfo(device_);
+          std::cout << std::endl;
+        }
+      } catch (ob::Error &e) {
+        ROS_ERROR_STREAM("Failed to list device at index "
+                         << i << ": " << orbbec_camera::formatObErrorWithStatus(e));
+      } catch (const std::exception &e) {
+        ROS_ERROR_STREAM("Failed to list device at index " << i << ": " << e.what());
+      } catch (...) {
+        ROS_ERROR_STREAM("Failed to list device at index " << i << ": unknown error");
       }
     }
     if (firmware_log_enabled) {

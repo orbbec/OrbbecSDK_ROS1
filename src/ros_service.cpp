@@ -14,6 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 #include "orbbec_camera/ob_camera_node.h"
+#include <algorithm>
+#include <cctype>
 
 namespace orbbec_camera {
 
@@ -51,6 +53,49 @@ bool setDisparityServiceFailure(SetInt32Response& response, const std::string& m
   response.message = message;
   ROS_INFO_STREAM(message);
   return true;
+}
+
+std::string alignTargetStreamToString(OBStreamType stream_type) {
+  switch (stream_type) {
+    case OB_STREAM_COLOR:
+      return "COLOR";
+    case OB_STREAM_DEPTH:
+      return "DEPTH";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string disparityToDepthModeToString(bool hardware_enabled, bool software_enabled) {
+  if (hardware_enabled) {
+    return "HW";
+  }
+  if (software_enabled) {
+    return "SW";
+  }
+  return "disable";
+}
+
+bool isPropertySupported(const std::shared_ptr<ob::Device>& device, OBPropertyID property_id,
+                         OBPermissionType permission) {
+  if (!device) {
+    return false;
+  }
+  try {
+    return device->isPropertySupported(property_id, permission);
+  } catch (...) {
+    return false;
+  }
+}
+
+bool isPropertyReadable(const std::shared_ptr<ob::Device>& device, OBPropertyID property_id) {
+  return isPropertySupported(device, property_id, OB_PERMISSION_READ) ||
+         isPropertySupported(device, property_id, OB_PERMISSION_READ_WRITE);
+}
+
+bool isPropertyWritable(const std::shared_ptr<ob::Device>& device, OBPropertyID property_id) {
+  return isPropertySupported(device, property_id, OB_PERMISSION_WRITE) ||
+         isPropertySupported(device, property_id, OB_PERMISSION_READ_WRITE);
 }
 
 }  // namespace
@@ -189,53 +234,80 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->resetCameraWhiteBalanceCallback(request, response);
       });
-  set_ptp_config_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_ptp_config",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setPtpConfigCallback(request, response);
-        return response.success;
-      });
-  get_ptp_config_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
-      "/" + camera_name_ + "/" + "get_ptp_config",
-      [this](GetBoolRequest& request, GetBoolResponse& response) {
-        response.success = this->getPtpConfigCallback(request, response);
-        return response.success;
-      });
-  set_fan_work_mode_srv_ =
-      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-          "/" + camera_name_ + "/" + "set_fan_work_mode",
-          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-            response.success = this->setFanWorkModeCallback(request, response);
-            return response.success;
-          });
-  set_flood_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_flood",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setFloodCallback(request, response);
-        return response.success;
-      });
-  set_laser_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_laser",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setLaserCallback(request, response);
-        return response.success;
-      });
-  set_ldp_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-      "/" + camera_name_ + "/" + "set_ldp",
-      [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-        response.success = this->setLdpEnableCallback(request, response);
-        return response.success;
-      });
-  get_ldp_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
-      "/" + camera_name_ + "/" + "get_ldp_status",
-      [this](GetBoolRequest& request, GetBoolResponse& response) {
-        response.success = this->getLdpStatusCallback(request, response);
-        return response.success;
-      });
+  if (isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL) &&
+      isPropertyWritable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
+    set_ptp_config_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        "/" + camera_name_ + "/" + "set_ptp_config",
+        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+          response.success = this->setPtpConfigCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
+    get_ptp_config_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+        "/" + camera_name_ + "/" + "get_ptp_config",
+        [this](GetBoolRequest& request, GetBoolResponse& response) {
+          response.success = this->getPtpConfigCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_FAN_WORK_MODE_INT)) {
+    set_fan_work_mode_srv_ =
+        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+            "/" + camera_name_ + "/" + "set_fan_work_mode",
+            [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+              response.success = this->setFanWorkModeCallback(request, response);
+              return response.success;
+            });
+  }
+  if (isPropertyWritable(device_, OB_PROP_FLOOD_BOOL)) {
+    set_flood_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        "/" + camera_name_ + "/" + "set_flood",
+        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+          response.success = this->setFloodCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT) ||
+      isPropertyWritable(device_, OB_PROP_LASER_BOOL)) {
+    set_laser_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        "/" + camera_name_ + "/" + "set_laser",
+        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+          response.success = this->setLaserCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_LDP_BOOL) &&
+      ((isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT) &&
+        isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT)) ||
+       (isPropertyReadable(device_, OB_PROP_LASER_BOOL) &&
+        isPropertyWritable(device_, OB_PROP_LASER_BOOL)))) {
+    set_ldp_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        "/" + camera_name_ + "/" + "set_ldp",
+        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+          response.success = this->setLdpEnableCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyReadable(device_, OB_PROP_LDP_BOOL) &&
+      isPropertyReadable(device_, OB_PROP_LDP_STATUS_BOOL)) {
+    get_ldp_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+        "/" + camera_name_ + "/" + "get_ldp_status",
+        [this](GetBoolRequest& request, GetBoolResponse& response) {
+          response.success = this->getLdpStatusCallback(request, response);
+          return response.success;
+        });
+  }
   get_device_info_srv_ = nh_.advertiseService<GetDeviceInfoRequest, GetDeviceInfoResponse>(
       "/" + camera_name_ + "/" + "get_device_info",
       [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
         response.success = this->getDeviceInfoCallback(request, response);
+        return response.success;
+      });
+  get_device_config_srv_ = nh_.advertiseService<GetDeviceConfigRequest, GetDeviceConfigResponse>(
+      "/" + camera_name_ + "/" + "get_device_config",
+      [this](GetDeviceConfigRequest& request, GetDeviceConfigResponse& response) {
+        response.success = this->getDeviceConfigCallback(request, response);
         return response.success;
       });
   get_serial_number_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
@@ -273,23 +345,44 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->saveImagesCallback(request, response);
       });
+  export_config_json_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+      "/" + camera_name_ + "/" + "export_config_json",
+      [this](SetStringRequest& request, SetStringResponse& response) {
+        return this->exportConfigJsonCallback(request, response);
+      });
   switch_ir_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "switch_ir_mode",
       [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->switchIRModeCallback(request, response);
         return response.success;
       });
-  switch_ir_data_source_channel_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
-      "/" + camera_name_ + "/" + "switch_ir",
-      [this](SetStringRequest& request, SetStringResponse& response) {
-        response.success = this->switchIRDataSourceChannelCallback(request, response);
+  if (isPropertyWritable(device_, OB_PROP_IR_CHANNEL_DATA_SOURCE_INT)) {
+    switch_ir_data_source_channel_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+        "/" + camera_name_ + "/" + "switch_ir",
+        [this](SetStringRequest& request, SetStringResponse& response) {
+          response.success = this->switchIRDataSourceChannelCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyReadable(device_, OB_PROP_LDP_MEASURE_DISTANCE_INT)) {
+    get_lrm_measure_distance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+        "/" + camera_name_ + "/" + "get_lrm_measure_distance",
+        [this](GetInt32Request& request, GetInt32Response& response) {
+          response.success = this->getLrmMeasureDistanceCallback(request, response);
+          return response.success;
+        });
+  }
+  set_stream_profile_srv_ = nh_.advertiseService<SetStreamProfileRequest, SetStreamProfileResponse>(
+      "/" + camera_name_ + "/" + "set_stream_profile",
+      [this](SetStreamProfileRequest& request, SetStreamProfileResponse& response) {
+        response.success = this->setStreamProfileCallback(request, response);
         return response.success;
       });
-  get_lrm_measure_distance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
-      "/" + camera_name_ + "/" + "get_lrm_measure_distance",
-      [this](GetInt32Request& request, GetInt32Response& response) {
-        response.success = this->getLrmMeasureDistanceCallback(request, response);
-        return response.success;
+  set_image_registration_mode_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+      "/" + camera_name_ + "/" + "set_image_registration_mode",
+      [this](SetStringRequest& request, SetStringResponse& response) {
+        response.success = this->setImageRegistrationModeCallback(request, response);
+        return true;
       });
 
   set_write_customerdata_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
@@ -304,12 +397,15 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->setReadCustomerData(request, response);
         return response.success;
       });
-  get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
-      "/" + camera_name_ + "/" + "get_laser_status",
-      [this](GetBoolRequest& request, GetBoolResponse& response) {
-        response.success = this->getLaserStatusCallback(request, response);
-        return response.success;
-      });
+  if (isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT) ||
+      isPropertyReadable(device_, OB_PROP_LASER_BOOL)) {
+    get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+        "/" + camera_name_ + "/" + "get_laser_status",
+        [this](GetBoolRequest& request, GetBoolResponse& response) {
+          response.success = this->getLaserStatusCallback(request, response);
+          return response.success;
+        });
+  }
   set_point_cloud_decimation_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "set_point_cloud_decimation",
       [this](SetInt32Request& request, SetInt32Response& response) {
@@ -322,16 +418,27 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getPointCloudDecimationCallback(request, response);
         return response.success;
       });
-  set_disparity_range_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
-      "/" + camera_name_ + "/" + "set_disparity_range_mode",
-      [this](SetInt32Request& request, SetInt32Response& response) {
-        return this->setDisparityRangeModeCallback(request, response);
-      });
-  set_disparity_search_offset_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
-      "/" + camera_name_ + "/" + "set_disparity_search_offset",
-      [this](SetInt32Request& request, SetInt32Response& response) {
-        return this->setDisparitySearchOffsetCallback(request, response);
-      });
+  if (isPropertyWritable(device_, OB_PROP_DISP_SEARCH_RANGE_MODE_INT)) {
+    set_disparity_range_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+        "/" + camera_name_ + "/" + "set_disparity_range_mode",
+        [this](SetInt32Request& request, SetInt32Response& response) {
+          return this->setDisparityRangeModeCallback(request, response);
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_DISP_SEARCH_OFFSET_INT)) {
+    set_disparity_search_offset_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+        "/" + camera_name_ + "/" + "set_disparity_search_offset",
+        [this](SetInt32Request& request, SetInt32Response& response) {
+          return this->setDisparitySearchOffsetCallback(request, response);
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT)) {
+    set_sync_io_voltage_level_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+        "/" + camera_name_ + "/" + "set_sync_io_voltage_level",
+        [this](SetInt32Request& request, SetInt32Response& response) {
+          return this->setSyncIoVoltageLevelCallback(request, response);
+        });
+  }
   set_ae_reference_stream_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
       "/" + camera_name_ + "/" + "set_ae_reference_stream",
       [this](const SetStringRequest& request, SetStringResponse& response) {
@@ -382,6 +489,7 @@ bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
         return false;
         break;
     }
+    image_mirror_[stream_index] = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set mirror mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -427,6 +535,7 @@ bool OBCameraNode::setFlipCallback(std_srvs::SetBoolRequest& request,
         return false;
         break;
     }
+    image_flip_[stream_index] = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set flip mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -447,37 +556,31 @@ bool OBCameraNode::setRotationCallback(SetInt32Request& request, SetInt32Respons
     switch (stream) {
       case OB_STREAM_IR_RIGHT:
         device_->setIntProperty(OB_PROP_IR_RIGHT_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_IR_LEFT:
         device_->setIntProperty(OB_PROP_IR_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_IR:
         device_->setIntProperty(OB_PROP_IR_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_DEPTH:
         device_->setIntProperty(OB_PROP_DEPTH_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_COLOR:
         device_->setIntProperty(OB_PROP_COLOR_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_COLOR_LEFT:
         device_->setIntProperty(OB_PROP_COLOR_LEFT_ROTATE_INT, request.data);
-        return true;
         break;
       case OB_STREAM_COLOR_RIGHT:
         device_->setIntProperty(OB_PROP_COLOR_RIGHT_ROTATE_INT, request.data);
-        return true;
         break;
       default:
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
         return false;
         break;
     }
+    image_rotation_[stream_index] = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set rotation mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -522,6 +625,13 @@ bool OBCameraNode::setExposureCallback(SetInt32Request& request, SetInt32Respons
       return false;
     }
     sensor->setExposure(request.data);
+    if (stream_index == COLOR) {
+      color_exposure_ = request.data;
+    } else if (stream_index == DEPTH) {
+      depth_exposure_ = request.data;
+    } else if (stream_index == INFRA0 || stream_index == INFRA1 || stream_index == INFRA2) {
+      ir_exposure_ = request.data;
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set exposure: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -586,6 +696,10 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         ROS_INFO_STREAM("set depth AE ROI : "
                         << "[Left: " << config.x0_left << ", Right: " << config.x1_right
                         << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
+        depth_ae_roi_left_ = config.x0_left;
+        depth_ae_roi_right_ = config.x1_right;
+        depth_ae_roi_top_ = config.y0_top;
+        depth_ae_roi_bottom_ = config.y1_bottom;
         break;
       case OB_STREAM_COLOR:
       case OB_STREAM_COLOR_LEFT:
@@ -621,6 +735,10 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
         ROS_INFO_STREAM("set color AE ROI : "
                         << "[Left: " << config.x0_left << ", Right: " << config.x1_right
                         << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
+        color_ae_roi_left_ = config.x0_left;
+        color_ae_roi_right_ = config.x1_right;
+        color_ae_roi_top_ = config.y0_top;
+        color_ae_roi_bottom_ = config.y1_bottom;
         break;
       default:
         ROS_ERROR_STREAM(" NOT a video stream" << __FUNCTION__);
@@ -632,7 +750,7 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
     response.message = "set AE ROI success";
     return true;
   } catch (const ob::Error& e) {
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     response.success = false;
     ROS_ERROR_STREAM("Failed to set AE ROI: " << orbbec_camera::formatObErrorWithStatus(e));
     return true;
@@ -687,6 +805,13 @@ bool OBCameraNode::setGainCallback(SetInt32Request& request, SetInt32Response& r
     sensor->setGain(request.data);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     auto gain = sensor->getGain();
+    if (stream_index == COLOR) {
+      color_gain_ = gain;
+    } else if (stream_index == DEPTH) {
+      depth_gain_ = gain;
+    } else if (stream_index == INFRA0 || stream_index == INFRA1 || stream_index == INFRA2) {
+      ir_gain_ = gain;
+    }
     ROS_INFO_STREAM("After set gain: " << gain);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set gain: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -730,6 +855,7 @@ bool OBCameraNode::setAutoWhiteBalanceCallback(SetInt32Request& request,
     sensor->setAutoWhiteBalance(request.data);
     ROS_INFO_STREAM("Set auto white balance to: " << request.data);
     result = sensor->getAutoWhiteBalance();
+    enable_color_auto_white_balance_ = result;
     ROS_INFO_STREAM("After set auto white balance: " << result);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM(
@@ -780,6 +906,7 @@ bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Res
       return false;
     }
     sensor->setWhiteBalance(request.data);
+    color_white_balance_ = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -799,6 +926,12 @@ bool OBCameraNode::setAutoExposureCallback(std_srvs::SetBoolRequest& request,
   auto sensor = sensors_[stream_index];
   try {
     sensor->setAutoExposure(request.data);
+    if (stream_index == COLOR) {
+      enable_color_auto_exposure_ = request.data;
+    } else if (stream_index == DEPTH || stream_index == INFRA0 || stream_index == INFRA1 ||
+               stream_index == INFRA2) {
+      enable_ir_auto_exposure_ = request.data;
+    }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set auto exposure: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -832,14 +965,20 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     int data = request.data ? 1 : 0;
-    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+    bool cache_updated = false;
+    if (isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT)) {
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, data);
-    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      cache_updated = true;
+    } else if (isPropertyWritable(device_, OB_PROP_LASER_BOOL)) {
       device_->setBoolProperty(OB_PROP_LASER_BOOL, data);
+      cache_updated = true;
+    }
+    if (cache_updated) {
+      enable_laser_ = request.data;
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set laser: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -847,13 +986,18 @@ bool OBCameraNode::setLaserCallback(std_srvs::SetBoolRequest& request,
 
 bool OBCameraNode::setPtpConfigCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response) {
-  (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
+    if (!isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL) ||
+        !isPropertyWritable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
+      response.message = "PTP clock sync property is not supported or not writable";
+      return false;
+    }
     device_->setBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL, request.data);
+    enable_ptp_config_ = request.data;
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("set ptp config failed: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -863,6 +1007,11 @@ bool OBCameraNode::getPtpConfigCallback(GetBoolRequest& request, GetBoolResponse
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
+    if (!isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
+      response.message = "PTP clock sync property is not supported or not readable";
+      response.success = false;
+      return false;
+    }
     response.data = device_->getBoolProperty(OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM(
@@ -875,15 +1024,22 @@ bool OBCameraNode::getPtpConfigCallback(GetBoolRequest& request, GetBoolResponse
 
 bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
                                         std_srvs::SetBoolResponse& response) {
-  (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   bool ldp_enable = request.data;
   try {
-    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+    bool cache_updated = false;
+    if (!isPropertyWritable(device_, OB_PROP_LDP_BOOL)) {
+      response.message = "LDP property is not supported";
+      return false;
+    }
+    if (isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT) &&
+        isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT)) {
       auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
       device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
       device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, laser_enable);
-    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+      cache_updated = true;
+    } else if (isPropertyReadable(device_, OB_PROP_LASER_BOOL) &&
+               isPropertyWritable(device_, OB_PROP_LASER_BOOL)) {
       if (!ldp_enable) {
         auto laser_enable = device_->getBoolProperty(OB_PROP_LASER_BOOL);
         device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
@@ -892,10 +1048,17 @@ bool OBCameraNode::setLdpEnableCallback(std_srvs::SetBoolRequest& request,
       } else {
         device_->setBoolProperty(OB_PROP_LDP_BOOL, ldp_enable);
       }
+      cache_updated = true;
+    }
+    if (cache_updated) {
+      enable_ldp_ = ldp_enable;
+    } else {
+      response.message = "Laser property is not supported";
+      return false;
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set LDP: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -905,7 +1068,14 @@ bool OBCameraNode::getLdpStatusCallback(GetBoolRequest& request, GetBoolResponse
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
-    response.data = device_->getBoolProperty(OB_PROP_LDP_STATUS_BOOL);
+    if (!isPropertyReadable(device_, OB_PROP_LDP_BOOL) ||
+        !isPropertyReadable(device_, OB_PROP_LDP_STATUS_BOOL)) {
+      response.message = "LDP property is not supported";
+      response.success = false;
+      return false;
+    }
+    response.data = device_->getBoolProperty(OB_PROP_LDP_BOOL) &&
+                    device_->getBoolProperty(OB_PROP_LDP_STATUS_BOOL);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to get LDP status: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
@@ -922,7 +1092,7 @@ bool OBCameraNode::setFanWorkModeCallback(std_srvs::SetBoolRequest& request,
     device_->setBoolProperty(OB_PROP_FAN_WORK_MODE_INT, request.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("set fan failed: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -935,7 +1105,7 @@ bool OBCameraNode::setFloodCallback(std_srvs::SetBoolRequest& request,
     device_->setBoolProperty(OB_PROP_FLOOD_BOOL, request.data);
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("set flood failed: " << orbbec_camera::formatObErrorWithStatus(e));
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   }
   return true;
@@ -951,6 +1121,182 @@ bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
   response.info.firmware_version = device_info->firmwareVersion();
   response.info.supported_min_sdk_version = device_info->supportedMinSdkVersion();
   response.success = true;
+  return true;
+}
+
+bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
+                                           GetDeviceConfigResponse& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  response.schema_version = "1";
+  response.color_preset = color_preset_;
+  response.align_mode = align_mode_;
+  response.align_target_stream = alignTargetStreamToString(align_target_stream_);
+  response.time_domain = time_domain_;
+  response.frame_aggregate_mode = frame_aggregate_mode_;
+  response.disparity_to_depth_mode = disparity_to_depth_mode_;
+  response.sync_mode = OBSyncModeToString(sync_mode_);
+  response.depth_precision = depth_precision_str_;
+  response.enable_frame_sync = enable_frame_sync_;
+  response.depth_registration = depth_registration_;
+  response.exposure_range_mode = exposure_range_mode_;
+  response.intra_camera_sync_reference = intra_camera_sync_reference_;
+  response.data_json = "";
+
+  auto can_read = [this](OBPropertyID property_id) {
+    return device_->isPropertySupported(property_id, OB_PERMISSION_READ) ||
+           device_->isPropertySupported(property_id, OB_PERMISSION_READ_WRITE);
+  };
+
+  try {
+    if (can_read(OB_PROP_DISPARITY_TO_DEPTH_BOOL) &&
+        can_read(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL)) {
+      response.disparity_to_depth_mode = disparityToDepthModeToString(
+          device_->getBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL),
+          device_->getBoolProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get disparity to depth mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get disparity to depth mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get disparity to depth mode");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL)) {
+      const bool hardware_align_enabled =
+          device_->getBoolProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL);
+      if (hardware_align_enabled) {
+        response.align_mode = "HW";
+        response.align_target_stream = "COLOR";
+        response.depth_registration = true;
+      } else if (align_mode_ == "HW") {
+        response.depth_registration = false;
+      }
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status: "
+                     << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get hardware depth alignment status");
+  }
+
+  try {
+    response.sync_mode = OBSyncModeToString(device_->getMultiDeviceSyncConfig().syncMode);
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get multi-device sync mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get multi-device sync mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get multi-device sync mode");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEPTH_PRECISION_LEVEL_INT)) {
+      response.depth_precision =
+          depthPrecisionLevelToString(device_->getIntProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT));
+    } else if (can_read(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT)) {
+      response.depth_precision =
+          std::to_string(device_->getFloatProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT)) +
+          "mm";
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get depth precision: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get depth precision: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get depth precision");
+  }
+
+  try {
+    if (can_read(OB_PROP_DEVICE_PERFORMANCE_MODE_INT)) {
+      response.exposure_range_mode =
+          exposureRangeModeToString(device_->getIntProperty(OB_PROP_DEVICE_PERFORMANCE_MODE_INT));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get exposure range mode: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get exposure range mode: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get exposure range mode");
+  }
+
+  try {
+    if (can_read(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT)) {
+      response.intra_camera_sync_reference = intraCameraSyncReferenceToString(
+          device_->getIntProperty(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT));
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM(
+        "Failed to get intra-camera sync reference: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get intra-camera sync reference: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get intra-camera sync reference");
+  }
+
+  try {
+    response.device_preset = device_->getCurrentPresetName();
+    if (response.device_preset == "Custom") {
+      try {
+        const char* current_depth_mode_name = device_->getCurrentDepthModeName();
+        if (current_depth_mode_name != nullptr) {
+          std::string current_depth_mode(current_depth_mode_name);
+          if (!current_depth_mode.empty()) {
+            response.device_preset = "Custom(from " + current_depth_mode + ")";
+          }
+        }
+      } catch (const ob::Error& e) {
+        ROS_DEBUG_STREAM(
+            "Failed to get current depth mode name: " << orbbec_camera::formatObErrorWithStatus(e));
+      } catch (const std::exception& e) {
+        ROS_DEBUG_STREAM("Failed to get current depth mode name: " << e.what());
+      } catch (...) {
+        ROS_DEBUG_STREAM("Failed to get current depth mode name");
+      }
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get current preset: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get current preset: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get current preset");
+  }
+
+  try {
+    if (device_->isColorPresetSupported()) {
+      const char* color_preset_name = device_->getCurrentColorPresetName();
+      if (color_preset_name != nullptr && color_preset_name[0] != '\0') {
+        response.color_preset = color_preset_name;
+      }
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get color preset: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get color preset: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get color preset");
+  }
+
+  try {
+    response.preset_version = device_->getExtensionInfo("PresetVer");
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get preset version: " << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get preset version: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get preset version");
+  }
+
+  response.success = true;
+  response.message = "OK";
   return true;
 }
 
@@ -1010,6 +1356,37 @@ bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enab
   }
 }
 
+bool OBCameraNode::setStreamProfileCallback(SetStreamProfileRequest& request,
+                                            SetStreamProfileResponse& response) {
+  try {
+    std::vector<PendingStreamProfile> pending_profiles;
+    std::string message;
+    if (!validateStreamProfileRequest(request, pending_profiles, message)) {
+      response.success = false;
+      response.message = message;
+      return false;
+    }
+    if (!applyStreamProfiles(pending_profiles, message)) {
+      response.success = false;
+      response.message = message;
+      return false;
+    }
+    response.success = true;
+    response.message = message;
+    return true;
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return false;
+}
+
 bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,
                                       std_srvs::EmptyResponse& response) {
   (void)request;
@@ -1031,6 +1408,13 @@ bool OBCameraNode::savePointCloudCallback(std_srvs::EmptyRequest& request,
   (void)response;
   save_point_cloud_ = true;
   save_colored_point_cloud_ = true;
+  return true;
+}
+
+bool OBCameraNode::exportConfigJsonCallback(SetStringRequest& request,
+                                            SetStringResponse& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  response.success = exportConfigJsonToFile(request.data, response.message);
   return true;
 }
 
@@ -1145,6 +1529,14 @@ bool OBCameraNode::resetCameraGainCallback(std_srvs::EmptyRequest& request,
         return false;
       }
       sensor->setGain(data);
+      const auto gain = sensor->getGain();
+      if (stream_index == COLOR) {
+        color_gain_ = gain;
+      } else if (stream_index == DEPTH) {
+        depth_gain_ = gain;
+      } else if (stream_index == INFRA0 || stream_index == INFRA1 || stream_index == INFRA2) {
+        ir_gain_ = gain;
+      }
       return true;
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("Failed to set gain: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -1166,6 +1558,13 @@ bool OBCameraNode::resetCameraExposureCallback(std_srvs::EmptyRequest& request,
   if (sensor) {
     try {
       sensor->setExposure(data);
+      if (stream_index == COLOR) {
+        color_exposure_ = data;
+      } else if (stream_index == DEPTH) {
+        depth_exposure_ = data;
+      } else if (stream_index == INFRA0 || stream_index == INFRA1 || stream_index == INFRA2) {
+        ir_exposure_ = data;
+      }
       return true;
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("Failed to set exposure: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -1191,6 +1590,7 @@ bool OBCameraNode::resetCameraWhiteBalanceCallback(std_srvs::EmptyRequest& reque
         return false;
       }
       sensor->setWhiteBalance(data);
+      color_white_balance_ = data;
       return true;
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM(
@@ -1209,7 +1609,7 @@ bool OBCameraNode::switchIRModeCallback(SetInt32Request& request, SetInt32Respon
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to switch IR mode: " << e.getMessage();
+    ss << "Failed to switch IR mode: " << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM("Failed to switch IR mode: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
@@ -1228,7 +1628,7 @@ bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to switch IR data source channel: " << e.getMessage();
+    ss << "Failed to switch IR data source channel: " << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM(
         "Failed to switch IR data source channel: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
@@ -1250,7 +1650,7 @@ bool OBCameraNode::setWriteCustomerData(SetStringRequest& request, SetStringResp
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to set write customer data: " << e.getMessage();
+    ss << "Failed to set write customer data: " << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM(
         "Failed to set write customer data: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
@@ -1272,7 +1672,7 @@ bool OBCameraNode::setReadCustomerData(GetStringRequest& request, GetStringRespo
     return true;
   } catch (const ob::Error& e) {
     std::stringstream ss;
-    ss << "Failed to read customer data: " << e.getMessage();
+    ss << "Failed to read customer data: " << orbbec_camera::formatObErrorWithStatus(e);
     ROS_ERROR_STREAM("Failed to read customer data: " << orbbec_camera::formatObErrorWithStatus(e));
     response.message = ss.str();
     return false;
@@ -1283,10 +1683,14 @@ bool OBCameraNode::getLaserStatusCallback(GetBoolRequest& request, GetBoolRespon
   (void)request;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
-    if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+    if (isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT)) {
       response.data = device_->getBoolProperty(OB_PROP_LASER_CONTROL_INT) ? true : false;
-    } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+    } else if (isPropertyReadable(device_, OB_PROP_LASER_BOOL)) {
       response.data = device_->getBoolProperty(OB_PROP_LASER_BOOL) ? true : false;
+    } else {
+      response.message = "Laser property is not supported";
+      response.success = false;
+      return false;
     }
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to get laser status: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -1314,7 +1718,7 @@ bool OBCameraNode::setPointCloudDecimationCallback(SetInt32Request& request,
     ROS_ERROR_STREAM(
         "Failed to set point cloud decimation: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
-    response.message = e.getMessage();
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
     return false;
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("Failed to set point cloud decimation: " << e.what());
@@ -1394,12 +1798,13 @@ bool OBCameraNode::setDisparityRangeModeCallback(SetInt32Request& request,
                               : (current_mode_index == 1) ? 128
                               : (current_mode_index == 2) ? 256
                                                           : current_mode_index;
+    disparity_range_mode_ = current_mode_value;
     response.success = true;
     response.message = "disparity_range_mode updated to " + std::to_string(current_mode_value);
     ROS_INFO_STREAM(response.message);
     return true;
   } catch (const ob::Error& e) {
-    return setDisparityServiceFailure(response, e.getMessage());
+    return setDisparityServiceFailure(response, orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
     return setDisparityServiceFailure(response, e.what());
   } catch (...) {
@@ -1441,17 +1846,56 @@ bool OBCameraNode::setDisparitySearchOffsetCallback(SetInt32Request& request,
 
     device_->setIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, request.data);
     auto current_offset = device_->getIntProperty(OB_PROP_DISP_SEARCH_OFFSET_INT);
+    disparity_search_offset_ = current_offset;
     ROS_INFO_STREAM("Set disparity_search_offset to " << current_offset);
     response.success = true;
     response.message = "disparity_search_offset updated to " + std::to_string(current_offset);
     return true;
   } catch (const ob::Error& e) {
-    return setDisparityServiceFailure(response, e.getMessage());
+    return setDisparityServiceFailure(response, orbbec_camera::formatObErrorWithStatus(e));
   } catch (const std::exception& e) {
     return setDisparityServiceFailure(response, e.what());
   } catch (...) {
     return setDisparityServiceFailure(response, "unknown error");
   }
+}
+
+bool OBCameraNode::setSyncIoVoltageLevelCallback(SetInt32Request& request,
+                                                 SetInt32Response& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    if (!device_->isPropertySupported(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT,
+                                      OB_PERMISSION_READ_WRITE)) {
+      response.success = false;
+      response.message = "Current device does not support sync IO voltage level";
+      return true;
+    }
+
+    auto range = device_->getIntPropertyRange(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT);
+    if (request.data < range.min || request.data > range.max) {
+      response.success = false;
+      response.message =
+          "Invalid sync IO voltage level. Allowed values:" + std::to_string(range.min) + " to " +
+          std::to_string(range.max);
+      return true;
+    }
+
+    device_->setIntProperty(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT, request.data);
+    sync_io_voltage_level_ = device_->getIntProperty(OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT);
+    response.success = true;
+    response.message = "sync_io_voltage_level updated to " + std::to_string(sync_io_voltage_level_);
+    ROS_INFO_STREAM(response.message);
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return true;
 }
 
 void OBCameraNode::setAEReferenceStreamCallback(const SetStringRequest& request,
@@ -1490,5 +1934,115 @@ void OBCameraNode::setAEStrategyCallback(const SetStringRequest& request,
     response.success = false;
     response.message = "exception occurred";
   }
+}
+
+bool OBCameraNode::setImageRegistrationModeCallback(SetStringRequest& request,
+                                                    SetStringResponse& response) {
+  auto mode = request.data;
+  std::transform(mode.begin(), mode.end(), mode.begin(),
+                 [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+  if (mode != "OFF" && mode != "HW_D2C" && mode != "SW_D2C" && mode != "SW_C2D") {
+    response.success = false;
+    response.message = "Invalid image registration mode '" + request.data +
+                       "'. Valid values: OFF, HW_D2C, SW_D2C, SW_C2D";
+    return false;
+  }
+
+  std::lock_guard<std::recursive_mutex> lock(device_lock_);
+
+  if (mode != "OFF" && (!enable_stream_[COLOR] || !enable_stream_[DEPTH])) {
+    response.success = false;
+    response.message =
+        "Image registration mode " + mode + " requires both color and depth streams to be enabled";
+    return false;
+  }
+
+  const bool old_depth_registration = depth_registration_;
+  const std::string old_align_mode = align_mode_;
+  const OBStreamType old_align_target_stream = align_target_stream_;
+  const bool was_running = pipeline_started_.load();
+
+  auto mode_from_state = [](bool depth_registration, const std::string& align_mode,
+                            OBStreamType align_target_stream) {
+    if (!depth_registration) {
+      return std::string("OFF");
+    }
+    if (align_mode == "HW") {
+      return std::string("HW_D2C");
+    }
+    return align_target_stream == OB_STREAM_DEPTH ? std::string("SW_C2D") : std::string("SW_D2C");
+  };
+  const auto old_mode =
+      mode_from_state(old_depth_registration, old_align_mode, old_align_target_stream);
+
+  auto apply_image_registration_mode = [this](const std::string& mode) {
+    if (mode == "OFF") {
+      depth_registration_ = false;
+      align_mode_ = "HW";
+      align_target_stream_ = OB_STREAM_COLOR;
+    } else if (mode == "HW_D2C") {
+      depth_registration_ = true;
+      align_mode_ = "HW";
+      align_target_stream_ = OB_STREAM_COLOR;
+    } else {
+      depth_registration_ = true;
+      align_mode_ = "SW";
+      align_target_stream_ = mode == "SW_C2D" ? OB_STREAM_DEPTH : OB_STREAM_COLOR;
+    }
+    align_filter_.reset();
+    syncSoftwareAlignment();
+  };
+
+  auto restore_old_mode = [this, old_depth_registration, old_align_mode,
+                           old_align_target_stream]() {
+    depth_registration_ = old_depth_registration;
+    align_mode_ = old_align_mode;
+    align_target_stream_ = old_align_target_stream;
+    align_filter_.reset();
+    syncSoftwareAlignment();
+  };
+
+  auto rollback_after_error = [&](const std::string& error_message) {
+    try {
+      restore_old_mode();
+      if (was_running && !pipeline_started_.load()) {
+        startStreams();
+      }
+      response.message = "Failed to set image registration mode to " + mode + ": " + error_message +
+                         ". Rolled back to " + old_mode;
+    } catch (const std::exception& rollback_error) {
+      response.message = "Failed to set image registration mode to " + mode + ": " + error_message +
+                         ". Rollback to " + old_mode + " also failed: " + rollback_error.what();
+    } catch (...) {
+      response.message = "Failed to set image registration mode to " + mode + ": " + error_message +
+                         ". Rollback to " + old_mode + " also failed";
+    }
+    response.success = false;
+  };
+
+  try {
+    if (was_running) {
+      stopStreams();
+    }
+
+    apply_image_registration_mode(mode);
+
+    if (was_running) {
+      startStreams();
+      response.message = "Image registration mode changed from " + old_mode + " to " + mode +
+                         "; streams restarted";
+    } else {
+      response.message = "Image registration mode set to " + mode + "; streams remain stopped";
+    }
+    response.success = true;
+    return true;
+  } catch (const ob::Error& e) {
+    rollback_after_error(orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    rollback_after_error(e.what());
+  } catch (...) {
+    rollback_after_error("unknown error");
+  }
+  return false;
 }
 }  // namespace orbbec_camera

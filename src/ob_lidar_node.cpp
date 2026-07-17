@@ -261,8 +261,8 @@ void OBLidarNode::setupProfiles() {
         }
 
       } catch (const ob::Error& ex) {
-        ROS_ERROR_STREAM("Failed to get " << stream_name_[elem]
-                                          << "  profile: " << ex.getMessage());
+        ROS_ERROR_STREAM("Failed to get " << stream_name_[elem] << "  profile: "
+                                          << orbbec_camera::formatObErrorWithStatus(ex));
         ROS_ERROR_STREAM("Stream: " << elem.first << ", Stream Index: " << elem.second
                                     << ", Scan Rate: " << rate_[elem]
                                     << "Format:" << format_[elem]);
@@ -1106,8 +1106,8 @@ void OBLidarNode::publishLidarToIMUExtrinsics() {
       ex = base_stream_profile->getExtrinsicTo(stream_profile_[GYRO]);
       ROS_INFO_STREAM("Using GYRO extrinsic for IMU");
     } catch (const ob::Error& e2) {
-      ROS_INFO_STREAM("Failed to get "
-                      << frame_id << " extrinsic from both ACCEL and GYRO: " << e2.getMessage());
+      ROS_INFO_STREAM("Failed to get " << frame_id << " extrinsic from both ACCEL and GYRO: "
+                                       << orbbec_camera::formatObErrorWithStatus(e2));
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
   }

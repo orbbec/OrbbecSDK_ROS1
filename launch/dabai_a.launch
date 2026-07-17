@@ -10,7 +10,12 @@
     <arg name="tf_publish_rate" default="0.0"/>
     <arg name="enable_frame_sync" default="true"/>
     <arg name="time_domain" default="global"/><!-- "device", "global", "system" -->
-    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="timestamp_clock_type" default=""/><!-- "realtime" or "monotonic", default is realtime. -->
+    <arg name="enable_color_undistortion" default="false"/>
+    <arg name="enable_depth_undistortion" default="false"/>
+    <arg name="enable_left_ir_undistortion" default="false"/>
+    <arg name="enable_right_ir_undistortion" default="false"/>
+    <arg name="enable_frame_drop_log" default="false"/>
     <arg name="frame_timestamp_csv_file" default=""/>
     <arg name="uvc_backend" default="libuvc"/><!-- "libuvc" or "v4l2" -->
     <arg name="enable_sync_host_time" default="false"/>
@@ -123,9 +128,13 @@
     <arg name="usb_port" default=""/>
     <arg name="serial_number" default=""/>
     <arg name="device_num" default="1"/>
+    <arg name="bag_record_filename" default=""/>
+    <arg name="bag_filename" default=""/>
+    <arg name="bag_loop" default="false"/>
 
     <arg name="retry_on_usb3_detection_failure" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
+    <arg name="enable_image_transport_plugins" default="true"/>
     <arg name="enable_ldp" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
     <arg name="enable_firmware_log" default="false"/>
@@ -135,6 +144,9 @@
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <!-- Use the parameters defined above -->
             <param name="camera_name" value="$(arg camera_name)"/>
+            <param name="bag_record_filename" value="$(arg bag_record_filename)"/>
+            <param name="bag_filename" value="$(arg bag_filename)"/>
+            <param name="bag_loop" value="$(arg bag_loop)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="log_file_name" value="$(arg log_file_name)"/>
@@ -142,7 +154,12 @@
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>
             <param name="time_domain" value="$(arg time_domain)"/>
-            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
+            <param name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
+            <param name="enable_depth_undistortion" value="$(arg enable_depth_undistortion)"/>
+            <param name="enable_left_ir_undistortion" value="$(arg enable_left_ir_undistortion)"/>
+            <param name="enable_right_ir_undistortion" value="$(arg enable_right_ir_undistortion)"/>
+            <param name="enable_frame_drop_log" value="$(arg enable_frame_drop_log)"/>
             <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="uvc_backend" value="$(arg uvc_backend)"/>
             <param name="enable_sync_host_time" value="$(arg enable_sync_host_time)"/>
@@ -238,6 +255,7 @@
             <param name="device_num" value="$(arg device_num)"/>
             <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
+            <param name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
             <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>

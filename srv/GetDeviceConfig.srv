@@ -1,0 +1,27 @@
+---
+# Schema version for this service response. Increment only when field semantics change.
+string schema_version
+
+# Effective device configuration state that is not provided by existing device/version services.
+string device_preset
+string preset_version
+string color_preset
+string depth_precision
+string disparity_to_depth_mode
+string exposure_range_mode
+
+bool depth_registration
+string align_mode
+string align_target_stream
+string frame_aggregate_mode
+bool enable_frame_sync
+
+string time_domain
+string sync_mode
+string intra_camera_sync_reference
+
+# Reserved for future non-breaking, device-specific extensions.
+string data_json
+
+bool success
+string message

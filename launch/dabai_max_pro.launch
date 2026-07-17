@@ -1,13 +1,20 @@
 <launch>
     <!-- unique camera name-->
     <arg name="camera_name" default="camera"/>
-    <arg name="enable_frame_timestamp_csv" default="false"/>
+    <arg name="timestamp_clock_type" default=""/><!-- "realtime" or "monotonic", default is realtime. -->
+    <arg name="enable_color_undistortion" default="false"/>
+    <arg name="enable_depth_undistortion" default="false"/>
+    <arg name="enable_ir_undistortion" default="false"/>
+    <arg name="enable_frame_drop_log" default="false"/>
     <arg name="frame_timestamp_csv_file" default=""/>
     <!-- Hardware depth registration -->
     <arg name="depth_registration" default="false"/>
     <arg name="serial_number" default=""/>
     <arg name="usb_port" default=""/>
     <arg name="device_num" default="1"/>
+    <arg name="bag_record_filename" default=""/>
+    <arg name="bag_filename" default=""/>
+    <arg name="bag_loop" default="false"/>
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default=""/>
     <arg name="enable_point_cloud" default="true"/>
@@ -19,13 +26,28 @@
     <arg name="enable_color" default="true"/>
     <arg name="color_format" default="MJPG"/>
     <arg name="flip_color" default="false"/>
+    <arg name="enable_color_auto_exposure_priority" default="false"/>
     <arg name="enable_color_auto_exposure" default="true"/>
+    <arg name="color_exposure" default="-1"/>
+    <arg name="color_gain" default="-1"/>
+    <arg name="color_brightness" default="-1"/>
+    <arg name="enable_color_auto_white_balance" default="true"/>
+    <arg name="color_white_balance" default="-1"/>
+    <arg name="color_sharpness" default="-1"/>
+    <arg name="color_gamma" default="-1"/>
+    <arg name="color_saturation" default="-1"/>
+    <arg name="color_contrast" default="-1"/>
+    <arg name="color_backlight_compensation" default="-1"/>
     <arg name="depth_width" default="640"/>
     <arg name="depth_height" default="400"/>
     <arg name="depth_fps" default="10"/>
     <arg name="enable_depth" default="true"/>
     <arg name="depth_format" default="Y12"/>
-    <arg name="flip_depth" default="false"/>
+    <arg name="depth_flip" default="false"/>
+    <arg name="depth_mirror" default="false"/>
+    <arg name="depth_rotation" default="-1"/>
+    <arg name="depth_exposure" default="-1"/>
+    <arg name="depth_gain" default="-1"/>
     <arg name="ir_width" default="640"/>
     <arg name="ir_height" default="400"/>
     <arg name="ir_fps" default="10"/>
@@ -41,10 +63,36 @@
     <arg name="log_level" default="none"/>
     <arg name="log_file_name" default=""/>
     <arg name="enable_d2c_viewer" default="false"/>
+    <arg name="enable_image_transport_plugins" default="true"/>
     <arg name="enable_pipeline" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
+    <arg name="enable_noise_removal_filter" default="true"/>
+    <arg name="noise_removal_filter_min_diff" default="256"/>
+    <arg name="noise_removal_filter_max_size" default="80"/>
     <arg name="enable_mgc_noise_removal_filter" default="false"/>
     <arg name="enable_lut_noise_removal_filter" default="false"/>
+    <arg name="enable_disp_outliers_filter" default="false"/>
+    <arg name="disp_outliers_filter_search_mode" default=""/><!-- FULL or OFFSET_80 -->
+    <arg name="enable_edge_noise_removal_filter" default="false"/>
+    <arg name="enable_spatial_fast_filter" default="false"/>
+    <arg name="spatial_fast_filter_radius" default="-1"/>
+    <arg name="enable_spatial_moderate_filter" default="false"/>
+    <arg name="spatial_moderate_filter_diff_threshold" default="-1"/>
+    <arg name="spatial_moderate_filter_magnitude" default="-1"/>
+    <arg name="spatial_moderate_filter_radius" default="-1"/>
+    <arg name="enable_spatial_filter" default="false"/>
+    <arg name="spatial_filter_alpha" default="-1.0"/>
+    <arg name="spatial_filter_diff_threshold" default="-1"/>
+    <arg name="spatial_filter_magnitude" default="-1"/>
+    <arg name="spatial_filter_radius" default="-1"/>
+    <arg name="enable_temporal_filter" default="false"/>
+    <arg name="temporal_filter_diff_threshold" default="-1.0"/>
+    <arg name="temporal_filter_weight" default="-1.0"/>
+    <arg name="enable_hole_filling_filter" default="false"/>
+    <arg name="hole_filling_filter_mode" default=""/>
+    <arg name="enable_threshold_filter" default="true"/>
+    <arg name="threshold_filter_max" default="-1"/>
+    <arg name="threshold_filter_min" default="-1"/>
     <!-- Configure the path for depth filter file, for example: /config/depthfilter/Openni_device.json -->
     <arg name="depth_filter_config" default=""/>
     <arg name="laser_energy_level" default="-1"/>
@@ -52,7 +100,14 @@
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
             <param name="camera_name" value="$(arg camera_name)"/>
-            <param name="enable_frame_timestamp_csv" value="$(arg enable_frame_timestamp_csv)"/>
+            <param name="bag_record_filename" value="$(arg bag_record_filename)"/>
+            <param name="bag_filename" value="$(arg bag_filename)"/>
+            <param name="bag_loop" value="$(arg bag_loop)"/>
+            <param name="timestamp_clock_type" value="$(arg timestamp_clock_type)"/>
+            <param name="enable_color_undistortion" value="$(arg enable_color_undistortion)"/>
+            <param name="enable_depth_undistortion" value="$(arg enable_depth_undistortion)"/>
+            <param name="enable_ir_undistortion" value="$(arg enable_ir_undistortion)"/>
+            <param name="enable_frame_drop_log" value="$(arg enable_frame_drop_log)"/>
             <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
             <param name="depth_registration" value="$(arg depth_registration)"/>
             <param name="serial_number" type="string" value="$(arg serial_number)"/>
@@ -68,13 +123,28 @@
             <param name="enable_color" value="$(arg enable_color)"/>
             <param name="color_format" value="$(arg color_format)"/>
             <param name="flip_color" value="$(arg flip_color)"/>
+            <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)"/>
             <param name="enable_color_auto_exposure" value="$(arg enable_color_auto_exposure)"/>
+            <param name="color_exposure" value="$(arg color_exposure)"/>
+            <param name="color_gain" value="$(arg color_gain)"/>
+            <param name="color_brightness" value="$(arg color_brightness)"/>
+            <param name="enable_color_auto_white_balance" value="$(arg enable_color_auto_white_balance)"/>
+            <param name="color_white_balance" value="$(arg color_white_balance)"/>
+            <param name="color_sharpness" value="$(arg color_sharpness)"/>
+            <param name="color_gamma" value="$(arg color_gamma)"/>
+            <param name="color_saturation" value="$(arg color_saturation)"/>
+            <param name="color_contrast" value="$(arg color_contrast)"/>
+            <param name="color_backlight_compensation" value="$(arg color_backlight_compensation)"/>
             <param name="depth_width" value="$(arg depth_width)"/>
             <param name="depth_height" value="$(arg depth_height)"/>
             <param name="depth_fps" value="$(arg depth_fps)"/>
             <param name="enable_depth" value="$(arg enable_depth)"/>
             <param name="depth_format" value="$(arg depth_format)"/>
-            <param name="flip_depth" value="$(arg flip_depth)"/>
+            <param name="depth_flip" value="$(arg depth_flip)"/>
+            <param name="depth_mirror" value="$(arg depth_mirror)"/>
+            <param name="depth_rotation" value="$(arg depth_rotation)"/>
+            <param name="depth_exposure" value="$(arg depth_exposure)"/>
+            <param name="depth_gain" value="$(arg depth_gain)"/>
             <param name="ir_width" value="$(arg ir_width)"/>
             <param name="ir_height" value="$(arg ir_height)"/>
             <param name="ir_fps" value="$(arg ir_fps)"/>
@@ -90,11 +160,37 @@
             <param name="log_level" value="$(arg log_level)"/>
             <param name="log_file_name" value="$(arg log_file_name)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
+            <param name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
             <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="device_num" value="$(arg device_num)"/>
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
+            <param name="enable_noise_removal_filter" value="$(arg enable_noise_removal_filter)"/>
+            <param name="noise_removal_filter_min_diff" value="$(arg noise_removal_filter_min_diff)"/>
+            <param name="noise_removal_filter_max_size" value="$(arg noise_removal_filter_max_size)"/>
             <param name="enable_mgc_noise_removal_filter" value="$(arg enable_mgc_noise_removal_filter)"/>
             <param name="enable_lut_noise_removal_filter" value="$(arg enable_lut_noise_removal_filter)"/>
+            <param name="enable_disp_outliers_filter" value="$(arg enable_disp_outliers_filter)"/>
+            <param name="disp_outliers_filter_search_mode" value="$(arg disp_outliers_filter_search_mode)"/>
+            <param name="enable_edge_noise_removal_filter" value="$(arg enable_edge_noise_removal_filter)"/>
+            <param name="enable_spatial_fast_filter" value="$(arg enable_spatial_fast_filter)"/>
+            <param name="spatial_fast_filter_radius" value="$(arg spatial_fast_filter_radius)"/>
+            <param name="enable_spatial_moderate_filter" value="$(arg enable_spatial_moderate_filter)"/>
+            <param name="spatial_moderate_filter_diff_threshold" value="$(arg spatial_moderate_filter_diff_threshold)"/>
+            <param name="spatial_moderate_filter_magnitude" value="$(arg spatial_moderate_filter_magnitude)"/>
+            <param name="spatial_moderate_filter_radius" value="$(arg spatial_moderate_filter_radius)"/>
+            <param name="enable_spatial_filter" value="$(arg enable_spatial_filter)"/>
+            <param name="spatial_filter_alpha" value="$(arg spatial_filter_alpha)"/>
+            <param name="spatial_filter_diff_threshold" value="$(arg spatial_filter_diff_threshold)"/>
+            <param name="spatial_filter_magnitude" value="$(arg spatial_filter_magnitude)"/>
+            <param name="spatial_filter_radius" value="$(arg spatial_filter_radius)"/>
+            <param name="enable_temporal_filter" value="$(arg enable_temporal_filter)"/>
+            <param name="temporal_filter_diff_threshold" value="$(arg temporal_filter_diff_threshold)"/>
+            <param name="temporal_filter_weight" value="$(arg temporal_filter_weight)"/>
+            <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
+            <param name="hole_filling_filter_mode" value="$(arg hole_filling_filter_mode)"/>
+            <param name="enable_threshold_filter" value="$(arg enable_threshold_filter)"/>
+            <param name="threshold_filter_max" value="$(arg threshold_filter_max)"/>
+            <param name="threshold_filter_min" value="$(arg threshold_filter_min)"/>
             <param name="depth_filter_config" value="$(arg depth_filter_config)"/>
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
