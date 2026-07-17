@@ -4814,6 +4814,12 @@ void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
         response.message = msg;
         return true;
       };
+      auto succeed = [&request, &response]() {
+        response.success = true;
+        ROS_INFO_STREAM("filter_name: " << request.filter_name << "  filter_enable: "
+                                        << (request.filter_enable ? "true" : "false"));
+        return true;
+      };
 
       const auto normalized_request_filter_name = normalizeDepthFilterName(request.filter_name);
       const bool is_noise_removal_filter = (normalized_request_filter_name == "NoiseRemovalFilter");
@@ -4841,8 +4847,6 @@ void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
                                          OB_PERMISSION_READ_WRITE);
       }
 
-      ROS_INFO_STREAM("filter_name: " << request.filter_name << "  filter_enable: "
-                                      << (request.filter_enable ? "true" : "false"));
       const bool has_positional_params = !request.filter_param.empty();
       const bool has_named_params = !request.filter_config.empty();
       if (has_positional_params && has_named_params) {
@@ -4856,24 +4860,24 @@ void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
         std::string message;
         if (!applyEnhancedDepthFilterConfig(request.filter_enable, request.filter_param,
                                             request.filter_config, message)) {
+          ROS_ERROR_STREAM(message);
           return fail(message);
         }
-        response.success = true;
-        return true;
+        return succeed();
       }
 
       if (has_named_params || !has_positional_params) {
         std::string message;
         if (!applyNamedDepthFilterConfig(normalized_request_filter_name, request.filter_enable,
                                          request.filter_config, message)) {
+          ROS_ERROR_STREAM(message);
           return fail(message);
         }
 
         filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
         publishDepthFiltersStatus();
 
-        response.success = true;
-        return true;
+        return succeed();
       }
 
       if (is_noise_removal_filter || is_hardware_noise_removal_filter || is_disp_outliers_filter) {
@@ -4975,9 +4979,11 @@ void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
             }
             if (decimation_filter_scale != -1 &&
                 (decimation_filter_scale < range.min || decimation_filter_scale > range.max)) {
-              ROS_ERROR_STREAM("Decimation filter scale value is out of range "
-                               << range.min << " - " << range.max);
-              return fail("Decimation filter scale value is out of range");
+              std::ostringstream ss;
+              ss << "Decimation filter scale value is out of range " << static_cast<int>(range.min)
+                 << " - " << static_cast<int>(range.max);
+              ROS_ERROR_STREAM(ss.str());
+              return fail(ss.str());
             }
             if (decimation_filter_scale <= range.max && decimation_filter_scale >= range.min) {
               decimation_filter_scale_range_ = decimation_filter_scale;
@@ -5137,8 +5143,7 @@ void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
       filter_status_[normalized_request_filter_name] = static_cast<bool>(request.filter_enable);
       publishDepthFiltersStatus();
 
-      response.success = true;
-      return true;
+      return succeed();
     } catch (const ob::Error& e) {
       response.success = false;
       response.message = "Failed to set filter: " + orbbec_camera::formatObErrorWithStatus(e);
