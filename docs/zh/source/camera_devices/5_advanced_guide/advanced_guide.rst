@@ -41,4 +41,5 @@
     configuration/predefined_presets.md
     configuration/sdk_json_config.md
     configuration/false_positive_filter.md
+    configuration/enhanced_depth_filter.md
     configuration/net_camera.md
