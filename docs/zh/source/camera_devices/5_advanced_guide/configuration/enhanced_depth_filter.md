@@ -157,7 +157,7 @@ RGB、YUYV、UYVY、MJPG、BGR、RGBA、Y16、Y8
 | --- | --- |
 | `/camera/depth/image_raw` | 滤波成功时发布增强后的对齐深度图像。运行中滤波失败时，驱动继续发布当前未增强的对齐深度图像。 |
 | `/camera/depth/image_unaligned` | 软件对齐时发布对齐前的深度图像。硬件 D2C 模式不发布该话题。 |
-| `/camera/confidence/image_raw` | 滤波成功时发布置信度图像，编码可能为 `mono8` 或 `mono16`。 |
+| `/camera/confidence/image_raw` | 滤波成功时发布 `mono8` 编码的置信度图像。 |
 
 普通节点和 Nodelet 使用相同的话题名称和发布规则。
 

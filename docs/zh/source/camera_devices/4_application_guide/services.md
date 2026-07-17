@@ -433,7 +433,7 @@ rosservice call /camera/set_ae_strategy motion
 
 * `/camera/set_filter`
 
-`FalsePositiveFilter` 的启动参数、状态确认和命名参数调参示例可参考 [Gemini 330 系列鬼影滤波](../5_advanced_guide/configuration/false_positive_filter.md)。
+`FalsePositiveFilter` 的启动参数、状态确认和命名参数调参示例可参考 [Gemini 330 系列鬼影滤波](../5_advanced_guide/configuration/false_positive_filter.md)。`EnhancedDepthFilter` 的环境要求、启动参数和状态确认方法可参考 [ROS1 EnhancedDepthFilter 使用说明](../5_advanced_guide/configuration/enhanced_depth_filter.md)。
 
 ```bash
 # filter_name 为滤波器名称，filter_enable 表示是否开启滤波器开关。
@@ -467,6 +467,9 @@ rosservice call /camera/set_filter '{filter_name: SpatialModerateFilter, filter_
 # 设置 FalsePositiveFilter: []
 rosservice call /camera/set_filter '{filter_name: FalsePositiveFilter, filter_enable: true, filter_param: []}'
 
+# 设置 EnhancedDepthFilter: [confidence_threshold]，阈值必须是 0 到 255 之间的整数
+rosservice call /camera/set_filter '{filter_name: EnhancedDepthFilter, filter_enable: true, filter_param: [60]}'
+
 # 设置 MgcNoiseRemovalFilter / LutNoiseRemovalFilter: []
 rosservice call /camera/set_filter '{filter_name: MgcNoiseRemovalFilter, filter_enable: true, filter_param: []}'
 rosservice call /camera/set_filter '{filter_name: LutNoiseRemovalFilter, filter_enable: true, filter_param: []}'
@@ -478,10 +481,13 @@ rosservice call /camera/set_filter '{filter_name: EdgeNoiseRemovalFilter, filter
 rosservice call /camera/set_filter "{filter_name: NoiseRemovalFilter, filter_enable: true, filter_config: [{name: min_diff, value: '256'}, {name: max_size, value: '80'}]}"
 rosservice call /camera/set_filter "{filter_name: HardwareNoiseRemovalFilter, filter_enable: true, filter_config: [{name: threshold, value: '0.2'}]}"
 rosservice call /camera/set_filter "{filter_name: SpatialAdvancedFilter, filter_enable: true, filter_config: [{name: alpha, value: '0.5'}, {name: disp_diff, value: '160'}, {name: magnitude, value: '1'}, {name: radius, value: '8'}]}"
+rosservice call /camera/set_filter "{filter_name: EnhancedDepthFilter, filter_enable: true, filter_config: [{name: confidence_threshold, value: '60'}]}"
 
 # 设置 DispOutliersFilter。search_mode 支持 FULL 或 OFFSET_80，大小写不敏感。
 rosservice call /camera/set_filter "{filter_name: DispOutliersFilter, filter_enable: true, filter_config: [{name: search_mode, value: 'FULL'}]}"
 ```
+
+`/camera/set_filter` 只能启停 EnhancedDepthFilter 或调整 `confidence_threshold`，不能修改模型路径、数据流配置或对齐方式；这些内容必须通过启动参数配置。
 
 ## 数据采集与标定管理（Data Capture & Calibration Management）
 

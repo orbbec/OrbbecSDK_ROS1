@@ -157,7 +157,7 @@ The following topic names assume the default `camera_name:=camera`. If `camera_n
 | --- | --- |
 | `/camera/depth/image_raw` | Publishes the enhanced aligned depth image when filtering succeeds. If filtering fails at runtime, the driver continues to publish the current unenhanced aligned depth image. |
 | `/camera/depth/image_unaligned` | Publishes the depth image before software alignment. This topic is not published in hardware D2C mode. |
-| `/camera/confidence/image_raw` | Publishes the confidence image when filtering succeeds. Its encoding can be `mono8` or `mono16`. |
+| `/camera/confidence/image_raw` | Publishes the confidence image with `mono8` encoding when filtering succeeds. |
 
 The standard node and Nodelet use the same topic names and publishing behavior.
 

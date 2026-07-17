@@ -257,6 +257,15 @@ The following are the launch parameters available:
 * **`enable_false_positive_filter`**
   * Enable this option to reduce ghosting noise. For usage examples and runtime tuning, see [False Positive Filtering for Gemini 330 Series](../5_advanced_guide/configuration/false_positive_filter.md).
   > **Supported Modules**: Gemini 330 series / Gemini 340 series
+* **`enable_enhanced_depth`**
+  * Enable LingBot enhanced depth filtering. The default is `false`. Both Color and Depth must be enabled, and D2C/C2D alignment must be configured. For complete environment, startup, and image requirements, see the [ROS1 EnhancedDepthFilter Usage Guide](../5_advanced_guide/configuration/enhanced_depth_filter.md).
+  > **Supported Modules**: Gemini 330 series
+* **`enhanced_depth_model_path`**
+  * Path to the LingBot `model.sm4` file. The default is empty. This parameter is required when enhanced depth filtering is enabled; an absolute path is recommended. The model file cannot be changed at runtime.
+  > **Supported Modules**: Gemini 330 series
+* **`enhanced_depth_confidence_threshold`**
+  * Confidence threshold for enhanced depth filtering. It must be an integer from `0` to `255`. The default is `51`.
+  > **Supported Modules**: Gemini 330 series
 * **`enable_fps_boost`**
   * Enable device FPS Boost. The default is `false`; this parameter only takes effect when the device supports the `FPS Boost` property.
   > **Supported Modules**: Gemini 330 series

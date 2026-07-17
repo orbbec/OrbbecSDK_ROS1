@@ -257,6 +257,15 @@
 * **`enable_false_positive_filter`**
   * 启用鬼影滤波。可减少重影噪声，使用示例和运行时调参方法请参考 [Gemini 330 系列鬼影滤波](../5_advanced_guide/configuration/false_positive_filter.md)。
   > **支持模组**：Gemini 330 系列 / Gemini 340 系列。
+* **`enable_enhanced_depth`**
+  * 启用 LingBot 增强深度滤波，默认值为 `false`。该功能需要同时启用 Color 和 Depth，并配置 D2C/C2D 对齐。完整环境、启动和图像要求请参考 [ROS1 EnhancedDepthFilter 使用说明](../5_advanced_guide/configuration/enhanced_depth_filter.md)。
+  > **支持模组**：Gemini 330 系列。
+* **`enhanced_depth_model_path`**
+  * LingBot `model.sm4` 文件路径，默认值为空。启用增强深度滤波时必须设置，建议使用绝对路径；运行时不能更换模型文件。
+  > **支持模组**：Gemini 330 系列。
+* **`enhanced_depth_confidence_threshold`**
+  * 增强深度滤波的置信度阈值，必须是 `0` 到 `255` 之间的整数，默认值为 `51`。
+  > **支持模组**：Gemini 330 系列。
 * **`enable_fps_boost`**
   * 启用设备 FPS Boost。默认值为 `false`；仅在设备支持 `FPS Boost` 属性时生效。
   > **支持模组**：Gemini 330 系列。
