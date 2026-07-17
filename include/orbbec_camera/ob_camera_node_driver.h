@@ -132,6 +132,7 @@ class OBCameraNodeDriver {
   std::atomic<bool> firmware_update_success_{false};
   std::atomic<bool> need_reupdate_{false};
   std::atomic<bool> is_reupdating_{false};  // Flag to track if we're in reupdate process
+  std::atomic<bool> delay_stream_start_after_reconnect_{false};
   bool force_ip_enable_{false};
   bool force_ip_dhcp_{false};
   std::string force_ip_mac_;          // e.g. "00:1A:7D:DA:71:13"

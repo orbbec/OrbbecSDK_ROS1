@@ -33,6 +33,8 @@ namespace orbbec_camera {
 backward::SignalHandling sh;
 
 namespace {
+constexpr auto kStreamStartDelayAfterReconnect = std::chrono::seconds(5);
+
 std::string getLogDirectoryForCamera(const std::string &camera_name) {
   const char *log_dir_override = std::getenv("ORBBEC_LOG_DIR");
   if (log_dir_override && log_dir_override[0] != '\0') {
@@ -528,6 +530,11 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_.get());
+  const bool should_delay_stream_start = delay_stream_start_after_reconnect_.exchange(false) &&
+                                         isGemini305SeriesPID(device_info_->pid());
+  if (should_delay_stream_start) {
+    std::this_thread::sleep_for(kStreamStartDelayAfterReconnect);
+  }
   // Safely cleanup existing camera node before creating new one
   if (ob_camera_node_) {
     // Ensure proper cleanup before destruction
@@ -797,6 +804,7 @@ void OBCameraNodeDriver::deviceDisconnectCallback(
     ROS_INFO_STREAM("Device with uid " << device_uid << " disconnected");
     if (device_uid == device_uid_) {
       ROS_INFO_STREAM("deviceDisconnectCallback : Before reset device, wait for device lock");
+      delay_stream_start_after_reconnect_ = true;
       std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
       reset_device_ = true;
       reset_device_cv_.notify_all();
@@ -987,6 +995,7 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
       std::string current_device_uid = device_uid_;
       ROS_INFO_STREAM("Rebooting device with UID: " << current_device_uid);
 
+      delay_stream_start_after_reconnect_ = true;
       if (ob_camera_node_) {
         ob_camera_node_->rebootDevice();
       } else if (ob_lidar_node_) {
@@ -1156,6 +1165,7 @@ void OBCameraNodeDriver::firmwareUpdateCallback(OBFwUpdateState state, const cha
   if (state == STAT_DONE || state == STAT_DONE_REBOOT_AND_REUPDATE) {
     ROS_INFO_STREAM("Reboot device");
     if (ob_camera_node_) {
+      delay_stream_start_after_reconnect_ = true;
       device_->reboot();
     } else if (ob_lidar_node_) {
       ob_lidar_node_->rebootDevice();

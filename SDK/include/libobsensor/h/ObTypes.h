@@ -152,6 +152,7 @@ typedef enum {
     OB_EXCEPTION_TYPE_INVALID_DATA,            /**< Runtime data is invalid, check data content or size */
     OB_EXCEPTION_TYPE_NOT_FOUND,               /**< The requested item was not found */
     OB_EXCEPTION_TYPE_RESOURCE_BUSY,           /**< Resource is busy or locked by another operation */
+    OB_EXCEPTION_TYPE_LICENSE_VERIFY_FAILED,   /**< License verification failed, the device/feature license is missing, invalid or expired */
 } OBExceptionType,
     ob_exception_type;
 
@@ -383,6 +384,14 @@ typedef struct {
     uint32_t offset;        ///< Offset of current data block relative to complete data
     uint32_t fullDataSize;  ///< Size of full data
 } OBDataChunk, ob_data_chunk;
+
+/**
+ * @brief A read-only, non-owning view over a byte buffer (a data pointer plus its size)
+ */
+typedef struct {
+    const uint8_t *data;      ///< Pointer to the data
+    uint32_t       dataSize;  ///< Size of the data in bytes
+} OBDataView, ob_data_view;
 
 /**
  * @brief Structure for integer range
@@ -1728,6 +1737,18 @@ typedef struct {
 } OBFilterConfigSchemaItem, ob_filter_config_schema_item;
 
 /**
+ * @brief Extensible options for activating a private filter instance.
+ * @brief Passed to @ref ob_filter_activate_private_ex / @ref ob_priv_filter_activate_ex. New fields must only be
+ *        appended at the end. The caller sets @ref struct_size to sizeof(ob_priv_filter_activate_options); the callee
+ *        uses it to detect which fields a (possibly older) caller actually provided, keeping the ABI compatible as the
+ *        struct grows. This is the single extension point for future activation parameters.
+ */
+typedef struct ob_priv_filter_activate_options {
+    uint32_t    struct_size;        ///< Size of this struct in bytes, set by the caller to sizeof(ob_priv_filter_activate_options).
+    const char *model_path;  ///< Path to the inference model file. NULL or empty selects the filter's default model.
+}OBPrivFilterActivateOptions, ob_priv_filter_activate_options;
+
+/**
  * @brief struct of serial number
  */
 typedef struct {
@@ -2024,6 +2045,20 @@ typedef enum {
     OB_DEVICE_DEFAULT_ACCESS   = 4,  ///< Default access: control access for capable devices, ignored otherwise
 } ob_device_access_mode,
     OBDeviceAccessMode;
+
+/**
+ * @brief Device access state queried from GVCP CCP without opening the device.
+ */
+typedef enum {
+    OB_DEVICE_ACCESS_STATE_UNKNOWN          = 0,  ///< The access state cannot be determined
+    OB_DEVICE_ACCESS_STATE_UNSUPPORTED      = 1,  ///< The device or current build does not support access-state query
+    OB_DEVICE_ACCESS_STATE_AVAILABLE        = 2,  ///< The device is available for control access
+    OB_DEVICE_ACCESS_STATE_CONTROLLED       = 3,  ///< The device has a controller; monitor access may still be available
+    OB_DEVICE_ACCESS_STATE_EXCLUSIVE        = 4,  ///< The device is held exclusively and cannot be accessed
+    OB_DEVICE_ACCESS_STATE_UNREACHABLE      = 5,  ///< The device did not respond or the network path is unreachable
+    OB_DEVICE_ACCESS_STATE_FW_NOT_SUPPORTED = 6,  ///< The device supports CCP, but the firmware version is too old
+} ob_device_access_state,
+    OBDeviceAccessState;
 
 typedef enum {
     OB_IP_SOURCE_NONE       = 0,  ///< No IP configuration active (e.g. USB device).

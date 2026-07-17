@@ -30,12 +30,14 @@
 #include <sensor_msgs/distortion_models.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <std_msgs/Int32.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <condition_variable>
+#include <cstddef>
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -46,6 +48,7 @@
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
 #include "orbbec_camera/GetCameraParams.h"
+#include "orbbec_camera/SetStreamProfile.h"
 #include <boost/optional.hpp>
 #include <image_transport/image_transport.h>
 #include <orbbec_camera/Metadata.h>
@@ -114,6 +117,14 @@ class OBCameraNode {
     stream_index_pair stream_{};
     Eigen::Vector3d data_{};
     double timestamp_ = -1;  // in nanoseconds
+  };
+
+  struct PendingStreamProfile {
+    stream_index_pair stream_index;
+    int requested_width = 0;
+    int requested_height = 0;
+    int requested_fps = 0;
+    std::shared_ptr<ob::VideoStreamProfile> profile;
   };
 
   void init();
@@ -257,8 +268,28 @@ class OBCameraNode {
 
   void setupProfiles();
 
+  std::shared_ptr<ob::VideoStreamProfile> selectVideoStreamProfile(
+      const stream_index_pair &stream_index, int width, int height, int fps, OBFormat format);
+
+  boost::optional<stream_index_pair> getImageStreamByName(const std::string &stream_name) const;
+
+  bool validateStreamProfileRequest(const SetStreamProfileRequest &request,
+                                    std::vector<PendingStreamProfile> &pending_profiles,
+                                    std::string &message);
+
+  bool applyStreamProfiles(const std::vector<PendingStreamProfile> &pending_profiles,
+                           std::string &message);
+
+  void clearColorFrameQueues();
+
+  void stopColorFrameThreads();
+
+  void setupImageBuffers();
+
   void updateImageConfig(const stream_index_pair &stream_index,
                          const std::shared_ptr<ob::VideoStreamProfile> &selected_profile);
+
+  void setupImagePublisher(const stream_index_pair &stream_index);
   static void printProfiles(const std::shared_ptr<ob::Sensor> &sensor);
 
   void setupTopics();
@@ -269,9 +300,12 @@ class OBCameraNode {
 
   void publishDepthFiltersStatus();
 
+  void publishLrmObstacleDistance(const ros::TimerEvent &event);
+
   orbbec_camera::DepthFilterState buildDepthFilterState(
       const std::string &filter_name, bool enabled,
       const std::shared_ptr<ob::Filter> &filter) const;
+  orbbec_camera::DepthFilterState buildEnhancedDepthFilterState() const;
 
   static std::string normalizeDepthFilterName(const std::string &filter_name);
 
@@ -283,6 +317,19 @@ class OBCameraNode {
   bool applyNamedDepthFilterConfig(const std::string &filter_name, bool enabled,
                                    const std::vector<orbbec_camera::DepthFilterParam> &params,
                                    std::string &message);
+  bool applyEnhancedDepthFilterConfig(bool enabled, const std::vector<float> &positional_params,
+                                      const std::vector<orbbec_camera::DepthFilterParam> &params,
+                                      std::string &message);
+  bool validateEnhancedDepthFilterConfig(std::string &message) const;
+  bool ensureEnhancedDepthFilter(std::string &message);
+  void applyEnhancedDepthConfidenceThreshold();
+  std::shared_ptr<ob::FrameSet> processEnhancedDepthFilter(
+      const std::shared_ptr<ob::FrameSet> &frame_set);
+  bool convertEnhancedDepthColorFrame(const std::shared_ptr<ob::FrameSet> &frame_set);
+  void setupConfidencePublishers();
+  void publishConfidenceFrame(const std::shared_ptr<ob::Frame> &confidence_frame);
+
+  void syncSoftwareAlignment();
 
   // Global publisher management methods
   static image_transport::Publisher getGlobalImagePublisher(
@@ -487,6 +534,10 @@ class OBCameraNode {
 
   void setAEStrategyCallback(const SetStringRequest &request, SetStringResponse &response);
 
+  bool setStreamProfileCallback(SetStreamProfileRequest &request,
+                                SetStreamProfileResponse &response);
+  bool setImageRegistrationModeCallback(SetStringRequest &request, SetStringResponse &response);
+
   // Set ROI
   void setColorAutoExposureROI();
   void setDepthAutoExposureROI();
@@ -609,6 +660,8 @@ class OBCameraNode {
   ros::ServiceServer set_sync_io_voltage_level_srv_;
   ros::ServiceServer set_ae_reference_stream_srv_;
   ros::ServiceServer set_ae_strategy_srv_;
+  ros::ServiceServer set_stream_profile_srv_;
+  ros::ServiceServer set_image_registration_mode_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
@@ -671,6 +724,7 @@ class OBCameraNode {
   int color_ae_roi_bottom_ = -1;
   int color_exposure_ = -1;
   int color_gain_ = -1;
+  int color_mjpeg_quality_ = -1;
   int color_brightness_ = -1;
   int color_roi_brightness_ = -1;
   int color_sharpness_ = -1;
@@ -718,7 +772,7 @@ class OBCameraNode {
   int trigger_out_delay_us_ = 0;
   bool trigger_out_enabled_ = false;
   bool enable_ptp_config_ = false;
-  int frames_per_trigger_ = 2;
+  int frames_per_trigger_ = 1;
   int software_trigger_period_ = 33;
   std::string depth_precision_str_;
   OB_DEPTH_PRECISION_LEVEL depth_precision_level_ = OB_PRECISION_1MM;
@@ -748,6 +802,9 @@ class OBCameraNode {
   uint8_t *rgb_buffer_ = nullptr;
   uint8_t *rgb_buffer_left_ = nullptr;
   uint8_t *rgb_buffer_right_ = nullptr;
+  size_t rgb_buffer_size_ = 0;
+  size_t rgb_buffer_left_size_ = 0;
+  size_t rgb_buffer_right_size_ = 0;
   std::atomic_bool rgb_is_decoded_{false};
   std::atomic_bool rgb_left_is_decoded_{false};
   std::atomic_bool rgb_right_is_decoded_{false};
@@ -755,6 +812,7 @@ class OBCameraNode {
   // For color
   std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
   std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
+  std::atomic_bool stop_color_frame_threads_{false};
   std::mutex colorFrameMtx_;
   std::condition_variable colorFrameCV_;
   // For left color
@@ -815,17 +873,29 @@ class OBCameraNode {
   std::string hole_filling_filter_mode_;
   ros::Publisher depth_filters_status_pub_;
   nlohmann::json filter_status_;
+  ros::Timer lrm_obstacle_distance_timer_;
+  ros::Publisher lrm_obstacle_distance_pub_;
   std::shared_ptr<diagnostic_updater::Updater> diagnostic_updater_ = nullptr;
-  double diagnostics_frequency_ = 1.0;
+  double diagnostics_frequency_ = 0.0;
   std::shared_ptr<std::thread> diagnostics_thread_ = nullptr;
   bool enable_laser_ = true;
   std::string align_mode_ = "HW";
   std::shared_ptr<ob::Align> align_filter_ = nullptr;
+  std::shared_ptr<ob::EnhancedDepthFilter> enhanced_depth_filter_ = nullptr;
+  ob::FormatConvertFilter enhanced_depth_format_convert_filter_;
+  std::mutex enhanced_depth_filter_mutex_;
+  std::atomic_bool enable_enhanced_depth_{false};
+  std::string enhanced_depth_model_path_;
+  int enhanced_depth_confidence_threshold_ = -1;
+  ros::Publisher confidence_image_publisher_;
+  cv::Mat confidence_image_;
   OBStreamType align_target_stream_ = OB_STREAM_COLOR;
   bool retry_on_usb3_detection_failure_ = false;
   bool enable_color_hdr_ = false;
   int laser_energy_level_ = -1;
   bool enable_ldp_ = true;
+  bool enable_lrm_obstacle_distance_publish_ = false;
+  double lrm_obstacle_distance_publish_rate_ = 10.0;
   ob::PointCloudFilter depth_point_cloud_filter_;
   ob::PointCloudFilter color_point_cloud_filter_;
   boost::optional<OBCalibrationParam> calibration_param_;
@@ -837,6 +907,7 @@ class OBCameraNode {
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
   bool enable_firmware_log_ = false;
+  bool enable_fps_boost_ = false;
   std::map<stream_index_pair, bool> enable_undistortion_;
   std::shared_ptr<ob::UnDistortionFilter> hw_d2c_color_undistortion_filter_;
   bool hw_d2c_color_undistortion_configured_ = false;

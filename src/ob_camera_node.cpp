@@ -174,6 +174,14 @@ void OBCameraNode::init() {
   setupUndistortionFilters();
   selectBaseStream();
   setupProfiles();
+  if (enable_enhanced_depth_.load()) {
+    std::string message;
+    ROS_INFO_STREAM("Pre-creating enhanced depth filter");
+    if (!ensureEnhancedDepthFilter(message)) {
+      throw std::runtime_error(message);
+    }
+    ROS_INFO_STREAM("Enhanced depth filter pre-created");
+  }
   setupCameraInfo();
   setupTopics();
   setupCameraCtrlServices();
@@ -181,55 +189,7 @@ void OBCameraNode::init() {
   readDefaultExposure();
   readDefaultGain();
   readDefaultWhiteBalance();
-#if defined(USE_RK_HW_DECODER)
-  mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
-  jpeg_decoder_left_ = std::make_shared<RKMjpegDecoder>(width_[COLOR_LEFT], height_[COLOR_LEFT]);
-  jpeg_decoder_right_ = std::make_shared<RKMjpegDecoder>(width_[COLOR_RIGHT], height_[COLOR_RIGHT]);
-#elif defined(USE_NV_HW_DECODER)
-  mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
-  jpeg_decoder_left_ =
-      std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR_LEFT], height_[COLOR_LEFT]);
-  jpeg_decoder_right_ =
-      std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR_RIGHT], height_[COLOR_RIGHT]);
-#endif
-  // Clean up existing RGB buffer if it exists
-  if (rgb_buffer_) {
-    delete[] rgb_buffer_;
-    rgb_buffer_ = nullptr;
-  }
-  if (rgb_buffer_left_) {
-    delete[] rgb_buffer_left_;
-    rgb_buffer_left_ = nullptr;
-  }
-  if (rgb_buffer_right_) {
-    delete[] rgb_buffer_right_;
-    rgb_buffer_right_ = nullptr;
-  }
-
-  if (enable_stream_[COLOR]) {
-    CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
-    rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 4];
-  } else {
-    rgb_buffer_ = nullptr;
-  }
-  if (enable_stream_[COLOR_LEFT]) {
-    CHECK(width_[COLOR_LEFT] > 0 && height_[COLOR_LEFT] > 0);
-    rgb_buffer_left_ = new uint8_t[width_[COLOR_LEFT] * height_[COLOR_LEFT] * 4];
-  } else {
-    rgb_buffer_left_ = nullptr;
-  }
-  if (enable_stream_[COLOR_RIGHT]) {
-    CHECK(width_[COLOR_RIGHT] > 0 && height_[COLOR_RIGHT] > 0);
-    rgb_buffer_right_ = new uint8_t[width_[COLOR_RIGHT] * height_[COLOR_RIGHT] * 4];
-  } else {
-    rgb_buffer_right_ = nullptr;
-  }
-  if (enable_colored_point_cloud_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
-    CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
-    rgb_point_cloud_buffer_size_ = width_[COLOR] * height_[COLOR] * sizeof(OBColorPoint);
-    xy_table_data_size_ = width_[COLOR] * height_[COLOR] * 2;
-  }
-  rgb_is_decoded_ = false;
+  setupImageBuffers();
   exportConfigJsonIfRequested();
   if (diagnostics_frequency_ > 0.0 && !is_playback_device_) {
     // Ensure we don't create multiple diagnostic threads
@@ -300,25 +260,15 @@ void OBCameraNode::clean() {
     std::lock_guard<std::mutex> lk(frame_info_logged_mutex_);
     frame_info_logged_.clear();
   }
+  if (lrm_obstacle_distance_timer_.isValid()) {
+    lrm_obstacle_distance_timer_.stop();
+  }
   ROS_DEBUG_STREAM("OBCameraNode::clean() stop tf thread");
   if (tf_thread_ && tf_thread_->joinable()) {
     tf_thread_->join();
   }
 
-  if (colorFrameThread_ && colorFrameThread_->joinable()) {
-    colorFrameCV_.notify_all();
-    colorFrameThread_->join();
-  }
-
-  if (leftColorFrameThread_ && leftColorFrameThread_->joinable()) {
-    leftColorFrameCV_.notify_all();
-    leftColorFrameThread_->join();
-  }
-
-  if (rightColorFrameThread_ && rightColorFrameThread_->joinable()) {
-    rightColorFrameCV_.notify_all();
-    rightColorFrameThread_->join();
-  }
+  stopColorFrameThreads();
 
   // Clear any remaining frames in the queue to prevent memory leaks
   {
@@ -346,14 +296,17 @@ void OBCameraNode::clean() {
   if (rgb_buffer_) {
     delete[] rgb_buffer_;
     rgb_buffer_ = nullptr;
+    rgb_buffer_size_ = 0;
   }
   if (rgb_buffer_left_) {
     delete[] rgb_buffer_left_;
     rgb_buffer_left_ = nullptr;
+    rgb_buffer_left_size_ = 0;
   }
   if (rgb_buffer_right_) {
     delete[] rgb_buffer_right_;
     rgb_buffer_right_ = nullptr;
+    rgb_buffer_right_size_ = 0;
   }
 
   // Don't clear global publisher cache here - let it persist across node recreations
@@ -374,6 +327,118 @@ void OBCameraNode::clean() {
 }
 
 OBCameraNode::~OBCameraNode() noexcept { clean(); }
+
+void OBCameraNode::clearColorFrameQueues() {
+  {
+    std::lock_guard<std::mutex> lock(colorFrameMtx_);
+    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    std::swap(colorFrameQueue_, empty);
+  }
+  {
+    std::lock_guard<std::mutex> lock(leftColorFrameMtx_);
+    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    std::swap(leftColorFrameQueue_, empty);
+  }
+  {
+    std::lock_guard<std::mutex> lock(rightColorFrameMtx_);
+    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    std::swap(rightColorFrameQueue_, empty);
+  }
+  rgb_is_decoded_ = false;
+  rgb_left_is_decoded_ = false;
+  rgb_right_is_decoded_ = false;
+}
+
+void OBCameraNode::stopColorFrameThreads() {
+  if (!colorFrameThread_ && !leftColorFrameThread_ && !rightColorFrameThread_) {
+    return;
+  }
+
+  stop_color_frame_threads_.store(true);
+  colorFrameCV_.notify_all();
+  leftColorFrameCV_.notify_all();
+  rightColorFrameCV_.notify_all();
+
+  if (colorFrameThread_ && colorFrameThread_->joinable()) {
+    colorFrameThread_->join();
+  }
+  if (leftColorFrameThread_ && leftColorFrameThread_->joinable()) {
+    leftColorFrameThread_->join();
+  }
+  if (rightColorFrameThread_ && rightColorFrameThread_->joinable()) {
+    rightColorFrameThread_->join();
+  }
+
+  colorFrameThread_.reset();
+  leftColorFrameThread_.reset();
+  rightColorFrameThread_.reset();
+  stop_color_frame_threads_.store(false);
+}
+
+void OBCameraNode::setupImageBuffers() {
+  mjpeg_decoder_.reset();
+  jpeg_decoder_left_.reset();
+  jpeg_decoder_right_.reset();
+
+#if defined(USE_RK_HW_DECODER)
+  if (enable_stream_[COLOR]) {
+    mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
+  }
+  if (enable_stream_[COLOR_LEFT]) {
+    jpeg_decoder_left_ = std::make_shared<RKMjpegDecoder>(width_[COLOR_LEFT], height_[COLOR_LEFT]);
+  }
+  if (enable_stream_[COLOR_RIGHT]) {
+    jpeg_decoder_right_ =
+        std::make_shared<RKMjpegDecoder>(width_[COLOR_RIGHT], height_[COLOR_RIGHT]);
+  }
+#elif defined(USE_NV_HW_DECODER)
+  if (enable_stream_[COLOR]) {
+    mjpeg_decoder_ = std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR], height_[COLOR]);
+  }
+  if (enable_stream_[COLOR_LEFT]) {
+    jpeg_decoder_left_ =
+        std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR_LEFT], height_[COLOR_LEFT]);
+  }
+  if (enable_stream_[COLOR_RIGHT]) {
+    jpeg_decoder_right_ =
+        std::make_shared<JetsonNvJPEGDecoder>(width_[COLOR_RIGHT], height_[COLOR_RIGHT]);
+  }
+#endif
+  delete[] rgb_buffer_;
+  rgb_buffer_ = nullptr;
+  rgb_buffer_size_ = 0;
+  delete[] rgb_buffer_left_;
+  rgb_buffer_left_ = nullptr;
+  rgb_buffer_left_size_ = 0;
+  delete[] rgb_buffer_right_;
+  rgb_buffer_right_ = nullptr;
+  rgb_buffer_right_size_ = 0;
+
+  if (enable_stream_[COLOR]) {
+    CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
+    rgb_buffer_size_ = static_cast<size_t>(width_[COLOR]) * height_[COLOR] * 4;
+    rgb_buffer_ = new uint8_t[rgb_buffer_size_];
+  }
+  if (enable_stream_[COLOR_LEFT]) {
+    CHECK(width_[COLOR_LEFT] > 0 && height_[COLOR_LEFT] > 0);
+    rgb_buffer_left_size_ = static_cast<size_t>(width_[COLOR_LEFT]) * height_[COLOR_LEFT] * 4;
+    rgb_buffer_left_ = new uint8_t[rgb_buffer_left_size_];
+  }
+  if (enable_stream_[COLOR_RIGHT]) {
+    CHECK(width_[COLOR_RIGHT] > 0 && height_[COLOR_RIGHT] > 0);
+    rgb_buffer_right_size_ = static_cast<size_t>(width_[COLOR_RIGHT]) * height_[COLOR_RIGHT] * 4;
+    rgb_buffer_right_ = new uint8_t[rgb_buffer_right_size_];
+  }
+  if (enable_colored_point_cloud_ && enable_stream_[COLOR] && enable_stream_[DEPTH]) {
+    CHECK(width_[COLOR] > 0 && height_[COLOR] > 0);
+    rgb_point_cloud_buffer_size_ = width_[COLOR] * height_[COLOR] * sizeof(OBColorPoint);
+    xy_table_data_size_ = width_[COLOR] * height_[COLOR] * 2;
+  }
+  rgb_is_decoded_ = false;
+  rgb_left_is_decoded_ = false;
+  rgb_right_is_decoded_ = false;
+}
+
 void OBCameraNode::getParameters() {
   captureInitialRosParameters();
 
@@ -413,6 +478,10 @@ void OBCameraNode::getParameters() {
   publish_tf_ = nh_private_.param<bool>("publish_tf", false);
   enable_image_transport_plugins_ = nh_private_.param<bool>("enable_image_transport_plugins", true);
   depth_registration_ = nh_private_.param<bool>("depth_registration", false);
+  enable_enhanced_depth_.store(nh_private_.param<bool>("enable_enhanced_depth", false));
+  enhanced_depth_model_path_ = nh_private_.param<std::string>("enhanced_depth_model_path", "");
+  enhanced_depth_confidence_threshold_ =
+      nh_private_.param<int>("enhanced_depth_confidence_threshold", 51);
   enable_frame_sync_ = nh_private_.param<bool>("enable_frame_sync", false);
   ir_info_uri_ = nh_private_.param<std::string>("ir_info_uri", "");
   color_info_uri_ = nh_private_.param<std::string>("color_info_uri", "");
@@ -444,6 +513,7 @@ void OBCameraNode::getParameters() {
   color_ae_roi_bottom_ = nh_private_.param<int>("color_ae_roi_bottom", -1);
   color_exposure_ = nh_private_.param<int>("color_exposure", -1);
   color_gain_ = nh_private_.param<int>("color_gain", -1);
+  color_mjpeg_quality_ = nh_private_.param<int>("color_mjpeg_quality", -1);
   color_brightness_ = nh_private_.param<int>("color_brightness", -1);
   color_roi_brightness_ = nh_private_.param<int>("color_roi_brightness", -1);
   color_sharpness_ = nh_private_.param<int>("color_sharpness", -1);
@@ -483,7 +553,7 @@ void OBCameraNode::getParameters() {
   trigger2image_delay_us_ = nh_private_.param<int>("trigger2image_delay_us", 0);
   trigger_out_delay_us_ = nh_private_.param<int>("trigger_out_delay_us", 0);
   trigger_out_enabled_ = nh_private_.param<bool>("trigger_out_enabled", false);
-  frames_per_trigger_ = nh_private_.param<int>("frames_per_trigger", 2);
+  frames_per_trigger_ = nh_private_.param<int>("frames_per_trigger", 1);
   software_trigger_period_ = nh_private_.param<int>("software_trigger_period", 33);
   enable_ptp_config_ = nh_private_.param<bool>("enable_ptp_config", false);
   depth_precision_str_ = nh_private_.param<std::string>("depth_precision", "");
@@ -578,7 +648,7 @@ void OBCameraNode::getParameters() {
       nh_private_.param<int>("spatial_moderate_filter_magnitude", -1);
   spatial_moderate_filter_radius_ = nh_private_.param<int>("spatial_moderate_filter_radius", -1);
 
-  diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 1.0);
+  diagnostics_frequency_ = nh_private_.param<double>("diagnostics_frequency", 0.0);
   enable_laser_ = nh_private_.param<bool>("enable_laser", true);
   align_mode_ = nh_private_.param<std::string>("align_mode", "HW");
   align_mode_ = normalizeClosedSetParameterValue("align_mode", align_mode_, {"HW", "SW"}, "HW");
@@ -599,9 +669,23 @@ void OBCameraNode::getParameters() {
       nh_private_.param<bool>("retry_on_usb3_detection_failure", false);
   laser_energy_level_ = nh_private_.param<int>("laser_energy_level", -1);
   enable_ldp_ = nh_private_.param<bool>("enable_ldp", true);
+  enable_lrm_obstacle_distance_publish_ =
+      nh_private_.param<bool>("enable_lrm_obstacle_distance_publish", false);
+  lrm_obstacle_distance_publish_rate_ =
+      nh_private_.param<double>("lrm_obstacle_distance_publish_rate", 10.0);
+  if (enable_lrm_obstacle_distance_publish_ && !enable_ldp_) {
+    ROS_INFO_STREAM("enable_lrm_obstacle_distance_publish is true, enabling LDP");
+    enable_ldp_ = true;
+  }
+  if (lrm_obstacle_distance_publish_rate_ <= 0.0) {
+    ROS_WARN_STREAM("Invalid lrm_obstacle_distance_publish_rate "
+                    << lrm_obstacle_distance_publish_rate_ << ", reset to 10.0");
+    lrm_obstacle_distance_publish_rate_ = 10.0;
+  }
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   enable_firmware_log_ = nh_private_.param<bool>("enable_firmware_log", false);
+  enable_fps_boost_ = nh_private_.param<bool>("enable_fps_boost", false);
   for (const auto& stream_index : IMAGE_STREAMS) {
     const auto param_name = "enable_" + stream_name_[stream_index] + "_undistortion";
     enable_undistortion_[stream_index] = nh_private_.param<bool>(param_name, false);
@@ -1599,8 +1683,10 @@ bool OBCameraNode::isColorFrameDecodeRequired(const std::shared_ptr<ob::Frame>& 
   }
   const auto format = frame->format();
   return !(format == OB_FORMAT_RGB || format == OB_FORMAT_BGR || format == OB_FORMAT_RGB888 ||
-           format == OB_FORMAT_RGBA || format == OB_FORMAT_BGRA || format == OB_FORMAT_Y16 ||
-           format == OB_FORMAT_Y8);
+           format == OB_FORMAT_RGBA || format == OB_FORMAT_BGRA || format == OB_FORMAT_Y8 ||
+           format == OB_FORMAT_GRAY || format == OB_FORMAT_Y10 || format == OB_FORMAT_Y11 ||
+           format == OB_FORMAT_Y12 || format == OB_FORMAT_Y14 || format == OB_FORMAT_Y16 ||
+           format == OB_FORMAT_Z16 || format == OB_FORMAT_RW16);
 }
 
 bool OBCameraNode::hasRawImageSubscriber(const stream_index_pair& stream_index) const {
@@ -1723,6 +1809,24 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
     if (!video_frame) {
       ROS_ERROR_STREAM("Decode frame failed");
       return false;
+    }
+    uint8_t** target_buffer = nullptr;
+    size_t* target_buffer_size = nullptr;
+    if (stream_index == COLOR_LEFT) {
+      target_buffer = &rgb_buffer_left_;
+      target_buffer_size = &rgb_buffer_left_size_;
+    } else if (stream_index == COLOR_RIGHT) {
+      target_buffer = &rgb_buffer_right_;
+      target_buffer_size = &rgb_buffer_right_size_;
+    } else {
+      target_buffer = &rgb_buffer_;
+      target_buffer_size = &rgb_buffer_size_;
+    }
+    if (video_frame->dataSize() > *target_buffer_size) {
+      delete[](*target_buffer);
+      *target_buffer_size = video_frame->dataSize();
+      *target_buffer = new uint8_t[*target_buffer_size];
+      dest = *target_buffer;
     }
     CHECK_NOTNULL(dest);
     memcpy(dest, video_frame->data(), video_frame->dataSize());
@@ -1982,14 +2086,54 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
 
     if (depth_registration_ && align_filter_ && depth_frame) {
       publishRawDepthImage(depth_frame);
-      if (auto new_frame = align_filter_->process(frame_set)) {
-        auto new_frame_set = new_frame->as<ob::FrameSet>();
-        CHECK_NOTNULL(new_frame_set.get());
-        frame_set = new_frame_set;
+      auto target_frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(align_target_stream_);
+      if (!frame_set->getFrame(target_frame_type)) {
+        ROS_DEBUG_STREAM("Depth registration target frame is null, skip software alignment");
       } else {
-        ROS_ERROR_STREAM("Depth frame alignment failed");
-        return;
+        if (align_target_stream_ == OB_STREAM_DEPTH && color_frame) {
+          ob::FormatConvertFilter align_color_format_convert_filter;
+          bool need_convert = true;
+          switch (color_frame->format()) {
+            case OB_FORMAT_YUYV:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_YUYV_TO_RGB888);
+              break;
+            case OB_FORMAT_UYVY:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_UYVY_TO_RGB888);
+              break;
+            case OB_FORMAT_MJPG:
+              align_color_format_convert_filter.setFormatConvertType(FORMAT_MJPEG_TO_RGB888);
+              break;
+            default:
+              need_convert = false;
+              break;
+          }
+          if (need_convert) {
+            auto converted_color_frame = align_color_format_convert_filter.process(color_frame);
+            if (converted_color_frame) {
+              color_frame = converted_color_frame;
+              frame_set->pushFrame(color_frame);
+            } else {
+              ROS_ERROR_STREAM("Failed to convert color frame for C2D alignment");
+            }
+          }
+        }
+        if (auto new_frame = align_filter_->process(frame_set)) {
+          auto new_frame_set = new_frame->as<ob::FrameSet>();
+          CHECK_NOTNULL(new_frame_set.get());
+          frame_set = new_frame_set;
+          depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+          color_frame = frame_set->getFrame(OB_FRAME_COLOR);
+        } else {
+          ROS_ERROR_STREAM("Depth frame alignment failed");
+          return;
+        }
       }
+    }
+
+    if (enable_enhanced_depth_.load()) {
+      frame_set = processEnhancedDepthFilter(frame_set);
+      depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+      color_frame = frame_set->getFrame(OB_FRAME_COLOR);
     }
 
     // Refresh frame from current frameset before logging to reflect post-filter/alignment output.
@@ -2102,12 +2246,14 @@ void OBCameraNode::logFrameInfoOnce(const stream_index_pair& stream_index,
 }
 
 void OBCameraNode::onNewColorFrameCallback() {
-  while (enable_stream_[COLOR] && ros::ok() && is_running_.load()) {
+  while (enable_stream_[COLOR] && ros::ok() && is_running_.load() &&
+         !stop_color_frame_threads_.load()) {
     std::unique_lock<std::mutex> lock(colorFrameMtx_);
-    colorFrameCV_.wait(lock,
-                       [this]() { return !colorFrameQueue_.empty() || !(is_running_.load()); });
+    colorFrameCV_.wait(lock, [this]() {
+      return !colorFrameQueue_.empty() || !(is_running_.load()) || stop_color_frame_threads_.load();
+    });
 
-    if (!ros::ok() || !is_running_.load()) {
+    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
       break;
     }
     if (colorFrameQueue_.empty()) {
@@ -2115,6 +2261,7 @@ void OBCameraNode::onNewColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
     colorFrameQueue_.pop();
+    lock.unlock();
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
     publishPointCloud(frameSet);
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(0));
@@ -2124,12 +2271,15 @@ void OBCameraNode::onNewColorFrameCallback() {
 }
 
 void OBCameraNode::onNewLeftColorFrameCallback() {
-  while (enable_stream_[COLOR_LEFT] && ros::ok() && is_running_.load()) {
+  while (enable_stream_[COLOR_LEFT] && ros::ok() && is_running_.load() &&
+         !stop_color_frame_threads_.load()) {
     std::unique_lock<std::mutex> lock(leftColorFrameMtx_);
-    leftColorFrameCV_.wait(
-        lock, [this]() { return !leftColorFrameQueue_.empty() || !(is_running_.load()); });
+    leftColorFrameCV_.wait(lock, [this]() {
+      return !leftColorFrameQueue_.empty() || !(is_running_.load()) ||
+             stop_color_frame_threads_.load();
+    });
 
-    if (!ros::ok() || !is_running_.load()) {
+    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
       break;
     }
     if (leftColorFrameQueue_.empty()) {
@@ -2137,6 +2287,7 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = leftColorFrameQueue_.front();
     leftColorFrameQueue_.pop();
+    lock.unlock();
     rgb_left_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_LEFT), rgb_buffer_left_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_LEFT), IMAGE_STREAMS.at(1));
@@ -2146,12 +2297,15 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
 }
 
 void OBCameraNode::onNewRightColorFrameCallback() {
-  while (enable_stream_[COLOR_RIGHT] && ros::ok() && is_running_.load()) {
+  while (enable_stream_[COLOR_RIGHT] && ros::ok() && is_running_.load() &&
+         !stop_color_frame_threads_.load()) {
     std::unique_lock<std::mutex> lock(rightColorFrameMtx_);
-    rightColorFrameCV_.wait(
-        lock, [this]() { return !rightColorFrameQueue_.empty() || !(is_running_.load()); });
+    rightColorFrameCV_.wait(lock, [this]() {
+      return !rightColorFrameQueue_.empty() || !(is_running_.load()) ||
+             stop_color_frame_threads_.load();
+    });
 
-    if (!ros::ok() || !is_running_.load()) {
+    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
       break;
     }
     if (rightColorFrameQueue_.empty()) {
@@ -2159,6 +2313,7 @@ void OBCameraNode::onNewRightColorFrameCallback() {
     }
     std::shared_ptr<ob::FrameSet> frameSet = rightColorFrameQueue_.front();
     rightColorFrameQueue_.pop();
+    lock.unlock();
     rgb_right_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), rgb_buffer_right_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), IMAGE_STREAMS.at(2));
