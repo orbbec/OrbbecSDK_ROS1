@@ -177,10 +177,12 @@ The following are the launch parameters available:
     *   The delay time (microseconds) of the trigger signal output after receiving the capture command or trigger signal.
 *   **`trigger_out_enabled`**
     *   Enable the trigger out signal.
-*   **`software_trigger_enabled`** / **`software_trigger_period`**
-    *   Enable the software trigger out signal / set the software trigger period in ms.
+*   **`software_trigger_enabled`**
+    *   Controls whether software trigger commands are sent automatically at a fixed interval when `sync_mode` is `software_triggering`. The default is `true`. Set it to `false` to trigger manually with the `/camera/send_software_trigger` service.
+*   **`software_trigger_period`**
+    *   Automatic software trigger period in milliseconds. The default is `33`. It takes effect only when `sync_mode:=software_triggering` and `software_trigger_enabled:=true`.
 *   **`frames_per_trigger`**
-    *   The frame number of each stream after each trigger in triggering mode.
+    *   Number of frames captured by each stream after every trigger. The default is `1`.
 *   **`sync_io_voltage_level`**
     *   Set the sync IO voltage level. Default: `-1`, which means do not set it. This is only supported on devices that expose the property; it can also be changed at runtime with `/camera/set_sync_io_voltage_level`.
 

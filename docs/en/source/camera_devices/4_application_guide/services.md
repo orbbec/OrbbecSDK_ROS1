@@ -388,6 +388,13 @@ rosservice call /camera/get_ptp_config
 rosservice call /camera/set_ptp_config true
 ```
 
+* `/camera/send_software_trigger`
+
+
+```bash
+rosservice call /camera/send_software_trigger "data: true"
+```
+
 * `/camera/set_sync_io_voltage_level`
 
 Set the sync IO voltage level. This is only supported on devices that expose the property.

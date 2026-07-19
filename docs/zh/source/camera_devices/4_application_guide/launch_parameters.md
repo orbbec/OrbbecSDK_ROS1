@@ -178,10 +178,13 @@
     *   接收捕获命令或触发信号后触发信号输出的延迟时间（微秒）。
 *   **`trigger_out_enabled`**
     *   启用触发输出信号。
-*   **`software_trigger_enabled`** / **`software_trigger_period`**
-    *   启用软件触发输出信号 / 设置软件触发周期（毫秒）。
+*   **`software_trigger_enabled`**
+    *   是否在 `sync_mode` 为 `software_triggering` 时按固定周期自动发送软件触发命令，默认值为 `true`。设置为 `false` 后可通过 `/camera/send_software_trigger` 服务手动触发。
+*   **`software_trigger_period`**
+    *   自动软件触发周期，单位为毫秒，默认值为 `33`。仅在 `sync_mode:=software_triggering` 且 `software_trigger_enabled:=true` 时生效。
 *   **`frames_per_trigger`**
-    *   触发模式下每次触发后每个流的帧数。
+    *   触发模式下每次触发后每个流采集的帧数，默认值为 `1`。
+
 *   **`sync_io_voltage_level`**
     *   设置同步 IO 电压等级。默认值为 `-1`，表示不设置。仅支持具备该属性的设备；可通过 `/camera/set_sync_io_voltage_level` 服务在运行时修改。
 

@@ -389,6 +389,12 @@ rosservice call /camera/get_ptp_config
 rosservice call /camera/set_ptp_config true
 ```
 
+* `/camera/send_software_trigger`
+
+```bash
+rosservice call /camera/send_software_trigger "data: true"
+```
+
 * `/camera/set_sync_io_voltage_level`
 
 设置同步 IO 电压等级。仅支持具备该属性的设备。

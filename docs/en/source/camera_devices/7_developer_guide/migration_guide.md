@@ -70,6 +70,7 @@ With an open-source SDK, developers can directly submit issues and pull requests
 | trigger2image_delay_us                  | -        | Added       | Delay between external trigger signal and image acquisition  |
 | trigger_out_delay_us                    | -        | Added       | Delay between acquisition and output trigger signal          |
 | trigger_out_enabled                     | -        | Added       | Enable external trigger output                               |
+| software_trigger_enabled                | -        | Added       | Enable periodic automatic software triggering                |
 | frames_per_trigger                      | -        | Added       | Number of frames per trigger                                 |
 | software_trigger_period                 | -        | Added       | Trigger period in software trigger mode                      |
 | enable_ptp_config                       | -        | Added       | Enable PTP (Precision Time Protocol) time synchronization    |
@@ -153,6 +154,7 @@ With an open-source SDK, developers can directly submit issues and pull requests
 | --------------------- | -------- | ----------- | ----------------------------------- |
 | get_ptp_config        | -        | Added       | Get PTP configuration               |
 | set_ptp_config        | -        | Added       | Set PTP configuration               |
+| send_software_trigger | -        | Added       | Send one software-trigger capture command |
 | set_color_ae_roi      | -        | Added       | Set AE ROI for color stream         |
 | set_color_flip        | -        | Added       | Set flip for color stream           |
 | set_color_rotation    | -        | Added       | Set rotation for color stream       |

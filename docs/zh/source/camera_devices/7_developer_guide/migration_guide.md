@@ -70,6 +70,7 @@ v2-main 分支提供完整功能支持，包括新特性开发、性能优化和
 | trigger2image_delay_us          | -        | 新增        | 外部触发信号到图像采集的延迟                          |
 | trigger_out_delay_us            | -        | 新增        | 采集到输出触发信号的延迟                              |
 | trigger_out_enabled             | -        | 新增        | 启用外部触发输出                                      |
+| software_trigger_enabled        | -        | 新增        | 启用周期自动软件触发                                  |
 | frames_per_trigger              | -        | 新增        | 每次触发采集的帧数                                    |
 | software_trigger_period         | -        | 新增        | 软件触发模式下的触发周期                              |
 | enable_ptp_config               | -        | 新增        | 启用 PTP（精确时间协议）同步                          |
@@ -153,6 +154,7 @@ v2-main 分支提供完整功能支持，包括新特性开发、性能优化和
 | --------------------- | -------- | ----------- | ---------------------------- |
 | get_ptp_config        | -        | 新增        | 获取PTP配置                  |
 | set_ptp_config        | -        | 新增        | 设置PTP配置                  |
+| send_software_trigger | -        | 新增        | 发送一次软件触发采集命令     |
 | set_color_ae_roi      | -        | 新增        | 设置彩色流自动曝光ROI        |
 | set_color_flip        | -        | 新增        | 设置彩色流翻转               |
 | set_color_rotation    | -        | 新增        | 设置彩色流旋转               |
@@ -168,4 +170,3 @@ v2-main 分支提供完整功能支持，包括新特性开发、性能优化和
 | read_customer_data    | -        | 新增        | 读取用户自定义数据           |
 | write_customer_data   | -        | 新增        | 写入用户自定义数据           |
 | set_filter            | -        | 新增        | 配置深度/点云滤波器          |
-
