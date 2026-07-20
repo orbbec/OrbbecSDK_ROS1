@@ -115,19 +115,6 @@ RGB、YUYV、UYVY、MJPG、BGR、RGBA、Y16、Y8
 
 该转换只用于 EnhancedDepthFilter，不会改变驱动向下游发布的 Color 图像格式。
 
-## SDK JSON 配置
-
-通过 `load_config_json_file_path` 加载 SDK JSON 时，JSON 中的 stream profile 和 `application_config.point_cloud` 对齐配置会影响最终的 Color/Depth 分辨率、格式、对齐方式和帧汇聚模式。
-
-启用 EnhancedDepthFilter 时，最终生效的配置仍需满足以下条件：
-
-* Color 和 Depth 均已启用；
-* D2C 或 C2D 对齐已启用；
-* D2C 的 Color 目标分辨率或 C2D 的 Depth 目标分辨率属于 `640x480/1280x720/1280x800`；
-* Depth 格式属于 `Y10/Y11/Y12/Y14/Y16/Z16`。
-
-如果 launch/YAML 参数和 SDK JSON 配置同一项，已传入节点的 launch/YAML 参数优先。完整启动文件通过 `<param>` 写入的默认参数也属于已传入参数，可能覆盖 JSON 中的同名配置。详细规则请参考 [Gemini 330 系列 SDK JSON 使用说明](sdk_json_config.md)。
-
 ## 输出话题
 
 以下话题名称以默认的 `camera_name:=camera` 为例。修改 `camera_name` 后，需要将 `/camera` 替换为实际命名空间。

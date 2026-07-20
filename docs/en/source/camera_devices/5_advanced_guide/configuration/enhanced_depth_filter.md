@@ -115,19 +115,6 @@ RGB, YUYV, UYVY, MJPG, BGR, RGBA, Y16, Y8
 
 This conversion is used only by EnhancedDepthFilter and does not change the Color image format published to downstream consumers.
 
-## SDK JSON Configuration
-
-When an SDK JSON file is loaded through `load_config_json_file_path`, the stream profiles and alignment configuration under `application_config.point_cloud` affect the final Color/Depth resolutions, formats, alignment method, and frame aggregation mode.
-
-When EnhancedDepthFilter is enabled, the final effective configuration must still meet these requirements:
-
-* both Color and Depth are enabled;
-* D2C or C2D alignment is enabled;
-* the D2C Color target resolution or C2D Depth target resolution is one of `640x480/1280x720/1280x800`;
-* the Depth format is one of `Y10/Y11/Y12/Y14/Y16/Z16`.
-
-If launch/YAML parameters and SDK JSON configure the same item, parameters already passed to the node take precedence. Default parameters written through `<param>` by a full launch file also count as passed parameters and may override the corresponding JSON configuration. For details, see [Gemini 330 Series SDK JSON Usage Guide](sdk_json_config.md).
-
 ## Output Topics
 
 The following topic names assume the default `camera_name:=camera`. If `camera_name` is changed, replace `/camera` with the actual namespace.
