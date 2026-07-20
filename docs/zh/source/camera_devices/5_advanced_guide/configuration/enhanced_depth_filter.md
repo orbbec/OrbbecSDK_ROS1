@@ -67,27 +67,6 @@ roslaunch orbbec_camera gemini_330_series.launch \
   enhanced_depth_confidence_threshold:=51
 ```
 
-Nodelet：
-
-```bash
-roslaunch orbbec_camera gemini_330_series_nodelet.launch \
-  enable_color:=true \
-  color_width:=640 \
-  color_height:=480 \
-  color_format:=RGB \
-  enable_depth:=true \
-  depth_width:=640 \
-  depth_height:=480 \
-  depth_format:=Y16 \
-  depth_registration:=true \
-  align_mode:=SW \
-  align_target_stream:=COLOR \
-  frame_aggregate_mode:=full_frame \
-  enable_enhanced_depth:=true \
-  enhanced_depth_model_path:=/path/to/model.sm4 \
-  enhanced_depth_confidence_threshold:=51
-```
-
 使用硬件 D2C 时，对齐目标只能是 Color：
 
 ```bash
