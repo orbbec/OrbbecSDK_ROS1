@@ -1,4 +1,4 @@
-# ROS1 EnhancedDepthFilter Usage Guide
+# Gemini 330 Series EnhancedDepthFilter Usage Guide
 
 The LingBot Enhanced Depth Filter (`EnhancedDepthFilter`) uses both color and depth information to improve depth image quality by reducing noise, filling depth holes, and refining object edges.
 
@@ -147,7 +147,7 @@ When EnhancedDepthFilter is enabled, the final effective configuration must stil
 * the D2C Color target resolution or C2D Depth target resolution is one of `640x480/1280x720/1280x800`;
 * the Depth format is one of `Y10/Y11/Y12/Y14/Y16/Z16`.
 
-If launch/YAML parameters and SDK JSON configure the same item, parameters already passed to the node take precedence. Default parameters written through `<param>` by a full launch file also count as passed parameters and may override the corresponding JSON configuration. For details, see [SDK JSON Import and Export for Gemini 330 Series](sdk_json_config.md).
+If launch/YAML parameters and SDK JSON configure the same item, parameters already passed to the node take precedence. Default parameters written through `<param>` by a full launch file also count as passed parameters and may override the corresponding JSON configuration. For details, see [Gemini 330 Series SDK JSON Usage Guide](sdk_json_config.md).
 
 ## Output Topics
 

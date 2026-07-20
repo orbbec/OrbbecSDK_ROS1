@@ -1,4 +1,4 @@
-# Gemini 330 系列鬼影滤波
+# Gemini 330 系列 FalsePositiveFilter 使用说明
 
 本文档说明如何在 ROS1 中为 Gemini 330 系列相机使用鬼影滤波 `FalsePositiveFilter`，包括启动时开启、状态确认、运行时开关和临时调参。
 
@@ -41,7 +41,7 @@ device_preset: "<preset_name>"
 
 ## 可选：导入 SDK JSON
 
-如果鬼影滤波参数已经写入 SDK JSON，可通过 `load_config_json_file_path` 导入。Gemini 330 系列 SDK JSON 的导入导出流程、参数优先级和日志确认方法，请参考 [Gemini 330 系列 SDK JSON 配置导入与导出](sdk_json_config.md)。
+如果鬼影滤波参数已经写入 SDK JSON，可通过 `load_config_json_file_path` 导入。Gemini 330 系列 SDK JSON 的导入导出流程、参数优先级和日志确认方法，请参考 [Gemini 330 系列 SDK JSON 使用说明](sdk_json_config.md)。
 
 常见情况：
 

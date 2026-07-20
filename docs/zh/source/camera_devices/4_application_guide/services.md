@@ -349,7 +349,7 @@ rosservice call /camera/get_camera_params
 
 * `/camera/export_config_json`
 
-导出当前设备配置为 SDK JSON 文件。Gemini 330 系列的 JSON 导入导出流程请参考 [Gemini 330 系列 SDK JSON 配置导入与导出](../5_advanced_guide/configuration/sdk_json_config.md)。
+导出当前设备配置为 SDK JSON 文件。Gemini 330 系列的 JSON 导入导出流程请参考 [Gemini 330 系列 SDK JSON 使用说明](../5_advanced_guide/configuration/sdk_json_config.md)。
 
 ```bash
 rosservice call /camera/export_config_json "data: '/tmp/orbbec_camera_config.json'"
@@ -439,7 +439,7 @@ rosservice call /camera/set_ae_strategy motion
 
 * `/camera/set_filter`
 
-`FalsePositiveFilter` 的启动参数、状态确认和命名参数调参示例可参考 [Gemini 330 系列鬼影滤波](../5_advanced_guide/configuration/false_positive_filter.md)。`EnhancedDepthFilter` 的环境要求、启动参数和状态确认方法可参考 [ROS1 EnhancedDepthFilter 使用说明](../5_advanced_guide/configuration/enhanced_depth_filter.md)。
+`FalsePositiveFilter` 的启动参数、状态确认和命名参数调参示例可参考 [Gemini 330 系列 FalsePositiveFilter 使用说明](../5_advanced_guide/configuration/false_positive_filter.md)。`EnhancedDepthFilter` 的环境要求、启动参数和状态确认方法可参考 [Gemini 330 系列 EnhancedDepthFilter 使用说明](../5_advanced_guide/configuration/enhanced_depth_filter.md)。
 
 ```bash
 # filter_name 为滤波器名称，filter_enable 表示是否开启滤波器开关。

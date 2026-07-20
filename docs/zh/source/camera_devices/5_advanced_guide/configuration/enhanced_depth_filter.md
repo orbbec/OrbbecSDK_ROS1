@@ -1,4 +1,4 @@
-# ROS1 EnhancedDepthFilter 使用说明
+# Gemini 330 系列 EnhancedDepthFilter 使用说明
 
 LingBot 增强深度滤波器（`EnhancedDepthFilter`）同时使用彩色和深度信息，通过降低噪声、填补深度空洞和优化物体边缘来改善深度图像质量。
 
@@ -147,7 +147,7 @@ RGB、YUYV、UYVY、MJPG、BGR、RGBA、Y16、Y8
 * D2C 的 Color 目标分辨率或 C2D 的 Depth 目标分辨率属于 `640x480/1280x720/1280x800`；
 * Depth 格式属于 `Y10/Y11/Y12/Y14/Y16/Z16`。
 
-如果 launch/YAML 参数和 SDK JSON 配置同一项，已传入节点的 launch/YAML 参数优先。完整启动文件通过 `<param>` 写入的默认参数也属于已传入参数，可能覆盖 JSON 中的同名配置。详细规则请参考 [Gemini 330 系列 SDK JSON 配置导入与导出](sdk_json_config.md)。
+如果 launch/YAML 参数和 SDK JSON 配置同一项，已传入节点的 launch/YAML 参数优先。完整启动文件通过 `<param>` 写入的默认参数也属于已传入参数，可能覆盖 JSON 中的同名配置。详细规则请参考 [Gemini 330 系列 SDK JSON 使用说明](sdk_json_config.md)。
 
 ## 输出话题
 

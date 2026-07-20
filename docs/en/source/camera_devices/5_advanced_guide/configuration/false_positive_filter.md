@@ -1,4 +1,4 @@
-# False Positive Filtering for Gemini 330 Series
+# Gemini 330 Series FalsePositiveFilter Usage Guide
 
 This document describes how to use the `FalsePositiveFilter` in ROS1 for Gemini 330 series cameras, including enabling it at startup, checking its status, enabling or disabling it at runtime, and temporarily tuning its parameters.
 
@@ -41,7 +41,7 @@ Notes:
 
 ## Optional: Import an SDK JSON File
 
-If false positive filter parameters are already written in an SDK JSON file, import it with `load_config_json_file_path`. For the Gemini 330 series SDK JSON import and export workflow, parameter priority, and log checks, see [SDK JSON Import and Export for Gemini 330 Series](sdk_json_config.md).
+If false positive filter parameters are already written in an SDK JSON file, import it with `load_config_json_file_path`. For the Gemini 330 series SDK JSON import and export workflow, parameter priority, and log checks, see [Gemini 330 Series SDK JSON Usage Guide](sdk_json_config.md).
 
 Common cases:
 

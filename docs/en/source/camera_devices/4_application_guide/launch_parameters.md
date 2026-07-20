@@ -257,10 +257,10 @@ The following are the launch parameters available:
   * Set the color MJPEG encoding quality. **Range:** `1–100`; **Default:** `-1` (leave the current device value unchanged). Firmware version `1.8.11` or later is required.
   > **Supported Modules**: Gemini 330 series
 * **`enable_false_positive_filter`**
-  * Enable this option to reduce ghosting noise. For usage examples and runtime tuning, see [False Positive Filtering for Gemini 330 Series](../5_advanced_guide/configuration/false_positive_filter.md).
+  * Enable this option to reduce ghosting noise. For usage examples and runtime tuning, see [Gemini 330 Series FalsePositiveFilter Usage Guide](../5_advanced_guide/configuration/false_positive_filter.md).
   > **Supported Modules**: Gemini 330 series / Gemini 340 series
 * **`enable_enhanced_depth`**
-  * Enable LingBot enhanced depth filtering. The default is `false`. Both Color and Depth must be enabled, and D2C/C2D alignment must be configured. For complete environment, startup, and image requirements, see the [ROS1 EnhancedDepthFilter Usage Guide](../5_advanced_guide/configuration/enhanced_depth_filter.md).
+  * Enable LingBot enhanced depth filtering. The default is `false`. Both Color and Depth must be enabled, and D2C/C2D alignment must be configured. For complete environment, startup, and image requirements, see the [Gemini 330 Series EnhancedDepthFilter Usage Guide](../5_advanced_guide/configuration/enhanced_depth_filter.md).
   > **Supported Modules**: Gemini 330 series
 * **`enhanced_depth_model_path`**
   * Path to the LingBot `model.sm4` file. The default is empty. This parameter is required when enhanced depth filtering is enabled; an absolute path is recommended. The model file cannot be changed at runtime.
@@ -341,10 +341,10 @@ The following are the launch parameters available:
 *   **`config_file_path`**
     *   The path to the YAML configuration file. Default is `""`. If not specified, default parameters from the launch file will be used. Some presets or special modes are configured through YAML. See [predefined presets](../5_advanced_guide/configuration/predefined_presets.md).
 *   **`load_config_json_file_path`**
-    *   SDK JSON configuration import path. When set, the node imports the JSON configuration during initialization. For Gemini 330 series, use `gemini_330_series_sdk_json.launch` as the dedicated SDK JSON launch file. See [SDK JSON Import and Export for Gemini 330 Series](../5_advanced_guide/configuration/sdk_json_config.md).
+    *   SDK JSON configuration import path. When set, the node imports the JSON configuration during initialization. For Gemini 330 series, use `gemini_330_series_sdk_json.launch` as the dedicated SDK JSON launch file. See [Gemini 330 Series SDK JSON Usage Guide](../5_advanced_guide/configuration/sdk_json_config.md).
     *   If the JSON contains `application_config`, the node syncs stream enable states, resolution, frame rate, format, undistortion, point cloud, HDR merge, and device-level decimation from it when those values are not explicitly overridden by launch parameters.
 *   **`export_config_json_file_path`**
-    *   SDK JSON configuration export path. When set, the node exports the current device configuration to JSON after initialization. You can also export at runtime with the `/camera/export_config_json` service. See [SDK JSON Import and Export for Gemini 330 Series](../5_advanced_guide/configuration/sdk_json_config.md).
+    *   SDK JSON configuration export path. When set, the node exports the current device configuration to JSON after initialization. You can also export at runtime with the `/camera/export_config_json` service. See [Gemini 330 Series SDK JSON Usage Guide](../5_advanced_guide/configuration/sdk_json_config.md).
     *   Before export, the node syncs the current ROS sensor stream, point cloud, and HDR merge settings into the SDK `application_config` when the device supports it.
 *   **`frame_aggregate_mode`**
     *   Set frame aggregate output mode. Optional values: `full_frame`, `color_frame`, `ANY`, `disable`.

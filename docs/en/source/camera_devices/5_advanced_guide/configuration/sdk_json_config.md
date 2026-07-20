@@ -1,4 +1,4 @@
-# SDK JSON Import and Export for Gemini 330 Series
+# Gemini 330 Series SDK JSON Usage Guide
 
 This document describes how to import and export SDK JSON configuration files for Gemini 330 series cameras in ROS1.
 

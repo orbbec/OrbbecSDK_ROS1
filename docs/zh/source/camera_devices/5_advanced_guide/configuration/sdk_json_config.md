@@ -1,4 +1,4 @@
-# Gemini 330 系列 SDK JSON 配置导入与导出
+# Gemini 330 系列 SDK JSON 使用说明
 
 本文档说明如何在 ROS1 中为 Gemini 330 系列相机导入和导出 SDK JSON 配置文件。
 

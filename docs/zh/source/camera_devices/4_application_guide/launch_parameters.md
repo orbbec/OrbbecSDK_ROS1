@@ -258,10 +258,10 @@
   * 设置彩色 MJPEG 编码质量。**范围：** `1–100`，**默认值：** `-1`（不修改设备当前值）。需要固件版本大于等于 `1.8.11`。
   > **支持模组**：Gemini 330 系列。
 * **`enable_false_positive_filter`**
-  * 启用鬼影滤波。可减少重影噪声，使用示例和运行时调参方法请参考 [Gemini 330 系列鬼影滤波](../5_advanced_guide/configuration/false_positive_filter.md)。
+  * 启用鬼影滤波。可减少重影噪声，使用示例和运行时调参方法请参考 [Gemini 330 系列 FalsePositiveFilter 使用说明](../5_advanced_guide/configuration/false_positive_filter.md)。
   > **支持模组**：Gemini 330 系列 / Gemini 340 系列。
 * **`enable_enhanced_depth`**
-  * 启用 LingBot 增强深度滤波，默认值为 `false`。该功能需要同时启用 Color 和 Depth，并配置 D2C/C2D 对齐。完整环境、启动和图像要求请参考 [ROS1 EnhancedDepthFilter 使用说明](../5_advanced_guide/configuration/enhanced_depth_filter.md)。
+  * 启用 LingBot 增强深度滤波，默认值为 `false`。该功能需要同时启用 Color 和 Depth，并配置 D2C/C2D 对齐。完整环境、启动和图像要求请参考 [Gemini 330 系列 EnhancedDepthFilter 使用说明](../5_advanced_guide/configuration/enhanced_depth_filter.md)。
   > **支持模组**：Gemini 330 系列。
 * **`enhanced_depth_model_path`**
   * LingBot `model.sm4` 文件路径，默认值为空。启用增强深度滤波时必须设置，建议使用绝对路径；运行时不能更换模型文件。
@@ -341,10 +341,10 @@
 *   **`config_file_path`**
     *   YAML配置文件的路径。默认为 `""`。如果未指定，将使用启动文件中的默认参数。部分 preset 或特殊模式会通过 YAML 配置，示例参考 [设备预设](../5_advanced_guide/configuration/predefined_presets.md)。
 *   **`load_config_json_file_path`**
-    *   SDK JSON 配置导入路径。设置后节点会在初始化时调用 SDK 导入 JSON 配置。Gemini 330 系列可使用 `gemini_330_series_sdk_json.launch` 作为专用启动文件，使用方法参考 [Gemini 330 系列 SDK JSON 配置导入与导出](../5_advanced_guide/configuration/sdk_json_config.md)。
+    *   SDK JSON 配置导入路径。设置后节点会在初始化时调用 SDK 导入 JSON 配置。Gemini 330 系列可使用 `gemini_330_series_sdk_json.launch` 作为专用启动文件，使用方法参考 [Gemini 330 系列 SDK JSON 使用说明](../5_advanced_guide/configuration/sdk_json_config.md)。
     *   如果 JSON 中包含 `application_config`，节点会在未被 launch 参数显式覆盖时同步其中的流开关、分辨率、帧率、格式、去畸变、点云、HDR 合并和设备级下采样配置。
 *   **`export_config_json_file_path`**
-    *   SDK JSON 配置导出路径。设置后节点会在初始化完成后将当前设备配置导出为 JSON。也可以通过 `/camera/export_config_json` 服务运行时导出，使用方法参考 [Gemini 330 系列 SDK JSON 配置导入与导出](../5_advanced_guide/configuration/sdk_json_config.md)。
+    *   SDK JSON 配置导出路径。设置后节点会在初始化完成后将当前设备配置导出为 JSON。也可以通过 `/camera/export_config_json` 服务运行时导出，使用方法参考 [Gemini 330 系列 SDK JSON 使用说明](../5_advanced_guide/configuration/sdk_json_config.md)。
     *   导出前会把当前 ROS 参数中的传感器流、点云和 HDR 合并配置同步到 SDK `application_config`（设备支持时）。
 *   **`frame_aggregate_mode`**
     *   设置帧聚合输出模式。可选值：`full_frame`、`color_frame`、`ANY`、`disable`。

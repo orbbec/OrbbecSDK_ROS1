@@ -348,7 +348,7 @@ rosservice call /camera/get_camera_params
 
 * `/camera/export_config_json`
 
-Export the current device configuration to an SDK JSON file. For the Gemini 330 series JSON import and export workflow, see [SDK JSON Import and Export for Gemini 330 Series](../5_advanced_guide/configuration/sdk_json_config.md).
+Export the current device configuration to an SDK JSON file. For the Gemini 330 series JSON import and export workflow, see [Gemini 330 Series SDK JSON Usage Guide](../5_advanced_guide/configuration/sdk_json_config.md).
 
 ```bash
 rosservice call /camera/export_config_json "data: '/tmp/orbbec_camera_config.json'"
@@ -439,7 +439,7 @@ rosservice call /camera/set_ae_strategy motion
 
 * `/camera/set_filter`
 
-For `FalsePositiveFilter` startup parameters, status checks, and named-parameter tuning examples, see [False Positive Filtering for Gemini 330 Series](../5_advanced_guide/configuration/false_positive_filter.md). For `EnhancedDepthFilter` environment requirements, startup parameters, and status checks, see the [ROS1 EnhancedDepthFilter Usage Guide](../5_advanced_guide/configuration/enhanced_depth_filter.md).
+For `FalsePositiveFilter` startup parameters, status checks, and named-parameter tuning examples, see [Gemini 330 Series FalsePositiveFilter Usage Guide](../5_advanced_guide/configuration/false_positive_filter.md). For `EnhancedDepthFilter` environment requirements, startup parameters, and status checks, see the [Gemini 330 Series EnhancedDepthFilter Usage Guide](../5_advanced_guide/configuration/enhanced_depth_filter.md).
 
 ```bash
 # filter_name is the filter name, and filter_enable indicates whether the filter is enabled.
