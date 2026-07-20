@@ -42,6 +42,8 @@
 
 以下是可用的启动参数：
 
+> **默认值说明：** 不同设备的 launch 文件可能为同一参数设置不同的默认值。下文仅在默认值能够统一确认时列出；参数默认值为空或为 `-1` 时，通常表示节点不主动修改设备当前值。
+
 ## 核心与数据流配置
 
 *   **`camera_name`**
@@ -113,7 +115,7 @@
 *   **`color_brightness`**、**`color_sharpness`**、**`color_gamma`**、**`color_saturation`**、**`color_contrast`**、**`color_hue`**
     *   设置彩色亮度、锐度、伽马、饱和度、对比度和色调。
 *   **`color_backlight_compensation`**
-    *   启用彩色相机的背光补偿功能。**范围**：`0–6`，**默认值**：`3`。
+    *   设置彩色相机的背光补偿等级。可设置范围为 `0–6`；launch 默认值为 `-1`，表示不修改设备当前值。
 *   **`color_powerline_freq`**
     *   设置电源线频率。可能的值为 `disable`、`50hz`、`60hz`、`auto`。
 *   **`color_preset`**
@@ -134,10 +136,8 @@
 * **`mean_intensity_set_point`**
   * 设置开启自动曝光时深度图像的目标平均强度。例如：`mean_intensity_set_point:=100`。
   > **注意：** 在 2.4.7 版本之后，该参数取代已弃用的 `depth_brightness`，但为了向后兼容，仍会支持 `depth_brightness`。
-*   **`enable_depth_scale`**
-    *   设置D2C后是否启用深度缩放。`true`表示启用，默认为`true`。
 *   **`depth_precision`**
-    *   深度精度应为 `1mm` 格式。默认值为 `1mm`。
+    *   设置深度精度，格式示例为 `1mm`。launch 参数为空时不主动修改设备当前深度精度。
 *   **`depth_work_mode`**
     *   设置深度工作模式。支持的设备、模式列表查看命令和启动示例参考 [深度工作模式切换](../5_advanced_guide/configuration/depth_work_mode_switch.md)。
 *   **`depth_ae_roi_[left|right|top|bottom]`**
@@ -169,7 +169,7 @@
 
 ### 多相机同步
 *   **`sync_mode`**
-    *   设置同步模式。默认值为 `standalone`。多相机连接、同步模式和触发配置参考 [多相机同步](../5_advanced_guide/multi_camera/multi_camera_synced.md)。
+    *   设置同步模式。多相机连接、同步模式和触发配置参考 [多相机同步](../5_advanced_guide/multi_camera/multi_camera_synced.md)。
 *   **`depth_delay_us`** / **`color_delay_us`**
     *   接收捕获命令或触发信号后深度/彩色图像捕获的延迟时间（微秒）。
 *   **`trigger2image_delay_us`**
@@ -207,7 +207,7 @@
 ### 视差
 *   **`disparity_to_depth_mode`**
     *   `HW`：使用硬件视差到深度转换。`SW`：使用软件视差到深度转换。也可以设置为 `disable` 关闭。
-    *   该参数大小写不敏感；非法值会报错并回退默认值。
+    *   该参数大小写不敏感；请使用上述有效值。
 *   **`disparity_range_mode`**、**`disparity_search_offset`**、**`disparity_offset_config`**
     *   视差搜索偏移参数。用于 [视差搜索偏移](../5_advanced_guide/configuration/disparity_search_offset.md)。
 
@@ -226,7 +226,7 @@
   *   启用深度帧与彩色帧的对齐。当 `enable_colored_point_cloud` 设置为 `true` 时需要此字段。启动和查看方法参考 [对齐深度到彩色](../5_advanced_guide/configuration/align_depth_color.md)。
 - **`align_mode`**
   *   要使用的对齐模式。选项为 `HW`（硬件对齐）和 `SW`（软件对齐）。
-  *   该参数大小写不敏感；非法值会报错并回退默认值。
+  *   该参数大小写不敏感；请使用上述有效值。
 - **`align_target_stream`**
   *   设置对齐目标流模式。
   *   可能的值为 `COLOR`、`DEPTH`。
@@ -234,7 +234,7 @@
   *   `DEPTH`：将彩色对齐到深度。
   *   该参数大小写不敏感。硬件 D2C 仅支持 `COLOR` 作为对齐目标；如需对齐到 `DEPTH`，请使用 `align_mode:=SW`。启动和查看方法参考 [对齐深度到彩色](../5_advanced_guide/configuration/align_depth_color.md)。
 - **`intra_camera_sync_reference`**
-  - 设置相机内同步的参考点。适用于Gemini 330系列设备，当 `sync_mode` 设置为**软件**或**硬件触发**模式时。**选项：** `Start`、`Middle`、`End`。设置为空时，长基线设备默认End，短基线设备默认Middle。
+  - 设置相机内同步的参考点。适用于Gemini 330系列设备，当 `sync_mode` 设置为**软件**或**硬件触发**模式时。**选项：** `Start`、`Middle`、`End`。参数为空时，节点不修改设备当前设置。
 
 ## 设备特定参数
 *   **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
@@ -308,15 +308,12 @@
 
 ### 时间同步
 *   **`enable_sync_host_time`**
-    *   启用主机时间与相机时间的同步。默认值为 `true`。如果使用全局时间，设置为 `false`。
+    *   启用主机时间与相机时间的同步。默认值由设备 launch 文件决定；Gemini 330 系列（包括 Gemini 336L）的 launch 默认关闭。使用全局时间时应设置为 `false`。ROS1 不提供 `time_sync_period` launch 参数，周期授时间隔固定为 60 秒。
 *   **`time_domain`**
     *   选择时间戳类型：`device`、`global` 和 `system`。
-    *   该参数大小写不敏感；非法值会报错并回退默认值。
+    *   该参数大小写不敏感；请使用上述有效值。
 *   **`timestamp_clock_type`**
-    *   设置 SDK 时间戳时钟类型。可选值：`realtime`、`monotonic`。默认使用 `realtime`。
-* **`time_sync_period`**
-  * 相机时间与主机系统同步的间隔（秒）。
-  > **注意**：仅当 **`enable_sync_host_time = true`** 且 **`time_domain = device`** 时需要设置此参数。
+    *   设置 SDK 时间戳时钟类型。可选值：`realtime`、`monotonic`。launch 参数为空时不显式设置 SDK 时钟类型。
 *   **`enable_frame_drop_log`**
     *   启用帧丢失日志。日志会分别统计 SDK 接收阶段和 ROS 发布阶段检测到的丢帧。
 *   **`frame_timestamp_csv_file`**
@@ -326,12 +323,12 @@
 
 ### 日志与诊断
 *   **`log_level`**
-    *   SDK日志级别。默认只输出设备当前状态，更多调试日志可通过 `debug` 开启。可选值：`debug`、`info`、`warn`、`error`、`fatal`。
+    *   SDK日志级别。launch 默认值为 `none`；需要更多调试日志时可设置为 `debug`。可选值：`none`、`debug`、`info`、`warn`、`error`、`fatal`。
     *   SDK 日志和崩溃文件保存在 `~/.ros/Log`；ROS1 运行日志保存在 `~/.ros/log/<run_id>`。
 * **`log_file_name`**
-  * SDK 日志文件名。为空时，日志默认以节点启动时间命名，格式为 `<YYYYMMDD_HHMMSS>.log`；指定后，实际路径为 `~/.ros/Log/<camera_name>/<log_file_name>`。多相机场景下，不同 `camera_name` 会分别写入各自目录。
-*   **`diagnostic_period`**
-    *   诊断周期（秒）。
+  * SDK 日志文件名。为空时，日志默认以节点启动时间命名，格式为 `OrbbecSDK_<YYYYMMDD_HHMMSS>.log`；指定后，实际路径为 `~/.ros/Log/<camera_name>/<log_file_name>`。多相机场景下，不同 `camera_name` 会分别写入各自目录。
+*   **`diagnostics_frequency`**
+    *   诊断发布频率，单位为 Hz。launch 默认值为 `1.0`。
 *   **`enable_heartbeat`**
     *   启用心跳功能。默认为 `false`。如果为 `true`，相机节点将向固件发送心跳信号。
 *   **`enable_firmware_log`**
@@ -348,7 +345,7 @@
     *   导出前会把当前 ROS 参数中的传感器流、点云和 HDR 合并配置同步到 SDK `application_config`（设备支持时）。
 *   **`frame_aggregate_mode`**
     *   设置帧聚合输出模式。可选值：`full_frame`、`color_frame`、`ANY`、`disable`。
-    *   该参数大小写不敏感；非法值会报错并回退默认值。
+    *   该参数大小写不敏感；请使用上述有效值。
 *   **`enable_d2c_viewer`**
     *   发布D2C叠加图像（仅用于测试）。使用示例参考 [对齐深度到彩色](../5_advanced_guide/configuration/align_depth_color.md)。
 

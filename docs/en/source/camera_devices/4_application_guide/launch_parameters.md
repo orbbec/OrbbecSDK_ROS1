@@ -42,6 +42,8 @@ Launch parameters can be modified in two ways:
 
 The following are the launch parameters available:
 
+> **About defaults:** Device launch files may assign different defaults to the same parameter. A default is listed below only when it can be confirmed consistently. An empty value or `-1` usually means that the node does not actively change the device's current value.
+
 ## Core & Stream Configuration
 
 *   **`camera_name`**
@@ -113,7 +115,7 @@ The following are the launch parameters available:
 *   **`color_brightness`**, **`color_sharpness`**, **`color_gamma`**, **`color_saturation`**, **`color_contrast`**, **`color_hue`**
     *   Set the Color brightness, sharpness, gamma, saturation, contrast, and hue.
 *   **`color_backlight_compensation`**
-    *    Enables the color camera’s backlight compensation feature. **Range**: `0–6`, **Default**: `3`.
+    *   Set the Color camera's backlight compensation level. Valid values are `0–6`; the launch default is `-1`, which leaves the current device value unchanged.
 *   **`color_powerline_freq`**
     *   Set the power line freq. The possible values are `disable`, `50hz`, `60hz`, `auto`.
 *   **`color_preset`**
@@ -134,10 +136,8 @@ The following are the launch parameters available:
 * **`mean_intensity_set_point`**
   * Set the target average intensity of the depth image when auto-exposure is turned on. For example: `mean_intensity_set_point:=100`.
   > **Note:** In wrapper version 2.4.7 and later, this parameter replaces the deprecated `depth_brightness`, but `depth_brightness` will still be supported for backward compatibility.
-*   **`enable_depth_scale`**
-    *   Whether to enable depth scaling after setting D2C. `true` means enabled, the default is `true`.
 *   **`depth_precision`**
-    *   The depth precision should be in the format `1mm`. The default value is `1mm`.
+    *   Set the depth precision, using a value such as `1mm`. When the launch argument is empty, the node does not actively change the device's current depth precision.
 *   **`depth_work_mode`**
     *   Set the depth work mode. See [Depth Work Mode Switch](../5_advanced_guide/configuration/depth_work_mode_switch.md) for supported devices, mode query commands, and launch examples.
 *   **`depth_ae_roi_[left|right|top|bottom]`**
@@ -168,7 +168,7 @@ The following are the launch parameters available:
 
 ### Multi-Camera Synchronization
 *   **`sync_mode`**
-    *   Set sync mode. The default value is `standalone`. See [multi camera synced](../5_advanced_guide/multi_camera/multi_camera_synced.md) for multi-camera connection, synchronization modes, and trigger configuration.
+    *   Set sync mode. See [multi camera synced](../5_advanced_guide/multi_camera/multi_camera_synced.md) for multi-camera connection, synchronization modes, and trigger configuration.
 *   **`depth_delay_us`** / **`color_delay_us`**
     *   The delay time (microseconds) of the depth/color image capture after receiving the capture command or trigger signal.
 *   **`trigger2image_delay_us`**
@@ -204,7 +204,7 @@ The following are the launch parameters available:
 ### Disparity
 *   **`disparity_to_depth_mode`**
     *   `HW`: use hardware disparity to depth conversion. `SW`: use software disparity to depth conversion. Use `disable` to turn it off.
-    *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
+    *   This parameter is case-insensitive. Use one of the valid values listed above.
 *   **`disparity_range_mode`**, **`disparity_search_offset`**, **`disparity_offset_config`**
     *   Parameters for disparity search offset. Used for [disparity search offset](../5_advanced_guide/configuration/disparity_search_offset.md).
 
@@ -223,7 +223,7 @@ The following are the launch parameters available:
   *   Enable alignment of the depth frame to the color frame. This field is required when the `enable_colored_point_cloud` is set to `true`. See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for startup and viewing examples.
 - **`align_mode`**
   *   The alignment mode to be used. Options are `HW` for hardware alignment and `SW` for software alignment.
-  *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
+  *   This parameter is case-insensitive. Use one of the valid values listed above.
 - **`align_target_stream`**
   *   Set align target stream mode.
   *   The possible values are `COLOR`, `DEPTH`.
@@ -231,7 +231,7 @@ The following are the launch parameters available:
   *   `DEPTH`: Align color to depth.
   *   This parameter is case-insensitive. Hardware D2C only supports `COLOR` as the target stream; use `align_mode:=SW` if you need to align to `DEPTH`. See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for startup and viewing examples.
 - **`intra_camera_sync_reference`**
-  - Sets the reference point for intra-camera synchronization. Applicable for Gemini 330 series devices when `sync_mode` is set to **software** or **hardware trigger** mode. **Options:** `Start`, `Middle`, `End`. When set to empty, the long baseline device defaults to End, and the short baseline device defaults to Middle.
+  - Sets the reference point for intra-camera synchronization. Applicable for Gemini 330 series devices when `sync_mode` is set to **software** or **hardware trigger** mode. **Options:** `Start`, `Middle`, `End`. When empty, the node leaves the device's current setting unchanged.
 
 ## Device-Specific Parameters
 * **`enable_gmsl_trigger`** / **`gmsl_trigger_fps`**
@@ -307,15 +307,12 @@ The following are the launch parameters available:
 
 ### Time Synchronization
 * **`enable_sync_host_time`**
-  * Enable synchronization of the host time with the camera time. The default value is `true`. If using global time, set to `false`.
+  * Enable synchronization of the host time with the camera time. The default is determined by the device launch file; Gemini 330 series launch files, including Gemini 336L, default to `false`. Set it to `false` when using global time. ROS1 does not expose a `time_sync_period` launch argument; the periodic synchronization interval is fixed at 60 seconds.
 * **`time_domain`**
   * Select timestamp type: `device`, `global`, and `system`.
-  * This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
+  * This parameter is case-insensitive. Use one of the valid values listed above.
 * **`timestamp_clock_type`**
-  * Set the SDK timestamp clock type. Optional values: `realtime`, `monotonic`. The default is `realtime`.
-* **`time_sync_period`**
-  * Interval (in seconds) for synchronizing the camera time with the host system.
-  > **Note**: This parameter only needs to be set when `enable_sync_host_time = true` and `time_domain = device`.
+  * Set the SDK timestamp clock type. Optional values: `realtime`, `monotonic`. When the launch argument is empty, the node does not explicitly set the SDK clock type.
 
 * **`enable_frame_drop_log`**
   * Enable frame drop logging. The log reports drops detected at both the SDK receive stage and the ROS publish stage.
@@ -326,12 +323,12 @@ The following are the launch parameters available:
 
 ### Logging & Diagnostics
 * **`log_level`**
-  * SDK log level. Default output keeps only the current device status; use `debug` for more detailed logs. Optional values: `debug`, `info`, `warn`, `error`, `fatal`.
+  * SDK log level. The launch default is `none`; use `debug` for more detailed logs. Optional values: `none`, `debug`, `info`, `warn`, `error`, `fatal`.
   * SDK logs and crash files are stored in `~/.ros/Log`; ROS1 runtime logs are stored in `~/.ros/log/<run_id>`.
 * **`log_file_name`**
-  * SDK log file name. When empty, the log file is named after the node startup time in the format `<YYYYMMDD_HHMMSS>.log`. When specified, the resulting path is `~/.ros/Log/<camera_name>/<log_file_name>`. In multi-camera setups, different `camera_name` values write into separate directories.
-* **`diagnostic_period`**
-  * Diagnostic period in seconds.
+  * SDK log file name. When empty, the log file is named after the node startup time in the format `OrbbecSDK_<YYYYMMDD_HHMMSS>.log`. When specified, the resulting path is `~/.ros/Log/<camera_name>/<log_file_name>`. In multi-camera setups, different `camera_name` values write into separate directories.
+* **`diagnostics_frequency`**
+  * Diagnostic publication frequency in Hz. The launch default is `1.0`.
 * **`enable_heartbeat`**
   * Enable the heartbeat function. Default is `false`. If `true`, the camera node will send heartbeat signals to the firmware.
 * **`enable_firmware_log`**
@@ -348,7 +345,7 @@ The following are the launch parameters available:
     *   Before export, the node syncs the current ROS sensor stream, point cloud, and HDR merge settings into the SDK `application_config` when the device supports it.
 *   **`frame_aggregate_mode`**
     *   Set frame aggregate output mode. Optional values: `full_frame`, `color_frame`, `ANY`, `disable`.
-    *   This parameter is case-insensitive. Invalid values are reported and replaced with the default value.
+    *   This parameter is case-insensitive. Use one of the valid values listed above.
 *   **`enable_d2c_viewer`**
     *   Publishes the D2C overlay image (for testing only). See [Aligning Depth to Color](../5_advanced_guide/configuration/align_depth_color.md) for usage examples.
 
