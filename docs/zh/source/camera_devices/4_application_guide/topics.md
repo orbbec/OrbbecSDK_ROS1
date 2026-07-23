@@ -23,6 +23,12 @@
     *   深度流的相机标定数据和元数据。
 *   `/camera/depth/metadata`
     *   来自深度流固件的底层元数据。
+*   `/camera/depth/image_unaligned`
+    *   软件对齐前的深度图像。
+    *   **条件：** 在 `depth_registration` 为 `true` 且 `align_mode` 为 `SW` 时发布；硬件对齐时不发布。
+*   `/camera/confidence/image_raw`
+    *   `EnhancedDepthFilter` 生成的置信度图像，根据置信度帧格式编码为 `mono8` 或 `mono16`。
+    *   **条件：** 增强深度滤波成功且该话题有订阅者时发布。
 
 *   `/camera/left_ir/image_raw`
     *   来自左红外（IR）流的原始图像数据。
@@ -53,6 +59,43 @@
 *   `/camera/depth_registered/points`
     *   彩色点云数据，其中深度点注册到彩色图像帧。
     *   **条件：** 仅在`enable_colored_point_cloud`为`true`时发布。
+
+### IMU 话题
+
+惯性测量单元（IMU）话题提供加速度计和陀螺仪数据及其标定信息。
+
+*   `/camera/accel/sample`
+    *   单独的加速度计数据流。
+    *   **条件：** 在 `enable_accel` 为 `true` 且 `enable_sync_output_accel_gyro` 为 `false` 时发布。
+
+*   `/camera/gyro/sample`
+    *   单独的陀螺仪数据流。
+    *   **条件：** 在 `enable_gyro` 为 `true` 且 `enable_sync_output_accel_gyro` 为 `false` 时发布。
+
+*   `/camera/gyro_accel/sample`
+    *   在单条消息中发布同步的加速度计和陀螺仪数据。
+    *   **条件：** 在 `enable_sync_output_accel_gyro` 为 `true` 时发布。
+
+*   `/camera/accel/imu_info`
+    *   加速度计标定信息和噪声特性，类型为 `orbbec_camera/IMUInfo`。
+    *   **条件：** 随加速度计输出提供。
+
+*   `/camera/gyro/imu_info`
+    *   陀螺仪标定信息和噪声特性，类型为 `orbbec_camera/IMUInfo`。
+    *   **条件：** 随陀螺仪输出提供。
+
+### 外参话题
+
+以下话题使用 `orbbec_camera/Extrinsics` 类型发布数据流之间的外参：
+
+*   `/camera/depth_to_ir`
+*   `/camera/depth_to_color`
+*   `/camera/depth_to_left_ir`
+*   `/camera/depth_to_right_ir`
+*   `/camera/depth_to_accel`
+*   `/camera/depth_to_gyro`
+
+**条件：** 所选话题对应的两个数据流均须启用。仅发布连接设备支持的话题。
 
 ### 设备状态和诊断
 

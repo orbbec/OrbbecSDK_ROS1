@@ -34,24 +34,24 @@ With an open-source SDK, developers can directly submit issues and pull requests
 
 ### **Launch File Differences**
 
-1. In v2-main, new low-power launch files have been added for the Gemini 330 series:
+1. In v2-main, new low-CPU launch files have been added for the Gemini 330 series:
    - `gemini_330_series_low_cpu.launch`
    - `gemini_330_series_nodelet_low_cpu.launch`
-2. v2-main introduces support for **Gemini 210** and **Gemini 435Le** cameras.
+2. v2-main introduces support for **Gemini 210**, **Gemini 301 series**, **Gemini 345**, **Gemini 345Lg**, and **Gemini 435Le** cameras.
 3. Since **OrbbecSDK_v2 only supports UVC devices**, the range of camera models supported in v2-main is slightly narrower than in main. Detailed information is provided in the comparison table below.
 
 | **Camera Series**   | **main**                                                     | **v2-main**                                                  |
 | ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Gemini (330 series) | gemini_330_series.launch                                     | gemini_330_series.launchgemini_330_series_low_cpu.launchgemini_330_series_nodelet_low_cpu.launchgemini_330_series_nodelet.launch |
-| Gemini2 series      | gemini2.launchgemini2L.launchgemini2XL.launchgemini2_nodelet.launch | gemini2.launchgemini2L.launch                                |
-| Gemini (E/EW/UW)    | gemini_e.launchgemini_e_lite.launchgemini_ew.launchgemini_ew_lite.launchgemini_uw.launch | Not supported                                                |
-| Gemini Other        | Not supported                                                | gemini210.launchgemini435_le.launch                          |
-| Femto               | femto_bolt.launchfemto_mega.launchfemto.launch               | femto_bolt.launchfemto_mega.launchfemto.launch               |
-| Astra               | astra_adv.launchastra_embedded_s.launchastra_pro2.launchastra_stereo_u3.launchastra.launchastra2.launch | astra.launchastra2.launch                                    |
-| Dabai               | dabai_d1.launchdabai_dcl.launchdabai_dcw.launchdabai_dcw2.launchdabai_dw.launchdabai_dw2.launchdabai_max_pro.launchdabai_max.launchdabai_pro.launchdabai.launch | dabai_a.launchdabai_al.launch                                |
+| Gemini (330 series) | gemini_330_series.launch                                     | gemini_330_series.launch<br>gemini_330_series_low_cpu.launch<br>gemini_330_series_nodelet_low_cpu.launch<br>gemini_330_series_nodelet.launch |
+| Gemini2 series      | gemini2.launch<br>gemini2L.launch<br>gemini2XL.launch<br>gemini2_nodelet.launch | gemini2.launch<br>gemini2L.launch                            |
+| Gemini (E/EW/UW)    | gemini_e.launch<br>gemini_e_lite.launch<br>gemini_ew.launch<br>gemini_ew_lite.launch<br>gemini_uw.launch | Not supported                                                |
+| Gemini Other        | Not supported                                                | gemini210.launch<br>gemini_301_series.launch<br>gemini345.launch<br>gemini345_lg.launch<br>gemini435_le.launch |
+| Femto               | femto_bolt.launch<br>femto_mega.launch<br>femto.launch       | femto_bolt.launch<br>femto_mega.launch<br>femto.launch       |
+| Astra               | astra_adv.launch<br>astra_embedded_s.launch<br>astra_pro2.launch<br>astra_stereo_u3.launch<br>astra.launch<br>astra2.launch | astra.launch<br>astra2.launch                                |
+| Dabai               | dabai_d1.launch<br>dabai_dcl.launch<br>dabai_dcw.launch<br>dabai_dcw2.launch<br>dabai_dw.launch<br>dabai_dw2.launch<br>dabai_max_pro.launch<br>dabai_max.launch<br>dabai_pro.launch<br>dabai.launch | dabai_a.launch<br>dabai_al.launch<br>dabai_dcw2.launch<br>dabai_max_pro.launch |
 | Deeya               | deeya.launch                                                 | Not supported                                                |
-| Multi-camera        | multi_camera.launch                                          | multi_camera.launchmulti_camera_nodelet.launchmulti_camera_synced.launch |
-| Debug/General       | ob_camera.launchob_camera_gdb.launch                         | ob_camera.launchob_camera_gdb.launch                         |
+| Multi-camera        | multi_camera.launch                                          | multi_camera.launch<br>multi_camera_nodelet.launch<br>multi_camera_synced.launch |
+| Debug/General       | ob_camera.launch<br>ob_camera_gdb.launch                     | ob_camera.launch<br>ob_camera_gdb.launch                     |
 
 ### **Parameter Differences**
 
@@ -133,7 +133,6 @@ With an open-source SDK, developers can directly submit issues and pull requests
 | offset_index1                           | -        | Added       | Disparity offset index 1                                     |
 | force_ip_enable                         | -        | Added       | Enable Force IP configuration                                |
 | force_ip_mac                            | -        | Added       | MAC address for Force IP                                     |
-| force_ip_dhcp                           | -        | Added       | Enable DHCP for Force IP                                     |
 | force_ip_address                        | -        | Added       | Forced IP address assignment                                 |
 | force_ip_subnet_mask                    | -        | Added       | Forced subnet mask assignment                                |
 | force_ip_gateway                        | -        | Added       | Forced gateway assignment                                    |

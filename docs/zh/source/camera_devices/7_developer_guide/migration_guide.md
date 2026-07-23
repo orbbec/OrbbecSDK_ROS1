@@ -34,10 +34,10 @@ v2-main 分支提供完整功能支持，包括新特性开发、性能优化和
 
 ### **启动文件差异**
 
-1. v2-main 新增 Gemini 330 系列低功耗启动文件：
+1. v2-main 新增 Gemini 330 系列低 CPU 启动文件：
    - `gemini_330_series_low_cpu.launch`
    - `gemini_330_series_nodelet_low_cpu.launch`
-2. v2-main 支持 **Gemini 210** 和 **Gemini 435Le** 相机。
+2. v2-main 支持 **Gemini 210**、**Gemini 301 系列**、**Gemini 345**、**Gemini 345Lg** 和 **Gemini 435Le** 相机。
 3. 由于 **OrbbecSDK_v2 仅支持 UVC 设备**，v2-main 支持的相机型号略少于 main，详见下表。
 
 | **相机系列**   | **main**                                                     | **v2-main**                                                  |
@@ -45,10 +45,10 @@ v2-main 分支提供完整功能支持，包括新特性开发、性能优化和
 | Gemini (330系列) | gemini_330_series.launch                                     | gemini_330_series.launch<br>gemini_330_series_low_cpu.launch<br>gemini_330_series_nodelet_low_cpu.launch<br>gemini_330_series_nodelet.launch |
 | Gemini2系列      | gemini2.launch<br>gemini2L.launch<br>gemini2XL.launch<br>gemini2_nodelet.launch | gemini2.launch<br>gemini2L.launch                                |
 | Gemini (E/EW/UW) | gemini_e.launch<br>gemini_e_lite.launch<br>gemini_ew.launch<br>gemini_ew_lite.launch<br>gemini_uw.launch | 不支持                                                |
-| Gemini 其它      | 不支持                                                | gemini210.launch<br>gemini435_le.launch                          |
+| Gemini 其它      | 不支持                                                | gemini210.launch<br>gemini_301_series.launch<br>gemini345.launch<br>gemini345_lg.launch<br>gemini435_le.launch |
 | Femto           | femto_bolt.launch<br>femto_mega.launch<br>femto.launch               | femto_bolt.launch<br>femto_mega.launch<br>femto.launch               |
 | Astra           | astra_adv.launch<br>astra_embedded_s.launch<br>astra_pro2.launch<br>astra_stereo_u3.launch<br>astra.launch<br>astra2.launch | astra.launch<br>astra2.launch                                    |
-| Dabai           | dabai_d1.launch<br>dabai_dcl.launch<br>dabai_dcw.launch<br>dabai_dcw2.launch<br>dabai_dw.launch<br>dabai_dw2.launch<br>dabai_max_pro.launch<br>dabai_max.launch<br>dabai_pro.launch<br>dabai.launch | dabai_a.launch<br>dabai_al.launch                                |
+| Dabai           | dabai_d1.launch<br>dabai_dcl.launch<br>dabai_dcw.launch<br>dabai_dcw2.launch<br>dabai_dw.launch<br>dabai_dw2.launch<br>dabai_max_pro.launch<br>dabai_max.launch<br>dabai_pro.launch<br>dabai.launch | dabai_a.launch<br>dabai_al.launch<br>dabai_dcw2.launch<br>dabai_max_pro.launch |
 | Deeya           | deeya.launch                                                 | 不支持                                                |
 | 多相机          | multi_camera.launch                                          | multi_camera.launch<br>multi_camera_nodelet.launch<br>multi_camera_synced.launch |
 | 调试/通用        | ob_camera.launch<br>ob_camera_gdb.launch                         | ob_camera.launch<br>ob_camera_gdb.launch                         |
@@ -133,7 +133,6 @@ v2-main 分支提供完整功能支持，包括新特性开发、性能优化和
 | offset_index1                   | -        | 新增        | 视差偏移索引1                                         |
 | force_ip_enable                 | -        | 新增        | 启用强制IP配置                                        |
 | force_ip_mac                    | -        | 新增        | 强制IP的MAC地址                                       |
-| force_ip_dhcp                   | -        | 新增        | 强制IP启用DHCP                                        |
 | force_ip_address                | -        | 新增        | 强制分配IP地址                                        |
 | force_ip_subnet_mask            | -        | 新增        | 强制分配子网掩码                                      |
 | force_ip_gateway                | -        | 新增        | 强制分配网关                                          |
