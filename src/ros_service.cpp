@@ -1370,6 +1370,8 @@ bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enab
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     stopStreams();
+    stopColorFrameThreads();
+    clearColorFrameQueues();
     enable_stream_[stream_index] = enabled;
     startStreams();
 
