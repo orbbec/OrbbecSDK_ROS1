@@ -1118,7 +1118,7 @@ void OBCameraNode::stopStreams() {
     try {
       pipeline_->stop();
       // disable interleave frame
-      if ((interleave_ae_mode_ == "hdr") || (interleave_ae_mode_ == "laser") && !is_running_) {
+      if (((interleave_ae_mode_ == "hdr") || (interleave_ae_mode_ == "laser")) && !is_running_) {
         ROS_INFO_STREAM("current interleave_ae_mode_: " << interleave_ae_mode_);
         if (device_->isPropertySupported(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL,
                                          OB_PERMISSION_WRITE)) {
