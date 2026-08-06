@@ -43,7 +43,7 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
       <td>recommended for new designs</td>
     </tr>
     <tr>
-      <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td rowspan="10" style="text-align: center; font-weight: bold;">Gemini 330</td>
       <td>Gemini 335</td>
       <td>full maintenance</td>
       <td>recommended for new designs</td>
@@ -80,6 +80,16 @@ Here is the device support list of main branch (v1.x) and v2-main branch (v2.x):
     </tr>
     <tr>
       <td>Gemini 335Le</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 338Lg</td>
+      <td>not supported</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Gemini 338Le</td>
       <td>not supported</td>
       <td>recommended for new designs</td>
     </tr>
@@ -315,7 +325,7 @@ The following devices are supported by the OrbbecSDK ROS Wrapper.
       <td>gemini_301_series.launch</td>
     </tr>
     <tr>
-      <td rowspan="8" style="text-align: center; font-weight: bold;">Gemini 330</td>
+      <td rowspan="10" style="text-align: center; font-weight: bold;">Gemini 330</td>
       <td>Gemini 335</td>
       <td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.8.10.zip">1.8.10</a></td>
       <td>gemini_330_series.launch</td>
@@ -327,6 +337,8 @@ The following devices are supported by the OrbbecSDK ROS Wrapper.
     <tr><td>Gemini 330L</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.8.10.zip">1.8.10</a></td><td>gemini_330_series.launch</td></tr>
     <tr><td>Gemini 335Lg</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.8.10.zip">1.8.10</a></td><td>gemini_330_series.launch</td></tr>
     <tr><td>Gemini 335Le</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_1.8.10.zip">1.8.10</a></td><td>gemini_330_series.launch</td></tr>
+    <tr><td>Gemini 338Lg</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_v1.8.17.zip">1.8.17</a></td><td>gemini_330_series.launch</td></tr>
+    <tr><td>Gemini 338Le</td><td><a href="https://orbbec-debian-repos-aws.s3.amazonaws.com/product/Gemini330_Release_v1.8.17.zip">1.8.17</a></td><td>gemini_330_series.launch</td></tr>
     <tr>
       <td style="text-align: center; font-weight: bold;">Gemini 340</td>
       <td>Gemini 345Lg</td>
