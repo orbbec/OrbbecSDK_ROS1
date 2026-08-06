@@ -1,10 +1,10 @@
 # Net Camera
 
-> This section describes how to use Net camera in OrbbecSDK_ROS. Currently, only Femto Mega, Gemini 335Le and Gemini 435Le devices are supported, and other Net devices will be supported in the near future.
+> This section describes how to use Net cameras in OrbbecSDK_ROS. 
 
 You can find example usage code in the [example](https://github.com/orbbec/OrbbecSDK_ROS1/tree/v2-main/examples).
 
-## Femto Mega & Gemini 435Le & Gemini 335Le
+## Femto Mega & Gemini 435Le & Gemini 335Le & Gemini 338Le
 
 **Parameter Introduction**
 
@@ -18,7 +18,7 @@ If you do not want to automatically enumerate network devices, you can set `enum
 
 **Single Net camera**
 
-If you need to run Gemini 435Le/Gemini 335Le, replace `femto_mega.launch` in the run command with `gemini435_le.launch` or `gemini_330_series.launch`.
+If you need to run Gemini 435Le, Gemini 335Le, or Gemini 338Le, replace `femto_mega.launch` in the run command with `gemini435_le.launch` or `gemini_330_series.launch`.
 
 For `femto_mega.launch` as an example:
 
