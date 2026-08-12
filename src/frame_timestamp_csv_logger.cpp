@@ -568,6 +568,9 @@ void FrameTimestampCsvLogger::writerThreadMain() {
       rows_to_write.swap(completed_rows_);
     }
 
+    std::stable_sort(rows_to_write.begin(), rows_to_write.end(),
+                     [](const auto &lhs, const auto &rhs) { return lhs.row_id < rhs.row_id; });
+
     for (const auto &row : rows_to_write) {
       if (csv_stream_.is_open()) {
         csv_stream_ << serializeRow(row) << "\n";
