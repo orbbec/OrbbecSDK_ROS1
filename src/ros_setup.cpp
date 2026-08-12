@@ -2107,6 +2107,10 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       auto threshold_filter = filter->as<ob::ThresholdFilter>();
       if (threshold_filter_min_ != -1 && threshold_filter_max_ != -1) {
         threshold_filter->setValueRange(threshold_filter_min_, threshold_filter_max_);
+      } else if (threshold_filter_min_ != -1) {
+        threshold_filter->setConfigValue("min", threshold_filter_min_);
+      } else if (threshold_filter_max_ != -1) {
+        threshold_filter->setConfigValue("max", threshold_filter_max_);
       }
       ROS_INFO_STREAM("Current threshold filter value range: "
                       << static_cast<int>(threshold_filter->getConfigValue("min")) << " - "
