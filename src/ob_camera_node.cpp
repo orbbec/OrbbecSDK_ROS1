@@ -2366,6 +2366,12 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (frame == nullptr) {
     return;
   }
+  const auto record_image_publish_skipped = [&]() {
+    if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled() &&
+        (stream_index == COLOR || stream_index == DEPTH)) {
+      frame_timestamp_csv_logger_->recordImagePublishSkipped(stream_index, frame);
+    }
+  };
   if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled() && !enable_pipeline_ &&
       (stream_index == COLOR || stream_index == DEPTH)) {
     frame_timestamp_csv_logger_->recordStandaloneFrameArrival(stream_index, frame, getSystemNowUs(),
@@ -2385,6 +2391,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     has_subscriber = true;
   }
   if (!has_subscriber) {
+    record_image_publish_skipped();
     return;
   }
   std::shared_ptr<ob::VideoFrame> video_frame;
@@ -2402,6 +2409,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   }
   if (!video_frame) {
     ROS_ERROR_STREAM("Failed to convert frame to video frame");
+    record_image_publish_skipped();
     return;
   }
   int width = static_cast<int>(video_frame->width());
@@ -2463,6 +2471,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   if ((stream_index == COLOR || stream_index == COLOR_LEFT || stream_index == COLOR_RIGHT) &&
       frame->format() == OB_FORMAT_MJPG && has_compressed_image_subscriber) {
+    if (!has_raw_image_subscriber && stream_index == COLOR && frame_timestamp_csv_logger_ &&
+        frame_timestamp_csv_logger_->enabled()) {
+      frame_timestamp_csv_logger_->recordPreImagePublish(stream_index, frame, getSystemNowUs(),
+                                                         getSteadyNowUs());
+    }
     publishCompressedColorImage(frame, stream_index, timestamp, frame_id);
     if (!has_raw_image_subscriber && stream_index == COLOR) {
       fps_delay_status_color_->tick(frame_timestamp);
@@ -2471,6 +2484,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   CHECK(hasImagePublisher(stream_index));
   if (!need_raw_image) {
+    record_image_publish_skipped();
     return;
   }
   auto& image = images_[stream_index];
@@ -2480,6 +2494,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (isColorFrameDecodeRequired(frame)) {
     if (frame->type() == OB_FRAME_COLOR && !rgb_is_decoded_) {
       ROS_ERROR("color frame is not decoded");
+      record_image_publish_skipped();
       return;
     }
     if (frame->getType() == OB_FRAME_COLOR_LEFT && !rgb_left_is_decoded_) {
@@ -2526,6 +2541,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   }
   saveImageToFile(stream_index, image, image_msg);
   if (!has_raw_image_subscriber) {
+    record_image_publish_skipped();
     return;
   }
   auto raw_pub = raw_image_publishers_.find(stream_index);
