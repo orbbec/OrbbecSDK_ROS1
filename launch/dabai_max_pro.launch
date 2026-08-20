@@ -63,6 +63,7 @@
     <arg name="log_level" default="none"/>
     <arg name="log_file_name" default=""/>
     <arg name="enable_d2c_viewer" default="false"/>
+    <arg name="depth_colorizer_mode" default="none"/>
     <arg name="enable_image_transport_plugins" default="true"/>
     <arg name="enable_pipeline" default="true"/>
     <arg name="enable_soft_filter" default="true"/>
@@ -160,6 +161,7 @@
             <param name="log_level" value="$(arg log_level)"/>
             <param name="log_file_name" value="$(arg log_file_name)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
+            <param name="depth_colorizer_mode" value="$(arg depth_colorizer_mode)"/>
             <param name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
             <param name="enable_pipeline" value="$(arg enable_pipeline)"/>
             <param name="device_num" value="$(arg device_num)"/>

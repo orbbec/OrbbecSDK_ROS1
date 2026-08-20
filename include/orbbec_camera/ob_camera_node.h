@@ -212,6 +212,8 @@ class OBCameraNode {
   void publishMetadata(const std::shared_ptr<ob::Frame> &frame,
                        const stream_index_pair &stream_index, const std_msgs::Header &header);
 
+  std::string createFrameMetadataJson(const std::shared_ptr<ob::Frame> &frame) const;
+
   void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame> &accel_frame,
                                        const std::shared_ptr<ob::Frame> &gyro_frame);
 
@@ -263,6 +265,8 @@ class OBCameraNode {
   void publishColoredPointCloud(const std::shared_ptr<ob::FrameSet> &frame_set);
 
   void publishRawDepthImage(const std::shared_ptr<ob::Frame> &depth_frame);
+
+  cv::Mat colorizeDepthImage(const cv::Mat &depth_image, const std::string &colorizer_mode);
 
   bool setupFormatConvertType(OBFormat type);
 
@@ -480,8 +484,9 @@ class OBCameraNode {
 
   bool saveImagesCallback(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
 
-  void saveImageToFile(const stream_index_pair &stream_index, const cv::Mat &image,
-                       const sensor_msgs::ImagePtr &image_msg);
+  void saveImageToFile(const stream_index_pair &stream_index, const cv::Mat &raw_image,
+                       const cv::Mat &image_to_save, const sensor_msgs::ImagePtr &image_msg,
+                       const std::shared_ptr<ob::Frame> &frame);
 
   bool savePointCloudCallback(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
 
@@ -689,6 +694,7 @@ class OBCameraNode {
   std::vector<std::shared_ptr<ob::Filter>> right_ir_filter_list_;
   std::string ir_info_uri_;
   std::string color_info_uri_;
+  std::string colorizer_mode_ = "none";
   bool enable_d2c_viewer_ = false;
   std::shared_ptr<D2CViewer> d2c_viewer_ = nullptr;
   bool enable_pipeline_ = false;
