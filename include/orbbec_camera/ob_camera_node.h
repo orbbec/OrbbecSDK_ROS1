@@ -581,6 +581,7 @@ class OBCameraNode {
   std::map<stream_index_pair, std::string> stream_name_;
   std::map<stream_index_pair, std::atomic_bool> save_images_;
   std::map<stream_index_pair, int> save_images_count_;
+  std::mutex save_images_mutex_;
   int max_save_images_count_ = 10;
   std::map<stream_index_pair, image_transport::Publisher> image_publishers_;
   std::map<stream_index_pair, ros::Publisher> raw_image_publishers_;

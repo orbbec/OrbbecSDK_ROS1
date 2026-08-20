@@ -504,6 +504,13 @@ void OBCameraNode::getParameters() {
   colorizer_mode_ = nh_private_.param<std::string>("depth_colorizer_mode", "none");
   colorizer_mode_ = normalizeClosedSetParameterValue("depth_colorizer_mode", colorizer_mode_,
                                                      {"none", "jet", "jet_inv", "gray"}, "none");
+  if (enable_d2c_viewer_ && colorizer_mode_ != "none") {
+    ROS_WARN_STREAM(
+        "enable_d2c_viewer requires a raw 16UC1 depth image and is incompatible with "
+        "depth_colorizer_mode='"
+        << colorizer_mode_ << "'. Disabling enable_d2c_viewer.");
+    enable_d2c_viewer_ = false;
+  }
   disparity_to_depth_mode_ = nh_private_.param<std::string>("disparity_to_depth_mode", "");
   disparity_to_depth_mode_ = normalizeClosedSetParameterValue(
       "disparity_to_depth_mode", disparity_to_depth_mode_, {"", "HW", "SW", "disable"}, "");
@@ -2697,18 +2704,34 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
                                    const cv::Mat& image_to_save,
                                    const sensor_msgs::ImagePtr& image_msg,
                                    const std::shared_ptr<ob::Frame>& frame) {
-  if (save_images_[stream_index]) {
+  if (save_images_[stream_index].load(std::memory_order_acquire)) {
+    int index = 0;
+    {
+      std::lock_guard<std::mutex> lock(save_images_mutex_);
+      if (!save_images_[stream_index].load(std::memory_order_relaxed)) {
+        return;
+      }
+      index = save_images_count_[stream_index]++;
+      if (save_images_count_[stream_index] >= max_save_images_count_) {
+        save_images_[stream_index].store(false, std::memory_order_release);
+      }
+    }
+
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
     auto us =
         std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()) % 1000000;
 
+    std::tm local_time{};
+    if (localtime_r(&in_time_t, &local_time) == nullptr) {
+      ROS_ERROR_STREAM("Failed to convert image save timestamp to local time");
+      return;
+    }
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&in_time_t), "%Y%m%d_%H%M%S");
+    ss << std::put_time(&local_time, "%Y%m%d_%H%M%S");
     ss << "_" << std::setw(6) << std::setfill('0') << us.count();
     const auto output_directory = boost::filesystem::current_path() / "image";
     auto fps = fps_[stream_index];
-    const int index = save_images_count_[stream_index];
     const std::string file_name = stream_name_[stream_index] + "_" +
                                   std::to_string(image_msg->width) + "x" +
                                   std::to_string(image_msg->height) + "_" + std::to_string(fps) +
@@ -2791,10 +2814,6 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
         ROS_ERROR_STREAM("Failed to write metadata file: " << metadata_filename);
       }
       metadata_ofs.close();
-    }
-
-    if (++save_images_count_[stream_index] >= max_save_images_count_) {
-      save_images_[stream_index] = false;
     }
   }
 }
