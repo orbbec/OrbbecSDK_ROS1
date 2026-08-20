@@ -2492,24 +2492,30 @@ void OBCameraNode::setupDevices() {
         ROS_INFO_STREAM("Current laser energy level: " << new_laser_energy_level);
       }
     }
-    if (should_apply_launch_config("enable_ldp") &&
-        device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ_WRITE)) {
-      if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
-        auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
-        device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
-        device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, laser_enable);
-      } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
-        if (!enable_ldp_) {
-          auto laser_enable = device_->getBoolProperty(OB_PROP_LASER_BOOL);
+    try {
+      if (should_apply_launch_config("enable_ldp") &&
+          device_->isPropertySupported(OB_PROP_LDP_BOOL, OB_PERMISSION_READ_WRITE)) {
+        if (device_->isPropertySupported(OB_PROP_LASER_CONTROL_INT, OB_PERMISSION_READ_WRITE)) {
+          auto laser_enable = device_->getIntProperty(OB_PROP_LASER_CONTROL_INT);
           device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
-          std::this_thread::sleep_for(std::chrono::milliseconds(3));
-          device_->setBoolProperty(OB_PROP_LASER_BOOL, laser_enable);
-        } else {
-          device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
+          device_->setIntProperty(OB_PROP_LASER_CONTROL_INT, laser_enable);
+        } else if (device_->isPropertySupported(OB_PROP_LASER_BOOL, OB_PERMISSION_READ_WRITE)) {
+          if (!enable_ldp_) {
+            auto laser_enable = device_->getBoolProperty(OB_PROP_LASER_BOOL);
+            device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(3));
+            device_->setBoolProperty(OB_PROP_LASER_BOOL, laser_enable);
+          } else {
+            device_->setBoolProperty(OB_PROP_LDP_BOOL, enable_ldp_);
+          }
         }
+        ROS_INFO_STREAM(
+            "Current LDP: " << (device_->getBoolProperty(OB_PROP_LDP_BOOL) ? "ON" : "OFF"));
       }
-      ROS_INFO_STREAM(
-          "Current LDP: " << (device_->getBoolProperty(OB_PROP_LDP_BOOL) ? "ON" : "OFF"));
+    } catch (const ob::Error& e) {
+      ROS_WARN_STREAM("Skipping LDP configuration: " << orbbec_camera::formatObErrorWithStatus(e));
+    } catch (const std::exception& e) {
+      ROS_WARN_STREAM("Skipping LDP configuration: " << e.what());
     }
     if (should_apply_launch_config("enable_firmware_log")) {
       device_->enableFirmwareLog(enable_firmware_log_);
