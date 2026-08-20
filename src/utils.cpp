@@ -613,17 +613,17 @@ OB_SAMPLE_RATE sampleRateFromString(std::string &sample_rate) {
     return OB_SAMPLE_RATE_200_HZ;
   } else if (sample_rate == "500hz") {
     return OB_SAMPLE_RATE_500_HZ;
-  } else if (sample_rate == "1khz") {
+  } else if (sample_rate == "1khz" || sample_rate == "1000hz") {
     return OB_SAMPLE_RATE_1_KHZ;
-  } else if (sample_rate == "2khz") {
+  } else if (sample_rate == "2khz" || sample_rate == "2000hz") {
     return OB_SAMPLE_RATE_2_KHZ;
-  } else if (sample_rate == "4khz") {
+  } else if (sample_rate == "4khz" || sample_rate == "4000hz") {
     return OB_SAMPLE_RATE_4_KHZ;
-  } else if (sample_rate == "8khz") {
+  } else if (sample_rate == "8khz" || sample_rate == "8000hz") {
     return OB_SAMPLE_RATE_8_KHZ;
-  } else if (sample_rate == "16khz") {
+  } else if (sample_rate == "16khz" || sample_rate == "16000hz") {
     return OB_SAMPLE_RATE_16_KHZ;
-  } else if (sample_rate == "32khz") {
+  } else if (sample_rate == "32khz" || sample_rate == "32000hz") {
     return OB_SAMPLE_RATE_32_KHZ;
   } else {
     ROS_ERROR_STREAM("Unknown OB_SAMPLE_RATE: " << sample_rate);
