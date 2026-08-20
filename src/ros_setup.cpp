@@ -3658,6 +3658,11 @@ void OBCameraNode::setupPublishers() {
                                                  image_subscribed_cb, image_unsubscribed_cb);
     }
   }
+  if (colorizer_mode_ != "none" && enable_stream_[DEPTH]) {
+    ROS_INFO_STREAM("Depth colorizer mode '"
+                    << colorizer_mode_
+                    << "' enabled, publishing colorized images on depth/image_raw");
+  }
   if (enable_point_cloud_ && enable_stream_[DEPTH]) {
     ros::SubscriberStatusCallback depth_cloud_subscribed_cb =
         boost::bind(&OBCameraNode::pointCloudSubscribedCallback, this);

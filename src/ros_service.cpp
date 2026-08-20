@@ -1419,10 +1419,11 @@ bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,
                                       std_srvs::EmptyResponse& response) {
   (void)request;
   (void)response;
+  std::lock_guard<std::mutex> lock(save_images_mutex_);
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
-      save_images_[stream_index] = true;
       save_images_count_[stream_index] = 0;
+      save_images_[stream_index].store(true, std::memory_order_release);
     } else {
       ROS_WARN_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     }
