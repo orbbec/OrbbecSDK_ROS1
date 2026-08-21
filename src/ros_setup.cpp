@@ -3531,6 +3531,12 @@ void OBCameraNode::updateImageConfig(
     encoding_[stream_index] = is_depth_stream ? sensor_msgs::image_encodings::TYPE_16UC1
                                               : sensor_msgs::image_encodings::MONO16;
     unit_step_size_[stream_index] = sizeof(uint16_t);
+  } else if (is_color_stream &&
+             (format == OB_FORMAT_YUYV || format == OB_FORMAT_UYVY || format == OB_FORMAT_I420 ||
+              format == OB_FORMAT_NV12 || format == OB_FORMAT_NV21)) {
+    image_format_[stream_index] = CV_8UC3;
+    encoding_[stream_index] = sensor_msgs::image_encodings::RGB8;
+    unit_step_size_[stream_index] = 3 * sizeof(uint8_t);
   } else if (format == OB_FORMAT_MJPG || format == OB_FORMAT_MJPEG) {
     if (is_ir_stream) {
       image_format_[stream_index] = CV_8UC1;
