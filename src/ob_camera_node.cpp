@@ -17,7 +17,9 @@
 #include "orbbec_camera/ob_camera_node.h"
 #include "libobsensor/hpp/Utils.hpp"
 #include <algorithm>
+#include <array>
 #include <cctype>
+#include <cmath>
 #include <fstream>
 #include <vector>
 #include <xmlrpcpp/XmlRpcValue.h>
@@ -30,6 +32,11 @@
 #include <fstream>
 namespace orbbec_camera {
 namespace {
+constexpr double kViewerColorizerGamma = 0.65;
+constexpr uint16_t kViewerColorizerMaxDistanceMm = 10000;
+constexpr uint16_t kViewerColorizerDefaultMinDistanceMm = 100;
+constexpr uint16_t kViewerColorizerG305MinDistanceMm = 40;
+
 std::string toLowerCopy(std::string value) {
   std::transform(value.begin(), value.end(), value.begin(),
                  [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
@@ -334,22 +341,72 @@ OBCameraNode::~OBCameraNode() noexcept { clean(); }
 void OBCameraNode::clearColorFrameQueues() {
   {
     std::lock_guard<std::mutex> lock(colorFrameMtx_);
-    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    ColorFrameQueue empty;
     std::swap(colorFrameQueue_, empty);
   }
   {
     std::lock_guard<std::mutex> lock(leftColorFrameMtx_);
-    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    ColorFrameQueue empty;
     std::swap(leftColorFrameQueue_, empty);
   }
   {
     std::lock_guard<std::mutex> lock(rightColorFrameMtx_);
-    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    ColorFrameQueue empty;
     std::swap(rightColorFrameQueue_, empty);
   }
   rgb_is_decoded_ = false;
   rgb_left_is_decoded_ = false;
   rgb_right_is_decoded_ = false;
+}
+
+void OBCameraNode::enqueueColorFrame(ColorFrameQueue& queue, std::mutex& mutex,
+                                     std::condition_variable& condition_variable,
+                                     ColorQueueStats& stats, int capacity_frames,
+                                     const std::shared_ptr<ob::FrameSet>& frame_set,
+                                     const char* queue_name) {
+  uint64_t overflow_count = 0;
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    const auto now = std::chrono::steady_clock::now();
+    if (queue.size() >= static_cast<size_t>(capacity_frames)) {
+      const auto oldest_age =
+          std::chrono::duration<double, std::milli>(now - queue.front().enqueue_time).count();
+      stats.max_queue_wait_ms = std::max(stats.max_queue_wait_ms, oldest_age);
+      queue.pop();
+      overflow_count = ++stats.overflow_count;
+    }
+    queue.push(QueuedColorFrame{frame_set, now});
+    stats.max_queue_size = std::max(stats.max_queue_size, queue.size());
+  }
+  condition_variable.notify_one();
+  if (overflow_count == 1 || (overflow_count > 0 && overflow_count % 100 == 0)) {
+    ROS_WARN_STREAM("Color frame queue overflow: queue=" << queue_name
+                                                         << " count=" << overflow_count
+                                                         << " capacity_frames=" << capacity_frames);
+  }
+}
+
+OBCameraNode::ColorQueueStatsSnapshot OBCameraNode::getColorQueueStats(ColorFrameQueue& queue,
+                                                                       std::mutex& mutex,
+                                                                       ColorQueueStats& stats,
+                                                                       int capacity_frames,
+                                                                       bool reset) {
+  std::lock_guard<std::mutex> lock(mutex);
+  const auto oldest_queue_wait_ms =
+      queue.empty() ? 0.0
+                    : std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                                queue.front().enqueue_time)
+                          .count();
+  stats.max_queue_wait_ms = std::max(stats.max_queue_wait_ms, oldest_queue_wait_ms);
+  const ColorQueueStatsSnapshot snapshot{capacity_frames,      queue.size(),
+                                         stats.max_queue_size, stats.overflow_count,
+                                         oldest_queue_wait_ms, stats.max_queue_wait_ms};
+  if (reset) {
+    stats.max_queue_size = queue.size();
+    stats.overflow_count = 0;
+    stats.max_queue_wait_ms = oldest_queue_wait_ms;
+  }
+  return snapshot;
 }
 
 void OBCameraNode::stopColorFrameThreads() {
@@ -446,6 +503,20 @@ void OBCameraNode::getParameters() {
   captureInitialRosParameters();
 
   camera_name_ = nh_private_.param<std::string>("camera_name", "camera");
+  color_frame_queue_max_frames_ = nh_private_.param<int>("color_frame_queue_max_frames", 10);
+  left_color_frame_queue_max_frames_ =
+      nh_private_.param<int>("left_color_frame_queue_max_frames", 10);
+  right_color_frame_queue_max_frames_ =
+      nh_private_.param<int>("right_color_frame_queue_max_frames", 10);
+  const auto validate_queue_capacity = [](const char* name, int capacity) {
+    if (capacity < 1) {
+      throw std::invalid_argument(std::string(name) + " must be greater than zero");
+    }
+  };
+  validate_queue_capacity("color_frame_queue_max_frames", color_frame_queue_max_frames_);
+  validate_queue_capacity("left_color_frame_queue_max_frames", left_color_frame_queue_max_frames_);
+  validate_queue_capacity("right_color_frame_queue_max_frames",
+                          right_color_frame_queue_max_frames_);
   enable_frame_drop_log_ = nh_private_.param<bool>("enable_frame_drop_log", false);
   frame_timestamp_csv_file_ = nh_private_.param<std::string>("frame_timestamp_csv_file", "");
   camera_link_frame_id_ = camera_name_ + "_link";
@@ -494,6 +565,16 @@ void OBCameraNode::getParameters() {
   enable_colored_point_cloud_ = nh_private_.param<bool>("enable_colored_point_cloud", false);
   point_cloud_decimation_filter_factor_ =
       nh_private_.param<int>("point_cloud_decimation_filter_factor", 1);
+  colorizer_mode_ = nh_private_.param<std::string>("depth_colorizer_mode", "none");
+  colorizer_mode_ = normalizeClosedSetParameterValue("depth_colorizer_mode", colorizer_mode_,
+                                                     {"none", "jet", "jet_inv", "gray"}, "none");
+  if (enable_d2c_viewer_ && colorizer_mode_ != "none") {
+    ROS_WARN_STREAM(
+        "enable_d2c_viewer requires a raw 16UC1 depth image and is incompatible with "
+        "depth_colorizer_mode='"
+        << colorizer_mode_ << "'. Disabling enable_d2c_viewer.");
+    enable_d2c_viewer_ = false;
+  }
   disparity_to_depth_mode_ = nh_private_.param<std::string>("disparity_to_depth_mode", "");
   disparity_to_depth_mode_ = normalizeClosedSetParameterValue(
       "disparity_to_depth_mode", disparity_to_depth_mode_, {"", "HW", "SW", "disable"}, "");
@@ -1118,7 +1199,7 @@ void OBCameraNode::stopStreams() {
     try {
       pipeline_->stop();
       // disable interleave frame
-      if ((interleave_ae_mode_ == "hdr") || (interleave_ae_mode_ == "laser") && !is_running_) {
+      if (((interleave_ae_mode_ == "hdr") || (interleave_ae_mode_ == "laser")) && !is_running_) {
         ROS_INFO_STREAM("current interleave_ae_mode_: " << interleave_ae_mode_);
         if (device_->isPropertySupported(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL,
                                          OB_PERMISSION_WRITE)) {
@@ -1503,6 +1584,90 @@ void OBCameraNode::publishRawDepthImage(const std::shared_ptr<ob::Frame>& depth_
   } else {
     depth_unaligned_publisher_.publish(image_msg);
   }
+}
+
+cv::Mat OBCameraNode::colorizeDepthImage(const cv::Mat& depth_image,
+                                         const std::string& colorizer_mode) {
+  if (depth_image.empty() || depth_image.channels() != 1) {
+    return {};
+  }
+
+  if (colorizer_mode == "none") {
+    return {};
+  }
+
+  if (depth_image.type() != CV_16UC1 && depth_image.type() != CV_32FC1 &&
+      depth_image.type() != CV_8UC1) {
+    ROS_WARN_THROTTLE(5.0, "Unsupported depth image type for colorizer: %d", depth_image.type());
+    return {};
+  }
+
+  cv::Mat depth_16u;
+  depth_image.convertTo(depth_16u, CV_16UC1);
+
+  const uint16_t min_depth = isGemini305SeriesPID(device_info_->pid())
+                                 ? kViewerColorizerG305MinDistanceMm
+                                 : kViewerColorizerDefaultMinDistanceMm;
+  const uint16_t max_depth = kViewerColorizerMaxDistanceMm;
+  const uint32_t value_range = static_cast<uint32_t>(max_depth) - min_depth + 1;
+  std::array<uint32_t, static_cast<size_t>(kViewerColorizerMaxDistanceMm) + 1> histogram{};
+  uint32_t valid_pixel_count = 0;
+
+  for (int row = 0; row < depth_16u.rows; ++row) {
+    const auto* depth_row = depth_16u.ptr<uint16_t>(row);
+    for (int col = 0; col < depth_16u.cols; ++col) {
+      const uint16_t depth_value = depth_row[col];
+      if (depth_value >= min_depth && depth_value <= max_depth) {
+        ++histogram[depth_value];
+        ++valid_pixel_count;
+      }
+    }
+  }
+  for (uint32_t depth_value = 1; depth_value <= max_depth; ++depth_value) {
+    histogram[depth_value] += histogram[depth_value - 1];
+  }
+
+  cv::Mat depth_8u(depth_16u.size(), CV_8UC1);
+  for (int row = 0; row < depth_16u.rows; ++row) {
+    const auto* depth_row = depth_16u.ptr<uint16_t>(row);
+    auto* mapped_row = depth_8u.ptr<uint8_t>(row);
+    for (int col = 0; col < depth_16u.cols; ++col) {
+      uint16_t depth_value = depth_row[col];
+      if (depth_value > max_depth) {
+        depth_value = max_depth;
+      }
+      if (valid_pixel_count != 0 && depth_value >= min_depth) {
+        depth_value = static_cast<uint16_t>(static_cast<float>(value_range) *
+                                                histogram[depth_value] / valid_pixel_count +
+                                            min_depth);
+      }
+      const double normalized_depth = std::max(
+          0.0,
+          std::min(1.0, (static_cast<double>(depth_value) - min_depth) / (max_depth - min_depth)));
+      const double scale_value = 255.0 * std::pow(normalized_depth, kViewerColorizerGamma);
+      mapped_row[col] = static_cast<uint8_t>(std::max(0.0, std::min(255.0, scale_value)));
+    }
+  }
+
+  cv::Mat invalid_depth_mask;
+  cv::compare(depth_image, cv::Scalar(0), invalid_depth_mask, cv::CMP_EQ);
+  depth_8u.setTo(cv::Scalar::all(0), invalid_depth_mask);
+
+  if (colorizer_mode == "gray") {
+    return depth_8u;
+  }
+  if (colorizer_mode == "jet_inv") {
+    depth_8u = 255 - depth_8u;
+    depth_8u.setTo(cv::Scalar::all(0), invalid_depth_mask);
+  }
+
+  cv::Mat colorized_bgr;
+  cv::applyColorMap(depth_8u, colorized_bgr, cv::COLORMAP_JET);
+  colorized_bgr.setTo(cv::Scalar::all(0), invalid_depth_mask);
+
+  cv::Mat colorized_rgb;
+  cv::cvtColor(colorized_bgr, colorized_rgb, cv::COLOR_BGR2RGB);
+  return colorized_rgb;
 }
 
 IMUInfo OBCameraNode::createIMUInfo(const stream_index_pair& stream_index) {
@@ -2177,21 +2342,20 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     }
 
     if (enable_stream_[COLOR] && color_frame) {
-      std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
-      colorFrameQueue_.push(frame_set);
-      colorFrameCV_.notify_all();
+      enqueueColorFrame(colorFrameQueue_, colorFrameMtx_, colorFrameCV_, colorFrameQueueStats_,
+                        color_frame_queue_max_frames_, frame_set, "color");
     } else {
       publishPointCloud(frame_set);
     }
     if (enable_stream_[COLOR_LEFT] && left_color_frame) {
-      std::unique_lock<std::mutex> leftColorLock(leftColorFrameMtx_);
-      leftColorFrameQueue_.push(frame_set);
-      leftColorFrameCV_.notify_all();
+      enqueueColorFrame(leftColorFrameQueue_, leftColorFrameMtx_, leftColorFrameCV_,
+                        leftColorFrameQueueStats_, left_color_frame_queue_max_frames_, frame_set,
+                        "left_color");
     }
     if (enable_stream_[COLOR_RIGHT] && right_color_frame) {
-      std::unique_lock<std::mutex> rightColorLock(rightColorFrameMtx_);
-      rightColorFrameQueue_.push(frame_set);
-      rightColorFrameCV_.notify_all();
+      enqueueColorFrame(rightColorFrameQueue_, rightColorFrameMtx_, rightColorFrameCV_,
+                        rightColorFrameQueueStats_, right_color_frame_queue_max_frames_, frame_set,
+                        "right_color");
     }
 
     for (const auto& stream_index : IMAGE_STREAMS) {
@@ -2252,19 +2416,27 @@ void OBCameraNode::logFrameInfoOnce(const stream_index_pair& stream_index,
 void OBCameraNode::onNewColorFrameCallback() {
   while (enable_stream_[COLOR] && ros::ok() && is_running_.load() &&
          !stop_color_frame_threads_.load()) {
-    std::unique_lock<std::mutex> lock(colorFrameMtx_);
-    colorFrameCV_.wait(lock, [this]() {
-      return !colorFrameQueue_.empty() || !(is_running_.load()) || stop_color_frame_threads_.load();
-    });
+    std::shared_ptr<ob::FrameSet> frameSet;
+    {
+      std::unique_lock<std::mutex> lock(colorFrameMtx_);
+      colorFrameCV_.wait(lock, [this]() {
+        return !colorFrameQueue_.empty() || !(is_running_.load()) ||
+               stop_color_frame_threads_.load();
+      });
 
-    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
-      break;
+      if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
+        break;
+      }
+      const auto queued = colorFrameQueue_.front();
+      colorFrameQueue_.pop();
+      frameSet = queued.frame_set;
+      colorFrameQueueStats_.max_queue_wait_ms =
+          std::max(colorFrameQueueStats_.max_queue_wait_ms,
+                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                             queued.enqueue_time)
+                       .count());
     }
-    if (colorFrameQueue_.empty()) {
-      continue;
-    }
-    std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
-    colorFrameQueue_.pop();
+
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
     publishPointCloud(frameSet);
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(0));
@@ -2276,20 +2448,27 @@ void OBCameraNode::onNewColorFrameCallback() {
 void OBCameraNode::onNewLeftColorFrameCallback() {
   while (enable_stream_[COLOR_LEFT] && ros::ok() && is_running_.load() &&
          !stop_color_frame_threads_.load()) {
-    std::unique_lock<std::mutex> lock(leftColorFrameMtx_);
-    leftColorFrameCV_.wait(lock, [this]() {
-      return !leftColorFrameQueue_.empty() || !(is_running_.load()) ||
-             stop_color_frame_threads_.load();
-    });
+    std::shared_ptr<ob::FrameSet> frameSet;
+    {
+      std::unique_lock<std::mutex> lock(leftColorFrameMtx_);
+      leftColorFrameCV_.wait(lock, [this]() {
+        return !leftColorFrameQueue_.empty() || !(is_running_.load()) ||
+               stop_color_frame_threads_.load();
+      });
 
-    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
-      break;
+      if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
+        break;
+      }
+      const auto queued = leftColorFrameQueue_.front();
+      leftColorFrameQueue_.pop();
+      frameSet = queued.frame_set;
+      leftColorFrameQueueStats_.max_queue_wait_ms =
+          std::max(leftColorFrameQueueStats_.max_queue_wait_ms,
+                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                             queued.enqueue_time)
+                       .count());
     }
-    if (leftColorFrameQueue_.empty()) {
-      continue;
-    }
-    std::shared_ptr<ob::FrameSet> frameSet = leftColorFrameQueue_.front();
-    leftColorFrameQueue_.pop();
+
     rgb_left_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_LEFT), rgb_buffer_left_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_LEFT), IMAGE_STREAMS.at(1));
@@ -2301,20 +2480,27 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
 void OBCameraNode::onNewRightColorFrameCallback() {
   while (enable_stream_[COLOR_RIGHT] && ros::ok() && is_running_.load() &&
          !stop_color_frame_threads_.load()) {
-    std::unique_lock<std::mutex> lock(rightColorFrameMtx_);
-    rightColorFrameCV_.wait(lock, [this]() {
-      return !rightColorFrameQueue_.empty() || !(is_running_.load()) ||
-             stop_color_frame_threads_.load();
-    });
+    std::shared_ptr<ob::FrameSet> frameSet;
+    {
+      std::unique_lock<std::mutex> lock(rightColorFrameMtx_);
+      rightColorFrameCV_.wait(lock, [this]() {
+        return !rightColorFrameQueue_.empty() || !(is_running_.load()) ||
+               stop_color_frame_threads_.load();
+      });
 
-    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
-      break;
+      if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
+        break;
+      }
+      const auto queued = rightColorFrameQueue_.front();
+      rightColorFrameQueue_.pop();
+      frameSet = queued.frame_set;
+      rightColorFrameQueueStats_.max_queue_wait_ms =
+          std::max(rightColorFrameQueueStats_.max_queue_wait_ms,
+                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                             queued.enqueue_time)
+                       .count());
     }
-    if (rightColorFrameQueue_.empty()) {
-      continue;
-    }
-    std::shared_ptr<ob::FrameSet> frameSet = rightColorFrameQueue_.front();
-    rightColorFrameQueue_.pop();
+
     rgb_right_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), rgb_buffer_right_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), IMAGE_STREAMS.at(2));
@@ -2366,6 +2552,12 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (frame == nullptr) {
     return;
   }
+  const auto record_image_publish_skipped = [&]() {
+    if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled() &&
+        (stream_index == COLOR || stream_index == DEPTH)) {
+      frame_timestamp_csv_logger_->recordImagePublishSkipped(stream_index, frame);
+    }
+  };
   if (frame_timestamp_csv_logger_ && frame_timestamp_csv_logger_->enabled() && !enable_pipeline_ &&
       (stream_index == COLOR || stream_index == DEPTH)) {
     frame_timestamp_csv_logger_->recordStandaloneFrameArrival(stream_index, frame, getSystemNowUs(),
@@ -2385,6 +2577,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     has_subscriber = true;
   }
   if (!has_subscriber) {
+    record_image_publish_skipped();
     return;
   }
   std::shared_ptr<ob::VideoFrame> video_frame;
@@ -2402,6 +2595,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   }
   if (!video_frame) {
     ROS_ERROR_STREAM("Failed to convert frame to video frame");
+    record_image_publish_skipped();
     return;
   }
   int width = static_cast<int>(video_frame->width());
@@ -2463,6 +2657,11 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   if ((stream_index == COLOR || stream_index == COLOR_LEFT || stream_index == COLOR_RIGHT) &&
       frame->format() == OB_FORMAT_MJPG && has_compressed_image_subscriber) {
+    if (!has_raw_image_subscriber && stream_index == COLOR && frame_timestamp_csv_logger_ &&
+        frame_timestamp_csv_logger_->enabled()) {
+      frame_timestamp_csv_logger_->recordPreImagePublish(stream_index, frame, getSystemNowUs(),
+                                                         getSteadyNowUs());
+    }
     publishCompressedColorImage(frame, stream_index, timestamp, frame_id);
     if (!has_raw_image_subscriber && stream_index == COLOR) {
       fps_delay_status_color_->tick(frame_timestamp);
@@ -2471,6 +2670,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   CHECK(hasImagePublisher(stream_index));
   if (!need_raw_image) {
+    record_image_publish_skipped();
     return;
   }
   auto& image = images_[stream_index];
@@ -2480,6 +2680,7 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   if (isColorFrameDecodeRequired(frame)) {
     if (frame->type() == OB_FRAME_COLOR && !rgb_is_decoded_) {
       ROS_ERROR("color frame is not decoded");
+      record_image_publish_skipped();
       return;
     }
     if (frame->getType() == OB_FRAME_COLOR_LEFT && !rgb_left_is_decoded_) {
@@ -2501,17 +2702,31 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     memcpy(image.data, video_frame->data(), video_frame->dataSize());
   }
 
+  cv::Mat raw_image = image;
+  cv::Mat image_to_publish = image;
+  std::string image_encoding = encoding_[stream_index];
+  uint32_t image_step = width * unit_step_size_[stream_index];
   if (stream_index == DEPTH) {
     auto depth_scale = video_frame->as<ob::DepthFrame>()->getValueScale();
     image = image * depth_scale;
+    image_to_publish = image;
+    if (colorizer_mode_ != "none") {
+      auto colorized_image = colorizeDepthImage(image, colorizer_mode_);
+      if (!colorized_image.empty()) {
+        image_to_publish = std::move(colorized_image);
+        image_encoding = colorizer_mode_ == "gray" ? sensor_msgs::image_encodings::MONO8
+                                                   : sensor_msgs::image_encodings::RGB8;
+        image_step = static_cast<uint32_t>(image_to_publish.cols * image_to_publish.elemSize());
+      }
+    }
   }
   auto image_msg =
-      cv_bridge::CvImage(std_msgs::Header(), encoding_[stream_index], image).toImageMsg();
+      cv_bridge::CvImage(std_msgs::Header(), image_encoding, image_to_publish).toImageMsg();
   CHECK_NOTNULL(image_msg.get());
   auto& seq = image_seq_[stream_index];
   image_msg->header.stamp = timestamp;
   image_msg->is_bigendian = false;
-  image_msg->step = width * unit_step_size_[stream_index];
+  image_msg->step = image_step;
   image_msg->header.frame_id = frame_id;
   image_msg->header.seq = seq++;
   if (stream_index == COLOR) {
@@ -2524,8 +2739,9 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
     frame_timestamp_csv_logger_->recordPreImagePublish(stream_index, frame, getSystemNowUs(),
                                                        getSteadyNowUs());
   }
-  saveImageToFile(stream_index, image, image_msg);
+  saveImageToFile(stream_index, raw_image, image_to_publish, image_msg, frame);
   if (!has_raw_image_subscriber) {
+    record_image_publish_skipped();
     return;
   }
   auto raw_pub = raw_image_publishers_.find(stream_index);
@@ -2548,8 +2764,15 @@ void OBCameraNode::publishMetadata(const std::shared_ptr<ob::Frame>& frame,
   }
   orbbec_camera::Metadata metadata_msg;
   metadata_msg.header = header;
-  nlohmann::json json_data;
+  metadata_msg.json_data = createFrameMetadataJson(frame);
+  metadata_publisher.publish(metadata_msg);
+}
 
+std::string OBCameraNode::createFrameMetadataJson(const std::shared_ptr<ob::Frame>& frame) const {
+  nlohmann::json json_data;
+  if (frame == nullptr) {
+    return json_data.dump(2);
+  }
   for (int i = 0; i < OB_FRAME_METADATA_TYPE_COUNT; i++) {
     auto meta_data_type = static_cast<OBFrameMetadataType>(i);
     std::string field_name = metaDataTypeToString(meta_data_type);
@@ -2559,54 +2782,123 @@ void OBCameraNode::publishMetadata(const std::shared_ptr<ob::Frame>& frame,
     int64_t value = frame->getMetadataValue(meta_data_type);
     json_data[field_name] = value;
   }
-  metadata_msg.json_data = json_data.dump(2);
-  metadata_publisher.publish(metadata_msg);
+  return json_data.dump(2);
 }
 
-void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const cv::Mat& image,
-                                   const sensor_msgs::ImagePtr& image_msg) {
-  if (save_images_[stream_index]) {
-    auto now = time(nullptr);
-    std::stringstream ss;
-    ss << std::put_time(localtime(&now), "%Y%m%d_%H%M%S");
-    auto current_path = boost::filesystem::current_path().string();
-    auto fps = fps_[stream_index];
-    int index = save_images_count_[stream_index];
-    std::string file_suffix = stream_index == COLOR ? ".png" : ".raw";
-    std::string filename = current_path + "/image/" + stream_name_[stream_index] + "_" +
-                           std::to_string(image_msg->width) + "x" +
-                           std::to_string(image_msg->height) + "_" + std::to_string(fps) + "hz_" +
-                           ss.str() + "_" + std::to_string(index) + file_suffix;
-    if (!boost::filesystem::exists(current_path + "/image")) {
-      boost::filesystem::create_directory(current_path + "/image");
-    }
-    ROS_INFO_STREAM("Saving image to " << filename);
-    if (stream_index.first == OB_STREAM_COLOR) {
-      auto image_to_save =
-          cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8)->image;
-      cv::imwrite(filename, image_to_save);
-    } else if (stream_index.first == OB_STREAM_IR || stream_index.first == OB_STREAM_IR_LEFT ||
-               stream_index.first == OB_STREAM_IR_RIGHT || stream_index.first == OB_STREAM_DEPTH) {
-      std::ofstream ofs(filename, std::ios::out | std::ios::binary);
-      if (!ofs.is_open()) {
-        ROS_ERROR_STREAM("Failed to open file: " << filename);
+void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const cv::Mat& raw_image,
+                                   const cv::Mat& image_to_save,
+                                   const sensor_msgs::ImagePtr& image_msg,
+                                   const std::shared_ptr<ob::Frame>& frame) {
+  if (save_images_[stream_index].load(std::memory_order_acquire)) {
+    int index = 0;
+    {
+      std::lock_guard<std::mutex> lock(save_images_mutex_);
+      if (!save_images_[stream_index].load(std::memory_order_relaxed)) {
         return;
       }
-      if (image.isContinuous()) {
-        ofs.write(reinterpret_cast<const char*>(image.data), image.total() * image.elemSize());
+      index = save_images_count_[stream_index]++;
+      if (save_images_count_[stream_index] >= max_save_images_count_) {
+        save_images_[stream_index].store(false, std::memory_order_release);
+      }
+    }
+
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    auto us =
+        std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()) % 1000000;
+
+    std::tm local_time{};
+    if (localtime_r(&in_time_t, &local_time) == nullptr) {
+      ROS_ERROR_STREAM("Failed to convert image save timestamp to local time");
+      return;
+    }
+    std::stringstream ss;
+    ss << std::put_time(&local_time, "%Y%m%d_%H%M%S");
+    ss << "_" << std::setw(6) << std::setfill('0') << us.count();
+    const auto output_directory = boost::filesystem::current_path() / "image";
+    auto fps = fps_[stream_index];
+    const std::string file_name = stream_name_[stream_index] + "_" +
+                                  std::to_string(image_msg->width) + "x" +
+                                  std::to_string(image_msg->height) + "_" + std::to_string(fps) +
+                                  "hz_" + ss.str() + "_" + std::to_string(index);
+    if (!boost::filesystem::exists(output_directory)) {
+      boost::filesystem::create_directories(output_directory);
+    }
+    const auto file_stem = (output_directory / file_name).string();
+    const auto raw_filename = file_stem + ".raw";
+    const auto png_filename = file_stem + ".png";
+    const auto metadata_filename = file_stem + ".json";
+    ROS_INFO_STREAM("Saving frame files to " << file_stem << " (.raw, .png, .json)");
+
+    const auto* frame_data = frame ? frame->data() : nullptr;
+    const auto frame_data_size = frame ? frame->dataSize() : 0;
+    std::ofstream ofs(raw_filename, std::ios::out | std::ios::binary);
+    if (!ofs.is_open()) {
+      ROS_ERROR_STREAM("Failed to open raw file: " << raw_filename);
+    } else if (frame_data != nullptr && frame_data_size > 0) {
+      ofs.write(reinterpret_cast<const char*>(frame_data),
+                static_cast<std::streamsize>(frame_data_size));
+      if (!ofs.good()) {
+        ROS_ERROR_STREAM("Failed to write raw file: " << raw_filename);
+      }
+    } else if (!raw_image.empty()) {
+      if (raw_image.isContinuous()) {
+        ofs.write(reinterpret_cast<const char*>(raw_image.data),
+                  static_cast<std::streamsize>(raw_image.total() * raw_image.elemSize()));
       } else {
-        int rows = image.rows;
-        int cols = image.cols * image.channels();
-        for (int r = 0; r < rows; ++r) {
-          ofs.write(reinterpret_cast<const char*>(image.ptr<uchar>(r)), cols);
+        const auto row_size = static_cast<std::streamsize>(raw_image.cols * raw_image.elemSize());
+        for (int row = 0; row < raw_image.rows; ++row) {
+          ofs.write(reinterpret_cast<const char*>(raw_image.ptr<uchar>(row)), row_size);
         }
       }
-      ofs.close();
+      if (!ofs.good()) {
+        ROS_ERROR_STREAM("Failed to write raw file: " << raw_filename);
+      }
     } else {
-      ROS_ERROR_STREAM("Unsupported stream type: " << stream_index.first);
+      ROS_ERROR_STREAM("Failed to save raw image: frame data and image are empty");
     }
-    if (++save_images_count_[stream_index] >= max_save_images_count_) {
-      save_images_[stream_index] = false;
+    if (ofs.is_open()) {
+      ofs.close();
+    }
+
+    cv::Mat png_image = image_to_save.empty() ? raw_image : image_to_save;
+    if (stream_index == DEPTH && colorizer_mode_ == "none") {
+      // Keep the ROS topic raw in none mode, but save a viewable depth preview.
+      auto depth_preview = colorizeDepthImage(png_image, "gray");
+      if (!depth_preview.empty()) {
+        png_image = std::move(depth_preview);
+      }
+    }
+    if (png_image.empty()) {
+      ROS_ERROR_STREAM("Failed to save PNG image: image is empty");
+    } else {
+      cv::Mat converted_png_image;
+      if (image_msg->encoding == sensor_msgs::image_encodings::RGB8 && png_image.channels() == 3) {
+        cv::cvtColor(png_image, converted_png_image, cv::COLOR_RGB2BGR);
+        png_image = converted_png_image;
+      } else if (image_msg->encoding == sensor_msgs::image_encodings::RGBA8 &&
+                 png_image.channels() == 4) {
+        cv::cvtColor(png_image, converted_png_image, cv::COLOR_RGBA2BGRA);
+        png_image = converted_png_image;
+      }
+      try {
+        if (!cv::imwrite(png_filename, png_image)) {
+          ROS_ERROR_STREAM("Failed to write PNG file: " << png_filename);
+        }
+      } catch (const cv::Exception& exception) {
+        ROS_ERROR_STREAM("Failed to write PNG file " << png_filename << ": " << exception.what());
+      }
+    }
+
+    std::ofstream metadata_ofs(metadata_filename);
+    if (!metadata_ofs.is_open()) {
+      ROS_ERROR_STREAM("Failed to open metadata file: " << metadata_filename);
+    } else {
+      metadata_ofs << createFrameMetadataJson(frame) << '\n';
+      if (!metadata_ofs.good()) {
+        ROS_ERROR_STREAM("Failed to write metadata file: " << metadata_filename);
+      }
+      metadata_ofs.close();
     }
   }
 }

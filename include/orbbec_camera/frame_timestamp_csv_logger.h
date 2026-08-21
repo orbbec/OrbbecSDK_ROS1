@@ -9,6 +9,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -37,6 +38,8 @@ class FrameTimestampCsvLogger {
   void recordPreImagePublish(const stream_index_pair &stream_index,
                              const std::shared_ptr<ob::Frame> &frame, int64_t publish_system_us,
                              int64_t publish_steady_us);
+  void recordImagePublishSkipped(const stream_index_pair &stream_index,
+                                 const std::shared_ptr<ob::Frame> &frame);
 
   void shutdown();
 
@@ -110,9 +113,10 @@ class FrameTimestampCsvLogger {
                                             const std::shared_ptr<ob::Frame> &frame,
                                             int64_t arrival_system_us, int64_t arrival_steady_us,
                                             bool image_publish_expected);
-  void recordPreImagePublishInternal(const stream_index_pair &stream_index,
-                                     const std::shared_ptr<ob::Frame> &frame,
-                                     int64_t publish_system_us, int64_t publish_steady_us);
+  void completeImagePublishInternal(const stream_index_pair &stream_index,
+                                    const std::shared_ptr<ob::Frame> &frame,
+                                    std::optional<int64_t> publish_system_us,
+                                    std::optional<int64_t> publish_steady_us);
 
   void populateArrivalData(StreamState &state, TrackedStream stream,
                            const std::shared_ptr<ob::Frame> &frame, int64_t arrival_system_us,
@@ -134,17 +138,21 @@ class FrameTimestampCsvLogger {
   static std::string csvHeader();
 
   void writerThreadMain();
-  void openCsvIfNeeded();
+  std::string csvFilePathForIndex(uint64_t file_index) const;
+  bool openCsvFile(uint64_t file_index);
+  bool rotateCsvFile();
 
   bool enabled_ = false;
   bool csv_enabled_ = false;
   bool drop_log_enabled_ = false;
   std::atomic_bool shutdown_requested_{false};
-  bool csv_writer_failed_ = false;
+  std::atomic_bool csv_writer_failed_{false};
   bool queue_warning_active_ = false;
   std::string csv_file_path_;
   std::ofstream csv_stream_;
   std::thread writer_thread_;
+  uint64_t csv_file_index_ = 0;
+  uint64_t csv_rows_written_ = 0;
 
   uint64_t next_row_id_ = 1;
   std::unordered_map<uint64_t, PendingRow> pending_rows_;

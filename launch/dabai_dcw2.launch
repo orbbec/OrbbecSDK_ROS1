@@ -10,6 +10,7 @@
   <arg name="frame_timestamp_csv_file" default=""/>
   <!-- Hardware depth registration -->
   <arg name="depth_registration" default="false" />
+  <arg name="depth_colorizer_mode" default="none" />
   <arg name="serial_number" default="" />
   <arg name="usb_port" default="" />
   <arg name="device_num" default="1" />
@@ -21,6 +22,7 @@
   <arg name="enable_point_cloud" default="true" />
   <arg name="enable_colored_point_cloud" default="false" />
   <arg name="connection_delay" default="100" />
+  <arg name="color_frame_queue_max_frames" default="10" />
   <arg name="color_width" default="640" />
   <arg name="color_height" default="480" />
   <arg name="color_fps" default="15" />
@@ -84,6 +86,7 @@
       <param name="enable_frame_drop_log" value="$(arg enable_frame_drop_log)"/>
       <param name="frame_timestamp_csv_file" value="$(arg frame_timestamp_csv_file)"/>
       <param name="depth_registration" value="$(arg depth_registration)" />
+      <param name="depth_colorizer_mode" value="$(arg depth_colorizer_mode)" />
       <param name="serial_number" type="string" value="$(arg serial_number)" />
       <param name="usb_port" type="string" value="$(arg usb_port)" />
       <param name="vendor_id" value="$(arg vendor_id)" />
@@ -91,6 +94,7 @@
       <param name="enable_point_cloud" value="$(arg enable_point_cloud)" />
       <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)" />
       <param name="connection_delay" value="$(arg connection_delay)" />
+      <param name="color_frame_queue_max_frames" value="$(arg color_frame_queue_max_frames)" />
       <param name="color_width" value="$(arg color_width)" />
       <param name="color_height" value="$(arg color_height)" />
       <param name="color_fps" value="$(arg color_fps)" />

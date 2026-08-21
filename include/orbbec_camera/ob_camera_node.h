@@ -36,8 +36,11 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <chrono>
 #include <condition_variable>
 #include <cstddef>
+#include <cstdint>
+#include <queue>
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -131,6 +134,9 @@ class OBCameraNode {
 
   void setupCameraCtrlServices();
 
+  bool getColorQueueStatsCallback(std_srvs::SetBoolRequest &request,
+                                  std_srvs::SetBoolResponse &response);
+
   void setupConfig();
 
   void getParameters();
@@ -212,6 +218,8 @@ class OBCameraNode {
   void publishMetadata(const std::shared_ptr<ob::Frame> &frame,
                        const stream_index_pair &stream_index, const std_msgs::Header &header);
 
+  std::string createFrameMetadataJson(const std::shared_ptr<ob::Frame> &frame) const;
+
   void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame> &accel_frame,
                                        const std::shared_ptr<ob::Frame> &gyro_frame);
 
@@ -263,6 +271,8 @@ class OBCameraNode {
   void publishColoredPointCloud(const std::shared_ptr<ob::FrameSet> &frame_set);
 
   void publishRawDepthImage(const std::shared_ptr<ob::Frame> &depth_frame);
+
+  cv::Mat colorizeDepthImage(const cv::Mat &depth_image, const std::string &colorizer_mode);
 
   bool setupFormatConvertType(OBFormat type);
 
@@ -480,8 +490,9 @@ class OBCameraNode {
 
   bool saveImagesCallback(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
 
-  void saveImageToFile(const stream_index_pair &stream_index, const cv::Mat &image,
-                       const sensor_msgs::ImagePtr &image_msg);
+  void saveImageToFile(const stream_index_pair &stream_index, const cv::Mat &raw_image,
+                       const cv::Mat &image_to_save, const sensor_msgs::ImagePtr &image_msg,
+                       const std::shared_ptr<ob::Frame> &frame);
 
   bool savePointCloudCallback(std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response);
 
@@ -576,6 +587,7 @@ class OBCameraNode {
   std::map<stream_index_pair, std::string> stream_name_;
   std::map<stream_index_pair, std::atomic_bool> save_images_;
   std::map<stream_index_pair, int> save_images_count_;
+  std::mutex save_images_mutex_;
   int max_save_images_count_ = 10;
   std::map<stream_index_pair, image_transport::Publisher> image_publishers_;
   std::map<stream_index_pair, ros::Publisher> raw_image_publishers_;
@@ -666,6 +678,7 @@ class OBCameraNode {
   ros::ServiceServer set_ae_strategy_srv_;
   ros::ServiceServer set_stream_profile_srv_;
   ros::ServiceServer set_image_registration_mode_srv_;
+  ros::ServiceServer get_color_queue_stats_srv_;
 
   bool publish_tf_ = true;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_ = nullptr;
@@ -689,6 +702,7 @@ class OBCameraNode {
   std::vector<std::shared_ptr<ob::Filter>> right_ir_filter_list_;
   std::string ir_info_uri_;
   std::string color_info_uri_;
+  std::string colorizer_mode_ = "none";
   bool enable_d2c_viewer_ = false;
   std::shared_ptr<D2CViewer> d2c_viewer_ = nullptr;
   bool enable_pipeline_ = false;
@@ -814,19 +828,51 @@ class OBCameraNode {
   std::atomic_bool rgb_left_is_decoded_{false};
   std::atomic_bool rgb_right_is_decoded_{false};
 
+  struct QueuedColorFrame {
+    std::shared_ptr<ob::FrameSet> frame_set;
+    std::chrono::steady_clock::time_point enqueue_time;
+  };
+  struct ColorQueueStats {
+    size_t max_queue_size = 0;
+    uint64_t overflow_count = 0;
+    double max_queue_wait_ms = 0.0;
+  };
+  struct ColorQueueStatsSnapshot {
+    int capacity_frames = 0;
+    size_t queue_size = 0;
+    size_t max_queue_size = 0;
+    uint64_t overflow_count = 0;
+    double oldest_queue_wait_ms = 0.0;
+    double max_queue_wait_ms = 0.0;
+  };
+  using ColorFrameQueue = std::queue<QueuedColorFrame>;
+  void enqueueColorFrame(ColorFrameQueue &queue, std::mutex &mutex,
+                         std::condition_variable &condition_variable, ColorQueueStats &stats,
+                         int capacity_frames, const std::shared_ptr<ob::FrameSet> &frame_set,
+                         const char *queue_name);
+  ColorQueueStatsSnapshot getColorQueueStats(ColorFrameQueue &queue, std::mutex &mutex,
+                                             ColorQueueStats &stats, int capacity_frames,
+                                             bool reset);
+
   // For color
-  std::queue<std::shared_ptr<ob::FrameSet>> colorFrameQueue_;
+  ColorFrameQueue colorFrameQueue_;
+  ColorQueueStats colorFrameQueueStats_;
+  int color_frame_queue_max_frames_ = 10;
   std::shared_ptr<std::thread> colorFrameThread_ = nullptr;
   std::atomic_bool stop_color_frame_threads_{false};
   std::mutex colorFrameMtx_;
   std::condition_variable colorFrameCV_;
   // For left color
-  std::queue<std::shared_ptr<ob::FrameSet>> leftColorFrameQueue_;
+  ColorFrameQueue leftColorFrameQueue_;
+  ColorQueueStats leftColorFrameQueueStats_;
+  int left_color_frame_queue_max_frames_ = 10;
   std::shared_ptr<std::thread> leftColorFrameThread_ = nullptr;
   std::mutex leftColorFrameMtx_;
   std::condition_variable leftColorFrameCV_;
   // For right color
-  std::queue<std::shared_ptr<ob::FrameSet>> rightColorFrameQueue_;
+  ColorFrameQueue rightColorFrameQueue_;
+  ColorQueueStats rightColorFrameQueueStats_;
+  int right_color_frame_queue_max_frames_ = 10;
   std::shared_ptr<std::thread> rightColorFrameThread_ = nullptr;
   std::mutex rightColorFrameMtx_;
   std::condition_variable rightColorFrameCV_;

@@ -12,6 +12,8 @@ namespace {
 
 constexpr size_t kCompletedQueueSoftLimit = 1000;
 constexpr size_t kFlushBatchSize = 100;
+// The header occupies the first row, leaving 1,024,575 rows for frame data.
+constexpr uint64_t kMaxCsvRowsPerFileIncludingHeader = 1'024'576;
 constexpr auto kFlushInterval = std::chrono::seconds(1);
 
 int64_t getExpectedIntervalUs(const std::shared_ptr<ob::Frame> &frame) {
@@ -60,7 +62,10 @@ FrameTimestampCsvLogger::FrameTimestampCsvLogger(bool drop_log_enabled,
   }
 
   if (csv_enabled_) {
-    openCsvIfNeeded();
+    if (!openCsvFile(0)) {
+      csv_enabled_ = false;
+      csv_writer_failed_ = true;
+    }
   }
 
   enabled_ = csv_enabled_ || drop_log_enabled_;
@@ -110,7 +115,15 @@ void FrameTimestampCsvLogger::recordPreImagePublish(const stream_index_pair &str
   if (!enabled_ || !frame || !isTrackedStream(stream_index)) {
     return;
   }
-  recordPreImagePublishInternal(stream_index, frame, publish_system_us, publish_steady_us);
+  completeImagePublishInternal(stream_index, frame, publish_system_us, publish_steady_us);
+}
+
+void FrameTimestampCsvLogger::recordImagePublishSkipped(const stream_index_pair &stream_index,
+                                                        const std::shared_ptr<ob::Frame> &frame) {
+  if (!enabled_ || !frame || !isTrackedStream(stream_index)) {
+    return;
+  }
+  completeImagePublishInternal(stream_index, frame, std::nullopt, std::nullopt);
 }
 
 void FrameTimestampCsvLogger::shutdown() {
@@ -260,10 +273,9 @@ void FrameTimestampCsvLogger::recordStandaloneFrameArrivalInternal(
   }
 }
 
-void FrameTimestampCsvLogger::recordPreImagePublishInternal(const stream_index_pair &stream_index,
-                                                            const std::shared_ptr<ob::Frame> &frame,
-                                                            int64_t publish_system_us,
-                                                            int64_t publish_steady_us) {
+void FrameTimestampCsvLogger::completeImagePublishInternal(
+    const stream_index_pair &stream_index, const std::shared_ptr<ob::Frame> &frame,
+    std::optional<int64_t> publish_system_us, std::optional<int64_t> publish_steady_us) {
   std::optional<PendingRow> ready_row;
   const auto frame_index = frame->index();
 
@@ -278,10 +290,12 @@ void FrameTimestampCsvLogger::recordPreImagePublishInternal(const stream_index_p
                                                            : depth_frame_index_to_row_id_;
     auto row_id_it = row_map.find(frame_index);
     if (row_id_it == row_map.end()) {
-      ROS_WARN_STREAM_THROTTLE(5.0,
-                               "Frame timestamp CSV logger missed row mapping for stream "
-                                   << (tracked_stream == TrackedStream::COLOR ? "color" : "depth")
-                                   << " frame index " << frame_index);
+      if (publish_system_us.has_value()) {
+        ROS_WARN_STREAM_THROTTLE(5.0,
+                                 "Frame timestamp CSV logger missed row mapping for stream "
+                                     << (tracked_stream == TrackedStream::COLOR ? "color" : "depth")
+                                     << " frame index " << frame_index);
+      }
       return;
     }
     const auto row_id = row_id_it->second;
@@ -293,8 +307,16 @@ void FrameTimestampCsvLogger::recordPreImagePublishInternal(const stream_index_p
 
     auto &state = tracked_stream == TrackedStream::COLOR ? pending_it->second.color
                                                          : pending_it->second.depth;
-    populatePublishData(state, tracked_stream, publish_system_us, publish_steady_us);
-    state.final = true;
+    if (state.final) {
+      return;
+    }
+    if (publish_system_us.has_value() && publish_steady_us.has_value()) {
+      populatePublishData(state, tracked_stream, publish_system_us.value(),
+                          publish_steady_us.value());
+      state.final = true;
+    } else {
+      finalizeStreamWithoutPublish(state);
+    }
 
     if (isRowReady(pending_it->second)) {
       ready_row = pending_it->second;
@@ -441,6 +463,8 @@ void FrameTimestampCsvLogger::flushPendingRowsLocked(std::vector<PendingRow> &ro
     row.depth.final = true;
     rows.push_back(std::move(row));
   }
+  std::stable_sort(rows.begin(), rows.end(),
+                   [](const auto &lhs, const auto &rhs) { return lhs.row_id < rhs.row_id; });
   pending_rows_.clear();
   color_frame_index_to_row_id_.clear();
   depth_frame_index_to_row_id_.clear();
@@ -549,11 +573,37 @@ void FrameTimestampCsvLogger::writerThreadMain() {
       rows_to_write.swap(completed_rows_);
     }
 
+    std::stable_sort(rows_to_write.begin(), rows_to_write.end(),
+                     [](const auto &lhs, const auto &rhs) { return lhs.row_id < rhs.row_id; });
+
     for (const auto &row : rows_to_write) {
-      if (csv_stream_.is_open()) {
-        csv_stream_ << serializeRow(row) << "\n";
-        rows_since_flush++;
+      if (csv_rows_written_ >= kMaxCsvRowsPerFileIncludingHeader) {
+        if (!rotateCsvFile()) {
+          csv_writer_failed_ = true;
+          break;
+        }
+        rows_since_flush = 0;
+        last_flush = std::chrono::steady_clock::now();
       }
+
+      if (!csv_stream_.is_open()) {
+        csv_writer_failed_ = true;
+        break;
+      }
+
+      csv_stream_ << serializeRow(row) << "\n";
+      if (!csv_stream_) {
+        ROS_ERROR_STREAM(
+            "Failed to write frame timestamp CSV file: " << csvFilePathForIndex(csv_file_index_));
+        csv_writer_failed_ = true;
+        break;
+      }
+      ++csv_rows_written_;
+      ++rows_since_flush;
+    }
+
+    if (csv_writer_failed_) {
+      break;
     }
 
     const auto now = std::chrono::steady_clock::now();
@@ -571,16 +621,54 @@ void FrameTimestampCsvLogger::writerThreadMain() {
   }
 }
 
-void FrameTimestampCsvLogger::openCsvIfNeeded() {
-  csv_stream_.open(csv_file_path_, std::ios::out | std::ios::trunc);
-  if (!csv_stream_.is_open()) {
-    ROS_ERROR_STREAM("Failed to open frame timestamp CSV file: " << csv_file_path_);
-    csv_enabled_ = false;
-    csv_writer_failed_ = true;
-    return;
+std::string FrameTimestampCsvLogger::csvFilePathForIndex(uint64_t file_index) const {
+  if (file_index == 0) {
+    return csv_file_path_;
   }
+
+  const boost::filesystem::path original_path(csv_file_path_);
+  const auto indexed_filename = original_path.stem().string() + "_" + std::to_string(file_index) +
+                                original_path.extension().string();
+  return (original_path.parent_path() / indexed_filename).string();
+}
+
+bool FrameTimestampCsvLogger::openCsvFile(uint64_t file_index) {
+  const auto file_path = csvFilePathForIndex(file_index);
+  csv_stream_.clear();
+  csv_stream_.open(file_path, std::ios::out | std::ios::trunc);
+  if (!csv_stream_.is_open()) {
+    ROS_ERROR_STREAM("Failed to open frame timestamp CSV file: " << file_path);
+    return false;
+  }
+
   csv_stream_ << csvHeader() << "\n";
   csv_stream_.flush();
+  if (!csv_stream_) {
+    ROS_ERROR_STREAM("Failed to write frame timestamp CSV header: " << file_path);
+    csv_stream_.close();
+    return false;
+  }
+
+  csv_file_index_ = file_index;
+  csv_rows_written_ = 1;
+  return true;
+}
+
+bool FrameTimestampCsvLogger::rotateCsvFile() {
+  if (csv_stream_.is_open()) {
+    csv_stream_.flush();
+    csv_stream_.close();
+  }
+
+  const auto next_file_index = csv_file_index_ + 1;
+  if (!openCsvFile(next_file_index)) {
+    return false;
+  }
+
+  ROS_INFO_STREAM("Frame timestamp CSV reached " << kMaxCsvRowsPerFileIncludingHeader
+                                                 << " rows; continuing in "
+                                                 << csvFilePathForIndex(csv_file_index_));
+  return true;
 }
 
 }  // namespace orbbec_camera

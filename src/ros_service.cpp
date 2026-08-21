@@ -102,6 +102,12 @@ bool isPropertyWritable(const std::shared_ptr<ob::Device>& device, OBPropertyID 
 
 void OBCameraNode::setupCameraCtrlServices() {
   using std_srvs::SetBool;
+  get_color_queue_stats_srv_ =
+      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+          "/" + camera_name_ + "/get_color_queue_stats",
+          [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+            return this->getColorQueueStatsCallback(request, response);
+          });
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (!enable_stream_[stream_index]) {
       ROS_DEBUG_STREAM("Stream " << stream_name_[stream_index] << " is disabled.");
@@ -458,6 +464,65 @@ void OBCameraNode::setupCameraCtrlServices() {
         this->setAEStrategyCallback(request, response);
         return true;
       });
+}
+
+bool OBCameraNode::getColorQueueStatsCallback(std_srvs::SetBoolRequest& request,
+                                              std_srvs::SetBoolResponse& response) {
+  try {
+    const auto to_json = [](const ColorQueueStatsSnapshot& stats) {
+      return nlohmann::json{
+          {"capacity_frames", stats.capacity_frames},
+          {"queue_size", stats.queue_size},
+          {"max_queue_size", stats.max_queue_size},
+          {"overflow_count", stats.overflow_count},
+          {"oldest_queue_wait_ms", stats.oldest_queue_wait_ms},
+          {"max_queue_wait_ms", stats.max_queue_wait_ms},
+      };
+    };
+
+    nlohmann::json queues = nlohmann::json::object();
+    uint64_t overflow_count = 0;
+    const bool reset = request.data;
+    if (enable_stream_[COLOR] || reset) {
+      const auto stats = getColorQueueStats(colorFrameQueue_, colorFrameMtx_, colorFrameQueueStats_,
+                                            color_frame_queue_max_frames_, reset);
+      if (enable_stream_[COLOR]) {
+        queues["color"] = to_json(stats);
+        overflow_count += stats.overflow_count;
+      }
+    }
+    if (enable_stream_[COLOR_LEFT] || reset) {
+      const auto stats =
+          getColorQueueStats(leftColorFrameQueue_, leftColorFrameMtx_, leftColorFrameQueueStats_,
+                             left_color_frame_queue_max_frames_, reset);
+      if (enable_stream_[COLOR_LEFT]) {
+        queues["left_color"] = to_json(stats);
+        overflow_count += stats.overflow_count;
+      }
+    }
+    if (enable_stream_[COLOR_RIGHT] || reset) {
+      const auto stats =
+          getColorQueueStats(rightColorFrameQueue_, rightColorFrameMtx_, rightColorFrameQueueStats_,
+                             right_color_frame_queue_max_frames_, reset);
+      if (enable_stream_[COLOR_RIGHT]) {
+        queues["right_color"] = to_json(stats);
+        overflow_count += stats.overflow_count;
+      }
+    }
+    response.success = true;
+    response.message = nlohmann::json{
+        {"namespace", nh_.getNamespace()},
+        {"overflow_count", overflow_count},
+        {"statistics_reset", reset},
+        {"queues", queues}}.dump();
+    if (queues.empty()) {
+      ROS_WARN_STREAM("No enabled color streams; color queue statistics are empty");
+    }
+  } catch (const std::exception& error) {
+    response.success = false;
+    response.message = error.what();
+  }
+  return true;
 }
 
 bool OBCameraNode::setMirrorCallback(std_srvs::SetBoolRequest& request,
@@ -1370,6 +1435,8 @@ bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enab
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
     stopStreams();
+    stopColorFrameThreads();
+    clearColorFrameQueues();
     enable_stream_[stream_index] = enabled;
     startStreams();
 
@@ -1417,10 +1484,11 @@ bool OBCameraNode::saveImagesCallback(std_srvs::EmptyRequest& request,
                                       std_srvs::EmptyResponse& response) {
   (void)request;
   (void)response;
+  std::lock_guard<std::mutex> lock(save_images_mutex_);
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
-      save_images_[stream_index] = true;
       save_images_count_[stream_index] = 0;
+      save_images_[stream_index].store(true, std::memory_order_release);
     } else {
       ROS_WARN_STREAM("Camera " << stream_name_[stream_index] << " is not enabled.");
     }

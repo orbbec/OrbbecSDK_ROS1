@@ -5,6 +5,9 @@
     <arg name="camera_name" default="camera"/>
     <!-- open device delay time 100m-->
     <arg name="connection_delay" default="100"/>
+    <arg name="color_frame_queue_max_frames" default="10"/>
+    <arg name="left_color_frame_queue_max_frames" default="10"/>
+    <arg name="right_color_frame_queue_max_frames" default="10"/>
     <arg name="log_level" default="none"/>
     <arg name="log_file_name" default=""/>
     <arg name="publish_tf" default="true"/>
@@ -192,6 +195,7 @@
 
     <arg name="retry_on_usb3_detection_failure" default="false"/>
     <arg name="enable_d2c_viewer" default="false"/>
+    <arg name="depth_colorizer_mode" default="none"/>
     <arg name="enable_image_transport_plugins" default="true"/>
     <arg name="enable_heartbeat" default="false"/>
     <arg name="enable_firmware_log" default="false"/>
@@ -229,6 +233,9 @@
             <param name="bag_filename" value="$(arg bag_filename)"/>
             <param name="bag_loop" value="$(arg bag_loop)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
+            <param name="color_frame_queue_max_frames" value="$(arg color_frame_queue_max_frames)"/>
+            <param name="left_color_frame_queue_max_frames" value="$(arg left_color_frame_queue_max_frames)"/>
+            <param name="right_color_frame_queue_max_frames" value="$(arg right_color_frame_queue_max_frames)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="log_file_name" value="$(arg log_file_name)"/>
             <param name="publish_tf" value="$(arg publish_tf)"/>
@@ -396,6 +403,7 @@
             <param name="device_num" value="$(arg device_num)"/>
             <param name="retry_on_usb3_detection_failure" value="$(arg retry_on_usb3_detection_failure)"/>
             <param name="enable_d2c_viewer" value="$(arg enable_d2c_viewer)"/>
+            <param name="depth_colorizer_mode" value="$(arg depth_colorizer_mode)"/>
             <param name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
             <param name="enable_heartbeat" value="$(arg enable_heartbeat)"/>
             <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
