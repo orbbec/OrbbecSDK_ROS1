@@ -4,6 +4,7 @@
     <arg name="camera_name" default="camera"/>
     <!-- open device delay time 100m-->
     <arg name="connection_delay" default="100"/>
+    <arg name="color_frame_queue_max_frames" default="10"/>
     <arg name="log_level" default="none"/>
     <arg name="log_file_name" default=""/>
     <arg name="publish_tf" default="true"/>
@@ -151,6 +152,7 @@
             <param name="bag_filename" value="$(arg bag_filename)"/>
             <param name="bag_loop" value="$(arg bag_loop)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
+            <param name="color_frame_queue_max_frames" value="$(arg color_frame_queue_max_frames)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="log_file_name" value="$(arg log_file_name)"/>
             <param name="publish_tf" value="$(arg publish_tf)"/>
