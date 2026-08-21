@@ -22,6 +22,7 @@
     <arg name="enable_colored_point_cloud" default="true"/>
     <arg name="point_cloud_decimation_filter_factor" default="1"/>
     <arg name="connection_delay" default="100"/>
+    <arg name="color_frame_queue_max_frames" default="10"/>
     <arg name="color_width" default="640"/>
     <arg name="color_height" default="480"/>
     <arg name="color_fps" default="10"/>
@@ -109,6 +110,7 @@
             <param name="enable_colored_point_cloud" value="$(arg enable_colored_point_cloud)"/>
             <param name="point_cloud_decimation_filter_factor" value="$(arg point_cloud_decimation_filter_factor)"/>
             <param name="connection_delay" value="$(arg connection_delay)"/>
+            <param name="color_frame_queue_max_frames" value="$(arg color_frame_queue_max_frames)"/>
             <param name="color_width" value="$(arg color_width)"/>
             <param name="color_height" value="$(arg color_height)"/>
             <param name="color_fps" value="$(arg color_fps)"/>

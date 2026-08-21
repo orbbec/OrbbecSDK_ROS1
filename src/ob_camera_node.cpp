@@ -341,22 +341,72 @@ OBCameraNode::~OBCameraNode() noexcept { clean(); }
 void OBCameraNode::clearColorFrameQueues() {
   {
     std::lock_guard<std::mutex> lock(colorFrameMtx_);
-    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    ColorFrameQueue empty;
     std::swap(colorFrameQueue_, empty);
   }
   {
     std::lock_guard<std::mutex> lock(leftColorFrameMtx_);
-    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    ColorFrameQueue empty;
     std::swap(leftColorFrameQueue_, empty);
   }
   {
     std::lock_guard<std::mutex> lock(rightColorFrameMtx_);
-    std::queue<std::shared_ptr<ob::FrameSet>> empty;
+    ColorFrameQueue empty;
     std::swap(rightColorFrameQueue_, empty);
   }
   rgb_is_decoded_ = false;
   rgb_left_is_decoded_ = false;
   rgb_right_is_decoded_ = false;
+}
+
+void OBCameraNode::enqueueColorFrame(ColorFrameQueue& queue, std::mutex& mutex,
+                                     std::condition_variable& condition_variable,
+                                     ColorQueueStats& stats, int capacity_frames,
+                                     const std::shared_ptr<ob::FrameSet>& frame_set,
+                                     const char* queue_name) {
+  uint64_t overflow_count = 0;
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    const auto now = std::chrono::steady_clock::now();
+    if (queue.size() >= static_cast<size_t>(capacity_frames)) {
+      const auto oldest_age =
+          std::chrono::duration<double, std::milli>(now - queue.front().enqueue_time).count();
+      stats.max_queue_wait_ms = std::max(stats.max_queue_wait_ms, oldest_age);
+      queue.pop();
+      overflow_count = ++stats.overflow_count;
+    }
+    queue.push(QueuedColorFrame{frame_set, now});
+    stats.max_queue_size = std::max(stats.max_queue_size, queue.size());
+  }
+  condition_variable.notify_one();
+  if (overflow_count == 1 || (overflow_count > 0 && overflow_count % 100 == 0)) {
+    ROS_WARN_STREAM("Color frame queue overflow: queue=" << queue_name
+                                                         << " count=" << overflow_count
+                                                         << " capacity_frames=" << capacity_frames);
+  }
+}
+
+OBCameraNode::ColorQueueStatsSnapshot OBCameraNode::getColorQueueStats(ColorFrameQueue& queue,
+                                                                       std::mutex& mutex,
+                                                                       ColorQueueStats& stats,
+                                                                       int capacity_frames,
+                                                                       bool reset) {
+  std::lock_guard<std::mutex> lock(mutex);
+  const auto oldest_queue_wait_ms =
+      queue.empty() ? 0.0
+                    : std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                                queue.front().enqueue_time)
+                          .count();
+  stats.max_queue_wait_ms = std::max(stats.max_queue_wait_ms, oldest_queue_wait_ms);
+  const ColorQueueStatsSnapshot snapshot{capacity_frames,      queue.size(),
+                                         stats.max_queue_size, stats.overflow_count,
+                                         oldest_queue_wait_ms, stats.max_queue_wait_ms};
+  if (reset) {
+    stats.max_queue_size = queue.size();
+    stats.overflow_count = 0;
+    stats.max_queue_wait_ms = oldest_queue_wait_ms;
+  }
+  return snapshot;
 }
 
 void OBCameraNode::stopColorFrameThreads() {
@@ -453,6 +503,20 @@ void OBCameraNode::getParameters() {
   captureInitialRosParameters();
 
   camera_name_ = nh_private_.param<std::string>("camera_name", "camera");
+  color_frame_queue_max_frames_ = nh_private_.param<int>("color_frame_queue_max_frames", 10);
+  left_color_frame_queue_max_frames_ =
+      nh_private_.param<int>("left_color_frame_queue_max_frames", 10);
+  right_color_frame_queue_max_frames_ =
+      nh_private_.param<int>("right_color_frame_queue_max_frames", 10);
+  const auto validate_queue_capacity = [](const char* name, int capacity) {
+    if (capacity < 1) {
+      throw std::invalid_argument(std::string(name) + " must be greater than zero");
+    }
+  };
+  validate_queue_capacity("color_frame_queue_max_frames", color_frame_queue_max_frames_);
+  validate_queue_capacity("left_color_frame_queue_max_frames", left_color_frame_queue_max_frames_);
+  validate_queue_capacity("right_color_frame_queue_max_frames",
+                          right_color_frame_queue_max_frames_);
   enable_frame_drop_log_ = nh_private_.param<bool>("enable_frame_drop_log", false);
   frame_timestamp_csv_file_ = nh_private_.param<std::string>("frame_timestamp_csv_file", "");
   camera_link_frame_id_ = camera_name_ + "_link";
@@ -2278,21 +2342,20 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     }
 
     if (enable_stream_[COLOR] && color_frame) {
-      std::unique_lock<std::mutex> colorLock(colorFrameMtx_);
-      colorFrameQueue_.push(frame_set);
-      colorFrameCV_.notify_all();
+      enqueueColorFrame(colorFrameQueue_, colorFrameMtx_, colorFrameCV_, colorFrameQueueStats_,
+                        color_frame_queue_max_frames_, frame_set, "color");
     } else {
       publishPointCloud(frame_set);
     }
     if (enable_stream_[COLOR_LEFT] && left_color_frame) {
-      std::unique_lock<std::mutex> leftColorLock(leftColorFrameMtx_);
-      leftColorFrameQueue_.push(frame_set);
-      leftColorFrameCV_.notify_all();
+      enqueueColorFrame(leftColorFrameQueue_, leftColorFrameMtx_, leftColorFrameCV_,
+                        leftColorFrameQueueStats_, left_color_frame_queue_max_frames_, frame_set,
+                        "left_color");
     }
     if (enable_stream_[COLOR_RIGHT] && right_color_frame) {
-      std::unique_lock<std::mutex> rightColorLock(rightColorFrameMtx_);
-      rightColorFrameQueue_.push(frame_set);
-      rightColorFrameCV_.notify_all();
+      enqueueColorFrame(rightColorFrameQueue_, rightColorFrameMtx_, rightColorFrameCV_,
+                        rightColorFrameQueueStats_, right_color_frame_queue_max_frames_, frame_set,
+                        "right_color");
     }
 
     for (const auto& stream_index : IMAGE_STREAMS) {
@@ -2353,19 +2416,27 @@ void OBCameraNode::logFrameInfoOnce(const stream_index_pair& stream_index,
 void OBCameraNode::onNewColorFrameCallback() {
   while (enable_stream_[COLOR] && ros::ok() && is_running_.load() &&
          !stop_color_frame_threads_.load()) {
-    std::unique_lock<std::mutex> lock(colorFrameMtx_);
-    colorFrameCV_.wait(lock, [this]() {
-      return !colorFrameQueue_.empty() || !(is_running_.load()) || stop_color_frame_threads_.load();
-    });
+    std::shared_ptr<ob::FrameSet> frameSet;
+    {
+      std::unique_lock<std::mutex> lock(colorFrameMtx_);
+      colorFrameCV_.wait(lock, [this]() {
+        return !colorFrameQueue_.empty() || !(is_running_.load()) ||
+               stop_color_frame_threads_.load();
+      });
 
-    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
-      break;
+      if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
+        break;
+      }
+      const auto queued = colorFrameQueue_.front();
+      colorFrameQueue_.pop();
+      frameSet = queued.frame_set;
+      colorFrameQueueStats_.max_queue_wait_ms =
+          std::max(colorFrameQueueStats_.max_queue_wait_ms,
+                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                             queued.enqueue_time)
+                       .count());
     }
-    if (colorFrameQueue_.empty()) {
-      continue;
-    }
-    std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
-    colorFrameQueue_.pop();
+
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
     publishPointCloud(frameSet);
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(0));
@@ -2377,20 +2448,27 @@ void OBCameraNode::onNewColorFrameCallback() {
 void OBCameraNode::onNewLeftColorFrameCallback() {
   while (enable_stream_[COLOR_LEFT] && ros::ok() && is_running_.load() &&
          !stop_color_frame_threads_.load()) {
-    std::unique_lock<std::mutex> lock(leftColorFrameMtx_);
-    leftColorFrameCV_.wait(lock, [this]() {
-      return !leftColorFrameQueue_.empty() || !(is_running_.load()) ||
-             stop_color_frame_threads_.load();
-    });
+    std::shared_ptr<ob::FrameSet> frameSet;
+    {
+      std::unique_lock<std::mutex> lock(leftColorFrameMtx_);
+      leftColorFrameCV_.wait(lock, [this]() {
+        return !leftColorFrameQueue_.empty() || !(is_running_.load()) ||
+               stop_color_frame_threads_.load();
+      });
 
-    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
-      break;
+      if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
+        break;
+      }
+      const auto queued = leftColorFrameQueue_.front();
+      leftColorFrameQueue_.pop();
+      frameSet = queued.frame_set;
+      leftColorFrameQueueStats_.max_queue_wait_ms =
+          std::max(leftColorFrameQueueStats_.max_queue_wait_ms,
+                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                             queued.enqueue_time)
+                       .count());
     }
-    if (leftColorFrameQueue_.empty()) {
-      continue;
-    }
-    std::shared_ptr<ob::FrameSet> frameSet = leftColorFrameQueue_.front();
-    leftColorFrameQueue_.pop();
+
     rgb_left_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_LEFT), rgb_buffer_left_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_LEFT), IMAGE_STREAMS.at(1));
@@ -2402,20 +2480,27 @@ void OBCameraNode::onNewLeftColorFrameCallback() {
 void OBCameraNode::onNewRightColorFrameCallback() {
   while (enable_stream_[COLOR_RIGHT] && ros::ok() && is_running_.load() &&
          !stop_color_frame_threads_.load()) {
-    std::unique_lock<std::mutex> lock(rightColorFrameMtx_);
-    rightColorFrameCV_.wait(lock, [this]() {
-      return !rightColorFrameQueue_.empty() || !(is_running_.load()) ||
-             stop_color_frame_threads_.load();
-    });
+    std::shared_ptr<ob::FrameSet> frameSet;
+    {
+      std::unique_lock<std::mutex> lock(rightColorFrameMtx_);
+      rightColorFrameCV_.wait(lock, [this]() {
+        return !rightColorFrameQueue_.empty() || !(is_running_.load()) ||
+               stop_color_frame_threads_.load();
+      });
 
-    if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
-      break;
+      if (!ros::ok() || !is_running_.load() || stop_color_frame_threads_.load()) {
+        break;
+      }
+      const auto queued = rightColorFrameQueue_.front();
+      rightColorFrameQueue_.pop();
+      frameSet = queued.frame_set;
+      rightColorFrameQueueStats_.max_queue_wait_ms =
+          std::max(rightColorFrameQueueStats_.max_queue_wait_ms,
+                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
+                                                             queued.enqueue_time)
+                       .count());
     }
-    if (rightColorFrameQueue_.empty()) {
-      continue;
-    }
-    std::shared_ptr<ob::FrameSet> frameSet = rightColorFrameQueue_.front();
-    rightColorFrameQueue_.pop();
+
     rgb_right_is_decoded_ =
         decodeColorFrameToBuffer(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), rgb_buffer_right_);
     onNewFrameCallback(frameSet->getFrame(OB_FRAME_COLOR_RIGHT), IMAGE_STREAMS.at(2));
