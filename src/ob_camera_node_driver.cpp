@@ -288,6 +288,7 @@ void OBCameraNodeDriver::init() {
   port_ = nh_private_.param<int>("port", 0);
   enable_hardware_reset_ = nh_private_.param<bool>("enable_hardware_reset", false);
   uvc_backend_ = nh_private_.param<std::string>("uvc_backend", "libuvc");
+  const bool use_explicit_net_device = !ip_address_.empty() && port_ != 0;
   preset_firmware_path_ = nh_private_.param<std::string>("preset_firmware_path", "");
   upgrade_firmware_ = nh_private_.param<std::string>("upgrade_firmware", "");
   device_access_mode_ =
@@ -306,15 +307,25 @@ void OBCameraNodeDriver::init() {
              orbbec_camera::SetBagRecordingResponse &response) {
         return setBagRecordingCallback(request, response);
       });
-  if (uvc_backend_ == "libuvc") {
-    ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_LIBUVC);
-    ROS_INFO_STREAM("Set UVC backend to " << uvc_backend_);
-  } else if (uvc_backend_ == "v4l2") {
-    ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_V4L2);
-    ROS_INFO_STREAM("Set UVC backend to " << uvc_backend_);
-  } else {
-    ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_LIBUVC);
-    ROS_WARN_STREAM("Unsupported uvc_backend '" << uvc_backend_ << "', using default libuvc");
+  if (!use_explicit_net_device) {
+    try {
+      if (uvc_backend_ == "libuvc") {
+        ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_LIBUVC);
+        ROS_INFO_STREAM("Set UVC backend to " << uvc_backend_);
+      } else if (uvc_backend_ == "v4l2") {
+        ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_V4L2);
+        ROS_INFO_STREAM("Set UVC backend to " << uvc_backend_);
+      } else {
+        ctx_->setUvcBackendType(OB_UVC_BACKEND_TYPE_LIBUVC);
+        ROS_WARN_STREAM("Unsupported uvc_backend '" << uvc_backend_ << "', using default libuvc");
+      }
+    } catch (const ob::Error &e) {
+      if (!enumerate_net_device_ || e.getStatus() != OB_ERROR_ITEM_NOT_FOUND) {
+        throw;
+      }
+      ROS_WARN_STREAM("USB backend is unavailable; continuing with network device enumeration: "
+                      << orbbec_camera::formatObErrorWithStatus(e));
+    }
   }
   ctx_->enableNetDeviceEnumeration(enumerate_net_device_);
   check_connection_timer_ =
