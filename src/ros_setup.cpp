@@ -33,9 +33,6 @@ namespace orbbec_camera {
 
 namespace {
 
-constexpr char kEnhancedDepthSupportedTargetResolutions[] = "640x480/1280x720/1280x800";
-constexpr char kEnhancedDepthSupportedDepthFormats[] = "Y10/Y11/Y12/Y14/Y16/Z16";
-
 std::string getDepthFilterStatusName(const std::string& filter_name) {
   if (filter_name == "SpatialAdvancedFilter") {
     return "SpatialFilter";
@@ -3975,6 +3972,9 @@ void OBCameraNode::setupPipelineConfig() {
 }
 
 bool OBCameraNode::validateEnhancedDepthFilterConfig(std::string& message) const {
+  constexpr char kEnhancedDepthSupportedTargetResolutions[] = "640x480/1280x720/1280x800";
+  constexpr char kEnhancedDepthSupportedDepthFormats[] = "Y10/Y11/Y12/Y14/Y16/Z16";
+
   if (!enable_stream_.count(COLOR) || !enable_stream_.at(COLOR) || !enable_stream_.count(DEPTH) ||
       !enable_stream_.at(DEPTH)) {
     message = "Enhanced depth filter requires color and depth streams";

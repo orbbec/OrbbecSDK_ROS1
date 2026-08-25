@@ -32,11 +32,6 @@
 #include <fstream>
 namespace orbbec_camera {
 namespace {
-constexpr double kViewerColorizerGamma = 0.65;
-constexpr uint16_t kViewerColorizerMaxDistanceMm = 10000;
-constexpr uint16_t kViewerColorizerDefaultMinDistanceMm = 100;
-constexpr uint16_t kViewerColorizerG305MinDistanceMm = 40;
-
 std::string toLowerCopy(std::string value) {
   std::transform(value.begin(), value.end(), value.begin(),
                  [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
@@ -1610,6 +1605,11 @@ cv::Mat OBCameraNode::colorizeDepthImage(const cv::Mat& depth_image,
     ROS_WARN_THROTTLE(5.0, "Unsupported depth image type for colorizer: %d", depth_image.type());
     return {};
   }
+
+  constexpr double kViewerColorizerGamma = 0.65;
+  constexpr uint16_t kViewerColorizerMaxDistanceMm = 10000;
+  constexpr uint16_t kViewerColorizerDefaultMinDistanceMm = 100;
+  constexpr uint16_t kViewerColorizerG305MinDistanceMm = 40;
 
   cv::Mat depth_16u;
   depth_image.convertTo(depth_16u, CV_16UC1);
