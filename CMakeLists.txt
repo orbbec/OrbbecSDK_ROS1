@@ -209,6 +209,8 @@ set(SOURCE_FILES
   src/ob_lidar_node.cpp
   src/ob_camera_node_driver.cpp
   src/frame_timestamp_csv_logger.cpp
+  src/imu_timestamp_csv_logger.cpp
+  src/timestamp_csv_logger.cpp
   src/ros_sensor.cpp
   src/ros_service.cpp
   src/utils.cpp
