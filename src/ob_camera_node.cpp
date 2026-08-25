@@ -181,6 +181,7 @@ void OBCameraNode::init() {
   setupUndistortionFilters();
   selectBaseStream();
   setupProfiles();
+  setupFrameTimestampCsvLogger();
   if (enable_enhanced_depth_.load()) {
     std::string message;
     ROS_INFO_STREAM("Pre-creating enhanced depth filter");
@@ -895,7 +896,6 @@ void OBCameraNode::getParameters() {
       ROS_INFO_STREAM("Enabled timer sync with host every 60 seconds");
     }
   }
-  setupFrameTimestampCsvLogger();
 }
 
 void OBCameraNode::setupFrameTimestampCsvLogger() {
