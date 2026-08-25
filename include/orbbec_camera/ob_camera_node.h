@@ -51,7 +51,9 @@
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
 #include "orbbec_camera/GetCameraParams.h"
+#include "orbbec_camera/GetAwbGain.h"
 #include "orbbec_camera/SetStreamProfile.h"
+#include "orbbec_camera/SetAwbGain.h"
 #include <boost/optional.hpp>
 #include <image_transport/image_transport.h>
 #include <orbbec_camera/Metadata.h>
@@ -454,6 +456,12 @@ class OBCameraNode {
 
   bool setWhiteBalanceCallback(SetInt32Request &request, SetInt32Response &response);
 
+  bool getAeAwbStatusCallback(GetInt32Request &request, GetInt32Response &response);
+
+  bool getAwbGainCallback(GetAwbGainRequest &request, GetAwbGainResponse &response);
+
+  bool setAwbGainCallback(SetAwbGainRequest &request, SetAwbGainResponse &response);
+
   bool setAutoExposureCallback(std_srvs::SetBoolRequest &request,
                                std_srvs::SetBoolResponse &response,
                                const stream_index_pair &stream_index);
@@ -653,6 +661,9 @@ class OBCameraNode {
   ros::ServiceServer get_white_balance_srv_;
   ros::ServiceServer set_white_balance_srv_;
   ros::ServiceServer reset_white_balance_srv_;
+  ros::ServiceServer get_ae_awb_status_srv_;
+  ros::ServiceServer get_awb_gain_srv_;
+  ros::ServiceServer set_awb_gain_srv_;
   ros::ServiceServer get_serial_number_srv_;
   ros::ServiceServer get_camera_params_srv_;
   ros::ServiceServer get_device_type_srv_;

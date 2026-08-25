@@ -80,9 +80,11 @@ set(SERVICE_FILES
   GetDeviceConfig.srv
   GetDeviceInfo.srv
   GetInt32.srv
+  GetAwbGain.srv
   SetFilter.srv
   GetString.srv
   SetInt32.srv
+  SetAwbGain.srv
   SetString.srv
   SetArrays.srv
   SetBagRecording.srv
