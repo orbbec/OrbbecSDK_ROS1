@@ -770,6 +770,15 @@ void OBCameraNode::getParameters() {
   tf_publish_rate_ = nh_private_.param<double>("tf_publish_rate", 0.0);
   enable_heartbeat_ = nh_private_.param<bool>("enable_heartbeat", false);
   enable_firmware_log_ = nh_private_.param<bool>("enable_firmware_log", false);
+  monitor_poll_interval_sec_ = nh_private_.param<int>("monitor_poll_interval_sec", -1);
+  if (monitor_poll_interval_sec_ != -1 &&
+      (monitor_poll_interval_sec_ < 1 || monitor_poll_interval_sec_ > 10)) {
+    const auto requested_monitor_poll_interval_sec = monitor_poll_interval_sec_;
+    monitor_poll_interval_sec_ = std::clamp(monitor_poll_interval_sec_, 1, 10);
+    ROS_WARN_STREAM("monitor_poll_interval_sec value " << requested_monitor_poll_interval_sec
+                                                       << " is out of range [1, 10], clamped to "
+                                                       << monitor_poll_interval_sec_);
+  }
   enable_fps_boost_ = nh_private_.param<bool>("enable_fps_boost", false);
   for (const auto& stream_index : IMAGE_STREAMS) {
     const auto param_name = "enable_" + stream_name_[stream_index] + "_undistortion";

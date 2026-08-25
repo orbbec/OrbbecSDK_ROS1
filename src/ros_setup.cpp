@@ -2517,6 +2517,17 @@ void OBCameraNode::setupDevices() {
     } catch (const std::exception& e) {
       ROS_WARN_STREAM("Skipping LDP configuration: " << e.what());
     }
+    if (monitor_poll_interval_sec_ != -1) {
+      try {
+        const auto interval_ms = static_cast<uint32_t>(monitor_poll_interval_sec_) * 1000U;
+        device_->setMonitorPollInterval(interval_ms);
+        ROS_INFO_STREAM("Current monitor poll interval: " << device_->getMonitorPollInterval()
+                                                          << " ms");
+      } catch (const ob::Error& e) {
+        ROS_WARN_STREAM("Skipping monitor poll interval configuration: "
+                        << orbbec_camera::formatObErrorWithStatus(e));
+      }
+    }
     if (should_apply_launch_config("enable_firmware_log")) {
       device_->enableFirmwareLog(enable_firmware_log_);
       ROS_INFO_STREAM("Current firmware log: " << (enable_firmware_log_ ? "ON" : "OFF"));

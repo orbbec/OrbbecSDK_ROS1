@@ -22,6 +22,7 @@
     <arg name="config_file_path" default=""/>
     <arg name="load_config_json_file_path" default=""/>
     <arg name="export_config_json_file_path" default=""/>
+    <arg name="monitor_poll_interval_sec" default="-1"/>
 
     <!-- Device discovery and management -->
     <arg name="enumerate_net_device" default="true"/>
@@ -86,6 +87,7 @@
             <param name="config_file_path" value="$(arg config_file_path)"/>
             <param name="load_config_json_file_path" value="$(arg load_config_json_file_path)"/>
             <param name="export_config_json_file_path" value="$(arg export_config_json_file_path)"/>
+            <param name="monitor_poll_interval_sec" value="$(arg monitor_poll_interval_sec)"/>
 
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
             <param name="device_access_mode" value="$(arg device_access_mode)"/>
