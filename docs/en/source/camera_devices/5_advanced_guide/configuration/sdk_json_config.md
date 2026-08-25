@@ -20,6 +20,8 @@ Full launch files such as `gemini_330_series.launch`, `gemini_330_series_low_cpu
 
 SDK JSON supports partial import. You can remove modules and parameters that are not needed and keep only the content to be imported. Configuration items omitted from the JSON file are not modified by that JSON import; their final values are still determined by launch / YAML parameters, the current device state, or defaults.
 
+Note that ordinary fields under `parameters` can be removed as needed, but structured configurations such as ROI, `frame_interleave`, and `disparity_search` are handled as atomic units: once such a node is retained, all fields required by that node must be provided. For example, an ROI must contain `left`, `right`, `top`, and `bottom`; specifying only one or two coordinates is not supported. If you only want to change the lower-right corner, you must also provide the current upper-left coordinates.
+
 It is recommended to minimize the JSON file for the actual use case. This reduces duplicate configuration and override relationships between JSON and launch / YAML parameters. For example, if only a depth preset and one depth post-processing filter are required, other sensor, point cloud, and unrelated filter configuration can be removed.
 
 After removing modules or parameters, the file must remain valid JSON, and the hierarchy and field names that remain must conform to the SDK JSON format supported by the current device and firmware. Re-import the minimized file and verify the final effective configuration as described below.
