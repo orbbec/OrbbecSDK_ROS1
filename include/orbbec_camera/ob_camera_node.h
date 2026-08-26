@@ -19,7 +19,7 @@
 #include "types.h"
 #include "utils.h"
 #include "ros_sensor.h"
-#include "frame_timestamp_csv_logger.h"
+#include "timestamp_csv_logger.h"
 #include "ros/ros.h"
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -223,7 +223,8 @@ class OBCameraNode {
   std::string createFrameMetadataJson(const std::shared_ptr<ob::Frame> &frame) const;
 
   void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame> &accel_frame,
-                                       const std::shared_ptr<ob::Frame> &gyro_frame);
+                                       const std::shared_ptr<ob::Frame> &gyro_frame,
+                                       int64_t arrival_system_us);
 
   void onNewIMUFrameCallback(const std::shared_ptr<ob::Frame> &frame,
                              const stream_index_pair &stream_index);
@@ -1029,7 +1030,7 @@ class OBCameraNode {
 
   bool enable_frame_drop_log_ = false;
   std::string frame_timestamp_csv_file_;
-  std::unique_ptr<FrameTimestampCsvLogger> frame_timestamp_csv_logger_{nullptr};
+  std::unique_ptr<TimestampCsvLogger> timestamp_csv_logger_{nullptr};
 
   std::unique_ptr<FpsDelayStatus> fps_delay_status_color_{nullptr};
   std::unique_ptr<FpsDelayStatus> fps_delay_status_depth_{nullptr};

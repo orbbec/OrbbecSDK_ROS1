@@ -18,7 +18,11 @@ namespace orbbec_camera {
 
 class FrameTimestampCsvLogger {
  public:
+  enum class OutputMode { SYNCED, COLOR, DEPTH };
+
   FrameTimestampCsvLogger(bool drop_log_enabled, const std::string &csv_file_path);
+  FrameTimestampCsvLogger(bool drop_log_enabled, const std::string &csv_file_path,
+                          OutputMode output_mode);
 
   ~FrameTimestampCsvLogger() noexcept;
 
@@ -135,7 +139,7 @@ class FrameTimestampCsvLogger {
   std::string serializeStreamColumns(const StreamState &state) const;
   static std::string formatSecondsColumn(int64_t time_us);
   static std::string formatOptionalIntColumn(const std::optional<int64_t> &value);
-  static std::string csvHeader();
+  std::string csvHeader() const;
 
   void writerThreadMain();
   std::string csvFilePathForIndex(uint64_t file_index) const;
@@ -149,6 +153,7 @@ class FrameTimestampCsvLogger {
   std::atomic_bool csv_writer_failed_{false};
   bool queue_warning_active_ = false;
   std::string csv_file_path_;
+  OutputMode output_mode_;
   std::ofstream csv_stream_;
   std::thread writer_thread_;
   uint64_t csv_file_index_ = 0;
