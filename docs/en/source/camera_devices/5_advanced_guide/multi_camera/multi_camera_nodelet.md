@@ -32,7 +32,6 @@ In this example, we launch a **Nodelet Manager** called `orbbec_camera_manager`,
     <arg name="camera2_prefix" default="02"/>
     <arg name="camera1_usb_port" default="4-1"/>
     <arg name="camera2_usb_port" default="4-2"/>
-    <arg name="device_num" default="2"/>
 
     <node unless="false" pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
               output="screen" required="false" respawn="false"/>
@@ -42,7 +41,6 @@ In this example, we launch a **Nodelet Manager** called `orbbec_camera_manager`,
         <arg name="external_manager" value="$(arg external_manager)"/>
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
-        <arg name="device_num" value="$(arg device_num)"/>
     </include>
 
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
@@ -50,7 +48,6 @@ In this example, we launch a **Nodelet Manager** called `orbbec_camera_manager`,
         <arg name="external_manager" value="$(arg external_manager)"/>
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
         <arg name="usb_port" value="$(arg camera2_usb_port)"/>
-        <arg name="device_num" value="$(arg device_num)"/>
     </include>
 </launch>
 
@@ -82,7 +79,6 @@ When you need to configure different parameters for each camera (for example, mo
     <arg name="camera2_prefix" default="02"/>
     <arg name="camera1_usb_port" default="4-1"/>
     <arg name="camera2_usb_port" default="4-2"/>
-    <arg name="device_num" default="2"/>
 
     <node unless="false" pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
               output="screen" required="false" respawn="false"/>
@@ -92,7 +88,6 @@ When you need to configure different parameters for each camera (for example, mo
         <arg name="external_manager" value="$(arg external_manager)"/>
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
-        <arg name="device_num" value="$(arg device_num)"/>
         <arg name="enable_hardware_noise_removal_filter" default="true"/>
     </include>
 
@@ -101,7 +96,6 @@ When you need to configure different parameters for each camera (for example, mo
         <arg name="external_manager" value="$(arg external_manager)"/>
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
         <arg name="usb_port" value="$(arg camera2_usb_port)"/>
-        <arg name="device_num" value="$(arg device_num)"/>
         <arg name="enable_hardware_noise_removal_filter" default="false"/>
     </include>
 </launch>

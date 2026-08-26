@@ -28,18 +28,15 @@ rosrun orbbec_camera list_devices_node
     <arg name="camera1_usb_port" default="2-1.2.1"/>
     <arg name="camera2_usb_port" default="2-1.1"/>
 
-    <arg name="device_num" default="2"/>
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
-        <arg name="device_num" value="$(arg device_num)"/>
         <arg name="sync_mode" default="software_triggering"/>
     </include>
 
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
         <arg name="usb_port" value="$(arg camera2_usb_port)"/>
-        <arg name="device_num" value="$(arg device_num)"/>
         <arg name="sync_mode" default="hardware_triggering"/>
     </include>
 </launch>
@@ -48,9 +45,8 @@ rosrun orbbec_camera list_devices_node
 1. `gemini_330_series.launch`是启动相机的启动文件。
 2. 将`camera_name`设置为`ob_camera_01`。例如，发布的彩色图像话题将是`/ob_camra_01/color/image_raw`。
 3. 将`usb_port`设置为`2-1.2.1`，表示正在使用端口`2-1.2.1`上的相机设备。这个值可以在`rosrun orbbec_camera list_devices_node`命令的输出中找到。
-4. 将`device_num`设置为`2`，表示将使用两个相机。
-5. 将`sync_mode`设置为`primary`以表示`2-7`相机设备处于主模式。多相机同步模式选项可以在下图中找到。
-6. 对于从相机，将`trigger_out_enabled`设置为false。
+4. 将`sync_mode`设置为`primary`以表示`2-7`相机设备处于主模式。多相机同步模式选项可以在下图中找到。
+5. 对于从相机，将`trigger_out_enabled`设置为false。
 
 | **模式名称** | **设置效果描述** |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

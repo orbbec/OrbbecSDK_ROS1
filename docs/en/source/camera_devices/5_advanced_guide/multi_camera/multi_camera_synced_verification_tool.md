@@ -2,8 +2,8 @@
 
 **File path:** [image_sync_example_node.cpp](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/examples/multi_camera_time_sync/image_sync_example_node.cpp)
 
-This example node is designed for **synchronized capture and timestamp verification** across **four Orbbec cameras**.
-It can be used to validate frame alignment accuracy under the multi-camera **Primary / Secondary Synced** mode.
+This example node performs synchronized capture and timestamp verification across multiple Orbbec cameras and supports **1 to 8 image topics** at a time.
+At startup, it automatically discovers published color/depth image topics and can be used to validate frame alignment accuracy under the multi-camera **Primary / Secondary Synced** mode.
 
 ---
 
@@ -11,15 +11,13 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
 
 1. **Modify `multi_camera_synced.launch` as follows**
 
-   - Add include blocks to support four cameras.
+   - Adjust the include blocks according to the number of cameras participating in synchronization.
 
    - Select the appropriate launch file based on your camera model.
      For example, use `gemini_330_series.launch` for the Gemini 330 series.
 
    - Naming convention:
      `camera_name` should follow the format `camera_01`, `camera_02`, `camera_03`, ...
-
-   - Set `device_num` to **4**.
 
    - Configure the USB ports using:
 
@@ -61,16 +59,14 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
 
      `rosrun orbbec_camera image_sync_example_node`
 
-     This node outputs timestamp differences between multiple camera streams for synchronization validation.
+     The node automatically discovers color/depth image topics from the running cameras, displays synchronized images, and outputs timestamp differences and FPS statistics for synchronization validation.
 
 ---
 
-4. **Reference Launch File**
+4. **Four-Camera Reference Launch File**
 
 ```xml
 <launch>
-  <arg name="device_num" default="4"/>
-
   <arg name="camera1_name" default="camera_01"/>
   <arg name="camera2_name" default="camera_02"/>
   <arg name="camera3_name" default="camera_03"/>
@@ -88,7 +84,6 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
   <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
     <arg name="camera_name" value="$(arg camera2_name)"/>
     <arg name="usb_port" value="$(arg camera2_usb_port)"/>
-    <arg name="device_num" value="$(arg device_num)"/>
     <arg name="sync_mode" value="secondary_synced"/>
     <arg name="config_file_path" value="$(arg secondary_config)"/>
     <arg name="trigger_out_enabled" value="false"/>
@@ -97,7 +92,6 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
   <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
     <arg name="camera_name" value="$(arg camera3_name)"/>
     <arg name="usb_port" value="$(arg camera3_usb_port)"/>
-    <arg name="device_num" value="$(arg device_num)"/>
     <arg name="sync_mode" value="secondary_synced"/>
     <arg name="config_file_path" value="$(arg secondary_config)"/>
     <arg name="trigger_out_enabled" value="false"/>
@@ -106,7 +100,6 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
   <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
     <arg name="camera_name" value="$(arg camera4_name)"/>
     <arg name="usb_port" value="$(arg camera4_usb_port)"/>
-    <arg name="device_num" value="$(arg device_num)"/>
     <arg name="sync_mode" value="secondary_synced"/>
     <arg name="config_file_path" value="$(arg secondary_config)"/>
     <arg name="trigger_out_enabled" value="false"/>
@@ -116,7 +109,6 @@ It can be used to validate frame alignment accuracy under the multi-camera **Pri
   <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
     <arg name="camera_name" value="$(arg camera1_name)"/>
     <arg name="usb_port" value="$(arg camera1_usb_port)"/>
-    <arg name="device_num" value="$(arg device_num)"/>
     <arg name="sync_mode" value="primary"/>
     <arg name="config_file_path" value="$(arg primary_config)"/>
     <arg name="trigger_out_enabled" value="true"/>

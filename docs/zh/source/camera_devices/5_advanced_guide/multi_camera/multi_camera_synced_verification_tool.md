@@ -2,8 +2,8 @@
 
 文件路径：[image_sync_example_node.cpp](https://github.com/orbbec/OrbbecSDK_ROS1/blob/v2-main/examples/multi_camera_time_sync/image_sync_example_node.cpp)
 
-此示例节点用于 **4 台 Orbbec 相机** 的同步采集与时间戳验证。
-它可用于验证多相机主从同步（Primary / Secondary Synced）模式下的帧对齐精度。
+此示例节点用于多台 Orbbec 相机的同步采集与时间戳验证，支持同时验证 **1～8 路图像 topic**。
+节点启动时会自动发现已发布的 color/depth 图像 topic，可用于验证多相机主从同步（Primary / Secondary Synced）模式下的帧对齐精度。
 
 ---
 
@@ -11,15 +11,13 @@
 
 1. **修改 `multi_camera_synced.launch`**
 
-   - 增加 include 配置以适配 4 台相机。
+   - 根据参与同步的相机数量调整 include 配置。
 
    - 根据设备型号选择对应的 launch 文件。
      例如，330 系列使用 `gemini_330_series.launch`。
 
    - 命名规范：
      `camera_name` 按 `camera_01`、`camera_02`、`camera_03` ... 命名。
-
-   - 将 `device_num` 设置为 **4**。
 
    - 通过以下命令查看并绑定正确的 USB 端口：
 
@@ -59,16 +57,14 @@
 
      `rosrun orbbec_camera image_sync_example_node`
 
-     该节点会输出多相机图像的时间戳差异信息，用于验证同步效果。
+     该节点会自动发现已启动相机的 color/depth 图像 topic，显示同步图像，并输出时间戳差异和 FPS 统计，用于验证同步效果。
 
 ---
 
-4. **参考 launch 文件**
+4. **4 台相机参考 launch 文件**
 
 ```xml
 <launch>
-  <arg name="device_num" default="4"/>
-
   <arg name="camera1_name" default="camera_01"/>
   <arg name="camera2_name" default="camera_02"/>
   <arg name="camera3_name" default="camera_03"/>
@@ -86,7 +82,6 @@
   <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
     <arg name="camera_name" value="$(arg camera2_name)"/>
     <arg name="usb_port" value="$(arg camera2_usb_port)"/>
-    <arg name="device_num" value="$(arg device_num)"/>
     <arg name="sync_mode" value="secondary_synced"/>
     <arg name="config_file_path" value="$(arg secondary_config)"/>
     <arg name="trigger_out_enabled" value="false"/>
@@ -95,7 +90,6 @@
   <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
     <arg name="camera_name" value="$(arg camera3_name)"/>
     <arg name="usb_port" value="$(arg camera3_usb_port)"/>
-    <arg name="device_num" value="$(arg device_num)"/>
     <arg name="sync_mode" value="secondary_synced"/>
     <arg name="config_file_path" value="$(arg secondary_config)"/>
     <arg name="trigger_out_enabled" value="false"/>
@@ -104,7 +98,6 @@
   <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
     <arg name="camera_name" value="$(arg camera4_name)"/>
     <arg name="usb_port" value="$(arg camera4_usb_port)"/>
-    <arg name="device_num" value="$(arg device_num)"/>
     <arg name="sync_mode" value="secondary_synced"/>
     <arg name="config_file_path" value="$(arg secondary_config)"/>
     <arg name="trigger_out_enabled" value="false"/>
@@ -114,7 +107,6 @@
   <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
     <arg name="camera_name" value="$(arg camera1_name)"/>
     <arg name="usb_port" value="$(arg camera1_usb_port)"/>
-    <arg name="device_num" value="$(arg device_num)"/>
     <arg name="sync_mode" value="primary"/>
     <arg name="config_file_path" value="$(arg primary_config)"/>
     <arg name="trigger_out_enabled" value="true"/>

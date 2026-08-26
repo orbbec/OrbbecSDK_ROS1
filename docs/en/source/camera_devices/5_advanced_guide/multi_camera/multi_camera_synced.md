@@ -28,18 +28,15 @@ Open multi_camera_synced.launch, and configure the camera settings as shown belo
     <arg name="camera1_usb_port" default="2-1.2.1"/>
     <arg name="camera2_usb_port" default="2-1.1"/>
 
-    <arg name="device_num" default="2"/>
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="usb_port" value="$(arg camera1_usb_port)"/>
-        <arg name="device_num" value="$(arg device_num)"/>
         <arg name="sync_mode" default="software_triggering"/>
     </include>
 
     <include file="$(find orbbec_camera)/launch/$(arg 3d_sensor).launch">
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
         <arg name="usb_port" value="$(arg camera2_usb_port)"/>
-        <arg name="device_num" value="$(arg device_num)"/>
         <arg name="sync_mode" default="hardware_triggering"/>
     </include>
 </launch>
@@ -48,9 +45,8 @@ Open multi_camera_synced.launch, and configure the camera settings as shown belo
 1. `gemini_330_series.launch` is the launch file for starting the camera.
 2. Set `camera_name` to `ob_camera_01`. For example, the published color image topic will be `/ob_camra_01/color/image_raw`.
 3. Set `usb_port` to `2-1.2.1`, indicating that the camera device on port `2-1.2.1` is being used. This value can be found in the output of the `rosrun orbbec_camera list_devices_node` command.
-4. Set `device_num` to `2`, meaning two cameras will be used.
-5. Set `sync_mode` to `primary` to indicate that the `2-7` camera device is in primary mode. The multi-camera sync mode options can be found in the figure below.
-6. For slave cameras, set `trigger_out_enabled` to false.
+4. Set `sync_mode` to `primary` to indicate that the `2-7` camera device is in primary mode. The multi-camera sync mode options can be found in the figure below.
+5. For slave cameras, set `trigger_out_enabled` to false.
 
 | **Pattern Nam**e | **Setting effect description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
