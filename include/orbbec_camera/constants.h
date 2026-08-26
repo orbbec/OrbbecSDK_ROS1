@@ -23,8 +23,8 @@
 #define THREAD_NUM 4
 
 #define OB_ROS_MAJOR_VERSION 2
-#define OB_ROS_MINOR_VERSION 9
-#define OB_ROS_PATCH_VERSION 3
+#define OB_ROS_MINOR_VERSION 10
+#define OB_ROS_PATCH_VERSION 1
 
 #ifndef STRINGIFY
 #define STRINGIFY(arg) #arg

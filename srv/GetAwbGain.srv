@@ -1,0 +1,7 @@
+---
+# Raw Q8.8 AWB channel gains.
+uint16 r_gain
+uint16 b_gain
+uint16 g_gain
+bool success
+string message

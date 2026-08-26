@@ -235,6 +235,30 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->setWhiteBalanceCallback(request, response);
         return response.success;
       });
+  if (isPropertyReadable(device_, OB_PROP_COLOR_AE_AWB_STAT_INT)) {
+    get_ae_awb_status_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+        "/" + camera_name_ + "/" + "get_color_ae_awb_status",
+        [this](GetInt32Request& request, GetInt32Response& response) {
+          response.success = this->getAeAwbStatusCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyReadable(device_, OB_STRUCT_COLOR_AWB_GAIN)) {
+    get_awb_gain_srv_ = nh_.advertiseService<GetAwbGainRequest, GetAwbGainResponse>(
+        "/" + camera_name_ + "/" + "get_color_awb_gain",
+        [this](GetAwbGainRequest& request, GetAwbGainResponse& response) {
+          response.success = this->getAwbGainCallback(request, response);
+          return response.success;
+        });
+  }
+  if (isPropertyWritable(device_, OB_STRUCT_COLOR_AWB_GAIN)) {
+    set_awb_gain_srv_ = nh_.advertiseService<SetAwbGainRequest, SetAwbGainResponse>(
+        "/" + camera_name_ + "/" + "set_color_awb_gain",
+        [this](SetAwbGainRequest& request, SetAwbGainResponse& response) {
+          response.success = this->setAwbGainCallback(request, response);
+          return response.success;
+        });
+  }
   reset_white_balance_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
       "/" + camera_name_ + "/" + "reset_white_balance",
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
@@ -981,6 +1005,84 @@ bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Res
   } catch (const ob::Error& e) {
     ROS_ERROR_STREAM("Failed to set white balance: " << orbbec_camera::formatObErrorWithStatus(e));
     response.success = false;
+    return false;
+  }
+  return true;
+}
+
+bool OBCameraNode::getAeAwbStatusCallback(GetInt32Request& request, GetInt32Response& response) {
+  (void)request;
+  try {
+    response.data = device_->getIntProperty(OB_PROP_COLOR_AE_AWB_STAT_INT);
+    response.success = true;
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+    return false;
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+    return false;
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+    return false;
+  }
+  return true;
+}
+
+bool OBCameraNode::getAwbGainCallback(GetAwbGainRequest& request, GetAwbGainResponse& response) {
+  (void)request;
+  try {
+    OBAwbGainParams gain{};
+    uint32_t size = sizeof(gain);
+    device_->getStructuredData(OB_STRUCT_COLOR_AWB_GAIN, reinterpret_cast<uint8_t*>(&gain), &size);
+    response.r_gain = gain.rGain;
+    response.b_gain = gain.bGain;
+    response.g_gain = gain.gGain;
+    response.success = true;
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+    return false;
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+    return false;
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+    return false;
+  }
+  return true;
+}
+
+bool OBCameraNode::setAwbGainCallback(SetAwbGainRequest& request, SetAwbGainResponse& response) {
+  try {
+    if (device_->getBoolProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL)) {
+      response.success = false;
+      response.message = "auto white balance is enabled";
+      return false;
+    }
+
+    OBAwbGainParams gain{};
+    gain.rGain = request.r_gain;
+    gain.bGain = request.b_gain;
+    gain.gGain = request.g_gain;
+    device_->setStructuredData(OB_STRUCT_COLOR_AWB_GAIN, reinterpret_cast<const uint8_t*>(&gain),
+                               sizeof(gain));
+    response.success = true;
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+    return false;
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+    return false;
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
     return false;
   }
   return true;

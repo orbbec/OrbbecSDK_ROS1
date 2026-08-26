@@ -55,6 +55,7 @@
     <arg name="enable_soft_filter" default="true"/>
     <arg name="laser_energy_level" default="-1"/>
     <arg name="enable_ldp" default="true"/>
+    <arg name="monitor_poll_interval_sec" default="-1"/>
     <arg name="color_mirror" default="false"/>
     <arg name="color_rotation" default="-1"/>
     <arg name="color_exposure" default="-1"/>
@@ -144,6 +145,7 @@
             <param name="enable_soft_filter" value="$(arg enable_soft_filter)"/>
             <param name="laser_energy_level" value="$(arg laser_energy_level)"/>
             <param name="enable_ldp" value="$(arg enable_ldp)"/>
+            <param name="monitor_poll_interval_sec" value="$(arg monitor_poll_interval_sec)"/>
             <param name="color_mirror" value="$(arg color_mirror)"/>
             <param name="color_rotation" value="$(arg color_rotation)"/>
             <param name="color_exposure" value="$(arg color_exposure)"/>

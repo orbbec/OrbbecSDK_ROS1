@@ -19,7 +19,7 @@
 #include "types.h"
 #include "utils.h"
 #include "ros_sensor.h"
-#include "frame_timestamp_csv_logger.h"
+#include "timestamp_csv_logger.h"
 #include "ros/ros.h"
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -51,7 +51,9 @@
 #include <std_srvs/Empty.h>
 #include "orbbec_camera/d2c_viewer.h"
 #include "orbbec_camera/GetCameraParams.h"
+#include "orbbec_camera/GetAwbGain.h"
 #include "orbbec_camera/SetStreamProfile.h"
+#include "orbbec_camera/SetAwbGain.h"
 #include <boost/optional.hpp>
 #include <image_transport/image_transport.h>
 #include <orbbec_camera/Metadata.h>
@@ -221,7 +223,8 @@ class OBCameraNode {
   std::string createFrameMetadataJson(const std::shared_ptr<ob::Frame> &frame) const;
 
   void onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Frame> &accel_frame,
-                                       const std::shared_ptr<ob::Frame> &gyro_frame);
+                                       const std::shared_ptr<ob::Frame> &gyro_frame,
+                                       int64_t arrival_system_us);
 
   void onNewIMUFrameCallback(const std::shared_ptr<ob::Frame> &frame,
                              const stream_index_pair &stream_index);
@@ -454,6 +457,12 @@ class OBCameraNode {
 
   bool setWhiteBalanceCallback(SetInt32Request &request, SetInt32Response &response);
 
+  bool getAeAwbStatusCallback(GetInt32Request &request, GetInt32Response &response);
+
+  bool getAwbGainCallback(GetAwbGainRequest &request, GetAwbGainResponse &response);
+
+  bool setAwbGainCallback(SetAwbGainRequest &request, SetAwbGainResponse &response);
+
   bool setAutoExposureCallback(std_srvs::SetBoolRequest &request,
                                std_srvs::SetBoolResponse &response,
                                const stream_index_pair &stream_index);
@@ -653,6 +662,9 @@ class OBCameraNode {
   ros::ServiceServer get_white_balance_srv_;
   ros::ServiceServer set_white_balance_srv_;
   ros::ServiceServer reset_white_balance_srv_;
+  ros::ServiceServer get_ae_awb_status_srv_;
+  ros::ServiceServer get_awb_gain_srv_;
+  ros::ServiceServer set_awb_gain_srv_;
   ros::ServiceServer get_serial_number_srv_;
   ros::ServiceServer get_camera_params_srv_;
   ros::ServiceServer get_device_type_srv_;
@@ -958,6 +970,7 @@ class OBCameraNode {
   ros::Publisher sdk_version_pub_;
   bool enable_heartbeat_ = false;
   bool enable_firmware_log_ = false;
+  int monitor_poll_interval_sec_ = -1;
   bool enable_fps_boost_ = false;
   std::map<stream_index_pair, bool> enable_undistortion_;
   std::shared_ptr<ob::UnDistortionFilter> hw_d2c_color_undistortion_filter_;
@@ -1017,7 +1030,7 @@ class OBCameraNode {
 
   bool enable_frame_drop_log_ = false;
   std::string frame_timestamp_csv_file_;
-  std::unique_ptr<FrameTimestampCsvLogger> frame_timestamp_csv_logger_{nullptr};
+  std::unique_ptr<TimestampCsvLogger> timestamp_csv_logger_{nullptr};
 
   std::unique_ptr<FpsDelayStatus> fps_delay_status_color_{nullptr};
   std::unique_ptr<FpsDelayStatus> fps_delay_status_depth_{nullptr};
