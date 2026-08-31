@@ -155,6 +155,7 @@ OrbbecSDK ROS 封装包为 Orbbec 相机与 ROS 环境之间提供了无缝集�
   - [启动相机](#启动相机)
   - [选择您想要显示的topic](#选择您想要显示的topic)
   - [Network camera](#network-camera)
+  - [使用V4L2后端](#使用v4l2后端)
   - [Launch参数](#launch参数)
   - [深度工作模式开关](#深度工作模式开关)
   - [深度 NFOV 和 WFOV 模式的配置](#深度-nfov-和-wfov-模式的配置)
@@ -350,6 +351,18 @@ For Femto Mega and Femto Mega I, the network camera feature is supported.
 roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
 ```
 
+## 使用V4L2后端
+
+带 UVC Color 的 OpenNI 设备如果在对应 launch 文件中暴露了 `uvc_backend` 参数，可以通过该参数选择 Linux
+UVC 后端。可选值为 `auto`、`libuvc`、`v4l2`，大小写不敏感。默认值为 `auto`，表示沿用
+`config/OrbbecSDKConfig_v1.0.xml` 中的 SDK 配置；不支持的取值也会回退到 SDK XML 配置。
+
+```bash
+roslaunch orbbec_camera gemini2.launch uvc_backend:=v4l2
+```
+
+仅 `config/OrbbecSDKConfig_v1.0.xml` 中支持 `LinuxUVCDefaultBackend` 的设备会提供 `uvc_backend` 参数。
+
 ## Launch参数
 
 以下是可用的launch启动参数：
@@ -368,6 +381,12 @@ roslaunch orbbec_camera femto_mega.launch enumerate_net_device:=true
 - `depth_registration`: 启用深度帧与颜色帧的对齐。当 `enable_colored_point_cloud` 设置为 `true` 时，此字段为必填项。
 - `color_ae_roi_[left|right|top|bottom]`,`depth_ae_roi_[left|right|top|bottom]`:设置颜色和深度自动曝光 ROI。
 - `log_level` : SDK 日志级别，默认值为 `info`，可选值为 `debug`, `info`, `warn`, `error`, `fatal`。保存在 `~/.ros/Log` 中。对于文件日志记录，请调整 `config/OrbbecSDKConfig_v1.0.xml` 中的 `<FileLogLevel>`。
+- `depth_filter_config`: 配置深度过滤配置文件的加载路径。默认情况下，深度过滤配置文件位于 /config/depthfilter 目录。Gemini2
+  可使用 `Gemini2_v1.8.json`；暴露该参数的 OpenNI 和 DaBaiMax 系列设备可使用 `Openni_device.json`
+  配置离群点滤波等效果。
+- `color_ae_max_exposure`: 设置彩色流自动曝光最大曝光值。
+- `color_ae_max_gain`: 设置彩色流自动曝光最大增益值。Gemini2 和 Gemini2L 支持。
+- `uvc_backend`: 设置支持该参数的 OpenNI 设备 UVC Color Linux 后端。可选值为 `auto`、`libuvc`、`v4l2`，默认值为 `auto`。
 - `ordered_pc`: 点云是否应按有序网格组织（`true`）或按无序点集组织（`false`）。
 - `preset_firmware_path` : 输入参数为预设的固件路径，若输入多个路径，每个路径之间需用 `,`分隔，最多可输入3个固件路径
 - `device_preset`: 默认值为 `Default`。仅支持 G330 系列。更多信息，请参阅 [G330 文档](https://www.orbbec.com/docs/g330-use-depth-presets/)。请参考下表，根据您的使用情况设置 `device_preset` 值。该值应为[表格](#预设presets) 中列出的预设名称之一。

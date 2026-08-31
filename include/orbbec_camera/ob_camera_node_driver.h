@@ -75,6 +75,7 @@ class OBCameraNodeDriver {
   std::string device_uid_;
   std::string log_level_;
   std::string usb_port_;
+  std::string uvc_backend_;
   int connection_delay_ = 1.0;
   std::shared_ptr<std::thread> query_thread_ = nullptr;
   std::recursive_mutex device_lock_;

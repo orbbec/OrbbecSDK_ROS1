@@ -21,6 +21,8 @@
 #include <sys/shm.h>
 #include <ros/package.h>
 #include <regex>
+#include <algorithm>
+#include <cctype>
 #include <sys/mman.h>
 #include <iomanip>  // For std::put_time
 
@@ -249,6 +251,22 @@ void OBCameraNodeDriver::init() {
   ip_address_ = nh_private_.param<std::string>("ip_address", "");
   port_ = nh_private_.param<int>("port", 0);
   enable_hardware_reset_ = nh_private_.param<bool>("enable_hardware_reset", false);
+  uvc_backend_ = nh_private_.param<std::string>("uvc_backend", "auto");
+  auto uvc_backend = uvc_backend_;
+  std::transform(uvc_backend.begin(), uvc_backend.end(), uvc_backend.begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+  if (uvc_backend == "auto") {
+    ROS_INFO_STREAM("Use default UVC backend from SDK config");
+  } else if (uvc_backend == "libuvc") {
+    ctx_->setUVCBackend(UVC_BACKEND_LIBUVC);
+    ROS_INFO_STREAM("Set UVC backend to " << uvc_backend_);
+  } else if (uvc_backend == "v4l2") {
+    ctx_->setUVCBackend(UVC_BACKEND_V4L2);
+    ROS_INFO_STREAM("Set UVC backend to " << uvc_backend_);
+  } else {
+    ROS_WARN_STREAM("Unsupported uvc_backend " << uvc_backend_
+                                               << ", using default UVC backend from SDK config");
+  }
 
   reboot_service_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
       "reboot_device", [this](std_srvs::EmptyRequest &request, std_srvs::EmptyResponse &response) {
