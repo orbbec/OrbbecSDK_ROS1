@@ -3006,7 +3006,7 @@ void OBCameraNode::setupDevices() {
           "Current gyro data correction: "
           << (device_->getBoolProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL) ? "ON" : "OFF"));
     }
-    if (isGemini335PID(pid) && !intra_camera_sync_reference_.empty() &&
+    if (!intra_camera_sync_reference_.empty() &&
         device_->isPropertySupported(OB_PROP_INTRA_CAMERA_SYNC_REFERENCE_INT,
                                      OB_PERMISSION_WRITE)) {
       if (intra_camera_sync_reference_ == "Start") {
