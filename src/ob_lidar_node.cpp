@@ -166,20 +166,22 @@ void OBLidarNode::setupDevices() {
     }
   }
   if (device_->isPropertySupported(OB_PROP_HEARTBEAT_BOOL, OB_PERMISSION_READ_WRITE)) {
-    device_->setIntProperty(OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);
-    ROS_INFO_STREAM(
-        "Current heartbeat: " << (device_->getBoolProperty(OB_PROP_HEARTBEAT_BOOL) ? "ON" : "OFF"));
+    TRY_TO_SET_PROPERTY(setBoolProperty, OB_PROP_HEARTBEAT_BOOL, enable_heartbeat_);
+    TRY_EXECUTE_BLOCK(
+        ROS_INFO_STREAM("Current heartbeat: "
+                        << (device_->getBoolProperty(OB_PROP_HEARTBEAT_BOOL) ? "ON" : "OFF")));
   }
   if (!echo_mode_.empty() &&
       device_->isPropertySupported(OB_PROP_LIDAR_SPECIFIC_MODE_INT, OB_PERMISSION_READ_WRITE)) {
     if (echo_mode_ == "Last Echo") {
-      device_->setIntProperty(OB_PROP_LIDAR_SPECIFIC_MODE_INT, 0);
+      TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_LIDAR_SPECIFIC_MODE_INT, 0);
     } else if (echo_mode_ == "First Echo") {
-      device_->setIntProperty(OB_PROP_LIDAR_SPECIFIC_MODE_INT, 1);
+      TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_LIDAR_SPECIFIC_MODE_INT, 1);
     }
-    ROS_INFO_STREAM("Current echo mode: "
-                    << (device_->getIntProperty(OB_PROP_LIDAR_SPECIFIC_MODE_INT) ? "First Echo"
-                                                                                 : "Last Echo"));
+    TRY_EXECUTE_BLOCK(ROS_INFO_STREAM(
+        "Current echo mode: " << (device_->getIntProperty(OB_PROP_LIDAR_SPECIFIC_MODE_INT)
+                                      ? "First Echo"
+                                      : "Last Echo")));
   }
   if (repetitive_scan_mode_ != -1 &&
       device_->isPropertySupported(OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT,
@@ -189,9 +191,10 @@ void OBLidarNode::setupDevices() {
       ROS_ERROR("repetitive scan mode value is out of range[%d,%d], please check the value",
                 range.min, range.max);
     } else {
-      device_->setIntProperty(OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT, repetitive_scan_mode_);
-      ROS_INFO_STREAM("Current repetitive scan mode: "
-                      << device_->getIntProperty(OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT));
+      TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT,
+                          repetitive_scan_mode_);
+      TRY_EXECUTE_BLOCK(ROS_INFO_STREAM("Current repetitive scan mode: " << device_->getIntProperty(
+                                            OB_PROP_LIDAR_REPETITIVE_SCAN_MODE_INT)));
     }
   }
   if (filter_level_ != -1 &&
@@ -201,10 +204,12 @@ void OBLidarNode::setupDevices() {
       ROS_ERROR("filter level value is out of range[%d,%d], please check the value", range.min,
                 range.max);
     } else {
-      device_->setIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT, filter_level_);
-      device_->setIntProperty(OB_PROP_LIDAR_APPLY_CONFIGS_INT, 1);
-      ROS_INFO_STREAM(
-          "Current filter level: " << device_->getIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT));
+      TRY_EXECUTE_BLOCK({
+        device_->setIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT, filter_level_);
+        device_->setIntProperty(OB_PROP_LIDAR_APPLY_CONFIGS_INT, 1);
+        ROS_INFO_STREAM("Current filter level: "
+                        << device_->getIntProperty(OB_PROP_LIDAR_TAIL_FILTER_LEVEL_INT));
+      });
     }
   }
 
@@ -215,9 +220,9 @@ void OBLidarNode::setupDevices() {
       ROS_ERROR("vertical fov value is out of range[%f,%f], please check the value", range.min,
                 range.max);
     } else {
-      device_->setFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT, vertical_fov_);
-      ROS_INFO_STREAM(
-          "Current vertical fov: " << device_->getFloatProperty(OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT));
+      TRY_TO_SET_PROPERTY(setFloatProperty, OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT, vertical_fov_);
+      TRY_EXECUTE_BLOCK(ROS_INFO_STREAM("Current vertical fov: " << device_->getFloatProperty(
+                                            OB_PROP_LIDAR_MEMS_FOV_SIZE_FLOAT)));
     }
   }
 }
@@ -246,9 +251,9 @@ void OBLidarNode::setupProfiles() {
         if (profile == nullptr) {
           throw std::runtime_error("Failed cast profile to LiDARStreamProfile");
         }
-        ROS_DEBUG_STREAM("Sensor profile: "
-                         << "stream_type: " << profile->getType() << "Scan Rate: "
-                         << profile->getScanRate() << "Format:" << profile->getFormat());
+        ROS_DEBUG_STREAM("Sensor profile: " << "stream_type: " << profile->getType()
+                                            << "Scan Rate: " << profile->getScanRate()
+                                            << "Format:" << profile->getFormat());
         supported_profiles_[elem].emplace_back(profile);
       }
       std::shared_ptr<ob::LiDARStreamProfile> selected_profile;
