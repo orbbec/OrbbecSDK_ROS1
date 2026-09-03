@@ -1,0 +1,8 @@
+uint32 selector
+---
+uint32 action_signal_count
+uint32 device_key
+uint32 group_key
+uint32 group_mask
+bool success
+string message

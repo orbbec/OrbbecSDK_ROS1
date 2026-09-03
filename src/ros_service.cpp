@@ -346,6 +346,28 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getDeviceConfigCallback(request, response);
         return response.success;
       });
+  if (isPropertyReadable(device_, OB_PROP_ACTION_SIGNAL_COUNT_INT) &&
+      isPropertyReadable(device_, OB_PROP_ACTION_DEVICE_KEY_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_SELECTOR_INT) &&
+      isPropertyReadable(device_, OB_PROP_ACTION_GROUP_KEY_INT) &&
+      isPropertyReadable(device_, OB_PROP_ACTION_GROUP_MASK_INT)) {
+    get_action_config_srv_ = nh_.advertiseService<GetActionConfigRequest, GetActionConfigResponse>(
+        "/" + camera_name_ + "/get_action_config",
+        [this](GetActionConfigRequest& request, GetActionConfigResponse& response) {
+          return this->getActionConfigCallback(request, response);
+        });
+  }
+  if (isPropertyReadable(device_, OB_PROP_ACTION_SIGNAL_COUNT_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_DEVICE_KEY_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_SELECTOR_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_GROUP_KEY_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_GROUP_MASK_INT)) {
+    set_action_config_srv_ = nh_.advertiseService<SetActionConfigRequest, SetActionConfigResponse>(
+        "/" + camera_name_ + "/set_action_config",
+        [this](SetActionConfigRequest& request, SetActionConfigResponse& response) {
+          return this->setActionConfigCallback(request, response);
+        });
+  }
   get_serial_number_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
       "/" + camera_name_ + "/" + "get_serial",
       [this](GetStringRequest& request, GetStringResponse& response) {
@@ -1314,6 +1336,76 @@ bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
   response.info.firmware_version = device_info->firmwareVersion();
   response.info.supported_min_sdk_version = device_info->supportedMinSdkVersion();
   response.success = true;
+  return true;
+}
+
+bool OBCameraNode::getActionConfigCallback(GetActionConfigRequest& request,
+                                           GetActionConfigResponse& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    const int action_signal_count = device_->getIntProperty(OB_PROP_ACTION_SIGNAL_COUNT_INT);
+    if (action_signal_count <= 0 ||
+        request.selector >= static_cast<uint32_t>(action_signal_count)) {
+      response.success = false;
+      response.message = "selector must be less than action signal count " +
+                         std::to_string(std::max(action_signal_count, 0));
+      return true;
+    }
+
+    device_->setIntProperty(OB_PROP_ACTION_SELECTOR_INT, static_cast<int32_t>(request.selector));
+    response.action_signal_count = static_cast<uint32_t>(action_signal_count);
+    response.device_key =
+        static_cast<uint32_t>(device_->getIntProperty(OB_PROP_ACTION_DEVICE_KEY_INT));
+    response.group_key =
+        static_cast<uint32_t>(device_->getIntProperty(OB_PROP_ACTION_GROUP_KEY_INT));
+    response.group_mask =
+        static_cast<uint32_t>(device_->getIntProperty(OB_PROP_ACTION_GROUP_MASK_INT));
+    response.success = true;
+    response.message = "OK";
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return true;
+}
+
+bool OBCameraNode::setActionConfigCallback(SetActionConfigRequest& request,
+                                           SetActionConfigResponse& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    const int action_signal_count = device_->getIntProperty(OB_PROP_ACTION_SIGNAL_COUNT_INT);
+    if (action_signal_count <= 0 ||
+        request.selector >= static_cast<uint32_t>(action_signal_count)) {
+      response.success = false;
+      response.message = "selector must be less than action signal count " +
+                         std::to_string(std::max(action_signal_count, 0));
+      return true;
+    }
+
+    device_->setIntProperty(OB_PROP_ACTION_DEVICE_KEY_INT,
+                            static_cast<int32_t>(request.device_key));
+    device_->setIntProperty(OB_PROP_ACTION_SELECTOR_INT, static_cast<int32_t>(request.selector));
+    device_->setIntProperty(OB_PROP_ACTION_GROUP_KEY_INT, static_cast<int32_t>(request.group_key));
+    device_->setIntProperty(OB_PROP_ACTION_GROUP_MASK_INT,
+                            static_cast<int32_t>(request.group_mask));
+    response.success = true;
+    response.message = "OK";
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
   return true;
 }
 

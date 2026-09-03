@@ -492,6 +492,10 @@ class OBCameraNode {
 
   bool getDeviceConfigCallback(GetDeviceConfigRequest &request, GetDeviceConfigResponse &response);
 
+  bool getActionConfigCallback(GetActionConfigRequest &request, GetActionConfigResponse &response);
+
+  bool setActionConfigCallback(SetActionConfigRequest &request, SetActionConfigResponse &response);
+
   bool getSDKVersionCallback(GetStringRequest &request, GetStringResponse &response);
 
   bool toggleSensorCallback(std_srvs::SetBoolRequest &request, std_srvs::SetBoolResponse &response,
@@ -651,6 +655,8 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::ServiceServer> get_camera_info_srv_;
   ros::ServiceServer get_sdk_version_srv_;
   ros::ServiceServer get_device_config_srv_;
+  ros::ServiceServer get_action_config_srv_;
+  ros::ServiceServer set_action_config_srv_;
   ros::ServiceServer get_device_info_srv_;
   ros::ServiceServer set_laser_srv_;
   ros::ServiceServer set_flood_srv_;
