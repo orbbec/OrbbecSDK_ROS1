@@ -197,7 +197,16 @@ void printPreset(const std::shared_ptr<ob::Device>& device) {
   std::cout << "Preset list:" << std::endl;
   for (uint32_t i = 0; i < preset_list->count(); i++) {
     auto name = preset_list->getName(i);
-    std::cout << "Preset list[" << i << "]: " << name << std::endl;
+    std::string version;
+    try {
+      const char* version_value = preset_list->getDepthWorkModeVersion(i);
+      version = version_value == nullptr ? "" : version_value;
+    } catch (...) {
+      // Older firmware can enumerate presets without exposing version information.
+    }
+    std::cout << "Preset list[" << i << "]: " << name
+              << ", depth work mode version: " << (version.empty() ? "not available" : version)
+              << std::endl;
   }
 }
 
@@ -239,8 +248,7 @@ int main(int argc, char** argv) {
   } catch (const std::exception& e) {
     ROS_ERROR_STREAM("list_camera_profile_mode: " << e.what());
   } catch (...) {
-    ROS_ERROR_STREAM("list_camera_profile_mode: "
-                     << "unknown error");
+    ROS_ERROR_STREAM("list_camera_profile_mode: " << "unknown error");
   }
   return 0;
 }

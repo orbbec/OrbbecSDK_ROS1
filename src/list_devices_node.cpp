@@ -195,7 +195,15 @@ void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
     for (uint32_t i = 0; i < preset_count; ++i) {
       const char *preset_name = preset_list->getName(i);
       if (preset_name != nullptr && preset_name[0] != '\0') {
-        ROS_INFO_STREAM("  - " << preset_name);
+        std::string version;
+        try {
+          const char *version_value = preset_list->getDepthWorkModeVersion(i);
+          version = version_value == nullptr ? "" : version_value;
+        } catch (...) {
+          // Older firmware can enumerate presets without exposing version information.
+        }
+        ROS_INFO_STREAM("  - " << preset_name << " (depth work mode version: "
+                               << (version.empty() ? "not available" : version) << ")");
       }
     }
 
@@ -341,8 +349,7 @@ int main(int argc, char **argv) {
   } catch (const std::exception &e) {
     ROS_ERROR_STREAM("list_device_node: " << e.what());
   } catch (...) {
-    ROS_ERROR_STREAM("list_device_node: "
-                     << "unknown error");
+    ROS_ERROR_STREAM("list_device_node: " << "unknown error");
   }
   return 0;
 }

@@ -2214,15 +2214,53 @@ void OBCameraNode::setupDevices() {
     return isLaunchParamProvided(param_name);
   };
 
-  if (!device_preset_.empty()) {
+  if (is_playback_device_ && (!depth_work_mode_.empty() || !device_preset_.empty())) {
+    ROS_INFO_STREAM("Skip device preset selection during bag playback");
+  } else if (!device_preset_.empty()) {
     try {
       ROS_DEBUG_STREAM("Available presets:");
       auto preset_list = device_->getAvailablePresetList();
       for (uint32_t i = 0; i < preset_list->getCount(); i++) {
-        ROS_DEBUG_STREAM("Preset " << i << ": " << preset_list->getName(i));
+        std::string version;
+        try {
+          const char* version_value = preset_list->getDepthWorkModeVersion(i);
+          version = version_value == nullptr ? "" : version_value;
+        } catch (...) {
+          // Older firmware can enumerate presets but may not report per-preset versions.
+        }
+        ROS_DEBUG_STREAM("Preset " << i << ": " << preset_list->getName(i)
+                                   << ", depth work mode version: "
+                                   << (version.empty() ? "not available" : version));
       }
-      device_->loadPreset(device_preset_.c_str());
-      ROS_INFO_STREAM("Loaded device preset: " << device_->getCurrentPresetName());
+
+      if (device_preset_version_.empty()) {
+        device_->loadPreset(device_preset_.c_str());
+      } else {
+        device_->loadPreset(device_preset_.c_str(), device_preset_version_.c_str());
+      }
+
+      std::string current_preset = device_preset_;
+      std::string current_version;
+      try {
+        const char* preset_name = device_->getCurrentPresetName();
+        current_preset = preset_name == nullptr ? device_preset_ : preset_name;
+      } catch (...) {
+        // Loading succeeded; failure to read back the name should not mark the load as failed.
+      }
+      try {
+        const char* version = device_->getCurrentPresetDepthWorkModeVersion();
+        current_version = version == nullptr ? "" : version;
+      } catch (...) {
+        // Older firmware does not report the current preset's depth work mode version.
+      }
+      ROS_INFO_STREAM("Loaded device preset: "
+                      << current_preset << ", depth work mode version: "
+                      << (current_version.empty() ? "not available" : current_version));
+      if (!device_preset_version_.empty() && !current_version.empty() &&
+          current_version != device_preset_version_) {
+        ROS_WARN_STREAM("Requested device preset depth work mode version "
+                        << device_preset_version_ << ", but device reports " << current_version);
+      }
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM(
           "Failed to load device preset: " << orbbec_camera::formatObErrorWithStatus(e));
@@ -2231,6 +2269,8 @@ void OBCameraNode::setupDevices() {
     } catch (...) {
       ROS_ERROR_STREAM("Failed to load device preset");
     }
+  } else if (!device_preset_version_.empty()) {
+    ROS_WARN_STREAM("Ignore device_preset_version because device_preset is empty");
   }
   if (!color_preset_.empty()) {
     try {

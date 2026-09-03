@@ -676,6 +676,7 @@ void OBCameraNode::getParameters() {
   } else {
     device_preset_ = nh_private_.param<std::string>("device_preset", "");
   }
+  device_preset_version_ = nh_private_.param<std::string>("device_preset_version", "");
   color_preset_ = nh_private_.param<std::string>("color_preset", "");
   // filter switch
   enable_decimation_filter_ = nh_private_.param<bool>("enable_decimation_filter", false);

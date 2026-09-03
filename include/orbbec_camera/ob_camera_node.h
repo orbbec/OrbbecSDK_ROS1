@@ -903,6 +903,7 @@ class OBCameraNode {
   // ordered point cloud
   bool ordered_pc_ = false;
   std::string device_preset_ = "";
+  std::string device_preset_version_ = "";
   std::string color_preset_ = "";
   // filter switch
   bool enable_decimation_filter_ = false;

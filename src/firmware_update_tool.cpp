@@ -438,7 +438,15 @@ void logCurrentPresetList(const std::shared_ptr<ob::Device> &device, const char 
     const uint32_t count = preset_list->getCount();
     ROS_INFO("[%s] Current preset count: %u", stage, count);
     for (uint32_t i = 0; i < count; ++i) {
-      ROS_INFO("[%s] Preset[%u]: %s", stage, i, preset_list->getName(i));
+      const char *version = nullptr;
+      try {
+        version = preset_list->getDepthWorkModeVersion(i);
+      } catch (...) {
+        // Older firmware can enumerate presets without exposing version information.
+      }
+      ROS_INFO("[%s] Preset[%u]: %s, depth work mode version: %s", stage, i,
+               preset_list->getName(i),
+               version == nullptr || version[0] == '\0' ? "not available" : version);
     }
   } catch (const ob::Error &e) {
     ROS_WARN("[%s] Failed to query preset list: %s", stage,

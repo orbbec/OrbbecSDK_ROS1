@@ -4,7 +4,10 @@ string schema_version
 
 # Effective device configuration state that is not provided by existing device/version services.
 string device_preset
+# Legacy preset package version reported by the device extension information.
 string preset_version
+# Current preset's target depth work mode version. Empty when unsupported or unavailable.
+string preset_depth_work_mode_version
 string color_preset
 string depth_precision
 string disparity_to_depth_mode
