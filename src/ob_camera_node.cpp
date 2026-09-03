@@ -676,6 +676,7 @@ void OBCameraNode::getParameters() {
   } else {
     device_preset_ = nh_private_.param<std::string>("device_preset", "");
   }
+  device_preset_version_ = nh_private_.param<std::string>("device_preset_version", "");
   color_preset_ = nh_private_.param<std::string>("color_preset", "");
   // filter switch
   enable_decimation_filter_ = nh_private_.param<bool>("enable_decimation_filter", false);
@@ -950,9 +951,11 @@ void OBCameraNode::init_interleave_mode() {
   if ((interleave_ae_mode_ == "hdr") || (interleave_ae_mode_ == "laser")) {
     ROS_INFO_STREAM("current interleave_ae_mode_: " << interleave_ae_mode_);
     if (device_->isPropertySupported(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL, OB_PERMISSION_WRITE)) {
-      device_->setBoolProperty(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL, interleave_frame_enable_);
-      ROS_INFO_STREAM("Enable enable_interleave_depth_frame to "
-                      << (interleave_frame_enable_ ? "true" : "false"));
+      TRY_TO_SET_PROPERTY(setBoolProperty, OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL,
+                          interleave_frame_enable_);
+      TRY_EXECUTE_BLOCK(ROS_INFO_STREAM(
+          "Enable enable_interleave_depth_frame to "
+          << (device_->getBoolProperty(OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL) ? "true" : "false")));
     }
   }
   // set interleave larse PATTERN_SYNC_DELAY
@@ -961,8 +964,10 @@ void OBCameraNode::init_interleave_mode() {
                                    OB_PERMISSION_READ_WRITE) &&
       (sync_mode_str_ == "PRIMARY" || sync_mode_str_ == "SOFTWARE_TRIGGERING")) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    device_->setIntProperty(OB_PROP_FRAME_INTERLEAVE_LASER_PATTERN_SYNC_DELAY_INT, 0);
-    ROS_INFO_STREAM("Setting OB_PROP_FRAME_INTERLEAVE_LASER_PATTERN_SYNC_DELAY_INT 0 ");
+    TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_FRAME_INTERLEAVE_LASER_PATTERN_SYNC_DELAY_INT, 0);
+    TRY_EXECUTE_BLOCK(
+        ROS_INFO_STREAM("Current interleave laser pattern sync delay: " << device_->getIntProperty(
+                            OB_PROP_FRAME_INTERLEAVE_LASER_PATTERN_SYNC_DELAY_INT)));
   }
   has_run = true;
 }

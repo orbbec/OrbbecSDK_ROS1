@@ -304,15 +304,14 @@ sensor_msgs::CameraInfo convertToCameraInfo(OBCameraIntrinsic intrinsic,
   info.distortion_model = getDistortionModels(distortion);
   info.width = intrinsic.width;
   info.height = intrinsic.height;
-  info.D.resize(8, 0.0);
-  info.D[0] = distortion.k1;
-  info.D[1] = distortion.k2;
-  info.D[2] = distortion.p1;
-  info.D[3] = distortion.p2;
-  info.D[4] = distortion.k3;
-  info.D[5] = distortion.k4;
-  info.D[6] = distortion.k5;
-  info.D[7] = distortion.k6;
+  if (info.distortion_model == sensor_msgs::distortion_models::RATIONAL_POLYNOMIAL) {
+    info.D = {distortion.k1, distortion.k2, distortion.p1, distortion.p2,
+              distortion.k3, distortion.k4, distortion.k5, distortion.k6};
+  } else if (info.distortion_model == sensor_msgs::distortion_models::EQUIDISTANT) {
+    info.D = {distortion.k1, distortion.k2, distortion.k3, distortion.k4};
+  } else {
+    info.D = {distortion.k1, distortion.k2, distortion.p1, distortion.p2, distortion.k3};
+  }
 
   bool all_zero = std::all_of(info.D.begin(), info.D.end(), [](double val) { return val == 0.0; });
   info.roi.do_rectify = all_zero;
@@ -561,6 +560,8 @@ OBMultiDeviceSyncMode OBSyncModeFromString(const std::string &mode) {
     return OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING;
   } else if (mode == "HARDWARE_TRIGGERING") {
     return OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING;
+  } else if (mode == "GROUP_ACTIONS") {
+    return OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_GROUP_ACTIONS;
   } else {
     return OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN;
   }
@@ -582,6 +583,8 @@ std::string OBSyncModeToString(const OBMultiDeviceSyncMode &mode) {
       return "SOFTWARE_TRIGGERING";
     case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING:
       return "HARDWARE_TRIGGERING";
+    case OBMultiDeviceSyncMode::OB_MULTI_DEVICE_SYNC_MODE_GROUP_ACTIONS:
+      return "GROUP_ACTIONS";
     default:
       return "FREE_RUN";
   }
@@ -1029,7 +1032,7 @@ std::string getDistortionModels(OBCameraDistortion distortion) {
     case OB_DISTORTION_BROWN_CONRADY:
       return sensor_msgs::distortion_models::PLUMB_BOB;
     case OB_DISTORTION_BROWN_CONRADY_K6:
-      return sensor_msgs::distortion_models::PLUMB_BOB;
+      return sensor_msgs::distortion_models::RATIONAL_POLYNOMIAL;
     case OB_DISTORTION_KANNALA_BRANDT4:
       return sensor_msgs::distortion_models::EQUIDISTANT;
     default:

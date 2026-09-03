@@ -457,6 +457,10 @@ class OBCameraNode {
 
   bool setWhiteBalanceCallback(SetInt32Request &request, SetInt32Response &response);
 
+  bool getColorWbCtrlCallback(GetInt32Request &request, GetInt32Response &response);
+
+  bool setColorWbCtrlCallback(SetInt32Request &request, SetInt32Response &response);
+
   bool getAeAwbStatusCallback(GetInt32Request &request, GetInt32Response &response);
 
   bool getAwbGainCallback(GetAwbGainRequest &request, GetAwbGainResponse &response);
@@ -491,6 +495,10 @@ class OBCameraNode {
   bool getDeviceInfoCallback(GetDeviceInfoRequest &request, GetDeviceInfoResponse &response);
 
   bool getDeviceConfigCallback(GetDeviceConfigRequest &request, GetDeviceConfigResponse &response);
+
+  bool getActionConfigCallback(GetActionConfigRequest &request, GetActionConfigResponse &response);
+
+  bool setActionConfigCallback(SetActionConfigRequest &request, SetActionConfigResponse &response);
 
   bool getSDKVersionCallback(GetStringRequest &request, GetStringResponse &response);
 
@@ -651,6 +659,8 @@ class OBCameraNode {
   std::map<stream_index_pair, ros::ServiceServer> get_camera_info_srv_;
   ros::ServiceServer get_sdk_version_srv_;
   ros::ServiceServer get_device_config_srv_;
+  ros::ServiceServer get_action_config_srv_;
+  ros::ServiceServer set_action_config_srv_;
   ros::ServiceServer get_device_info_srv_;
   ros::ServiceServer set_laser_srv_;
   ros::ServiceServer set_flood_srv_;
@@ -661,6 +671,8 @@ class OBCameraNode {
   ros::ServiceServer set_auto_white_balance_srv_;
   ros::ServiceServer get_white_balance_srv_;
   ros::ServiceServer set_white_balance_srv_;
+  ros::ServiceServer get_color_wb_ctrl_srv_;
+  ros::ServiceServer set_color_wb_ctrl_srv_;
   ros::ServiceServer reset_white_balance_srv_;
   ros::ServiceServer get_ae_awb_status_srv_;
   ros::ServiceServer get_awb_gain_srv_;
@@ -891,6 +903,7 @@ class OBCameraNode {
   // ordered point cloud
   bool ordered_pc_ = false;
   std::string device_preset_ = "";
+  std::string device_preset_version_ = "";
   std::string color_preset_ = "";
   // filter switch
   bool enable_decimation_filter_ = false;

@@ -674,6 +674,7 @@ typedef enum {
 
     /**
      * @brief Enable FPS boost in trigger mode
+     *        Not effective for devices connected via USB 2.x or lower
      */
     OB_PROP_FPS_BOOST_BOOL = 275,
 
@@ -694,6 +695,44 @@ typedef enum {
      *          and the system is in a stable imaging state.
      */
     OB_PROP_COLOR_AE_AWB_STATUS_INT = 287,
+
+    /**
+     * @brief Number of Action Signal blocks supported by the device
+     */
+    OB_PROP_ACTION_SIGNAL_COUNT_INT = 296,
+
+    /**
+     * @brief Action Device Key, shared across all Action Commands
+     */
+    OB_PROP_ACTION_DEVICE_KEY_INT = 297,
+
+    /**
+     * @brief Maximum number of scheduled Action Commands that can be queued by the device
+     */
+    OB_PROP_ACTION_SCHEDULED_COMMAND_QUEUE_SIZE_INT = 298,
+
+    /**
+     * @brief Action Signal selector, 0..N-1; subsequent selector-scoped reads/writes target the selected block.
+     * @note The selector is stateful. The selector, Group Key, and Group Mask
+     *       must be written serially as one caller-controlled sequence. Do not
+     *       interleave this sequence with Action Command property operations
+     *       from another thread on the same device.
+     */
+    OB_PROP_ACTION_SELECTOR_INT = 299,
+
+    /**
+     * @brief Action Group Key for the currently selected block.
+     * @note Must be written serially with OB_PROP_ACTION_SELECTOR_INT and
+     *       OB_PROP_ACTION_GROUP_MASK_INT on the same device.
+     */
+    OB_PROP_ACTION_GROUP_KEY_INT = 300,
+
+    /**
+     * @brief Action Group Mask for the currently selected block.
+     * @note Must be written serially with OB_PROP_ACTION_SELECTOR_INT and
+     *       OB_PROP_ACTION_GROUP_KEY_INT on the same device.
+     */
+    OB_PROP_ACTION_GROUP_MASK_INT = 301,
 
     /**
      * @brief Baseline calibration parameters
@@ -977,6 +1016,11 @@ typedef enum {
      *
      */
     OB_PROP_DEPTH_AUTO_EXPOSURE_PRIORITY_INT = 2052,
+
+    /**
+     * @brief Color camera WB control
+     */
+    OB_PROP_COLOR_WB_CTRL_INT = 2053,
 
     /**
      * @brief Software disparity to depth

@@ -17,8 +17,10 @@
 #pragma once
 
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <string_view>
 
 #include "sensor_msgs/CameraInfo.h"
@@ -47,6 +49,40 @@ inline std::string formatObErrorWithStatus(const ob::Error &e) {
   return os.str();
 }
 }  // namespace orbbec_camera
+
+#define TRY_EXECUTE_BLOCK(block)                                                               \
+  try {                                                                                        \
+    block;                                                                                     \
+  } catch (const ob::Error &e) {                                                               \
+    std::string error_msg = orbbec_camera::formatObErrorWithStatus(e);                         \
+    if (error_msg.find("Device is deactivated") != std::string::npos ||                        \
+        error_msg.find("disconnected") != std::string::npos ||                                 \
+        error_msg.find("Send control transfer failed") != std::string::npos) {                 \
+      ROS_WARN("Device communication error in %s at line %d: %s - Device may be disconnected", \
+               __FUNCTION__, __LINE__, error_msg.c_str());                                     \
+    } else {                                                                                   \
+      ROS_ERROR("Error in %s at line %d: %s", __FUNCTION__, __LINE__, error_msg.c_str());      \
+    }                                                                                          \
+  } catch (const std::exception &e) {                                                          \
+    ROS_ERROR("Exception in %s at line %d: %s", __FUNCTION__, __LINE__, e.what());             \
+  } catch (...) {                                                                              \
+    ROS_ERROR("Unknown exception in %s at line %d", __FUNCTION__, __LINE__);                   \
+  }
+
+#define TRY_TO_SET_PROPERTY(func, property, value)                                                 \
+  try {                                                                                            \
+    device_->func((property), (value));                                                            \
+  } catch (const ob::Error &e) {                                                                   \
+    ROS_ERROR_STREAM("Failed to set " << (property) << " to " << (value) << " in " << __FUNCTION__ \
+                                      << " at line " << __LINE__ << ": "                           \
+                                      << orbbec_camera::formatObErrorWithStatus(e));               \
+  } catch (const std::exception &e) {                                                              \
+    ROS_ERROR_STREAM("Failed to set " << (property) << " to " << (value) << " in " << __FUNCTION__ \
+                                      << " at line " << __LINE__ << ": " << e.what());             \
+  } catch (...) {                                                                                  \
+    ROS_ERROR_STREAM("Failed to set " << (property) << " to " << (value) << " in " << __FUNCTION__ \
+                                      << " at line " << __LINE__);                                 \
+  }
 
 // Macros for checking conditions and comparing values
 #define CHECK(condition) \

@@ -235,6 +235,20 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->setWhiteBalanceCallback(request, response);
         return response.success;
       });
+  if (isPropertyReadable(device_, OB_PROP_COLOR_WB_CTRL_INT)) {
+    get_color_wb_ctrl_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+        "/" + camera_name_ + "/get_color_wb_ctrl",
+        [this](GetInt32Request& request, GetInt32Response& response) {
+          return this->getColorWbCtrlCallback(request, response);
+        });
+  }
+  if (isPropertyWritable(device_, OB_PROP_COLOR_WB_CTRL_INT)) {
+    set_color_wb_ctrl_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+        "/" + camera_name_ + "/set_color_wb_ctrl",
+        [this](SetInt32Request& request, SetInt32Response& response) {
+          return this->setColorWbCtrlCallback(request, response);
+        });
+  }
   if (isPropertyReadable(device_, OB_PROP_COLOR_AE_AWB_STAT_INT)) {
     get_ae_awb_status_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
         "/" + camera_name_ + "/" + "get_color_ae_awb_status",
@@ -346,6 +360,28 @@ void OBCameraNode::setupCameraCtrlServices() {
         response.success = this->getDeviceConfigCallback(request, response);
         return response.success;
       });
+  if (isPropertyReadable(device_, OB_PROP_ACTION_SIGNAL_COUNT_INT) &&
+      isPropertyReadable(device_, OB_PROP_ACTION_DEVICE_KEY_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_SELECTOR_INT) &&
+      isPropertyReadable(device_, OB_PROP_ACTION_GROUP_KEY_INT) &&
+      isPropertyReadable(device_, OB_PROP_ACTION_GROUP_MASK_INT)) {
+    get_action_config_srv_ = nh_.advertiseService<GetActionConfigRequest, GetActionConfigResponse>(
+        "/" + camera_name_ + "/get_action_config",
+        [this](GetActionConfigRequest& request, GetActionConfigResponse& response) {
+          return this->getActionConfigCallback(request, response);
+        });
+  }
+  if (isPropertyReadable(device_, OB_PROP_ACTION_SIGNAL_COUNT_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_DEVICE_KEY_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_SELECTOR_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_GROUP_KEY_INT) &&
+      isPropertyWritable(device_, OB_PROP_ACTION_GROUP_MASK_INT)) {
+    set_action_config_srv_ = nh_.advertiseService<SetActionConfigRequest, SetActionConfigResponse>(
+        "/" + camera_name_ + "/set_action_config",
+        [this](SetActionConfigRequest& request, SetActionConfigResponse& response) {
+          return this->setActionConfigCallback(request, response);
+        });
+  }
   get_serial_number_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
       "/" + camera_name_ + "/" + "get_serial",
       [this](GetStringRequest& request, GetStringResponse& response) {
@@ -1010,6 +1046,61 @@ bool OBCameraNode::setWhiteBalanceCallback(SetInt32Request& request, SetInt32Res
   return true;
 }
 
+bool OBCameraNode::getColorWbCtrlCallback(GetInt32Request& request, GetInt32Response& response) {
+  (void)request;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    response.data = device_->getIntProperty(OB_PROP_COLOR_WB_CTRL_INT);
+    response.success = true;
+    response.message = "OK";
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return true;
+}
+
+bool OBCameraNode::setColorWbCtrlCallback(SetInt32Request& request, SetInt32Response& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    const auto range = device_->getIntPropertyRange(OB_PROP_COLOR_WB_CTRL_INT);
+    if (request.data < range.min || request.data > range.max) {
+      response.success = false;
+      response.message = "value out of range [" + std::to_string(range.min) + ", " +
+                         std::to_string(range.max) + "]";
+      return true;
+    }
+
+    device_->setIntProperty(OB_PROP_COLOR_WB_CTRL_INT, request.data);
+    response.success = true;
+    response.message = "OK";
+    if (isPropertyReadable(device_, OB_PROP_COLOR_WB_CTRL_INT)) {
+      const auto current_value = device_->getIntProperty(OB_PROP_COLOR_WB_CTRL_INT);
+      response.success = current_value == request.data;
+      if (!response.success) {
+        response.message = "device reported " + std::to_string(current_value) + " after setting " +
+                           std::to_string(request.data);
+      }
+    }
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return true;
+}
+
 bool OBCameraNode::getAeAwbStatusCallback(GetInt32Request& request, GetInt32Response& response) {
   (void)request;
   try {
@@ -1317,6 +1408,76 @@ bool OBCameraNode::getDeviceInfoCallback(GetDeviceInfoRequest& request,
   return true;
 }
 
+bool OBCameraNode::getActionConfigCallback(GetActionConfigRequest& request,
+                                           GetActionConfigResponse& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    const int action_signal_count = device_->getIntProperty(OB_PROP_ACTION_SIGNAL_COUNT_INT);
+    if (action_signal_count <= 0 ||
+        request.selector >= static_cast<uint32_t>(action_signal_count)) {
+      response.success = false;
+      response.message = "selector must be less than action signal count " +
+                         std::to_string(std::max(action_signal_count, 0));
+      return true;
+    }
+
+    device_->setIntProperty(OB_PROP_ACTION_SELECTOR_INT, static_cast<int32_t>(request.selector));
+    response.action_signal_count = static_cast<uint32_t>(action_signal_count);
+    response.device_key =
+        static_cast<uint32_t>(device_->getIntProperty(OB_PROP_ACTION_DEVICE_KEY_INT));
+    response.group_key =
+        static_cast<uint32_t>(device_->getIntProperty(OB_PROP_ACTION_GROUP_KEY_INT));
+    response.group_mask =
+        static_cast<uint32_t>(device_->getIntProperty(OB_PROP_ACTION_GROUP_MASK_INT));
+    response.success = true;
+    response.message = "OK";
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return true;
+}
+
+bool OBCameraNode::setActionConfigCallback(SetActionConfigRequest& request,
+                                           SetActionConfigResponse& response) {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    const int action_signal_count = device_->getIntProperty(OB_PROP_ACTION_SIGNAL_COUNT_INT);
+    if (action_signal_count <= 0 ||
+        request.selector >= static_cast<uint32_t>(action_signal_count)) {
+      response.success = false;
+      response.message = "selector must be less than action signal count " +
+                         std::to_string(std::max(action_signal_count, 0));
+      return true;
+    }
+
+    device_->setIntProperty(OB_PROP_ACTION_DEVICE_KEY_INT,
+                            static_cast<int32_t>(request.device_key));
+    device_->setIntProperty(OB_PROP_ACTION_SELECTOR_INT, static_cast<int32_t>(request.selector));
+    device_->setIntProperty(OB_PROP_ACTION_GROUP_KEY_INT, static_cast<int32_t>(request.group_key));
+    device_->setIntProperty(OB_PROP_ACTION_GROUP_MASK_INT,
+                            static_cast<int32_t>(request.group_mask));
+    response.success = true;
+    response.message = "OK";
+  } catch (const ob::Error& e) {
+    response.success = false;
+    response.message = orbbec_camera::formatObErrorWithStatus(e);
+  } catch (const std::exception& e) {
+    response.success = false;
+    response.message = e.what();
+  } catch (...) {
+    response.success = false;
+    response.message = "unknown error";
+  }
+  return true;
+}
+
 bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
                                            GetDeviceConfigResponse& response) {
   (void)request;
@@ -1461,6 +1622,20 @@ bool OBCameraNode::getDeviceConfigCallback(GetDeviceConfigRequest& request,
     ROS_DEBUG_STREAM("Failed to get current preset: " << e.what());
   } catch (...) {
     ROS_DEBUG_STREAM("Failed to get current preset");
+  }
+
+  try {
+    const char* version = device_->getCurrentPresetDepthWorkModeVersion();
+    if (version != nullptr) {
+      response.preset_depth_work_mode_version = version;
+    }
+  } catch (const ob::Error& e) {
+    ROS_DEBUG_STREAM("Failed to get current preset depth work mode version: "
+                     << orbbec_camera::formatObErrorWithStatus(e));
+  } catch (const std::exception& e) {
+    ROS_DEBUG_STREAM("Failed to get current preset depth work mode version: " << e.what());
+  } catch (...) {
+    ROS_DEBUG_STREAM("Failed to get current preset depth work mode version");
   }
 
   try {

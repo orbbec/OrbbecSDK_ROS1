@@ -1,0 +1,12 @@
+uint32 device_key
+uint32 group_key
+uint32 group_mask
+# IPv4 destination. Leave empty to use the SDK broadcast address (255.255.255.255).
+string destination_ip
+# GVCP/PTP timestamp: upper 32 bits are seconds and lower 32 bits are nanoseconds.
+# Zero sends the command immediately.
+uint64 scheduled_time
+---
+# Success means that the SDK dispatched the command; Action Command has no device acknowledgment.
+bool success
+string message
