@@ -457,6 +457,10 @@ class OBCameraNode {
 
   bool setWhiteBalanceCallback(SetInt32Request &request, SetInt32Response &response);
 
+  bool getColorWbCtrlCallback(GetInt32Request &request, GetInt32Response &response);
+
+  bool setColorWbCtrlCallback(SetInt32Request &request, SetInt32Response &response);
+
   bool getAeAwbStatusCallback(GetInt32Request &request, GetInt32Response &response);
 
   bool getAwbGainCallback(GetAwbGainRequest &request, GetAwbGainResponse &response);
@@ -667,6 +671,8 @@ class OBCameraNode {
   ros::ServiceServer set_auto_white_balance_srv_;
   ros::ServiceServer get_white_balance_srv_;
   ros::ServiceServer set_white_balance_srv_;
+  ros::ServiceServer get_color_wb_ctrl_srv_;
+  ros::ServiceServer set_color_wb_ctrl_srv_;
   ros::ServiceServer reset_white_balance_srv_;
   ros::ServiceServer get_ae_awb_status_srv_;
   ros::ServiceServer get_awb_gain_srv_;
