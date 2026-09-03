@@ -69,19 +69,19 @@ inline std::string formatObErrorWithStatus(const ob::Error &e) {
     ROS_ERROR("Unknown exception in %s at line %d", __FUNCTION__, __LINE__);                   \
   }
 
-#define TRY_TO_SET_PROPERTY(func, property, value)                                             \
-  try {                                                                                        \
-    device_->func(property, value);                                                            \
-  } catch (const ob::Error &e) {                                                               \
-    ROS_ERROR_STREAM("Failed to set " << property << " to " << value << " in " << __FUNCTION__ \
-                                      << " at line " << __LINE__ << ": "                       \
-                                      << orbbec_camera::formatObErrorWithStatus(e));           \
-  } catch (const std::exception &e) {                                                          \
-    ROS_ERROR_STREAM("Failed to set " << property << " to " << value << " in " << __FUNCTION__ \
-                                      << " at line " << __LINE__ << ": " << e.what());         \
-  } catch (...) {                                                                              \
-    ROS_ERROR_STREAM("Failed to set " << property << " to " << value << " in " << __FUNCTION__ \
-                                      << " at line " << __LINE__);                             \
+#define TRY_TO_SET_PROPERTY(func, property, value)                                                 \
+  try {                                                                                            \
+    device_->func((property), (value));                                                            \
+  } catch (const ob::Error &e) {                                                                   \
+    ROS_ERROR_STREAM("Failed to set " << (property) << " to " << (value) << " in " << __FUNCTION__ \
+                                      << " at line " << __LINE__ << ": "                           \
+                                      << orbbec_camera::formatObErrorWithStatus(e));               \
+  } catch (const std::exception &e) {                                                              \
+    ROS_ERROR_STREAM("Failed to set " << (property) << " to " << (value) << " in " << __FUNCTION__ \
+                                      << " at line " << __LINE__ << ": " << e.what());             \
+  } catch (...) {                                                                                  \
+    ROS_ERROR_STREAM("Failed to set " << (property) << " to " << (value) << " in " << __FUNCTION__ \
+                                      << " at line " << __LINE__);                                 \
   }
 
 // Macros for checking conditions and comparing values
