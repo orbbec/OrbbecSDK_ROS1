@@ -202,8 +202,7 @@ void printPresetInfo(const std::shared_ptr<ob::Device> &device) {
         } catch (...) {
           // Older firmware can enumerate presets without exposing version information.
         }
-        ROS_INFO_STREAM("  - " << preset_name << " (depth work mode version: "
-                               << (version.empty() ? "not available" : version) << ")");
+        ROS_INFO_STREAM("  - " << preset_name << (version.empty() ? "" : " (" + version + ")"));
       }
     }
 

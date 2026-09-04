@@ -2229,8 +2229,7 @@ void OBCameraNode::setupDevices() {
           // Older firmware can enumerate presets but may not report per-preset versions.
         }
         ROS_DEBUG_STREAM("Preset " << i << ": " << preset_list->getName(i)
-                                   << ", depth work mode version: "
-                                   << (version.empty() ? "not available" : version));
+                                   << (version.empty() ? "" : " (" + version + ")"));
       }
 
       if (device_preset_version_.empty()) {
@@ -2254,8 +2253,8 @@ void OBCameraNode::setupDevices() {
         // Older firmware does not report the current preset's depth work mode version.
       }
       ROS_INFO_STREAM("Loaded device preset: "
-                      << current_preset << ", depth work mode version: "
-                      << (current_version.empty() ? "not available" : current_version));
+                      << current_preset
+                      << (current_version.empty() ? "" : " (" + current_version + ")"));
       if (!device_preset_version_.empty() && !current_version.empty() &&
           current_version != device_preset_version_) {
         ROS_WARN_STREAM("Requested device preset depth work mode version "

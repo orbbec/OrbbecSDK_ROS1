@@ -444,9 +444,11 @@ void logCurrentPresetList(const std::shared_ptr<ob::Device> &device, const char 
       } catch (...) {
         // Older firmware can enumerate presets without exposing version information.
       }
-      ROS_INFO("[%s] Preset[%u]: %s, depth work mode version: %s", stage, i,
-               preset_list->getName(i),
-               version == nullptr || version[0] == '\0' ? "not available" : version);
+      if (version == nullptr || version[0] == '\0') {
+        ROS_INFO("[%s] Preset[%u]: %s", stage, i, preset_list->getName(i));
+      } else {
+        ROS_INFO("[%s] Preset[%u]: %s (%s)", stage, i, preset_list->getName(i), version);
+      }
     }
   } catch (const ob::Error &e) {
     ROS_WARN("[%s] Failed to query preset list: %s", stage,

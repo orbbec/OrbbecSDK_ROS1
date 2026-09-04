@@ -205,8 +205,7 @@ void printPreset(const std::shared_ptr<ob::Device>& device) {
       // Older firmware can enumerate presets without exposing version information.
     }
     std::cout << "Preset list[" << i << "]: " << name
-              << ", depth work mode version: " << (version.empty() ? "not available" : version)
-              << std::endl;
+              << (version.empty() ? "" : " (" + version + ")") << std::endl;
   }
 }
 
