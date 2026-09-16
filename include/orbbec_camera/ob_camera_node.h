@@ -309,6 +309,9 @@ class OBCameraNode {
   void setupImagePublisher(const stream_index_pair &stream_index);
   static void printProfiles(const std::shared_ptr<ob::Sensor> &sensor);
 
+  bool validate301SeriesStreamFrameRates(const std::map<stream_index_pair, int> &fps,
+                                         std::string &message) const;
+
   void setupTopics();
 
   void setupPipelineConfig();
