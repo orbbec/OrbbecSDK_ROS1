@@ -15,20 +15,124 @@
  *******************************************************************************/
 
 #include "orbbec_camera/jetson_nv_decoder.h"
-#include <ros/ros.h>
-#include <NvJpegDecoder.h>
-#include <NvV4l2Element.h>
-#include <algorithm>
+
+#include <linux/videodev2.h>
+#include <setjmp.h>
+#include <unistd.h>
+
+#include <NvBufSurface.h>
+#include <cstring>
+#include <jpeglib.h>
 #include <nvbufsurface.h>
 #include <nvbufsurftransform.h>
-#include <NvBufSurface.h>
-#include <fstream>
 #include <libyuv.h>
+#include <ros/ros.h>
+
+#include "jpegint.h"
+#include "orbbec_camera/utils.h"
+
 namespace orbbec_camera {
+namespace {
 
-JetsonNvJPEGDecoder::JetsonNvJPEGDecoder(int width, int height) : JPEGDecoder(width, height) {}
+struct JpegErrorManager {
+  jpeg_error_mgr base;
+  jmp_buf jump_buffer;
+  char message[JMSG_LENGTH_MAX];
+};
 
-JetsonNvJPEGDecoder::~JetsonNvJPEGDecoder() { delete decoder_; }
+void jpegErrorExit(j_common_ptr cinfo) {
+  auto *error = reinterpret_cast<JpegErrorManager *>(cinfo->err);
+  (*cinfo->err->format_message)(cinfo, error->message);
+  longjmp(error->jump_buffer, 1);
+}
+
+}  // namespace
+
+class JetsonNvJPEGDecoder::Impl {
+ public:
+  Impl() {
+    std::memset(&cinfo_, 0, sizeof(cinfo_));
+    std::memset(&error_, 0, sizeof(error_));
+    cinfo_.err = jpeg_std_error(&error_.base);
+    error_.base.error_exit = jpegErrorExit;
+
+    if (setjmp(error_.jump_buffer) != 0) {
+      return;
+    }
+
+    jpeg_create_decompress(&cinfo_);
+    initialized_ = true;
+    cinfo_.mjpeg_decode = TRUE;
+  }
+
+  ~Impl() {
+    if (initialized_) {
+      jpeg_destroy_decompress(&cinfo_);
+    }
+  }
+
+  Impl(const Impl &) = delete;
+  Impl &operator=(const Impl &) = delete;
+
+  bool isInitialized() const { return initialized_; }
+
+  const char *lastError() const { return error_.message; }
+
+  int decodeToFd(int &fd, unsigned char *input, unsigned long input_size, uint32_t &pixfmt,
+                 uint32_t &width, uint32_t &height) {
+    if (!initialized_ || input == nullptr || input_size == 0) {
+      return -1;
+    }
+
+    error_.message[0] = '\0';
+    if (setjmp(error_.jump_buffer) != 0) {
+      return -1;
+    }
+
+    NvBufSurface surface;
+    cinfo_.out_color_space = JCS_YCbCr;
+    jpeg_mem_src(&cinfo_, input, input_size);
+
+    (void)jpeg_read_header(&cinfo_, TRUE);
+
+    cinfo_.out_color_space = JCS_YCbCr;
+    cinfo_.IsVendorbuf = TRUE;
+    cinfo_.pVendor_buf = reinterpret_cast<unsigned char *>(&surface);
+
+    uint32_t pixel_format = 0;
+    if (cinfo_.comp_info[0].h_samp_factor == 2) {
+      pixel_format =
+          cinfo_.comp_info[0].v_samp_factor == 2 ? V4L2_PIX_FMT_YUV420M : V4L2_PIX_FMT_YUV422M;
+    } else {
+      pixel_format =
+          cinfo_.comp_info[0].v_samp_factor == 1 ? V4L2_PIX_FMT_YUV444M : V4L2_PIX_FMT_YUV422RM;
+    }
+
+    jpeg_start_decompress(&cinfo_);
+    if (cinfo_.global_state != DSTATE_READY) {
+      return -1;
+    }
+
+    jpeg_read_raw_data(&cinfo_, nullptr, cinfo_.comp_info[0].v_samp_factor * DCTSIZE);
+    jpeg_finish_decompress(&cinfo_);
+
+    width = cinfo_.image_width % 2 == 1 ? cinfo_.image_width + 1 : cinfo_.image_width;
+    height = cinfo_.image_height % 2 == 1 ? cinfo_.image_height + 1 : cinfo_.image_height;
+    pixfmt = pixel_format;
+    fd = cinfo_.fd;
+    return 0;
+  }
+
+ private:
+  jpeg_decompress_struct cinfo_{};
+  JpegErrorManager error_{};
+  bool initialized_ = false;
+};
+
+JetsonNvJPEGDecoder::JetsonNvJPEGDecoder(int width, int height)
+    : JPEGDecoder(width, height), decoder_(std::make_unique<Impl>()) {}
+
+JetsonNvJPEGDecoder::~JetsonNvJPEGDecoder() = default;
 
 bool JetsonNvJPEGDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, uint8_t *dest) {
   if (!isValidJPEG(frame)) {
@@ -40,13 +144,26 @@ bool JetsonNvJPEGDecoder::decode(const std::shared_ptr<ob::ColorFrame> &frame, u
   uint32_t width = 0;
   uint32_t height = 0;
   auto data_size = frame->dataSize();
-  while (data[data_size - 1] == 0) {
+  while (data_size > 4 && data[data_size - 1] == 0) {
     data_size--;
   }
+
+  if (!decoder_ || !decoder_->isInitialized()) {
+    decoder_ = std::make_unique<Impl>();
+  }
+  if (!decoder_->isInitialized()) {
+    ROS_ERROR_STREAM("Failed to initialize NVIDIA JPEG decoder");
+    decoder_.reset();
+    return false;
+  }
+
   int fd = -1;
-  decoder_ = NvJPEGDecoder::createJPEGDecoder("jpegdec");
-  std::shared_ptr<int> decoder_deleter(nullptr, [&](int *) { delete decoder_; });
-  decoder_->decodeToFd(fd, data, data_size, pixfmt, width, height);
+  if (decoder_->decodeToFd(fd, data, data_size, pixfmt, width, height) != 0) {
+    ROS_ERROR_STREAM("Failed to decode JPEG frame");
+    decoder_.reset();
+    return false;
+  }
+
   if (pixfmt != V4L2_PIX_FMT_YUV422M) {
     ROS_ERROR_STREAM("Unexpected pixfmt: " << pixfmt);
     if (fd != -1) {

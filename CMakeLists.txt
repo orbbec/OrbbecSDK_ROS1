@@ -47,11 +47,40 @@ if (USE_NV_HW_DECODER)
   set(JETSON_MULTI_MEDIA_API_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_DIR}/include/)
   set(LIBJPEG8B_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}/libjpeg-8b)
   set(TEGRA_ARMABI /usr/lib/aarch64-linux-gnu/)
+  # Search Jetson Multimedia API libraries, excluding CUDA library directories.
+  find_library(JETSON_JPEG_LIBRARY
+    NAMES nvmm_jpeg nvjpeg
+    PATHS
+      "${TEGRA_ARMABI}/nvidia"
+      "${TEGRA_ARMABI}/tegra"
+    NO_DEFAULT_PATH
+  )
+  if(NOT JETSON_JPEG_LIBRARY)
+    message(FATAL_ERROR
+      "Jetson Multimedia API JPEG library not found. "
+      "Install the Multimedia API matching the system L4T version."
+    )
+  endif()
+  message(STATUS "Jetson JPEG library: ${JETSON_JPEG_LIBRARY}")
+
   set(NV_LIBRARIES
-    -lnvjpeg -lnvbufsurface -lnvbufsurftransform -lyuv -lv4l2
+    "${JETSON_JPEG_LIBRARY}"
+    -lnvbufsurface -lnvbufsurftransform -lyuv -lv4l2
   )
   list(APPEND NV_LIBRARIES
-    -L${TEGRA_ARMABI} -L${TEGRA_ARMABI}/tegra)
+    "-L${TEGRA_ARMABI}"
+    "-L${TEGRA_ARMABI}/nvidia"
+    "-L${TEGRA_ARMABI}/tegra"
+  )
+
+  # The nvmm_jpeg Multimedia API classes use the CUDA driver API.
+  if(JETSON_JPEG_LIBRARY MATCHES "/libnvmm_jpeg\\.so")
+    if(CMAKE_VERSION VERSION_LESS "3.17")
+      message(FATAL_ERROR "nvmm_jpeg support requires CMake 3.17 or newer to find CUDAToolkit.")
+    endif()
+    find_package(CUDAToolkit REQUIRED)
+    list(APPEND NV_LIBRARIES CUDA::cuda_driver)
+  endif()
 endif ()
 # Dependencies
 find_package(catkin REQUIRED

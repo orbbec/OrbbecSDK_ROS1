@@ -15,15 +15,10 @@
  *******************************************************************************/
 
 #pragma once
-#include "utils.h"
-#include <opencv2/opencv.hpp>
+
+#include <memory>
 
 #include "jpeg_decoder.h"
-#include <NvJpegDecoder.h>
-#include <NvUtils.h>
-#include <NvV4l2Element.h>
-#include <NvJpegDecoder.h>
-#include <NvV4l2Element.h>
 
 namespace orbbec_camera {
 class JetsonNvJPEGDecoder : public JPEGDecoder {
@@ -34,7 +29,7 @@ class JetsonNvJPEGDecoder : public JPEGDecoder {
   bool decode(const std::shared_ptr<ob::ColorFrame>& frame, uint8_t* dest) override;
 
  private:
-  NvJPEGDecoder* decoder_;
-  int save_count_ = 0;
+  class Impl;
+  std::unique_ptr<Impl> decoder_;
 };
 }  // namespace orbbec_camera
