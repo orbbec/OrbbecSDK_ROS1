@@ -27,6 +27,7 @@
 #include <nvbufsurftransform.h>
 #include <libyuv.h>
 #include <ros/ros.h>
+#include <v4l2_nv_extensions.h>
 
 #include "jpegint.h"
 #include "orbbec_camera/utils.h"
