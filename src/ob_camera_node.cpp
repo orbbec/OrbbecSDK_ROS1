@@ -1434,7 +1434,9 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   }
   auto frame_timestamp = getFrameTimestampUs(depth_frame);
   auto timestamp = fromUsToROSTime(frame_timestamp);
-  std::string frame_id = depth_registration_ ? optical_frame_id_[COLOR] : optical_frame_id_[DEPTH];
+  std::string frame_id = depth_registration_ && align_target_stream_ == OB_STREAM_COLOR
+                             ? depth_aligned_frame_id_[DEPTH]
+                             : optical_frame_id_[DEPTH];
   cloud_msg_.header.stamp = timestamp;
   cloud_msg_.header.frame_id = frame_id;
   depth_cloud_pub_.publish(cloud_msg_);
@@ -2310,12 +2312,14 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     }
 
     if (depth_registration_ && align_filter_ && depth_frame) {
-      publishRawDepthImage(depth_frame);
-      auto target_frame_type = STREAM_TYPE_TO_FRAME_TYPE.at(align_target_stream_);
-      if (!frame_set->getFrame(target_frame_type)) {
-        ROS_DEBUG_STREAM("Depth registration target frame is null, skip software alignment");
+      if (align_target_stream_ == OB_STREAM_COLOR) {
+        publishRawDepthImage(depth_frame);
+      }
+      if (align_target_stream_ == OB_STREAM_DEPTH && !color_frame) {
+        ROS_DEBUG_STREAM("C2D alignment requires a color frame, skip alignment");
       } else {
-        if (align_target_stream_ == OB_STREAM_DEPTH && color_frame) {
+        auto align_color_frame = color_frame;
+        if (align_target_stream_ == OB_STREAM_DEPTH) {
           ob::FormatConvertFilter align_color_format_convert_filter;
           bool need_convert = true;
           switch (color_frame->format()) {
@@ -2333,24 +2337,26 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
               break;
           }
           if (need_convert) {
-            auto converted_color_frame = align_color_format_convert_filter.process(color_frame);
-            if (converted_color_frame) {
-              color_frame = converted_color_frame;
+            align_color_frame = align_color_format_convert_filter.process(color_frame);
+            if (align_color_frame) {
+              color_frame = align_color_frame;
               frame_set->pushFrame(color_frame);
             } else {
               ROS_ERROR_STREAM("Failed to convert color frame for C2D alignment");
             }
           }
         }
-        if (auto new_frame = align_filter_->process(frame_set)) {
-          auto new_frame_set = new_frame->as<ob::FrameSet>();
-          CHECK_NOTNULL(new_frame_set.get());
-          frame_set = new_frame_set;
-          depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
-          color_frame = frame_set->getFrame(OB_FRAME_COLOR);
-        } else {
-          ROS_ERROR_STREAM("Depth frame alignment failed");
-          return;
+        if (align_target_stream_ != OB_STREAM_DEPTH || align_color_frame) {
+          if (auto new_frame = align_filter_->process(frame_set)) {
+            auto new_frame_set = new_frame->as<ob::FrameSet>();
+            CHECK_NOTNULL(new_frame_set.get());
+            frame_set = new_frame_set;
+            depth_frame = frame_set->getFrame(OB_FRAME_DEPTH);
+            color_frame = frame_set->getFrame(OB_FRAME_COLOR);
+          } else {
+            ROS_ERROR_STREAM("Depth frame alignment failed");
+            return;
+          }
         }
       }
     }

@@ -1866,7 +1866,7 @@ bool OBCameraNode::shouldUseGeneratedCameraInfo(const stream_index_pair& stream_
 
 std::string OBCameraNode::getEffectiveOpticalFrameId(const stream_index_pair& stream_index) const {
   if (depth_registration_ && stream_index == DEPTH && align_target_stream_ == OB_STREAM_COLOR) {
-    return optical_frame_id_.at(COLOR);
+    return depth_aligned_frame_id_.at(DEPTH);
   }
   if (depth_registration_ && stream_index == COLOR && align_target_stream_ == OB_STREAM_DEPTH) {
     return optical_frame_id_.at(DEPTH);
