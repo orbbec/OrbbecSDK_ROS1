@@ -4,6 +4,7 @@
 #include <ros/master.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
 
 #include <cv_bridge/cv_bridge.h>
 
@@ -259,7 +260,17 @@ class ImageSyncNode {
     try {
       for (const auto &msg : msgs) {
         auto cv_image = cv_bridge::toCvShare(msg);
-        images.push_back(cv_image->image.clone());
+        cv::Mat image;
+        if (msg->encoding == sensor_msgs::image_encodings::RGB8) {
+          cv::cvtColor(cv_image->image, image, cv::COLOR_RGB2BGR);
+        } else if (msg->encoding == sensor_msgs::image_encodings::RGBA8) {
+          cv::cvtColor(cv_image->image, image, cv::COLOR_RGBA2BGR);
+        } else if (msg->encoding == sensor_msgs::image_encodings::BGRA8) {
+          cv::cvtColor(cv_image->image, image, cv::COLOR_BGRA2BGR);
+        } else {
+          image = cv_image->image.clone();
+        }
+        images.push_back(std::move(image));
         timestamps.push_back(msg->header.stamp.toSec());
       }
     } catch (cv_bridge::Exception &e) {
@@ -438,8 +449,14 @@ class ImageSyncNode {
         cv::applyColorMap(tmp, image, cv::COLORMAP_JET);
       } else if (images[i].channels() == 3) {
         image = images[i].clone();
+      } else if (images[i].channels() == 4) {
+        cv::cvtColor(images[i], image, cv::COLOR_BGRA2BGR);
       } else {
-        cv::cvtColor(images[i], image, cv::COLOR_GRAY2BGR);
+        ROS_WARN("Display first channel of unsupported %d-channel image %s", images[i].channels(),
+                 topic_infos[i].topic.c_str());
+        cv::Mat first_channel;
+        cv::extractChannel(images[i], first_channel, 0);
+        cv::cvtColor(first_channel, image, cv::COLOR_GRAY2BGR);
       }
 
       const std::string text = topic_infos[i].camera_name + " " + topic_infos[i].image_type +
