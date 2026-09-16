@@ -2315,8 +2315,9 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
       if (align_target_stream_ == OB_STREAM_COLOR) {
         publishRawDepthImage(depth_frame);
       }
-      if (align_target_stream_ == OB_STREAM_DEPTH && !color_frame) {
-        ROS_DEBUG_STREAM("C2D alignment requires a color frame, skip alignment");
+      if (!color_frame) {
+        ROS_DEBUG_STREAM("Software alignment requires a color frame, skip frame set");
+        return;
       } else {
         auto align_color_frame = color_frame;
         if (align_target_stream_ == OB_STREAM_DEPTH) {
@@ -2343,6 +2344,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
               frame_set->pushFrame(color_frame);
             } else {
               ROS_ERROR_STREAM("Failed to convert color frame for C2D alignment");
+              return;
             }
           }
         }

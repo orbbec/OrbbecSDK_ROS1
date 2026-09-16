@@ -824,9 +824,9 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
                                    reinterpret_cast<const uint8_t*>(&config), sizeof(config));
         device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                    &data_size);
-        ROS_INFO_STREAM("set depth AE ROI : "
-                        << "[Left: " << config.x0_left << ", Right: " << config.x1_right
-                        << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
+        ROS_INFO_STREAM("set depth AE ROI : " << "[Left: " << config.x0_left << ", Right: "
+                                              << config.x1_right << ", Top: " << config.y0_top
+                                              << ", Bottom: " << config.y1_bottom << " ]");
         depth_ae_roi_left_ = config.x0_left;
         depth_ae_roi_right_ = config.x1_right;
         depth_ae_roi_top_ = config.y0_top;
@@ -863,9 +863,9 @@ bool OBCameraNode::setAeRoiCallback(SetArraysRequest& request, SetArraysResponse
                                    reinterpret_cast<const uint8_t*>(&config), sizeof(config));
         device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                    &data_size);
-        ROS_INFO_STREAM("set color AE ROI : "
-                        << "[Left: " << config.x0_left << ", Right: " << config.x1_right
-                        << ", Top: " << config.y0_top << ", Bottom: " << config.y1_bottom << " ]");
+        ROS_INFO_STREAM("set color AE ROI : " << "[Left: " << config.x0_left << ", Right: "
+                                              << config.x1_right << ", Top: " << config.y0_top
+                                              << ", Bottom: " << config.y1_bottom << " ]");
         color_ae_roi_left_ = config.x0_left;
         color_ae_roi_right_ = config.x1_right;
         color_ae_roi_top_ = config.y0_top;
@@ -2375,6 +2375,8 @@ bool OBCameraNode::setImageRegistrationModeCallback(SetStringRequest& request,
 
   auto rollback_after_error = [&](const std::string& error_message) {
     try {
+      stopColorFrameThreads();
+      clearColorFrameQueues();
       restore_old_mode();
       if (was_running && !pipeline_started_.load()) {
         startStreams();
@@ -2395,6 +2397,8 @@ bool OBCameraNode::setImageRegistrationModeCallback(SetStringRequest& request,
     if (was_running) {
       stopStreams();
     }
+    stopColorFrameThreads();
+    clearColorFrameQueues();
 
     apply_image_registration_mode(mode);
 
