@@ -768,18 +768,28 @@ std::string fullAccelScaleRangeToString(const OBAccelFullScaleRange &full_scale_
 }
 
 bool isValidJPEG(const std::shared_ptr<ob::ColorFrame> &frame) {
-  if (frame->dataSize() < 2) {  // Checking both start and end markers, so minimal size is 4
+  if (!frame) {
     return false;
   }
 
+  const auto data_size = frame->dataSize();
   const auto *data = static_cast<const uint8_t *>(frame->data());
+  if (data == nullptr || data_size < 4) {
+    return false;
+  }
 
   // Check for JPEG start marker
   if (data[0] != 0xFF || data[1] != 0xD8) {
     return false;
   }
 
-  return true;
+  auto jpeg_size = data_size;
+  while (jpeg_size > 2 && data[jpeg_size - 1] == 0x00) {
+    --jpeg_size;
+  }
+
+  // Check for JPEG end marker after trimming zero padding.
+  return jpeg_size >= 4 && data[jpeg_size - 2] == 0xFF && data[jpeg_size - 1] == 0xD9;
 }
 
 std::string fourccToString(const uint32_t fourcc) {
