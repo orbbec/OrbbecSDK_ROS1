@@ -3200,35 +3200,44 @@ bool OBCameraNode::setupFormatConvertType(OBFormat type) {
 
 void OBCameraNode::printProfiles(const std::shared_ptr<ob::Sensor>& sensor) {
   auto profiles = sensor->getStreamProfileList();
+  const auto sensor_type = sensor->getType();
   for (size_t j = 0; j < profiles->count(); j++) {
     auto origin_profile = profiles->getProfile(j);
-    if (sensor->getType() == OB_SENSOR_COLOR) {
+    if (sensor_type == OB_SENSOR_COLOR || sensor_type == OB_SENSOR_COLOR_LEFT ||
+        sensor_type == OB_SENSOR_COLOR_RIGHT) {
       auto profile = origin_profile->as<ob::VideoStreamProfile>();
-      ROS_INFO_STREAM("available color profile: " << profile->width() << "x" << profile->height()
-                                                  << " " << profile->fps() << "fps "
-                                                  << profile->format());
-    } else if (sensor->getType() == OB_SENSOR_DEPTH) {
+      const char* stream_name = sensor_type == OB_SENSOR_COLOR_LEFT    ? "left_color"
+                                : sensor_type == OB_SENSOR_COLOR_RIGHT ? "right_color"
+                                                                       : "color";
+      ROS_INFO_STREAM("available " << stream_name << " profile: " << profile->width() << "x"
+                                   << profile->height() << " " << profile->fps() << "fps "
+                                   << profile->format());
+    } else if (sensor_type == OB_SENSOR_DEPTH) {
       auto profile = origin_profile->as<ob::VideoStreamProfile>();
       ROS_INFO_STREAM("available depth profile: " << profile->width() << "x" << profile->height()
                                                   << " " << profile->fps() << "fps "
                                                   << profile->format());
-    } else if (sensor->getType() == OB_SENSOR_IR) {
+    } else if (sensor_type == OB_SENSOR_IR || sensor_type == OB_SENSOR_IR_LEFT ||
+               sensor_type == OB_SENSOR_IR_RIGHT) {
       auto profile = origin_profile->as<ob::VideoStreamProfile>();
-      ROS_INFO_STREAM("available ir profile: " << profile->width() << "x" << profile->height()
-                                               << " " << profile->fps() << "fps "
-                                               << profile->format());
-    } else if (sensor->getType() == OB_SENSOR_ACCEL) {
+      const char* stream_name = sensor_type == OB_SENSOR_IR_LEFT    ? "left_ir"
+                                : sensor_type == OB_SENSOR_IR_RIGHT ? "right_ir"
+                                                                    : "ir";
+      ROS_INFO_STREAM("available " << stream_name << " profile: " << profile->width() << "x"
+                                   << profile->height() << " " << profile->fps() << "fps "
+                                   << profile->format());
+    } else if (sensor_type == OB_SENSOR_ACCEL) {
       auto profile = origin_profile->as<ob::AccelStreamProfile>();
       ROS_INFO_STREAM("available accel profile: sampleRate "
                       << sampleRateToString(profile->sampleRate()) << "  full scale_range "
                       << fullAccelScaleRangeToString(profile->fullScaleRange()));
-    } else if (sensor->getType() == OB_SENSOR_GYRO) {
+    } else if (sensor_type == OB_SENSOR_GYRO) {
       auto profile = origin_profile->as<ob::GyroStreamProfile>();
       ROS_INFO_STREAM("available gyro profile: sampleRate "
                       << sampleRateToString(profile->sampleRate()) << "  full scale_range "
                       << fullGyroScaleRangeToString(profile->fullScaleRange()));
     } else {
-      ROS_INFO_STREAM("unknown profile: " << sensor->getType());
+      ROS_INFO_STREAM("unknown profile: " << sensor_type);
     }
   }
 }
