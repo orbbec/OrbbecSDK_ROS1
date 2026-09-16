@@ -1378,7 +1378,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   }
   CHECK_NOTNULL(pipeline_);
   auto camera_params = pipeline_->getCameraParam();
-  if (depth_registration_ && isGemini335PID(device_info_->pid())) {
+  if (depth_registration_ && isGemini330SeriesPID(device_info_->pid())) {
     // if depth registration is enabled and the device is a Gemini 335, use the rgb intrinsic as the
     // depth intrinsic
     camera_params.depthIntrinsic = camera_params.rgbIntrinsic;
@@ -3408,36 +3408,13 @@ void OBCameraNode::publishStaticTransforms() {
   }
 }
 
-bool OBCameraNode::isGemini335PID(uint32_t pid) {
-  const uint16_t GEMINI_335_PID = 0x0800;    // Gemini 335 / 335e
-  const uint16_t GEMINI_330_PID = 0x0801;    // Gemini 330
-  const uint16_t GEMINI_336_PID = 0x0803;    // Gemini 336 / 336e
-  const uint16_t GEMINI_335L_PID = 0x0804;   // Gemini 335L
-  const uint16_t GEMINI_330L_PID = 0x0805;   // Gemini 336L
-  const uint16_t GEMINI_336L_PID = 0x0807;   // Gemini 335Lg
-  const uint16_t GEMINI_335LG_PID = 0x080B;  // Gemini 336Lg
-  const uint16_t GEMINI_336LG_PID = 0x080D;
-  const uint16_t GEMINI_335LE_PID = 0x080E;                 // Gemini 335Le
-  const uint16_t GEMINI_336LE_PID = 0x0810;                 // Gemini 335Le
-  const int32_t CUSTOM_ADVANTECH_GEMINI_336_PID = 0x0816;   // Custom Advantech Gemini 336
-  const int32_t CUSTOM_ADVANTECH_GEMINI_336L_PID = 0x0817;  // Custom Advantech Gemini 336L
-  const uint16_t GEMINI_338_PID = 0x0818;                   // Gemini 338
-  return pid == GEMINI_335_PID || pid == GEMINI_330_PID || pid == GEMINI_336_PID ||
-         pid == GEMINI_335L_PID || pid == GEMINI_330L_PID || pid == GEMINI_336L_PID ||
-         pid == GEMINI_335LG_PID || pid == GEMINI_336LG_PID || pid == GEMINI_335LE_PID ||
-         pid == GEMINI_336LE_PID || pid == CUSTOM_ADVANTECH_GEMINI_336_PID ||
-         pid == CUSTOM_ADVANTECH_GEMINI_336L_PID || pid == GEMINI_338_PID ||
-         pid == GEMINI_338L_PID || pid == GEMINI_338LE_PID || pid == GEMINI_338LG_PID ||
-         pid == GEMINI_331L_PID;
-}
-
 bool OBCameraNode::isGemini435LePID(uint32_t pid) {
   const uint16_t GEMINI_435Le_PID = 0x815;  // Gemini 435Le
   return pid == GEMINI_435Le_PID;
 }
 
 bool OBCameraNode::isPublishMetaData(uint32_t pid) {
-  return isGemini335PID(pid) || isGemini435LePID(pid) || isGemini305SeriesPID(pid);
+  return isGemini330SeriesPID(pid) || isGemini435LePID(pid) || isGemini305SeriesPID(pid);
 }
 
 bool OBCameraNode::isDabaiASeriesForHwD2C(uint32_t pid) {

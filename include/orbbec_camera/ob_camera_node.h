@@ -406,8 +406,6 @@ class OBCameraNode {
 
   void publishStaticTransforms();
 
-  bool isGemini335PID(uint32_t pid);
-
   bool isGemini435LePID(uint32_t pid);
 
   bool isPublishMetaData(uint32_t pid);

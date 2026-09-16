@@ -1493,7 +1493,9 @@ void OBCameraNode::publishDepthFiltersStatus() {
   if (disp_outliers_filter_supported) {
     append_unique_filter_name("DispOutliersFilter");
   }
-  append_unique_filter_name("EnhancedDepthFilter");
+  if (isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
+    append_unique_filter_name("EnhancedDepthFilter");
+  }
 
   msg.filters.reserve(ordered_filter_names.size());
   for (const auto& filter_name : ordered_filter_names) {
@@ -1928,7 +1930,7 @@ void OBCameraNode::setupLeftIrPostProcessFilter() {
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
   auto pid = device_info->getPid();
-  if (isGemini335PID(pid)) {
+  if (isGemini330SeriesPID(pid)) {
     auto left_ir_sensor = device_->getSensor(OB_SENSOR_IR_LEFT);
     left_ir_filter_list_ = left_ir_sensor->createRecommendedFilters();
     if (left_ir_filter_list_.empty()) {
@@ -1971,7 +1973,7 @@ void OBCameraNode::setupRightIrPostProcessFilter() {
   auto device_info = device_->getDeviceInfo();
   CHECK_NOTNULL(device_info);
   auto pid = device_info->getPid();
-  if (isGemini335PID(pid)) {
+  if (isGemini330SeriesPID(pid)) {
     auto right_ir_sensor = device_->getSensor(OB_SENSOR_IR_RIGHT);
     right_ir_filter_list_ = right_ir_sensor->createRecommendedFilters();
     if (right_ir_filter_list_.empty()) {
@@ -4092,6 +4094,11 @@ bool OBCameraNode::validateEnhancedDepthFilterConfig(std::string& message) const
   constexpr char kEnhancedDepthSupportedTargetResolutions[] = "640x480/1280x720/1280x800";
   constexpr char kEnhancedDepthSupportedDepthFormats[] = "Y10/Y11/Y12/Y14/Y16/Z16";
 
+  if (!isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
+    message = "Enhanced depth filter is only supported by Gemini 330 series devices";
+    return false;
+  }
+
   if (!enable_stream_.count(COLOR) || !enable_stream_.at(COLOR) || !enable_stream_.count(DEPTH) ||
       !enable_stream_.at(DEPTH)) {
     message = "Enhanced depth filter requires color and depth streams";
@@ -4869,6 +4876,11 @@ bool OBCameraNode::applyNamedDepthFilterConfig(
 bool OBCameraNode::applyEnhancedDepthFilterConfig(
     bool enabled, const std::vector<float>& positional_params,
     const std::vector<orbbec_camera::DepthFilterParam>& named_params, std::string& message) {
+  if (!isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
+    message = "Enhanced depth filter is only supported by Gemini 330 series devices";
+    return false;
+  }
+
   if (positional_params.size() > 1) {
     message = "EnhancedDepthFilter only supports one positional parameter";
     return false;
