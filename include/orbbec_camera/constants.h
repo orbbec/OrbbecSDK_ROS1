@@ -147,7 +147,7 @@ inline bool isGemini330SeriesPID(uint32_t pid) {
          pid == GEMINI_331L_PID;
 }
 
-inline bool isGemini305SeriesPID(uint32_t pid) {
+inline bool isGemini301SeriesPID(uint32_t pid) {
   return pid == GEMINI_305_PID || pid == GEMINI_305_PID2 || pid == GEMINI_305G_PID ||
          pid == GEMINI_301G_PID || pid == GEMINI_309G_PID;
 }

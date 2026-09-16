@@ -1645,7 +1645,7 @@ cv::Mat OBCameraNode::colorizeDepthImage(const cv::Mat& depth_image,
   cv::Mat depth_16u;
   depth_image.convertTo(depth_16u, CV_16UC1);
 
-  const uint16_t min_depth = isGemini305SeriesPID(device_info_->pid())
+  const uint16_t min_depth = isGemini301SeriesPID(device_info_->pid())
                                  ? kViewerColorizerG305MinDistanceMm
                                  : kViewerColorizerDefaultMinDistanceMm;
   const uint16_t max_depth = kViewerColorizerMaxDistanceMm;
@@ -3459,7 +3459,7 @@ bool OBCameraNode::isGemini435LePID(uint32_t pid) {
 }
 
 bool OBCameraNode::isPublishMetaData(uint32_t pid) {
-  return isGemini330SeriesPID(pid) || isGemini435LePID(pid) || isGemini305SeriesPID(pid);
+  return isGemini330SeriesPID(pid) || isGemini435LePID(pid) || isGemini301SeriesPID(pid);
 }
 
 bool OBCameraNode::isDabaiASeriesForHwD2C(uint32_t pid) {

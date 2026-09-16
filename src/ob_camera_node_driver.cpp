@@ -542,7 +542,7 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
   device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_.get());
   const bool should_delay_stream_start = delay_stream_start_after_reconnect_.exchange(false) &&
-                                         isGemini305SeriesPID(device_info_->pid());
+                                         isGemini301SeriesPID(device_info_->pid());
   if (should_delay_stream_start) {
     std::this_thread::sleep_for(kStreamStartDelayAfterReconnect);
   }
