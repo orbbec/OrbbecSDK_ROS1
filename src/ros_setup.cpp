@@ -3438,7 +3438,7 @@ bool OBCameraNode::validate301SeriesStreamFrameRates(const std::map<stream_index
     const auto name_it = stream_name_.find(stream_index);
     active_streams += name_it != stream_name_.end()
                           ? name_it->second
-                          : std::string(magic_enum::enum_name(stream_index.first));
+                          : ob::TypeHelper::convertOBStreamTypeToString(stream_index.first);
     active_streams += "=" + std::to_string(fps_it->second);
 
     if (active_fps == 0) {
