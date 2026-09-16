@@ -28,6 +28,18 @@ TimestampCsvLogger::TimestampCsvLogger(Config config) {
       depth_logger_ = create_image_logger(FrameTimestampCsvLogger::OutputMode::DEPTH);
     }
   }
+  if (config.left_color_enabled) {
+    left_color_logger_ = create_image_logger(FrameTimestampCsvLogger::OutputMode::LEFT_COLOR);
+  }
+  if (config.right_color_enabled) {
+    right_color_logger_ = create_image_logger(FrameTimestampCsvLogger::OutputMode::RIGHT_COLOR);
+  }
+  if (config.left_ir_enabled) {
+    left_ir_logger_ = create_image_logger(FrameTimestampCsvLogger::OutputMode::LEFT_IR);
+  }
+  if (config.right_ir_enabled) {
+    right_ir_logger_ = create_image_logger(FrameTimestampCsvLogger::OutputMode::RIGHT_IR);
+  }
 
   if (config.csv_file_path.empty()) {
     return;
@@ -62,7 +74,12 @@ bool TimestampCsvLogger::enabled() const {
 
 bool TimestampCsvLogger::imageEnabled() const {
   return (synced_image_logger_ && synced_image_logger_->enabled()) ||
-         (color_logger_ && color_logger_->enabled()) || (depth_logger_ && depth_logger_->enabled());
+         (color_logger_ && color_logger_->enabled()) ||
+         (left_color_logger_ && left_color_logger_->enabled()) ||
+         (right_color_logger_ && right_color_logger_->enabled()) ||
+         (depth_logger_ && depth_logger_->enabled()) ||
+         (left_ir_logger_ && left_ir_logger_->enabled()) ||
+         (right_ir_logger_ && right_ir_logger_->enabled());
 }
 
 bool TimestampCsvLogger::imageStreamEnabled(const stream_index_pair &stream_index) const {
@@ -107,6 +124,18 @@ void TimestampCsvLogger::recordStandaloneImageArrival(const stream_index_pair &s
                                                       int64_t arrival_system_us,
                                                       int64_t arrival_steady_us,
                                                       bool image_publish_expected) {
+  auto *timestamp_logger = imageLoggerForStream(stream_index);
+  if (timestamp_logger) {
+    timestamp_logger->recordStandaloneFrameArrival(stream_index, frame, arrival_system_us,
+                                                   arrival_steady_us, image_publish_expected);
+  }
+}
+
+void TimestampCsvLogger::recordImageFrameArrival(const stream_index_pair &stream_index,
+                                                 const std::shared_ptr<ob::Frame> &frame,
+                                                 int64_t arrival_system_us,
+                                                 int64_t arrival_steady_us,
+                                                 bool image_publish_expected) {
   auto *timestamp_logger = imageLoggerForStream(stream_index);
   if (timestamp_logger) {
     timestamp_logger->recordStandaloneFrameArrival(stream_index, frame, arrival_system_us,
@@ -174,7 +203,11 @@ void TimestampCsvLogger::shutdown() noexcept {
 
   shutdown_logger(synced_image_logger_, "synced image timestamp CSV logger");
   shutdown_logger(color_logger_, "color timestamp CSV logger");
+  shutdown_logger(left_color_logger_, "left color timestamp CSV logger");
+  shutdown_logger(right_color_logger_, "right color timestamp CSV logger");
   shutdown_logger(depth_logger_, "depth timestamp CSV logger");
+  shutdown_logger(left_ir_logger_, "left IR timestamp CSV logger");
+  shutdown_logger(right_ir_logger_, "right IR timestamp CSV logger");
   shutdown_logger(synced_imu_logger_, "synced IMU timestamp CSV logger");
   shutdown_logger(accel_logger_, "accel timestamp CSV logger");
   shutdown_logger(gyro_logger_, "gyro timestamp CSV logger");
@@ -187,6 +220,18 @@ FrameTimestampCsvLogger *TimestampCsvLogger::imageLoggerForStream(
   }
   if (stream_index == DEPTH) {
     return synced_image_logger_ ? synced_image_logger_.get() : depth_logger_.get();
+  }
+  if (stream_index == COLOR_LEFT) {
+    return left_color_logger_.get();
+  }
+  if (stream_index == COLOR_RIGHT) {
+    return right_color_logger_.get();
+  }
+  if (stream_index == INFRA1) {
+    return left_ir_logger_.get();
+  }
+  if (stream_index == INFRA2) {
+    return right_ir_logger_.get();
   }
   return nullptr;
 }

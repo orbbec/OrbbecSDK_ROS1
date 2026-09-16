@@ -20,6 +20,7 @@
 #include <orbbec_camera/DeviceStatus.h>
 #include <chrono>
 #include <functional>
+#include <limits>
 #include <mutex>
 namespace orbbec_camera {
 class FpsDelayStatus {
@@ -58,36 +59,57 @@ class FpsDelayStatus {
   }
 
   void fillColorStatus(orbbec_camera::DeviceStatus &msg) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    msg.color_frame_rate_cur = last_fps_;
-    msg.color_frame_rate_avg = frame_count_ > 0 ? fps_sum_ / frame_count_ : 0;
-    msg.color_frame_rate_min = fps_min_;
-    msg.color_frame_rate_max = fps_max_;
+    fillStatus(msg.color_frame_rate_cur, msg.color_frame_rate_avg, msg.color_frame_rate_min,
+               msg.color_frame_rate_max, msg.color_delay_ms_cur, msg.color_delay_ms_avg,
+               msg.color_delay_ms_min, msg.color_delay_ms_max);
+  }
 
-    msg.color_delay_ms_cur = last_delay_ms_;
-    msg.color_delay_ms_avg = frame_count_ > 0 ? delay_sum_ / frame_count_ : 0;
-    msg.color_delay_ms_min = delay_min_;
-    msg.color_delay_ms_max = delay_max_;
+  void fillLeftColorStatus(orbbec_camera::DeviceStatus &msg) {
+    fillStatus(msg.left_color_frame_rate_cur, msg.left_color_frame_rate_avg,
+               msg.left_color_frame_rate_min, msg.left_color_frame_rate_max,
+               msg.left_color_delay_ms_cur, msg.left_color_delay_ms_avg,
+               msg.left_color_delay_ms_min, msg.left_color_delay_ms_max);
+  }
 
-    last_delay_ms_ = 0.0;
-    last_fps_ = 0.0;
-    frame_count_ = 0;
-    fps_sum_ = delay_sum_ = 0.0;
-    fps_max_ = delay_max_ = 0.0;
-    fps_min_ = delay_min_ = 0.0;
+  void fillRightColorStatus(orbbec_camera::DeviceStatus &msg) {
+    fillStatus(msg.right_color_frame_rate_cur, msg.right_color_frame_rate_avg,
+               msg.right_color_frame_rate_min, msg.right_color_frame_rate_max,
+               msg.right_color_delay_ms_cur, msg.right_color_delay_ms_avg,
+               msg.right_color_delay_ms_min, msg.right_color_delay_ms_max);
   }
 
   void fillDepthStatus(orbbec_camera::DeviceStatus &msg) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    msg.depth_frame_rate_cur = last_fps_;
-    msg.depth_frame_rate_avg = frame_count_ > 0 ? fps_sum_ / frame_count_ : 0;
-    msg.depth_frame_rate_min = fps_min_;
-    msg.depth_frame_rate_max = fps_max_;
+    fillStatus(msg.depth_frame_rate_cur, msg.depth_frame_rate_avg, msg.depth_frame_rate_min,
+               msg.depth_frame_rate_max, msg.depth_delay_ms_cur, msg.depth_delay_ms_avg,
+               msg.depth_delay_ms_min, msg.depth_delay_ms_max);
+  }
 
-    msg.depth_delay_ms_cur = last_delay_ms_;
-    msg.depth_delay_ms_avg = frame_count_ > 0 ? delay_sum_ / frame_count_ : 0;
-    msg.depth_delay_ms_min = delay_min_;
-    msg.depth_delay_ms_max = delay_max_;
+  void fillLeftIrStatus(orbbec_camera::DeviceStatus &msg) {
+    fillStatus(msg.left_ir_frame_rate_cur, msg.left_ir_frame_rate_avg, msg.left_ir_frame_rate_min,
+               msg.left_ir_frame_rate_max, msg.left_ir_delay_ms_cur, msg.left_ir_delay_ms_avg,
+               msg.left_ir_delay_ms_min, msg.left_ir_delay_ms_max);
+  }
+
+  void fillRightIrStatus(orbbec_camera::DeviceStatus &msg) {
+    fillStatus(msg.right_ir_frame_rate_cur, msg.right_ir_frame_rate_avg,
+               msg.right_ir_frame_rate_min, msg.right_ir_frame_rate_max, msg.right_ir_delay_ms_cur,
+               msg.right_ir_delay_ms_avg, msg.right_ir_delay_ms_min, msg.right_ir_delay_ms_max);
+  }
+
+ private:
+  void fillStatus(double &frame_rate_cur, double &frame_rate_avg, double &frame_rate_min,
+                  double &frame_rate_max, double &delay_ms_cur, double &delay_ms_avg,
+                  double &delay_ms_min, double &delay_ms_max) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    frame_rate_cur = last_fps_;
+    frame_rate_avg = frame_count_ > 0 ? fps_sum_ / frame_count_ : 0;
+    frame_rate_min = frame_count_ > 0 ? fps_min_ : 0;
+    frame_rate_max = frame_count_ > 0 ? fps_max_ : 0;
+
+    delay_ms_cur = last_delay_ms_;
+    delay_ms_avg = frame_count_ > 0 ? delay_sum_ / frame_count_ : 0;
+    delay_ms_min = frame_count_ > 0 ? delay_min_ : 0;
+    delay_ms_max = frame_count_ > 0 ? delay_max_ : 0;
 
     last_delay_ms_ = 0.0;
     last_fps_ = 0.0;
@@ -97,7 +119,6 @@ class FpsDelayStatus {
     fps_min_ = delay_min_ = 0.0;
   }
 
- private:
   mutable std::mutex mutex_;
   u_int64_t last_stream_timestamp_{0};
   double last_delay_ms_{0.0};

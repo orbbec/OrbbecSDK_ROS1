@@ -18,7 +18,7 @@ namespace orbbec_camera {
 
 class FrameTimestampCsvLogger {
  public:
-  enum class OutputMode { SYNCED, COLOR, DEPTH };
+  enum class OutputMode { SYNCED, COLOR, LEFT_COLOR, RIGHT_COLOR, DEPTH, LEFT_IR, RIGHT_IR };
 
   FrameTimestampCsvLogger(bool drop_log_enabled, const std::string &csv_file_path);
   FrameTimestampCsvLogger(bool drop_log_enabled, const std::string &csv_file_path,

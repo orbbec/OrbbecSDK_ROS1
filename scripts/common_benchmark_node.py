@@ -293,10 +293,23 @@ class CameraMonitorNode:
 
         camera["prev_online"] = msg.device_online
 
-        self.update_stats(camera["stats"], "color_fps", msg.color_frame_rate_cur, msg.color_frame_rate_min, msg.color_frame_rate_max, msg.color_frame_rate_avg)
-        self.update_stats(camera["stats"], "color_delay", msg.color_delay_ms_cur, msg.color_delay_ms_min, msg.color_delay_ms_max, msg.color_delay_ms_avg)
-        self.update_stats(camera["stats"], "depth_fps", msg.depth_frame_rate_cur, msg.depth_frame_rate_min, msg.depth_frame_rate_max, msg.depth_frame_rate_avg)
-        self.update_stats(camera["stats"], "depth_delay", msg.depth_delay_ms_cur, msg.depth_delay_ms_min, msg.depth_delay_ms_max, msg.depth_delay_ms_avg)
+        for stream in MONITORED_STREAMS:
+            self.update_stats(
+                camera["stats"],
+                f"{stream}_fps",
+                getattr(msg, f"{stream}_frame_rate_cur"),
+                getattr(msg, f"{stream}_frame_rate_min"),
+                getattr(msg, f"{stream}_frame_rate_max"),
+                getattr(msg, f"{stream}_frame_rate_avg"),
+            )
+            self.update_stats(
+                camera["stats"],
+                f"{stream}_delay",
+                getattr(msg, f"{stream}_delay_ms_cur"),
+                getattr(msg, f"{stream}_delay_ms_min"),
+                getattr(msg, f"{stream}_delay_ms_max"),
+                getattr(msg, f"{stream}_delay_ms_avg"),
+            )
 
     def image_callback(self, msg, callback_args):
         camera_name, stream = callback_args
@@ -309,14 +322,7 @@ class CameraMonitorNode:
             if self.ideal_fps and self.ideal_fps > 0.0
             else camera["stats"][f"{stream}_fps"]["avg"]
         )
-        stamp, observed_fps = tracker.on_msg(msg.header, fps_to_use)
-
-        if stream not in ("color", "depth"):
-            if observed_fps is not None:
-                self.update_sample_stat(camera["stats"], f"{stream}_fps", observed_fps)
-            delay_ms = (rospy.Time.now().to_sec() - stamp) * 1000.0
-            if 0.0 <= delay_ms <= 60000.0:
-                self.update_sample_stat(camera["stats"], f"{stream}_delay", delay_ms)
+        tracker.on_msg(msg.header, fps_to_use)
 
     def update_stats(self, stats, key, cur, min_val, max_val, avg_val):
         if min_val <= 1e-3 or avg_val < 0:  # ignore invalid data
@@ -328,17 +334,6 @@ class CameraMonitorNode:
         s["avg"] = s["sum"] / s["count"] if s["count"] > 0 else 0.0
         s["min"] = min(s["min"], min_val)
         s["max"] = max(s["max"], max_val)
-
-    def update_sample_stat(self, stats, key, value):
-        if value is None or value < 0.0:
-            return
-        s = stats[key]
-        s["cur"] = value
-        s["count"] += 1
-        s["sum"] += value
-        s["avg"] = s["sum"] / s["count"]
-        s["min"] = min(s["min"], value)
-        s["max"] = max(s["max"], value)
 
     def update_sys_stat(self, stat_dict, value, online=True):
         stat_dict["cur"] = value

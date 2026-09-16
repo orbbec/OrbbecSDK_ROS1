@@ -104,10 +104,14 @@ class OBCameraNode {
 
   void getColorStatus(orbbec_camera::DeviceStatus &status_msg) {
     fps_delay_status_color_->fillColorStatus(status_msg);
+    fps_delay_status_left_color_->fillLeftColorStatus(status_msg);
+    fps_delay_status_right_color_->fillRightColorStatus(status_msg);
   }
 
   void getDepthStatus(orbbec_camera::DeviceStatus &status_msg) {
     fps_delay_status_depth_->fillDepthStatus(status_msg);
+    fps_delay_status_left_ir_->fillLeftIrStatus(status_msg);
+    fps_delay_status_right_ir_->fillRightIrStatus(status_msg);
   }
 
  private:
@@ -1044,7 +1048,11 @@ class OBCameraNode {
   std::unique_ptr<TimestampCsvLogger> timestamp_csv_logger_{nullptr};
 
   std::unique_ptr<FpsDelayStatus> fps_delay_status_color_{nullptr};
+  std::unique_ptr<FpsDelayStatus> fps_delay_status_left_color_{nullptr};
+  std::unique_ptr<FpsDelayStatus> fps_delay_status_right_color_{nullptr};
   std::unique_ptr<FpsDelayStatus> fps_delay_status_depth_{nullptr};
+  std::unique_ptr<FpsDelayStatus> fps_delay_status_left_ir_{nullptr};
+  std::unique_ptr<FpsDelayStatus> fps_delay_status_right_ir_{nullptr};
 
   std::string intra_camera_sync_reference_ = "";
   std::string ae_reference_stream_;
