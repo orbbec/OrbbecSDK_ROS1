@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 function:
-  Monitor the performance of an Orbbec camera node,
-  including frame rates, delays, CPU, and RAM usage.
+  Monitor subscriber-side frame rates, end-to-end delays, CPU and RAM usage,
+  and estimated frame loss for Orbbec camera topics.
 
 usage examples:
   # Run for 2 minutes, save results to a CSV file
@@ -14,6 +14,9 @@ usage examples:
 
   # Monitor multiple cameras and write one CSV row per timestamp
   3. rosrun orbbec_camera common_benchmark_node.py --camera_names camera,camera01
+
+  # Select streams or full compressed-image/point-cloud topics
+  4. rosrun orbbec_camera common_benchmark_node.py --topics color,depth
 
 Parameters:
   --run_time / _run_time: Set run time duration. Supports formats:
@@ -31,7 +34,7 @@ import csv
 import os
 from collections import defaultdict
 from orbbec_camera.msg import DeviceStatus
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage, Image, PointCloud2
 
 from tabulate import tabulate
 
@@ -39,11 +42,14 @@ CAMERA_NODE_NAMES = ["component_container", "orbbec_camera_node", "nodelet"]
 MONITORED_STREAMS = (
     "color",
     "depth",
+    "ir",
     "left_ir",
     "right_ir",
     "left_color",
     "right_color",
 )
+DISCOVERY_INTERVAL_SECONDS = 0.1
+DISCOVERY_DURATION_SECONDS = 1.0
 
 # ----------------tool functions----------------
 def parse_duration(s):
@@ -103,69 +109,78 @@ def estimate_dropped_frames(dt, expected_interval):
     return max(1, int(dt / expected_interval) - 1)
 # ----------------------------------------------
 
-# calculate packet loss and frames loss
 class TopicTracker:
-    def __init__(self):
-        self.last_seq = None
+    def __init__(self, sample_start_time=None):
         self.received = 0
-        self.lost = 0
-
-        self.last_time = None
+        self.sample_start_time = sample_start_time or time.monotonic()
+        self.last_sample_time = self.sample_start_time
+        self.last_sample_received = 0
+        self.last_header_stamp = None
+        self.estimated_interval = None
         self.drop_frames = 0
 
-    def on_msg(self, header, avg_fps):
-        seq = int(header.seq)
-        stamp = header.stamp.to_sec()
-        observed_fps = None
+    def on_msg(self, header, ros_receive_time, ideal_fps):
+        """Record a received message and return its age in milliseconds."""
+        header_stamp = header.stamp.to_sec()
+        self.received += 1
+        delay_ms = None
 
-        if self.last_seq is None:
-            self.last_seq = seq
-            self.last_time = stamp
-            self.received = 1
-            return stamp, observed_fps
+        if header_stamp > 0:
+            delay_ms = (ros_receive_time - header_stamp) * 1000.0
+            if self.last_header_stamp is not None:
+                header_dt = header_stamp - self.last_header_stamp
+                if header_dt > 0:
+                    expected_interval = (
+                        1.0 / ideal_fps
+                        if ideal_fps and ideal_fps > 0.0
+                        else self.estimated_interval
+                    )
+                    if expected_interval is not None:
+                        self.drop_frames += estimate_dropped_frames(
+                            header_dt, expected_interval
+                        )
+                    self.update_estimated_interval(header_dt)
+            self.last_header_stamp = header_stamp
 
-        if seq > self.last_seq:
-            missed = seq - self.last_seq - 1
-            if missed > 0:
-                self.lost += missed
-            self.received += 1
-        elif seq == self.last_seq:
-            # duplicate seq, ignore
-            rospy.logwarn(f"Duplicate seq: {seq}")
-        elif seq < self.last_seq:
-            rospy.logwarn(f"Out-of-order seq: last_seq={self.last_seq}, current_seq={seq}")
+        return delay_ms
 
-        if self.last_time is not None:
-            dt = stamp - self.last_time
-            if dt > 0:
-                observed_fps = 1.0 / dt
-                if avg_fps > 0:
-                    expected_interval = 1.0 / avg_fps
-                    self.drop_frames += estimate_dropped_frames(dt, expected_interval)
+    def sample_fps(self, sample_time):
+        window_elapsed = sample_time - self.last_sample_time
+        total_elapsed = sample_time - self.sample_start_time
+        if window_elapsed <= 0.0 or total_elapsed <= 0.0:
+            return None
 
-        self.last_seq = seq
-        self.last_time = stamp
-        return stamp, observed_fps
+        window_received = self.received - self.last_sample_received
+        current_fps = window_received / window_elapsed
+        average_fps = self.received / total_elapsed
+        self.last_sample_time = sample_time
+        self.last_sample_received = self.received
+        return current_fps, average_fps
 
-    def packet_loss_rate(self):
-        denom = self.lost + self.received
-        if denom <= 0:
-            return 0.0
-        return float(self.lost) / denom
+    def update_estimated_interval(self, interval):
+        if self.estimated_interval is None or interval < 0.75 * self.estimated_interval:
+            self.estimated_interval = interval
+        elif interval <= 1.5 * self.estimated_interval:
+            self.estimated_interval = 0.9 * self.estimated_interval + 0.1 * interval
 
     def frames_loss_rate(self):
-      total = self.received + self.drop_frames
-      if total == 0:
-          return 0.0
-      return float(self.drop_frames) / total
-
-    def reset(self):
-      self.__init__()
+        total = self.received + self.drop_frames
+        if total == 0:
+            return 0.0
+        return float(self.drop_frames) / total
 
 class CameraMonitorNode:
-    def __init__(self, run_time, csv_file="camera_monitor_log.csv", camera_names=None, ideal_fps=0.0):
+    def __init__(
+        self,
+        run_time,
+        csv_file="camera_monitor_log.csv",
+        camera_names=None,
+        ideal_fps=0.0,
+        topics=None,
+    ):
         self.run_time = run_time
-        self.start_time = time.time()
+        self.discovery_start_time = time.time()
+        self.start_time = None
         self.process = psutil.Process(os.getpid())
         self.first_data_collected = False
         self.camera_names = parse_camera_names(camera_names)
@@ -183,31 +198,173 @@ class CameraMonitorNode:
                 "stats": defaultdict(make_stat),
                 "cpu_stats": make_stat(),
                 "ram_stats": make_stat(),
-                "trackers": {stream: TopicTracker() for stream in MONITORED_STREAMS}
+                "trackers": {},
             }
 
         self.total_cpu_stats = make_stat()
         self.total_ram_stats = make_stat()
+        self.status_subscriptions = []
+        self.topic_subscriptions = {}
+        self.topic_configs = {}
+        self.requested_streams = self.parse_requested_topics(topics)
 
         # CSV
         self.csv_file = csv_file
-        self.csv_fh = open(self.csv_file, "w")
+        self.csv_fh = open(self.csv_file, "w", newline="")
         self.csv_writer = csv.writer(self.csv_fh)
-        self.csv_writer.writerow(self.build_csv_header())
 
         for camera_name in self.camera_names:
             ns = self.camera_namespace(camera_name)
-            rospy.Subscriber(f"{ns}/device_status", DeviceStatus, self.status_callback, callback_args=camera_name)
-            for stream in MONITORED_STREAMS:
+            self.status_subscriptions.append(
                 rospy.Subscriber(
-                    f"{ns}/{stream}/image_raw",
-                    Image,
-                    self.image_callback,
-                    callback_args=(camera_name, stream),
+                    f"{ns}/device_status",
+                    DeviceStatus,
+                    self.status_callback,
+                    callback_args=camera_name,
                 )
+            )
+
+        selected_topics = self.requested_streams or self.discover_published_image_streams()
+        self.finish_topic_discovery(selected_topics)
 
     def camera_namespace(self, camera_name):
         return "/" + camera_name.strip("/")
+
+    def image_topic_name(self, camera_name, stream):
+        return f"{self.camera_namespace(camera_name)}/{stream}/image_raw"
+
+    def make_raw_image_config(self, camera_name, stream):
+        return {
+            "camera_name": camera_name,
+            "topic_id": stream,
+            "topic_name": self.image_topic_name(camera_name, stream),
+            "msg_type": Image,
+        }
+
+    def parse_full_topic(self, topic_name):
+        normalized_topic = "/" + topic_name.strip("/")
+        for camera_name in self.camera_names:
+            namespace_prefix = self.camera_namespace(camera_name) + "/"
+            if not normalized_topic.startswith(namespace_prefix):
+                continue
+
+            relative_name = normalized_topic[len(namespace_prefix):]
+            for stream in MONITORED_STREAMS:
+                raw_name = f"{stream}/image_raw"
+                if relative_name == raw_name:
+                    return self.make_raw_image_config(camera_name, stream)
+                if relative_name == f"{raw_name}/compressed":
+                    return {
+                        "camera_name": camera_name,
+                        "topic_id": f"{stream}_compressed",
+                        "topic_name": normalized_topic,
+                        "msg_type": CompressedImage,
+                    }
+                if relative_name == f"{raw_name}/compressedDepth":
+                    return {
+                        "camera_name": camera_name,
+                        "topic_id": f"{stream}_compressed_depth",
+                        "topic_name": normalized_topic,
+                        "msg_type": CompressedImage,
+                    }
+
+            point_cloud_ids = {
+                "depth/points": "depth_points",
+                "depth_registered/points": "depth_registered_points",
+            }
+            if relative_name in point_cloud_ids:
+                return {
+                    "camera_name": camera_name,
+                    "topic_id": point_cloud_ids[relative_name],
+                    "topic_name": normalized_topic,
+                    "msg_type": PointCloud2,
+                }
+        return None
+
+    def parse_requested_topics(self, topics):
+        if not topics:
+            return {}
+
+        selected = {}
+        for raw_value in str(topics).replace(";", ",").split(","):
+            value = raw_value.strip()
+            if not value:
+                continue
+            if value in MONITORED_STREAMS:
+                for camera_name in self.camera_names:
+                    config = self.make_raw_image_config(camera_name, value)
+                    selected[(camera_name, config["topic_id"])] = config
+                continue
+
+            config = self.parse_full_topic(value)
+            if config is None:
+                raise ValueError(
+                    f"Unsupported topic '{value}'. Specify a raw or compressed image topic, "
+                    "or a depth/points or depth_registered/points topic under a configured "
+                    "camera namespace."
+                )
+            selected[(config["camera_name"], config["topic_id"])] = config
+        return selected
+
+    def find_published_image_streams(self):
+        published_topic_names = {name for name, _ in rospy.get_published_topics()}
+        published_streams = {}
+        for camera_name in self.camera_names:
+            for stream in MONITORED_STREAMS:
+                config = self.make_raw_image_config(camera_name, stream)
+                if config["topic_name"] in published_topic_names:
+                    published_streams[(camera_name, stream)] = config
+        return published_streams
+
+    def discover_published_image_streams(self):
+        discovered_streams = {}
+        discovery_start = time.monotonic()
+        while not rospy.is_shutdown():
+            discovered_streams.update(self.find_published_image_streams())
+            if time.monotonic() - discovery_start >= DISCOVERY_DURATION_SECONDS:
+                break
+            rospy.sleep(DISCOVERY_INTERVAL_SECONDS)
+        return discovered_streams
+
+    def finish_topic_discovery(self, selected_streams):
+        self.topic_configs = dict(selected_streams)
+        sample_start_time = time.monotonic()
+        for key, config in self.topic_configs.items():
+            camera_name = config["camera_name"]
+            topic_id = config["topic_id"]
+            self.cameras[camera_name]["trackers"][topic_id] = TopicTracker(sample_start_time)
+            self.topic_subscriptions[key] = rospy.Subscriber(
+                config["topic_name"],
+                config["msg_type"],
+                self.topic_callback,
+                callback_args=(camera_name, topic_id),
+            )
+
+        self.csv_writer.writerow(self.build_csv_header())
+        self.csv_fh.flush()
+        self.start_time = time.time()
+
+    def topics_for_camera(self, camera_name):
+        return [
+            config
+            for config in self.topic_configs.values()
+            if config["camera_name"] == camera_name
+        ]
+
+    def update_topic_fps_stats(self):
+        sample_time = time.monotonic()
+        for config in self.topic_configs.values():
+            camera = self.cameras[config["camera_name"]]
+            topic_id = config["topic_id"]
+            fps_sample = camera["trackers"][topic_id].sample_fps(sample_time)
+            if fps_sample is None:
+                continue
+            current_fps, average_fps = fps_sample
+            self.update_sample_stat(
+                camera["stats"][f"{topic_id}_fps"],
+                current_fps,
+                average=average_fps,
+            )
 
     def cmdline_has_camera_namespace(self, cmdline_args, camera_name):
         ns = self.camera_namespace(camera_name)
@@ -293,47 +450,27 @@ class CameraMonitorNode:
 
         camera["prev_online"] = msg.device_online
 
-        for stream in MONITORED_STREAMS:
-            self.update_stats(
-                camera["stats"],
-                f"{stream}_fps",
-                getattr(msg, f"{stream}_frame_rate_cur"),
-                getattr(msg, f"{stream}_frame_rate_min"),
-                getattr(msg, f"{stream}_frame_rate_max"),
-                getattr(msg, f"{stream}_frame_rate_avg"),
-            )
-            self.update_stats(
-                camera["stats"],
-                f"{stream}_delay",
-                getattr(msg, f"{stream}_delay_ms_cur"),
-                getattr(msg, f"{stream}_delay_ms_min"),
-                getattr(msg, f"{stream}_delay_ms_max"),
-                getattr(msg, f"{stream}_delay_ms_avg"),
-            )
-
-    def image_callback(self, msg, callback_args):
-        camera_name, stream = callback_args
-        if stream not in MONITORED_STREAMS:
-            return
+    def topic_callback(self, msg, callback_args):
+        camera_name, topic_id = callback_args
+        self.first_data_collected = True
         camera = self.cameras[camera_name]
-        tracker = camera["trackers"][stream]
-        fps_to_use = (
-            self.ideal_fps
-            if self.ideal_fps and self.ideal_fps > 0.0
-            else camera["stats"][f"{stream}_fps"]["avg"]
+        camera["data_collected"] = True
+        tracker = camera["trackers"][topic_id]
+        delay_ms = tracker.on_msg(
+            msg.header,
+            rospy.Time.now().to_sec(),
+            self.ideal_fps,
         )
-        tracker.on_msg(msg.header, fps_to_use)
+        if delay_ms is not None:
+            self.update_sample_stat(camera["stats"][f"{topic_id}_delay"], delay_ms)
 
-    def update_stats(self, stats, key, cur, min_val, max_val, avg_val):
-        if min_val <= 1e-3 or avg_val < 0:  # ignore invalid data
-            return
-        s = stats[key]
-        s["cur"] = (cur)
-        s["count"] += 1
-        s["sum"] += avg_val
-        s["avg"] = s["sum"] / s["count"] if s["count"] > 0 else 0.0
-        s["min"] = min(s["min"], min_val)
-        s["max"] = max(s["max"], max_val)
+    def update_sample_stat(self, stat, value, average=None):
+        stat["cur"] = value
+        stat["count"] += 1
+        stat["sum"] += value
+        stat["avg"] = average if average is not None else stat["sum"] / stat["count"]
+        stat["min"] = min(stat["min"], value)
+        stat["max"] = max(stat["max"], value)
 
     def update_sys_stat(self, stat_dict, value, online=True):
         stat_dict["cur"] = value
@@ -354,6 +491,7 @@ class CameraMonitorNode:
             if elapsed > self.run_time:
                 break
 
+            self.update_topic_fps_stats()
             camera_sys_stats, total_cpu, total_ram, self.total_node_name = self.get_camera_stats()
             for camera_name in self.camera_names:
                 camera = self.cameras[camera_name]
@@ -379,7 +517,7 @@ class CameraMonitorNode:
     def log_to_csv(self, elapsed):
         row = [round(elapsed, 2)]
         for camera_name in self.camera_names:
-            row.extend(self.build_camera_csv_values(self.cameras[camera_name]))
+            row.extend(self.build_camera_csv_values(camera_name, self.cameras[camera_name]))
 
         row.extend([
             round(self.total_cpu_stats["cur"], 2), round(self.total_cpu_stats["avg"], 2),
@@ -391,32 +529,42 @@ class CameraMonitorNode:
 
     def build_csv_header(self):
         header = ["time(s)"]
-        camera_fields = ["connection_type", "status_online", "disconnects"]
-        for stream in MONITORED_STREAMS:
-            camera_fields.extend(
+        for camera_name in self.camera_names:
+            header.extend(
                 [
-                    f"{stream}_fps_cur",
-                    f"{stream}_fps_avg",
-                    f"{stream}_fps_min",
-                    f"{stream}_fps_max",
-                    f"{stream}_delay_cur",
-                    f"{stream}_delay_avg",
-                    f"{stream}_delay_min",
-                    f"{stream}_delay_max",
-                    f"{stream}_packet_loss",
-                    f"{stream}_packet_loss_rate(%)",
-                    f"{stream}_frames_loss",
-                    f"{stream}_frames_loss_rate(%)",
+                    f"{camera_name}_connection_type",
+                    f"{camera_name}_status_online",
+                    f"{camera_name}_disconnects",
                 ]
             )
-        camera_fields.extend(
-            [
-                "cpu_cur", "cpu_avg", "cpu_min", "cpu_max",
-                "ram_cur", "ram_avg", "ram_min", "ram_max",
-            ]
-        )
-        for camera_name in self.camera_names:
-            header.extend([f"{camera_name}_{field}" for field in camera_fields])
+            for config in self.topics_for_camera(camera_name):
+                topic_id = config["topic_id"]
+                header.extend(
+                    [
+                        f"{camera_name}_{topic_id}_fps_cur",
+                        f"{camera_name}_{topic_id}_fps_avg",
+                        f"{camera_name}_{topic_id}_fps_min",
+                        f"{camera_name}_{topic_id}_fps_max",
+                        f"{camera_name}_{topic_id}_delay_cur",
+                        f"{camera_name}_{topic_id}_delay_avg",
+                        f"{camera_name}_{topic_id}_delay_min",
+                        f"{camera_name}_{topic_id}_delay_max",
+                        f"{camera_name}_{topic_id}_sub_lost_count",
+                        f"{camera_name}_{topic_id}_sub_lost_rate(%)",
+                    ]
+                )
+            header.extend(
+                [
+                    f"{camera_name}_cpu_cur",
+                    f"{camera_name}_cpu_avg",
+                    f"{camera_name}_cpu_min",
+                    f"{camera_name}_cpu_max",
+                    f"{camera_name}_ram_cur",
+                    f"{camera_name}_ram_avg",
+                    f"{camera_name}_ram_min",
+                    f"{camera_name}_ram_max",
+                ]
+            )
 
         header.extend([
             "total_cpu_cur", "total_cpu_avg", "total_cpu_min", "total_cpu_max",
@@ -424,7 +572,7 @@ class CameraMonitorNode:
         ])
         return header
 
-    def build_camera_csv_values(self, camera):
+    def build_camera_csv_values(self, camera_name, camera):
         def safe(k):
             v = camera["stats"].get(k, {})
             return (
@@ -439,17 +587,16 @@ class CameraMonitorNode:
             camera["prev_online"],
             camera["disconnect_count"],
         ]
-        for stream in MONITORED_STREAMS:
-            tracker = camera["trackers"][stream]
+        for config in self.topics_for_camera(camera_name):
+            topic_id = config["topic_id"]
+            tracker = camera["trackers"][topic_id]
             if camera["prev_online"]:
-                values.extend(safe(f"{stream}_fps"))
-                values.extend(safe(f"{stream}_delay"))
+                values.extend(safe(f"{topic_id}_fps"))
+                values.extend(safe(f"{topic_id}_delay"))
             else:
                 values.extend(["N/A"] * 8)
             values.extend(
                 [
-                    tracker.lost,
-                    round(tracker.packet_loss_rate() * 100.0, 3),
                     tracker.drop_frames,
                     round(tracker.frames_loss_rate() * 100.0, 3),
                 ]
@@ -494,28 +641,31 @@ class CameraMonitorNode:
         rows = []
         for camera_name in self.camera_names:
             camera = self.cameras[camera_name]
-            for stream in MONITORED_STREAMS:
-                fps_key = f"{stream}_fps"
-                delay_key = f"{stream}_delay"
-                topic_name = f"/{camera_name}/{stream}/image_raw"
+            for config in self.topics_for_camera(camera_name):
+                topic_id = config["topic_id"]
+                fps_key = f"{topic_id}_fps"
+                delay_key = f"{topic_id}_delay"
+                topic_name = config["topic_name"]
 
                 if not camera["prev_online"]:
-                    rows.append([camera_name, topic_name, *["N/A"] * 12])
+                    rows.append([camera_name, topic_name, *["N/A"] * 10])
                 else:
                     fps_vals = format_stats(camera["stats"][fps_key])
                     delay_vals = format_stats(camera["stats"][delay_key])
 
-                    tracker = camera["trackers"][stream]
-                    packet_loss = tracker.lost
-                    packet_loss_rate = round(tracker.packet_loss_rate() * 100.0, 3)
+                    tracker = camera["trackers"][topic_id]
                     frames_loss = tracker.drop_frames
                     frames_loss_rate = round(tracker.frames_loss_rate() * 100.0, 3)
-                    rows.append([camera_name, topic_name, *fps_vals, *delay_vals, packet_loss, packet_loss_rate, frames_loss, frames_loss_rate])
+                    rows.append([camera_name, topic_name, *fps_vals, *delay_vals, frames_loss, frames_loss_rate])
 
-        header_bottom = ["Camera", "Topic", "fps_cur", "fps_avg", "fps_min", "fps_max", "delay_cur(ms)", "delay_avg(ms)", "delay_min(ms)", "delay_max(ms)", "Sub_lost_count", "Sub_lost_rate(%)", "Pub_lost_count", "Pub_lost_rate(%)"]
+        header_bottom = [
+            "Camera", "Topic", "fps_cur", "fps_avg", "fps_min", "fps_max",
+            "delay_cur(ms)", "delay_avg(ms)", "delay_min(ms)", "delay_max(ms)",
+            "Sub_lost_count", "Sub_lost_rate(%)",
+        ]
 
         os.system("clear")
-        print("Orbbec Camera Benchmark\n")
+        print("Orbbec Camera Subscriber Benchmark\n")
         print(tabulate([header_bottom] + rows, tablefmt="fancy_grid"))
 
         sys_rows = []
@@ -551,7 +701,16 @@ if __name__ == "__main__":
     parser.add_argument("--run_time", type=str, default=None, help="Total run time for monitoring, e.g., 10s, 5m, 1h. Default is 10 seconds.")
     parser.add_argument("--csv_file", type=str, default=None)
     parser.add_argument("--camera_names", type=str, default=None, help="Comma-separated camera namespaces, e.g., camera,camera01,camera02.")
-    parser.add_argument("--ideal_fps", type=float, default=None, help="Optional ideal frame rate to use for drop detection.")
+    parser.add_argument("--ideal_fps", type=float, default=None, help="Optional ideal frame rate for subscriber-side drop detection.")
+    parser.add_argument(
+        "--topics",
+        type=str,
+        default=None,
+        help=(
+            "Comma-separated raw stream names or full raw/compressed image and point cloud "
+            "topics. Automatic discovery only selects raw image topics."
+        ),
+    )
     args, unknown = parser.parse_known_args()
 
     rospy.init_node("camera_monitor_node")
@@ -561,6 +720,13 @@ if __name__ == "__main__":
     csv_file = args.csv_file if args.csv_file is not None else rospy.get_param("~csv_file", "camera_monitor_log.csv")
     camera_names = args.camera_names if args.camera_names is not None else rospy.get_param("~camera_names", "camera")
     ideal_fps = args.ideal_fps if args.ideal_fps is not None else rospy.get_param("~ideal_fps", 0.0)
+    topics = args.topics if args.topics is not None else rospy.get_param("~topics", "")
 
-    monitor = CameraMonitorNode(run_time, csv_file, camera_names=camera_names, ideal_fps=ideal_fps)
+    monitor = CameraMonitorNode(
+        run_time,
+        csv_file,
+        camera_names=camera_names,
+        ideal_fps=ideal_fps,
+        topics=topics,
+    )
     monitor.run()
