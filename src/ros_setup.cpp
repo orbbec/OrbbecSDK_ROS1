@@ -2124,11 +2124,11 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         spatial_filter->setFilterParams(params);
       }
       auto current_params = spatial_filter->getFilterParams();
-      ROS_INFO_STREAM("Current SpatialFilter params: "
-                      << "alpha=" << current_params.alpha
-                      << ", disp_diff=" << current_params.disp_diff
-                      << ", magnitude=" << static_cast<int>(current_params.magnitude)
-                      << ", radius=" << current_params.radius);
+      ROS_INFO_STREAM("Current SpatialFilter params: " << "alpha=" << current_params.alpha
+                                                       << ", disp_diff=" << current_params.disp_diff
+                                                       << ", magnitude="
+                                                       << static_cast<int>(current_params.magnitude)
+                                                       << ", radius=" << current_params.radius);
     } else if (filter_name == "TemporalFilter" && enable_temporal_filter_) {
       auto temporal_filter = filter->as<ob::TemporalFilter>();
       if (temporal_filter_diff_threshold_ != -1 && temporal_filter_weight_ != -1) {
@@ -2170,10 +2170,10 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       uint32_t hdr_config_size = sizeof(hdr_config);
       device_->getStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG,
                                  reinterpret_cast<uint8_t*>(&hdr_config), &hdr_config_size);
-      ROS_INFO_STREAM("Current HDRMerge params: "
-                      << "exposure_1=" << hdr_config.exposure_1 << ", gain_1=" << hdr_config.gain_1
-                      << ", exposure_2=" << hdr_config.exposure_2
-                      << ", gain_2=" << hdr_config.gain_2);
+      ROS_INFO_STREAM("Current HDRMerge params: " << "exposure_1=" << hdr_config.exposure_1
+                                                  << ", gain_1=" << hdr_config.gain_1
+                                                  << ", exposure_2=" << hdr_config.exposure_2
+                                                  << ", gain_2=" << hdr_config.gain_2);
     } else if (filter_name == "SpatialFastFilter" && enable_spatial_fast_filter_) {
       auto spatial_fast_filter = filter->as<ob::SpatialFastFilter>();
       OBSpatialFastFilterParams params{};
@@ -2718,22 +2718,35 @@ void OBCameraNode::setupDevices() {
           ROS_INFO_STREAM("Current color denoising level: "
                           << device_->getIntProperty(OB_PROP_COLOR_DENOISING_LEVEL_INT)));
     }
-    if (!color_powerline_freq_.empty() &&
-        device_->isPropertySupported(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, OB_PERMISSION_WRITE)) {
-      if (color_powerline_freq_ == "disable") {
-        TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 0);
-      } else if (color_powerline_freq_ == "50hz") {
-        TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 1);
-      } else if (color_powerline_freq_ == "60hz") {
-        TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 2);
-      } else if (color_powerline_freq_ == "auto") {
-        TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, 3);
+    if (!color_powerline_freq_.empty()) {
+      const auto normalized_color_powerline_freq = lowerFilterConfigValue(color_powerline_freq_);
+      int color_powerline_freq_value = -1;
+      if (normalized_color_powerline_freq == "disable") {
+        color_powerline_freq_value = 0;
+      } else if (normalized_color_powerline_freq == "50hz") {
+        color_powerline_freq_value = 1;
+      } else if (normalized_color_powerline_freq == "60hz") {
+        color_powerline_freq_value = 2;
+      } else if (normalized_color_powerline_freq == "auto") {
+        color_powerline_freq_value = 3;
+      } else {
+        ROS_WARN_STREAM("Invalid parameter color_powerline_freq '"
+                        << color_powerline_freq_
+                        << "'. Valid values: 'disable', '50hz', '60hz', 'auto'. Skip setting.");
+        color_powerline_freq_.clear();
       }
-      TRY_EXECUTE_BLOCK({
-        const auto current_freq = device_->getIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT);
-        ROS_INFO_STREAM(
-            "Current color powerline freq: " << colorPowerLineFrequencyToString(current_freq));
-      });
+      if (color_powerline_freq_value >= 0 &&
+          device_->isPropertySupported(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT,
+                                       OB_PERMISSION_WRITE)) {
+        color_powerline_freq_ = normalized_color_powerline_freq;
+        TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT,
+                            color_powerline_freq_value);
+        TRY_EXECUTE_BLOCK({
+          const auto current_freq = device_->getIntProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT);
+          ROS_INFO_STREAM(
+              "Current color powerline freq: " << colorPowerLineFrequencyToString(current_freq));
+        });
+      }
     }
     if (should_apply_launch_config("enable_color_auto_exposure") &&
         device_->isPropertySupported(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
