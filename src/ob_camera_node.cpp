@@ -888,9 +888,9 @@ void OBCameraNode::getParameters() {
 
   enable_sync_host_time_ = nh_private_.param<bool>("enable_sync_host_time", true);
   ROS_INFO_STREAM("enable_sync_host_time:" << (enable_sync_host_time_ ? "true" : "false"));
-  if (enable_sync_host_time_ && !isOpenNIDevice(device_info_->pid()) && !is_playback_device_) {
+  if (!isOpenNIDevice(device_info_->pid()) && !is_playback_device_) {
     device_->timerSyncWithHost();
-    if (time_domain_ != "global") {
+    if (enable_sync_host_time_ && time_domain_ != "global") {
       device_->enableGlobalTimestamp(false);
       sync_host_time_timer_ =
           nh_private_.createTimer(ros::Duration(60.0), [this](const ros::TimerEvent&) {
