@@ -150,7 +150,8 @@ void listSensorProfiles(const std::shared_ptr<ob::Device>& device) {
                   << " | width: " << profile->getDecimationConfig().originWidth
                   << " height: " << profile->getDecimationConfig().originHeight
                   << " downscale:" << profile->getDecimationConfig().factor << std::endl;
-      } else if (sensor->type() == OB_SENSOR_COLOR || sensor->type() == OB_SENSOR_DEPTH ||
+      } else if (sensor->type() == OB_SENSOR_COLOR || sensor->type() == OB_SENSOR_COLOR_LEFT ||
+                 sensor->type() == OB_SENSOR_COLOR_RIGHT || sensor->type() == OB_SENSOR_DEPTH ||
                  sensor->type() == OB_SENSOR_IR || sensor->type() == OB_SENSOR_IR_LEFT ||
                  sensor->type() == OB_SENSOR_IR_RIGHT) {
         auto profile = origin_profile->as<ob::VideoStreamProfile>();
