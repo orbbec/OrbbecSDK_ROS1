@@ -1,12 +1,21 @@
+uint8 TRIGGER_MODE_IMMEDIATE=0
+uint8 TRIGGER_MODE_DELAYED=1
+uint8 TRIGGER_MODE_TIMESTAMP=2
+
 uint32 device_key
 uint32 group_key
 uint32 group_mask
 # IPv4 destination. Leave empty to use the SDK broadcast address (255.255.255.255).
-string destination_ip
-# GVCP/PTP timestamp: upper 32 bits are seconds and lower 32 bits are nanoseconds.
-# Zero sends the command immediately.
+string broadcast_ip
+# Select immediate, relative-delay, or absolute-PTP-time triggering.
+uint8 trigger_mode
+# Used only with TRIGGER_MODE_DELAYED. Must be positive.
+uint32 delay_ms
+# Used only with TRIGGER_MODE_TIMESTAMP. Upper 32 bits are seconds and lower 32 bits are nanoseconds.
 uint64 scheduled_time
 ---
 # Success means that the SDK dispatched the command; Action Command has no device acknowledgment.
 bool success
+# Exact GVCP/PTP value sent to the SDK. Zero is used for an immediate command.
+uint64 encoded_scheduled_time
 string message

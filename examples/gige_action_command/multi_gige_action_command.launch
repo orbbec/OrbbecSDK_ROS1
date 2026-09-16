@@ -14,6 +14,7 @@
         <arg name="ip_address" value="$(arg camera1_ip)"/>
         <arg name="port" value="$(arg camera_port)"/>
         <arg name="sync_mode" value="group_actions"/>
+        <arg name="enable_ptp_config" value="true"/>
         <arg name="log_file_name" value="camera_01.log"/>
     </include>
 
@@ -24,6 +25,7 @@
         <arg name="ip_address" value="$(arg camera2_ip)"/>
         <arg name="port" value="$(arg camera_port)"/>
         <arg name="sync_mode" value="group_actions"/>
+        <arg name="enable_ptp_config" value="true"/>
         <arg name="log_file_name" value="camera_02.log"/>
     </include>
 </launch>
