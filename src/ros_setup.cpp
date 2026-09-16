@@ -3604,6 +3604,15 @@ void OBCameraNode::syncSoftwareAlignment() {
       align_filter_->setMatchTargetResolution(true);
       ROS_INFO_STREAM("SW D2C align output resolution will match target stream resolution");
     }
+    if (align_target_stream_ != OB_STREAM_COLOR) {
+      if (depth_unaligned_publisher_) {
+        depth_unaligned_publisher_.shutdown();
+      }
+      if (depth_unaligned_raw_publisher_) {
+        depth_unaligned_raw_publisher_.shutdown();
+      }
+      return;
+    }
     if (!depth_unaligned_publisher_ && !depth_unaligned_raw_publisher_) {
       ros::SubscriberStatusCallback depth_unaligned_subscribed_cb =
           boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
