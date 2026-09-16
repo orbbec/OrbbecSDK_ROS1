@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="gemini_435_Le">
+  <xacro:property name="mesh_path" value="package://orbbec_camera/meshes/gemini435Le/" />
+
+  <!--
+    The root link owns the complete physical model. Sensor links below are
+    coordinate frames only, so their geometry, collision, mass, and inertia
+    are not counted repeatedly.
+  -->
+  <link name="camera_screw_frame">
+    <inertial>
+      <origin xyz="0.00362974814795868 0.0327239520253598 0.0201570762447024" rpy="0 0 0" />
+      <mass value="0.52" />
+      <inertia
+        ixx="0.000996547989654272"
+        ixy="-1.27347531187977E-05"
+        ixz="-6.37274993760709E-08"
+        iyy="0.000114258647753823"
+        iyz="2.49203178977503E-06"
+        izz="0.000945634655484896" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="${mesh_path}camera_screw_frame.STL" />
+      </geometry>
+      <material name="camera_body">
+        <color rgba="0.501960784313725 0.250980392156863 0.250980392156863 1" />
+      </material>
+    </visual>
+    <!-- Primitive collision avoids using a high-triangle-count dynamic mesh. -->
+    <collision>
+      <origin xyz="0.0024025 0.03375 0.0202" rpy="0 0 0" />
+      <geometry>
+        <box size="0.075505 0.1384 0.0404" />
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="camera_link" />
+  <joint name="camera_link_joint" type="fixed">
+    <origin xyz="0.0354680400000002 0.0811997 0.0201999999999996" rpy="0 0 0" />
+    <parent link="camera_screw_frame" />
+    <child link="camera_link" />
+  </joint>
+
+  <link name="camera_depth_frame" />
+  <joint name="camera_depth_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="camera_link" />
+    <child link="camera_depth_frame" />
+  </joint>
+
+  <link name="camera_IMU_frame" />
+  <joint name="camera_IMU_joint" type="fixed">
+    <origin xyz="-0.0550580400000001 -0.0152696999999998 9.99999999999141E-05" rpy="0 0 0" />
+    <parent link="camera_depth_frame" />
+    <child link="camera_IMU_frame" />
+  </joint>
+
+  <link name="camera_color_frame" />
+  <joint name="camera_color_joint" type="fixed">
+    <origin xyz="0 -0.0237497 0" rpy="0 0 0" />
+    <parent link="camera_depth_frame" />
+    <child link="camera_color_frame" />
+  </joint>
+
+  <link name="camera_color_optical_frame" />
+  <joint name="camera_color_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.57079632679489 0 -1.5707963267949" />
+    <parent link="camera_color_frame" />
+    <child link="camera_color_optical_frame" />
+  </joint>
+
+  <link name="camera_left_ir_frame" />
+  <joint name="camera_left_ir_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="camera_depth_frame" />
+    <child link="camera_left_ir_frame" />
+  </joint>
+
+  <link name="camera_left_ir_optical_frame" />
+  <joint name="camera_left_ir_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.57079632679489 0 -1.5707963267949" />
+    <parent link="camera_left_ir_frame" />
+    <child link="camera_left_ir_optical_frame" />
+  </joint>
+
+  <link name="camera_right_ir_frame" />
+  <joint name="camera_right_ir_joint" type="fixed">
+    <origin xyz="0 -0.0949976 0" rpy="0 0 0" />
+    <parent link="camera_depth_frame" />
+    <child link="camera_right_ir_frame" />
+  </joint>
+
+  <link name="camera_right_ir_optical_frame" />
+  <joint name="camera_right_ir_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.57079632679489 0 -1.5707963267949" />
+    <parent link="camera_right_ir_frame" />
+    <child link="camera_right_ir_optical_frame" />
+  </joint>
+
+  <link name="camera_depth_optical_frame" />
+  <joint name="camera_depth_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.57079632679489 0 -1.5707963267949" />
+    <parent link="camera_depth_frame" />
+    <child link="camera_depth_optical_frame" />
+  </joint>
+</robot>

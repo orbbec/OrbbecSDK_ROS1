@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="gemini_435_Le">
+  <xacro:include filename="gemini_435_Le.urdf.xacro" />
+
+  <!-- Define a virtual root link for model tests and robot mounting. -->
+  <link name="base_link" />
+  <joint name="base_link_to_camera_screw_frame" type="fixed">
+    <parent link="base_link" />
+    <child link="camera_screw_frame" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+</robot>
