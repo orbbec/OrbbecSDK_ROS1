@@ -41,6 +41,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <queue>
+#include <stdexcept>
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -65,6 +66,11 @@
 #include <diagnostic_updater/diagnostic_updater.h>
 
 namespace orbbec_camera {
+class StreamConfigurationError : public std::runtime_error {
+ public:
+  explicit StreamConfigurationError(const std::string &message) : std::runtime_error(message) {}
+};
+
 class OBCameraNode {
  public:
   OBCameraNode(ros::NodeHandle &nh, ros::NodeHandle &nh_private, std::shared_ptr<ob::Device> device,

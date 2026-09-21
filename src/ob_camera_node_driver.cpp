@@ -522,6 +522,10 @@ void OBCameraNodeDriver::initializeBagPlayback() {
 }
 
 void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &device) {
+  if (stream_configuration_error_.load()) {
+    return;
+  }
+
   auto start_time = std::chrono::high_resolution_clock::now();
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (device_) {
@@ -559,8 +563,17 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     ob_lidar_node_.reset();
   }
   if (device_type_ == "camera") {
-    ob_camera_node_ =
-        std::make_shared<OBCameraNode>(nh_, nh_private_, device_, playback_device_ != nullptr);
+    try {
+      ob_camera_node_ =
+          std::make_shared<OBCameraNode>(nh_, nh_private_, device_, playback_device_ != nullptr);
+    } catch (const StreamConfigurationError &e) {
+      if (!stream_configuration_error_.exchange(true)) {
+        ROS_ERROR_STREAM("Invalid stream configuration; shutting down: " << e.what());
+        ros::shutdown();
+      }
+      device_connected_ = false;
+      throw;
+    }
 
     if (!upgrade_firmware_.empty()) {
       bool is_second_update = is_reupdating_.load();
@@ -685,6 +698,9 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
 
 void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceList> &list) {
   ROS_INFO_STREAM("Device connect callback triggered");
+  if (stream_configuration_error_.load()) {
+    return;
+  }
   CHECK_NOTNULL(list.get());
   {
     std::unique_lock<decltype(reset_device_lock_)> reset_lock(reset_device_lock_);
@@ -715,7 +731,7 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
                                     [this](int *) { pthread_mutex_unlock(orb_device_lock_); });
 
     // check device connected flag again after get lock
-    if (device_connected_) {
+    if (device_connected_ || stream_configuration_error_.load()) {
       return;
     }
 
@@ -755,6 +771,8 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
       return;
     }
     initializeDevice(device);
+  } catch (const StreamConfigurationError &) {
+    // The initialization path already logged the configuration error and requested shutdown.
   } catch (ob::Error &e) {
     start_device_failed = true;
     ROS_ERROR_STREAM("Failed to initialize device " << orbbec_camera::formatObErrorWithStatus(e));
@@ -774,6 +792,9 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
 }
 
 void OBCameraNodeDriver::connectNetDevice(const std::string &ip_address, int port) {
+  if (stream_configuration_error_.load()) {
+    return;
+  }
   if (ip_address.empty() || port == 0) {
     ROS_ERROR_STREAM("Invalid ip address or port");
     return;
@@ -784,7 +805,11 @@ void OBCameraNodeDriver::connectNetDevice(const std::string &ip_address, int por
     ROS_ERROR_STREAM("Failed to create net device");
     return;
   }
-  initializeDevice(device);
+  try {
+    initializeDevice(device);
+  } catch (const StreamConfigurationError &) {
+    device_connected_ = false;
+  }
 }
 
 void OBCameraNodeDriver::checkConnectionTimer() {
@@ -842,7 +867,7 @@ OBLogSeverity OBCameraNodeDriver::obLogSeverityFromString(const std::string &log
 }
 
 void OBCameraNodeDriver::queryDevice() {
-  while (is_alive_ && ros::ok() && !device_connected_) {
+  while (is_alive_ && ros::ok() && !device_connected_ && !stream_configuration_error_.load()) {
     ROS_INFO_STREAM("queryDevice: first query device");
     if (!enumerate_net_device_ && !ip_address_.empty() && port_ != 0) {
       ROS_INFO_STREAM("queryDevice: connect to net device " << ip_address_ << ":" << port_);

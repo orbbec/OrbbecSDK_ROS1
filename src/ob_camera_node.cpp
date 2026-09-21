@@ -185,7 +185,7 @@ void OBCameraNode::init() {
     std::string message;
     ROS_INFO_STREAM("Pre-creating enhanced depth filter");
     if (!ensureEnhancedDepthFilter(message)) {
-      throw std::runtime_error(message);
+      throw StreamConfigurationError(message);
     }
     ROS_INFO_STREAM("Enhanced depth filter pre-created");
   }
@@ -510,7 +510,7 @@ void OBCameraNode::getParameters() {
       nh_private_.param<int>("right_color_frame_queue_max_frames", 10);
   const auto validate_queue_capacity = [](const char* name, int capacity) {
     if (capacity < 1) {
-      throw std::invalid_argument(std::string(name) + " must be greater than zero");
+      throw StreamConfigurationError(std::string(name) + " must be greater than zero");
     }
   };
   validate_queue_capacity("color_frame_queue_max_frames", color_frame_queue_max_frames_);

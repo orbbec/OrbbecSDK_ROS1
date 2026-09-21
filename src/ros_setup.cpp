@@ -2323,21 +2323,24 @@ void OBCameraNode::setupDevices() {
     std::string token;
     std::vector<int> values;
     values.reserve(4);
-    while (std::getline(iss, token, ',')) {
-      values.push_back(std::stoi(token));
+    try {
+      while (std::getline(iss, token, ',')) {
+        values.push_back(std::stoi(token));
+      }
+    } catch (const std::exception& e) {
+      throw StreamConfigurationError("Invalid preset_resolution_config '" +
+                                     preset_resolution_config_ + "': " + e.what());
     }
 
-    if (values.size() >= 4) {
-      presetResolutionConfig.width = values[0];
-      presetResolutionConfig.height = values[1];
-      presetResolutionConfig.irDecimationFactor = values[2];
-      presetResolutionConfig.depthDecimationFactor = values[3];
-    } else {
-      ROS_ERROR_STREAM(
-          "Invalid preset_resolution_config parameter. "
-          "Expected format: width,height,ir_decimation_factor,depth_decimation_factor");
-      return;
+    if (values.size() < 4) {
+      throw StreamConfigurationError(
+          "Invalid preset_resolution_config '" + preset_resolution_config_ +
+          "'. Expected format: width,height,ir_decimation_factor,depth_decimation_factor");
     }
+    presetResolutionConfig.width = values[0];
+    presetResolutionConfig.height = values[1];
+    presetResolutionConfig.irDecimationFactor = values[2];
+    presetResolutionConfig.depthDecimationFactor = values[3];
     ROS_INFO_STREAM("Set preset resolution config: "
                     << "width=" << presetResolutionConfig.width
                     << ", height=" << presetResolutionConfig.height
@@ -3286,23 +3289,15 @@ void OBCameraNode::setupProfiles() {
         }
       }
 
-      auto default_profile = profile_list->getProfile(0)->as<ob::VideoStreamProfile>();
       if (!selected_profile) {
-        ROS_WARN_STREAM("Given stream configuration is not supported by the device! "
-                        << " Stream: " << stream_name_[stream_index]
-                        << ", Width: " << width_[stream_index]
-                        << ", Height: " << height_[stream_index] << ", FPS: " << fps_[stream_index]
-                        << ", Format: " << format_[stream_index]);
-        if (default_profile) {
-          ROS_WARN_STREAM("Using default profile instead.");
-          ROS_WARN_STREAM("default FPS " << default_profile->fps());
-          selected_profile = default_profile;
-        } else {
-          ROS_WARN_STREAM(" NO default_profile found , Stream: " << stream_index.first
-                                                                 << " will be disable");
-          enable_stream_[stream_index] = false;
-          continue;
-        }
+        const auto message = "Requested " + stream_name_[stream_index] +
+                             " stream profile is not supported by the device: width=" +
+                             std::to_string(width_[stream_index]) +
+                             ", height=" + std::to_string(height_[stream_index]) +
+                             ", fps=" + std::to_string(fps_[stream_index]) +
+                             ", format=" + OBFormatToString(format_[stream_index]);
+        ROS_ERROR_STREAM(message);
+        throw StreamConfigurationError(message);
       }
       CHECK_NOTNULL(selected_profile.get());
       stream_profile_[stream_index] = selected_profile;
@@ -3339,19 +3334,21 @@ void OBCameraNode::setupProfiles() {
                        << height_[stream_index] << " " << fps_[stream_index] << "fps "
                        << OBFormatToString(format_[stream_index])
                        << " ERROR:" << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM(
+          "The requested stream profile is invalid. Please correct the stream "
+          "configuration and restart the node.");
+      ROS_INFO_STREAM("Available profiles:");
       printProfiles(sensors_[stream_index]->getSensor());
-      ROS_ERROR(
-          "Error: The device might be connected via USB 2.0. Please verify your launch file "
-          "configuration and "
-          "try again. The current process will now exit.");
-      exit(1);
+      throw StreamConfigurationError(
+          "Failed to configure the requested " + stream_name_[stream_index] +
+          " stream profile: " + orbbec_camera::formatObErrorWithStatus(e));
     }
   }
 
   std::string stream_fps_message;
   if (!validate301SeriesStreamFrameRates(fps_, stream_fps_message)) {
     ROS_ERROR_STREAM(stream_fps_message);
-    throw std::runtime_error(stream_fps_message);
+    throw StreamConfigurationError(stream_fps_message);
   }
 
   // IMU
