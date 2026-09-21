@@ -2914,8 +2914,7 @@ void OBCameraNode::setupDevices() {
                                               OB_PROP_COLOR_AE_MAX_GAIN_INT)));
       }
     }
-    if ((should_apply_launch_config("enable_auto_exposure") ||
-         should_apply_launch_config("enable_ir_auto_exposure")) &&
+    if (should_apply_launch_config("enable_ir_auto_exposure") &&
         device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       TRY_TO_SET_PROPERTY(setBoolProperty, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL,
                           enable_ir_auto_exposure_);
@@ -2943,8 +2942,7 @@ void OBCameraNode::setupDevices() {
             "Current depth brightness: " << device_->getIntProperty(OB_PROP_IR_BRIGHTNESS_INT)));
       }
     }
-    if ((should_apply_launch_config("enable_auto_exposure") ||
-         should_apply_launch_config("enable_ir_auto_exposure")) &&
+    if (should_apply_launch_config("enable_ir_auto_exposure") &&
         device_->isPropertySupported(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       TRY_TO_SET_PROPERTY(setBoolProperty, OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     }
