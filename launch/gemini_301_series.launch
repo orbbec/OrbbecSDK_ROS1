@@ -61,17 +61,13 @@
     <arg name="color_rotation" default="-1"/>
     <arg name="color_flip" default="false"/>
     <arg name="color_mirror" default="false"/>
-    <arg name="enable_color_auto_exposure_priority" default="false"/>
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in ms-->
-    <arg name="color_exposure" default="-1"/>
     <arg name="color_ae_roi_left" default="-1"/>
     <arg name="color_ae_roi_right" default="-1"/>
     <arg name="color_ae_roi_top" default="-1"/>
     <arg name="color_ae_roi_bottom" default="-1"/>
-    <arg name="color_gain" default="-1"/>
     <arg name="enable_color_auto_white_balance" default="true"/>
     <arg name="color_white_balance" default="-1"/>
-    <arg name="color_ae_max_exposure" default="-1"/>
     <arg name="color_brightness" default="-1"/>
     <arg name="color_sharpness" default="-1"/>
     <arg name="color_gamma" default="-1"/>
@@ -139,7 +135,6 @@
     <!-- -1 means not set, other value bigger than 0, the value is the exposure time in us-->
     <arg name="ir_exposure" default="-1"/>
     <arg name="ir_gain" default="-1"/>
-    <arg name="ir_brightness" default="-1"/>
 
     <!-- Point cloud parameters -->
     <arg name="enable_point_cloud" default="true"/>
@@ -278,7 +273,6 @@
             <param name="ae_strategy" value="$(arg ae_strategy)"/>
             <param name="ir_exposure" value="$(arg ir_exposure)"/>
             <param name="ir_gain" value="$(arg ir_gain)"/>
-            <param name="ir_brightness" value="$(arg ir_brightness)"/>
             <param name="ir_info_uri" value="$(arg ir_info_uri)"/>
             <param name="color_info_uri" value="$(arg color_info_uri)"/>
 
@@ -287,15 +281,12 @@
             <param name="color_fps" value="$(arg color_fps)"/>
             <param name="enable_color" value="$(arg enable_color)"/>
             <param name="color_format" value="$(arg color_format)"/>
-            <param name="color_exposure" value="$(arg color_exposure)"/>
             <param name="color_ae_roi_left" value="$(arg color_ae_roi_left)"/>
             <param name="color_ae_roi_right" value="$(arg color_ae_roi_right)"/>
             <param name="color_ae_roi_top" value="$(arg color_ae_roi_top)"/>
             <param name="color_ae_roi_bottom" value="$(arg color_ae_roi_bottom)"/>
-            <param name="color_gain" value="$(arg color_gain)"/>
             <param name="enable_color_auto_white_balance" value="$(arg enable_color_auto_white_balance)"/>
             <param name="color_white_balance" value="$(arg color_white_balance)"/>
-            <param name="color_ae_max_exposure" value="$(arg color_ae_max_exposure)"/>
             <param name="color_brightness" value="$(arg color_brightness)"/>
             <param name="color_sharpness" value="$(arg color_sharpness)"/>
             <param name="color_gamma" value="$(arg color_gamma)"/>
@@ -310,7 +301,6 @@
             <param name="color_rotation" value="$(arg color_rotation)"/>
             <param name="color_flip" value="$(arg color_flip)"/>
             <param name="color_mirror" value="$(arg color_mirror)"/>
-            <param name="enable_color_auto_exposure_priority" value="$(arg enable_color_auto_exposure_priority)"/>
             <param name="color_denoising_level" value="$(arg color_denoising_level)"/>
 
             <param name="depth_width" value="$(arg depth_width)"/>
