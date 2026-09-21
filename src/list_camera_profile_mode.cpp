@@ -14,6 +14,7 @@ constexpr int kFirmwareLogDrainDelaySec = 5;
 struct CommandLineOptions {
   bool show_help = false;
   std::string serial_number;
+  std::string device_preset;
   std::string sdk_log_level = "off";
 };
 
@@ -21,9 +22,11 @@ void printUsage(const char* program_name) {
   (void)program_name;
   std::cout << "Usage:\n"
             << "rosrun orbbec_camera list_camera_profile_mode_node\\\n"
-            << "      [--serial_number SN]\n\n"
+            << "      [--serial_number SN] [--device_preset PRESET]\n\n"
             << "Parameters:\n"
             << "  --serial_number SN  Select a specific camera by serial number.\n"
+            << "  --device_preset PRESET\n"
+            << "                      Load a device preset before listing profiles.\n"
             << "  --sdk_log_level LEVEL\n"
             << "                      SDK file log level: debug/info/warn/error/fatal/off "
                "(default: off).\n"
@@ -54,6 +57,28 @@ bool parseCommandLine(int argc, char** argv, CommandLineOptions& options, std::s
       options.serial_number = arg.substr(prefix.size());
       if (options.serial_number.empty()) {
         error = "--serial_number requires a value";
+        return false;
+      }
+      continue;
+    }
+
+    const std::string device_preset_prefix = "--device_preset=";
+    if (arg.rfind(device_preset_prefix, 0) == 0) {
+      options.device_preset = arg.substr(device_preset_prefix.size());
+      if (options.device_preset.empty()) {
+        error = "--device_preset requires a value";
+        return false;
+      }
+      continue;
+    }
+    if (arg == "--device_preset") {
+      if (i + 1 >= argc) {
+        error = arg + " requires a value";
+        return false;
+      }
+      options.device_preset = argv[++i];
+      if (options.device_preset.empty()) {
+        error = "--device_preset requires a value";
         return false;
       }
       continue;
@@ -122,6 +147,23 @@ bool enableFirmwareLog(const std::shared_ptr<ob::Device>& device) {
     std::cerr << "Failed to enable firmware log: " << formatObErrorWithStatus(e) << std::endl;
   } catch (const std::exception& e) {
     std::cerr << "Failed to enable firmware log: " << e.what() << std::endl;
+  }
+  return false;
+}
+
+bool loadDevicePreset(const std::shared_ptr<ob::Device>& device, const std::string& device_preset) {
+  if (device_preset.empty()) {
+    return true;
+  }
+
+  try {
+    device->loadPreset(device_preset.c_str());
+    std::cout << "Loaded device preset: " << device_preset << std::endl;
+    return true;
+  } catch (const ob::Error& e) {
+    std::cerr << "Failed to load device preset: " << formatObErrorWithStatus(e) << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "Failed to load device preset: " << e.what() << std::endl;
   }
   return false;
 }
@@ -236,6 +278,9 @@ int main(int argc, char** argv) {
     bool firmware_log_enabled = false;
     if (isSdkLogEnabled(options.sdk_log_level)) {
       firmware_log_enabled = enableFirmwareLog(device);
+    }
+    if (!loadDevicePreset(device, options.device_preset)) {
+      return -1;
     }
     listSensorProfiles(device);
     printDeviceProperties(device);
