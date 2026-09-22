@@ -159,6 +159,7 @@ add_message_files(FILES
   Extrinsics.msg
   Metadata.msg
   IMUInfo.msg
+  StreamStatus.msg
   DeviceStatus.msg
   DepthFilterParam.msg
   DepthFilterState.msg

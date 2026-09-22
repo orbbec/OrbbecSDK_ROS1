@@ -1302,6 +1302,10 @@ void OBCameraNodeDriver::deviceStatusTimer() {
   status_msg.calibration_from_launch_param = false;
   status_msg.customer_calibration_ready = false;
 
+  if (ob_camera_node_) {
+    ob_camera_node_->fillStreamStatus(status_msg);
+  }
+
   // Flag to track if device communication error occurs
   bool device_communication_error = false;
 
@@ -1312,27 +1316,6 @@ void OBCameraNodeDriver::deviceStatusTimer() {
     if (reset_lock.owns_lock() && !reset_device_) {
       // Only get device-specific info if we have a valid camera node and device
       if (ob_camera_node_) {
-        // Safely get color and depth status - these may access device
-        try {
-          ob_camera_node_->getColorStatus(status_msg);
-          ob_camera_node_->getDepthStatus(status_msg);
-        } catch (const ob::Error &e) {
-          std::string raw_error_msg = orbbec_camera::getObErrorMessage(e);
-          std::string error_msg = orbbec_camera::formatObErrorWithStatus(e);
-          if (raw_error_msg.find("Device is deactivated") != std::string::npos ||
-              raw_error_msg.find("disconnected") != std::string::npos ||
-              raw_error_msg.find("Send control transfer failed") != std::string::npos) {
-            ROS_WARN("Device communication error in %s at line %d: %s - Device may be disconnected",
-                     __FUNCTION__, __LINE__, error_msg.c_str());
-            device_communication_error = true;
-          } else {
-            ROS_ERROR("Error in %s at line %d: %s", __FUNCTION__, __LINE__, error_msg.c_str());
-          }
-        } catch (const std::exception &e) {
-          ROS_ERROR("Exception in %s at line %d: %s", __FUNCTION__, __LINE__, e.what());
-        } catch (...) {
-          ROS_ERROR("Unknown exception in %s at line %d", __FUNCTION__, __LINE__);
-        }
         status_msg.calibration_from_launch_param = ob_camera_node_->isParamCalibrated();
       }
 

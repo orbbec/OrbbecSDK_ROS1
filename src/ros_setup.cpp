@@ -3807,9 +3807,65 @@ void OBCameraNode::setupTopics() {
   }
 }
 
+std::string OBCameraNode::resolveStreamStatusTopic(const std::string& topic_name) const {
+  return nh_.resolveName(topic_name);
+}
+
+std::string OBCameraNode::compressedStreamStatusTopic(const stream_index_pair& stream_index) const {
+  const std::string topic = stream_name_.at(stream_index) + "/image_raw";
+  return topic + (stream_index == DEPTH ? "/compressedDepth" : "/compressed");
+}
+
+void OBCameraNode::registerStreamStatus(const std::string& topic_name,
+                                        StreamStatusTracker::SubscriberCountFn subscriber_count) {
+  const auto resolved_topic_name = resolveStreamStatusTopic(topic_name);
+  auto tracker =
+      std::make_shared<StreamStatusTracker>(resolved_topic_name, std::move(subscriber_count));
+  std::lock_guard<std::mutex> lock(stream_status_mutex_);
+  stream_status_trackers_[topic_name] = std::move(tracker);
+}
+
+void OBCameraNode::removeStreamStatus(const std::string& topic_name) {
+  std::lock_guard<std::mutex> lock(stream_status_mutex_);
+  stream_status_trackers_.erase(topic_name);
+  image_transport_subscriber_counts_.erase(topic_name);
+}
+
+void OBCameraNode::recordStreamStatus(const std::string& topic_name, const ros::Time& stamp) {
+  std::shared_ptr<StreamStatusTracker> tracker;
+  {
+    std::lock_guard<std::mutex> lock(stream_status_mutex_);
+    const auto iter = stream_status_trackers_.find(topic_name);
+    if (iter == stream_status_trackers_.end()) {
+      return;
+    }
+    tracker = iter->second;
+  }
+  tracker->record(stamp);
+}
+
+void OBCameraNode::fillStreamStatus(orbbec_camera::DeviceStatus& status_msg) {
+  std::vector<std::shared_ptr<StreamStatusTracker>> trackers;
+  {
+    std::lock_guard<std::mutex> lock(stream_status_mutex_);
+    trackers.reserve(stream_status_trackers_.size());
+    for (const auto& [topic_name, tracker] : stream_status_trackers_) {
+      (void)topic_name;
+      trackers.push_back(tracker);
+    }
+  }
+
+  status_msg.streams.clear();
+  status_msg.streams.reserve(trackers.size());
+  for (const auto& tracker : trackers) {
+    status_msg.streams.emplace_back();
+    tracker->fill(status_msg.streams.back());
+  }
+}
+
 void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
-  const std::string topic_name =
-      "/" + camera_name_ + "/" + stream_name_[stream_index] + "/image_raw";
+  const std::string topic = stream_name_.at(stream_index) + "/image_raw";
+  const std::string topic_name = "/" + camera_name_ + "/" + topic;
   releaseGlobalImagePublisher(topic_name);
   auto raw_it = raw_image_publishers_.find(stream_index);
   if (raw_it != raw_image_publishers_.end()) {
@@ -3822,6 +3878,9 @@ void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
     compressed_image_publishers_.erase(compressed_it);
   }
   image_publishers_.erase(stream_index);
+  removeStreamStatus(topic);
+  removeStreamStatus(topic + "/compressed");
+  removeStreamStatus(compressedStreamStatusTopic(stream_index));
 
   if (!enable_stream_[stream_index]) {
     return;
@@ -3832,24 +3891,35 @@ void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
   ros::SubscriberStatusCallback image_unsubscribed_cb =
       boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
   image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
-      [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
-        this->imageSubscribedCallback(stream_index);
+      [this, stream_index](const image_transport::SingleSubscriberPublisher& subscriber) {
+        this->imageTransportSubscribedCallback(stream_index, subscriber);
       };
   image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
-      [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
-        this->imageUnsubscribedCallback(stream_index);
+      [this, stream_index](const image_transport::SingleSubscriberPublisher& subscriber) {
+        this->imageTransportUnsubscribedCallback(stream_index, subscriber);
       };
 
   if (isMjpgColorStream(stream_index) || !enable_image_transport_plugins_) {
     raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
+    const auto raw_publisher = raw_image_publishers_.at(stream_index);
+    registerStreamStatus(topic, [raw_publisher]() { return raw_publisher.getNumSubscribers(); });
     if (isMjpgColorStream(stream_index)) {
       compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
           topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+      const auto compressed_publisher = compressed_image_publishers_.at(stream_index);
+      registerStreamStatus(topic + "/compressed", [compressed_publisher]() {
+        return compressed_publisher.getNumSubscribers();
+      });
     }
   } else {
     image_publishers_[stream_index] = getGlobalImagePublisher(
         topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    registerStreamStatus(topic, [this, topic]() { return getStreamStatusSubscriberCount(topic); });
+    const auto compressed_topic = compressedStreamStatusTopic(stream_index);
+    registerStreamStatus(compressed_topic, [this, compressed_topic]() {
+      return getStreamStatusSubscriberCount(compressed_topic);
+    });
   }
 }
 
@@ -3860,40 +3930,13 @@ void OBCameraNode::setupPublishers() {
       continue;
     }
     std::string name = stream_name_[stream_index];
-    std::string topic_name = "/" + camera_name_ + "/" + name + "/image_raw";
+    setupImagePublisher(stream_index);
 
-    // Create subscriber status callbacks for ros::Publisher
     ros::SubscriberStatusCallback image_subscribed_cb =
         boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
     ros::SubscriberStatusCallback image_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
-
-    // Create wrapper callbacks for image_transport::Publisher (they have different parameter
-    // types)
-    image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
-        [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
-          this->imageSubscribedCallback(stream_index);
-        };
-    image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
-        [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
-          this->imageUnsubscribedCallback(stream_index);
-        };
-
-    if (isMjpgColorStream(stream_index) || !enable_image_transport_plugins_) {
-      raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
-          topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
-      if (isMjpgColorStream(stream_index)) {
-        compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
-            topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
-      }
-    } else {
-      // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
-      // subscriber detection.
-      image_publishers_[stream_index] = getGlobalImagePublisher(
-          topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
-    }
-
-    topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
+    const std::string topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     CHECK_NOTNULL(device_info_.get());
@@ -3916,6 +3959,10 @@ void OBCameraNode::setupPublishers() {
         boost::bind(&OBCameraNode::pointCloudUnsubscribedCallback, this);
     depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth/points", 1, depth_cloud_subscribed_cb, depth_cloud_unsubscribed_cb);
+    const auto publisher = depth_cloud_pub_;
+    registerStreamStatus("depth/points", [publisher]() { return publisher.getNumSubscribers(); });
+  } else {
+    removeStreamStatus("depth/points");
   }
   if (enable_colored_point_cloud_ && enable_stream_[DEPTH] && enable_stream_[COLOR]) {
     ros::SubscriberStatusCallback depth_registered_cloud_subscribed_cb =
@@ -3925,6 +3972,11 @@ void OBCameraNode::setupPublishers() {
     depth_registered_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth_registered/points", 1, depth_registered_cloud_subscribed_cb,
         depth_registered_cloud_unsubscribed_cb);
+    const auto publisher = depth_registered_cloud_pub_;
+    registerStreamStatus("depth_registered/points",
+                         [publisher]() { return publisher.getNumSubscribers(); });
+  } else {
+    removeStreamStatus("depth_registered/points");
   }
 
   if (depth_registration_ && align_mode_ == "SW") {
@@ -3955,6 +4007,8 @@ void OBCameraNode::setupPublishers() {
         boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, GYRO);
     imu_gyro_accel_publisher_ =
         nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+    const auto publisher = imu_gyro_accel_publisher_;
+    registerStreamStatus(topic_name, [publisher]() { return publisher.getNumSubscribers(); });
     topic_name = stream_name_[GYRO] + "/imu_info";
     imu_info_publishers_[GYRO] = nh_.advertise<orbbec_camera::IMUInfo>(
         topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
@@ -3973,6 +4027,8 @@ void OBCameraNode::setupPublishers() {
           boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, stream_index);
       imu_publishers_[stream_index] =
           nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+      const auto publisher = imu_publishers_.at(stream_index);
+      registerStreamStatus(topic_name, [publisher]() { return publisher.getNumSubscribers(); });
       topic_name = stream_name_[stream_index] + "/imu_info";
       imu_info_publishers_[stream_index] = nh_.advertise<orbbec_camera::IMUInfo>(
           topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
