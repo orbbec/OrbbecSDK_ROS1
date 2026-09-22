@@ -448,7 +448,7 @@ void OBCameraNode::setupCameraCtrlServices() {
       "/" + camera_name_ + "/" + "set_stream_profile",
       [this](SetStreamProfileRequest& request, SetStreamProfileResponse& response) {
         response.success = this->setStreamProfileCallback(request, response);
-        return response.success;
+        return true;
       });
   set_image_registration_mode_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
       "/" + camera_name_ + "/" + "set_image_registration_mode",
