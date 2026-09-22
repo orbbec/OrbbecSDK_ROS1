@@ -2774,7 +2774,9 @@ void OBCameraNode::setupDevices() {
             "Current color gain: " << device_->getIntProperty(OB_PROP_COLOR_GAIN_INT)));
       }
     }
-    if (color_mjpeg_quality_ != -1) {
+    if (color_mjpeg_quality_ != -1 &&
+        (format_[COLOR] == OB_FORMAT_UNKNOWN || format_[COLOR] == OB_FORMAT_MJPG ||
+         format_[COLOR] == OB_FORMAT_MJPEG)) {
       if (!device_->isPropertySupported(OB_PROP_MJPEG_QUALITY_INT, OB_PERMISSION_WRITE)) {
         ROS_WARN_STREAM("color_mjpeg_quality is not supported by this device");
       } else {
@@ -2788,6 +2790,9 @@ void OBCameraNode::setupDevices() {
                                             << device_->getIntProperty(OB_PROP_MJPEG_QUALITY_INT)));
         }
       }
+    } else if (color_mjpeg_quality_ != -1) {
+      ROS_WARN_STREAM("color_mjpeg_quality is ignored because color format is "
+                      << format_str_[COLOR] << "; MJPG/MJPEG is required");
     }
     if (color_brightness_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
