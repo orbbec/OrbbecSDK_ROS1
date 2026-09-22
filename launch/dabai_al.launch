@@ -108,6 +108,9 @@
     <arg name="enable_temporal_filter" default="false"/>
     <arg name="enable_hole_filling_filter" default="false"/>
     <arg name="enable_false_positive_filter" default="false"/>
+    <arg name="enable_enhanced_depth" default="false"/>
+    <arg name="enhanced_depth_model_path" default=""/>
+    <arg name="enhanced_depth_confidence_threshold" default="51"/>
 
     <arg name="sequence_id_filter_id" default="1"/>
     <arg name="threshold_filter_max" default="-1"/>
@@ -144,6 +147,7 @@
     <arg name="enable_firmware_log" default="false"/>
     <arg name="monitor_poll_interval_sec" default="-1"/>
     <arg name="enable_hardware_reset" default="false"/>
+    <arg name="frame_aggregate_mode" default="ANY"/>
 
     <group ns="$(arg camera_name)">
         <node name="camera" pkg="orbbec_camera" type="orbbec_camera_node" output="screen">
@@ -229,6 +233,9 @@
             <param name="enable_temporal_filter" value="$(arg enable_temporal_filter)"/>
             <param name="enable_hole_filling_filter" value="$(arg enable_hole_filling_filter)"/>
             <param name="enable_false_positive_filter" value="$(arg enable_false_positive_filter)"/>
+            <param name="enable_enhanced_depth" value="$(arg enable_enhanced_depth)"/>
+            <param name="enhanced_depth_model_path" value="$(arg enhanced_depth_model_path)"/>
+            <param name="enhanced_depth_confidence_threshold" value="$(arg enhanced_depth_confidence_threshold)"/>
             <param name="sequence_id_filter_id" value="$(arg sequence_id_filter_id)"/>
             <param name="threshold_filter_max" value="$(arg threshold_filter_max)"/>
             <param name="threshold_filter_min" value="$(arg threshold_filter_min)"/>
@@ -270,6 +277,7 @@
             <param name="enable_firmware_log" value="$(arg enable_firmware_log)"/>
             <param name="monitor_poll_interval_sec" value="$(arg monitor_poll_interval_sec)"/>
             <param name="enable_hardware_reset" value="$(arg enable_hardware_reset)"/>
+            <param name="frame_aggregate_mode" value="$(arg frame_aggregate_mode)"/>
 
             <!-- Remap the depth registered point cloud topic -->
             <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>

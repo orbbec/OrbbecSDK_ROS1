@@ -425,6 +425,8 @@ class OBCameraNode {
 
   static bool isDabaiASeriesForHwD2C(uint32_t pid);
 
+  static bool isLingBotSupportedPID(uint32_t pid);
+
   boost::optional<OBCameraParam> getCameraParam();
 
   boost::optional<OBCameraParam> getCameraDepthParam();

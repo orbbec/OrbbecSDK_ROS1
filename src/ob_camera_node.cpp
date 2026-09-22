@@ -3463,4 +3463,8 @@ bool OBCameraNode::isDabaiASeriesForHwD2C(uint32_t pid) {
   return pid == DABAI_A_PID || pid == DABAI_AL_PID || pid == GEMINI_345_PID ||
          pid == GEMINI_345LG_PID;
 }
+
+bool OBCameraNode::isLingBotSupportedPID(uint32_t pid) {
+  return isGemini330SeriesPID(pid) || isDabaiASeriesForHwD2C(pid);
+}
 }  // namespace orbbec_camera

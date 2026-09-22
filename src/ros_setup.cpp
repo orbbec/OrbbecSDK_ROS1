@@ -1493,7 +1493,7 @@ void OBCameraNode::publishDepthFiltersStatus() {
   if (disp_outliers_filter_supported) {
     append_unique_filter_name("DispOutliersFilter");
   }
-  if (isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
+  if (isLingBotSupportedPID(device_->getDeviceInfo()->pid())) {
     append_unique_filter_name("EnhancedDepthFilter");
   }
 
@@ -1748,6 +1748,11 @@ void OBCameraNode::setupIrPostProcessFilter() {
 void OBCameraNode::setupUndistortionFilters() {
   hw_d2c_color_undistortion_filter_.reset();
   hw_d2c_color_undistortion_configured_ = false;
+
+  if (enable_enhanced_depth_.load() && isDabaiASeriesForHwD2C(device_info_->pid())) {
+    enable_undistortion_[COLOR] = true;
+    ROS_INFO_STREAM("Enable color undistortion for LingBot enhanced depth filter");
+  }
 
   auto remove_undistortion_filter = [](std::vector<std::shared_ptr<ob::Filter>>& filters) {
     filters.erase(std::remove_if(filters.begin(), filters.end(),
@@ -4196,8 +4201,8 @@ bool OBCameraNode::validateEnhancedDepthFilterConfig(std::string& message) const
   constexpr char kEnhancedDepthSupportedTargetResolutions[] = "640x480/1280x720/1280x800";
   constexpr char kEnhancedDepthSupportedDepthFormats[] = "Y10/Y11/Y12/Y14/Y16/Z16";
 
-  if (!isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
-    message = "Enhanced depth filter is only supported by Gemini 330 series devices";
+  if (!isLingBotSupportedPID(device_->getDeviceInfo()->pid())) {
+    message = "Enhanced depth filter is only supported by Gemini 330 and Dabai A series devices";
     return false;
   }
 
@@ -4978,8 +4983,8 @@ bool OBCameraNode::applyNamedDepthFilterConfig(
 bool OBCameraNode::applyEnhancedDepthFilterConfig(
     bool enabled, const std::vector<float>& positional_params,
     const std::vector<orbbec_camera::DepthFilterParam>& named_params, std::string& message) {
-  if (!isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
-    message = "Enhanced depth filter is only supported by Gemini 330 series devices";
+  if (!isLingBotSupportedPID(device_->getDeviceInfo()->pid())) {
+    message = "Enhanced depth filter is only supported by Gemini 330 and Dabai A series devices";
     return false;
   }
 
