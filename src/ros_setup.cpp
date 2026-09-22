@@ -3158,7 +3158,10 @@ void OBCameraNode::setupDevices() {
       device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
     TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_DEVICE_AE_STRATEGY_INT,
                         ae_strategy_ == "motion" ? 1 : 0);
-    ROS_INFO_STREAM("Current AE Strategy: " << ae_strategy_);
+    TRY_EXECUTE_BLOCK(ROS_INFO_STREAM(
+        "Current AE Strategy: " << (device_->getIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT) == 1
+                                        ? "Motion"
+                                        : "Default")));
   }
   if ((ae_reference_stream_ == "depth" || ae_reference_stream_ == "color") &&
       device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE)) {
@@ -3166,8 +3169,7 @@ void OBCameraNode::setupDevices() {
     TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_DEVICE_AE_REFERENCE_INT, ae_reference);
     TRY_EXECUTE_BLOCK({
       auto current_ae_reference = device_->getIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT);
-      ROS_INFO_STREAM(
-          "Current AE Reference Stream: " << (current_ae_reference == 0 ? "depth" : "color"));
+      ROS_INFO_STREAM("Current AE Reference: " << (current_ae_reference == 0 ? "Depth" : "Color"));
     });
   }
 }
