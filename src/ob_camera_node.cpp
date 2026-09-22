@@ -1049,6 +1049,7 @@ void OBCameraNode::startStreams() {
       ROS_ERROR_STREAM("failed to start pipeline: " << orbbec_camera::formatObErrorWithStatus(e)
                                                     << " try to disable ir stream try again");
       enable_stream_[INFRA0] = false;
+      setupImagePublisher(INFRA0);
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
         CHECK_NOTNULL(frame_set.get());
