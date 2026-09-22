@@ -343,7 +343,7 @@ void OBCameraNodeDriver::init() {
     device_status_pub_ =
         nh_.advertise<orbbec_camera::DeviceStatus>("/" + g_camera_name + "/device_status", 1);
     device_status_timer_ = nh_.createTimer(
-        ros::Duration(0.5), [this](const ros::TimerEvent &) { deviceStatusTimer(); });
+        ros::Duration(1.0), [this](const ros::TimerEvent &) { deviceStatusTimer(); });
   }
 }
 
