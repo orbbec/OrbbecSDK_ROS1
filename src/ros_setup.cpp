@@ -3845,6 +3845,8 @@ void OBCameraNode::recordStreamStatus(const std::string& topic_name, const ros::
 }
 
 void OBCameraNode::fillStreamStatus(orbbec_camera::DeviceStatus& status_msg) {
+  refreshImageTransportSubscriberCounts();
+
   std::vector<std::shared_ptr<StreamStatusTracker>> trackers;
   {
     std::lock_guard<std::mutex> lock(stream_status_mutex_);

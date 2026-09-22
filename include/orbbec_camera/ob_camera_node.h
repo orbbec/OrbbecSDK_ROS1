@@ -331,6 +331,7 @@ class OBCameraNode {
   void updateImageTransportSubscriberCount(
       const stream_index_pair &stream_index,
       const image_transport::SingleSubscriberPublisher &subscriber, bool connected);
+  void refreshImageTransportSubscriberCounts();
   size_t getStreamStatusSubscriberCount(const std::string &topic_name) const;
 
   void publishDepthFiltersStatus();

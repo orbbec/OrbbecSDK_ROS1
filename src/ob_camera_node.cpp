@@ -16,6 +16,7 @@
 
 #include "orbbec_camera/ob_camera_node.h"
 #include "libobsensor/hpp/Utils.hpp"
+#include <ros/master.h>
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -3006,24 +3007,61 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
 void OBCameraNode::updateImageTransportSubscriberCount(
     const stream_index_pair& stream_index,
     const image_transport::SingleSubscriberPublisher& subscriber, bool connected) {
-  const auto subscriber_topic = resolveStreamStatusTopic(subscriber.getTopic());
-  const auto raw_topic = resolveStreamStatusTopic(stream_name_.at(stream_index) + "/image_raw");
-  const auto compressed_topic = resolveStreamStatusTopic(compressedStreamStatusTopic(stream_index));
-  std::string status_topic;
-  if (subscriber_topic == raw_topic) {
-    status_topic = stream_name_.at(stream_index) + "/image_raw";
-  } else if (subscriber_topic == compressed_topic) {
-    status_topic = compressedStreamStatusTopic(stream_index);
-  } else {
+  (void)stream_index;
+  (void)subscriber;
+  (void)connected;
+  refreshImageTransportSubscriberCounts();
+}
+
+void OBCameraNode::refreshImageTransportSubscriberCounts() {
+  std::map<std::string, std::string> resolved_topics;
+  for (const auto& [stream_index, publisher] : image_publishers_) {
+    (void)publisher;
+    const auto raw_topic = stream_name_.at(stream_index) + "/image_raw";
+    const auto compressed_topic = compressedStreamStatusTopic(stream_index);
+    resolved_topics[resolveStreamStatusTopic(raw_topic)] = raw_topic;
+    resolved_topics[resolveStreamStatusTopic(compressed_topic)] = compressed_topic;
+  }
+  if (resolved_topics.empty()) {
     return;
   }
 
+  XmlRpc::XmlRpcValue request;
+  request.setSize(1);
+  request[0] = ros::this_node::getName();
+  XmlRpc::XmlRpcValue response;
+  XmlRpc::XmlRpcValue payload;
+  if (!ros::master::execute("getSystemState", request, response, payload, false) ||
+      payload.getType() != XmlRpc::XmlRpcValue::TypeArray || payload.size() < 2) {
+    return;
+  }
+
+  const auto& subscribers = payload[1];
+  if (subscribers.getType() != XmlRpc::XmlRpcValue::TypeArray) {
+    return;
+  }
+
+  std::map<std::string, size_t> subscriber_counts;
+  for (const auto& [resolved_topic, status_topic] : resolved_topics) {
+    (void)resolved_topic;
+    subscriber_counts[status_topic] = 0;
+  }
+  for (int index = 0; index < subscribers.size(); ++index) {
+    const auto& subscriber = subscribers[index];
+    if (subscriber.getType() != XmlRpc::XmlRpcValue::TypeArray || subscriber.size() < 2 ||
+        subscriber[0].getType() != XmlRpc::XmlRpcValue::TypeString ||
+        subscriber[1].getType() != XmlRpc::XmlRpcValue::TypeArray) {
+      continue;
+    }
+    const auto topic_it = resolved_topics.find(static_cast<std::string>(subscriber[0]));
+    if (topic_it != resolved_topics.end()) {
+      subscriber_counts[topic_it->second] = static_cast<size_t>(subscriber[1].size());
+    }
+  }
+
   std::lock_guard<std::mutex> lock(stream_status_mutex_);
-  auto count_it = image_transport_subscriber_counts_.find(status_topic);
-  if (connected) {
-    ++image_transport_subscriber_counts_[status_topic];
-  } else if (count_it != image_transport_subscriber_counts_.end() && count_it->second > 0) {
-    --count_it->second;
+  for (const auto& [topic_name, count] : subscriber_counts) {
+    image_transport_subscriber_counts_[topic_name] = count;
   }
 }
 
