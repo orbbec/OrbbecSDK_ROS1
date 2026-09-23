@@ -1,0 +1,18 @@
+<launch>
+    <!--
+        model supports every test_*.urdf.xacro under orbbec_camera/urdf.
+        Example: model:=test_gemini_335_Le.urdf.xacro
+    -->
+    <arg name="model" default="test_gemini_335.urdf.xacro" />
+    <arg name="gui" default="true" />
+    <arg name="use_nominal_extrinsics" default="true" />
+    <arg name="add_plug" default="true" />
+    <arg name="use_mesh" default="true" />
+
+    <param name="robot_description"
+           command="$(find xacro)/xacro --inorder '$(find orbbec_camera)/urdf/$(arg model)' use_nominal_extrinsics:=$(arg use_nominal_extrinsics) add_plug:=$(arg add_plug) use_mesh:=$(arg use_mesh)" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+    <param name="use_gui" value="$(arg gui)" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find orbbec_camera)/rviz/urdf.rviz" required="true" />
+</launch>

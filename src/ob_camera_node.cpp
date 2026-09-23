@@ -16,6 +16,7 @@
 
 #include "orbbec_camera/ob_camera_node.h"
 #include "libobsensor/hpp/Utils.hpp"
+#include <ros/master.h>
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -149,12 +150,6 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
       is_playback_device_(is_playback_device) {
   // Initialize global image_transport (persistent across node recreations)
   initializeGlobalImageTransport();
-  fps_delay_status_color_ = std::make_unique<FpsDelayStatus>();
-  fps_delay_status_left_color_ = std::make_unique<FpsDelayStatus>();
-  fps_delay_status_right_color_ = std::make_unique<FpsDelayStatus>();
-  fps_delay_status_depth_ = std::make_unique<FpsDelayStatus>();
-  fps_delay_status_left_ir_ = std::make_unique<FpsDelayStatus>();
-  fps_delay_status_right_ir_ = std::make_unique<FpsDelayStatus>();
   init();
 }
 
@@ -185,7 +180,7 @@ void OBCameraNode::init() {
     std::string message;
     ROS_INFO_STREAM("Pre-creating enhanced depth filter");
     if (!ensureEnhancedDepthFilter(message)) {
-      throw std::runtime_error(message);
+      throw StreamConfigurationError(message);
     }
     ROS_INFO_STREAM("Enhanced depth filter pre-created");
   }
@@ -331,6 +326,11 @@ void OBCameraNode::clean() {
   if (timestamp_csv_logger_) {
     timestamp_csv_logger_->shutdown();
     timestamp_csv_logger_.reset();
+  }
+  {
+    std::lock_guard<std::mutex> status_lock(stream_status_mutex_);
+    stream_status_trackers_.clear();
+    image_transport_subscriber_counts_.clear();
   }
 
   ROS_DEBUG_STREAM("OBCameraNode::clean() end (global image_transport persists)");
@@ -510,7 +510,7 @@ void OBCameraNode::getParameters() {
       nh_private_.param<int>("right_color_frame_queue_max_frames", 10);
   const auto validate_queue_capacity = [](const char* name, int capacity) {
     if (capacity < 1) {
-      throw std::invalid_argument(std::string(name) + " must be greater than zero");
+      throw StreamConfigurationError(std::string(name) + " must be greater than zero");
     }
   };
   validate_queue_capacity("color_frame_queue_max_frames", color_frame_queue_max_frames_);
@@ -617,10 +617,7 @@ void OBCameraNode::getParameters() {
   depth_ae_roi_bottom_ = nh_private_.param<int>("depth_ae_roi_bottom", -1);
   depth_brightness_ = nh_private_.param<int>("depth_brightness", -1);
   mean_intensity_set_point_ = nh_private_.param<int>("mean_intensity_set_point", depth_brightness_);
-  enable_ir_auto_exposure_ = nh_private_.param<bool>(isLaunchParamProvided("enable_auto_exposure")
-                                                         ? "enable_auto_exposure"
-                                                         : "enable_ir_auto_exposure",
-                                                     true);
+  enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
   depth_exposure_ = nh_private_.param<int>("depth_exposure", -1);
   depth_gain_ = nh_private_.param<int>("depth_gain", -1);
   ir_gain_ = nh_private_.param<int>("ir_gain", -1);
@@ -1052,6 +1049,7 @@ void OBCameraNode::startStreams() {
       ROS_ERROR_STREAM("failed to start pipeline: " << orbbec_camera::formatObErrorWithStatus(e)
                                                     << " try to disable ir stream try again");
       enable_stream_[INFRA0] = false;
+      setupImagePublisher(INFRA0);
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
         CHECK_NOTNULL(frame_set.get());
@@ -1447,6 +1445,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
                              : optical_frame_id_[DEPTH];
   cloud_msg_.header.stamp = timestamp;
   cloud_msg_.header.frame_id = frame_id;
+  recordStreamStatus("depth/points", cloud_msg_.header.stamp);
   depth_cloud_pub_.publish(cloud_msg_);
   if (save_point_cloud_) {
     save_point_cloud_ = false;
@@ -1555,6 +1554,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   auto timestamp = fromUsToROSTime(frame_timestamp);
   cloud_msg_.header.stamp = timestamp;
   cloud_msg_.header.frame_id = optical_frame_id_[COLOR];
+  recordStreamStatus("depth_registered/points", cloud_msg_.header.stamp);
   depth_registered_cloud_pub_.publish(cloud_msg_);
   if (save_colored_point_cloud_) {
     save_colored_point_cloud_ = false;
@@ -1847,6 +1847,8 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
   imu_msg.linear_acceleration.z = accelData.z - accel_info.bias[2];
 
   const auto publish_system_us = getSystemNowUs();
+  recordStreamStatus(stream_name_[GYRO] + "_" + stream_name_[ACCEL] + "/sample",
+                     imu_msg.header.stamp);
   imu_gyro_accel_publisher_.publish(imu_msg);
   record_timestamps(publish_system_us);
 }
@@ -1908,6 +1910,7 @@ void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame
     return;
   }
   const auto publish_system_us = getSystemNowUs();
+  recordStreamStatus(stream_name_[stream_index] + "/sample", imu_msg.header.stamp);
   imu_publishers_[stream_index].publish(imu_msg);
   record_timestamps(publish_system_us);
 }
@@ -1930,12 +1933,21 @@ bool OBCameraNode::hasRawImageSubscriber(const stream_index_pair& stream_index) 
     return raw_it->second.getNumSubscribers() > 0;
   }
   auto it = image_publishers_.find(stream_index);
-  return it != image_publishers_.end() && it->second.getNumSubscribers() > 0;
+  if (it == image_publishers_.end()) {
+    return false;
+  }
+  return getStreamStatusSubscriberCount(stream_name_.at(stream_index) + "/image_raw") > 0;
 }
 
 bool OBCameraNode::hasCompressedImageSubscriber(const stream_index_pair& stream_index) const {
   auto it = compressed_image_publishers_.find(stream_index);
-  return it != compressed_image_publishers_.end() && it->second.getNumSubscribers() > 0;
+  if (it != compressed_image_publishers_.end()) {
+    return it->second.getNumSubscribers() > 0;
+  }
+  if (image_publishers_.count(stream_index) == 0) {
+    return false;
+  }
+  return getStreamStatusSubscriberCount(compressedStreamStatusTopic(stream_index)) > 0;
 }
 
 bool OBCameraNode::isMjpgColorStream(const stream_index_pair& stream_index) const {
@@ -1973,6 +1985,7 @@ void OBCameraNode::publishCompressedColorImage(const std::shared_ptr<ob::Frame>&
   msg.format = "jpeg";
   const auto* data = static_cast<const uint8_t*>(frame->data());
   msg.data.assign(data, data + frame->dataSize());
+  recordStreamStatus(stream_name_.at(stream_index) + "/image_raw/compressed", msg.header.stamp);
   it->second.publish(msg);
 }
 
@@ -2006,6 +2019,9 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
       break;
   }
   bool decode_required = hasRawImageSubscriber(stream_index) || save_images_[stream_index];
+  if (image_publishers_.count(stream_index) > 0) {
+    decode_required = decode_required || hasCompressedImageSubscriber(stream_index);
+  }
   if (frame->getType() == OB_FRAME_COLOR && enable_colored_point_cloud_ &&
       depth_registered_cloud_pub_.getNumSubscribers() > 0) {
     decode_required = true;
@@ -2651,6 +2667,8 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
 
   const bool has_raw_image_subscriber = hasRawImageSubscriber(stream_index);
   const bool has_compressed_image_subscriber = hasCompressedImageSubscriber(stream_index);
+  const bool has_image_transport_compressed_subscriber =
+      has_compressed_image_subscriber && image_publishers_.count(stream_index) > 0;
   const bool need_raw_image = has_raw_image_subscriber || save_images_[stream_index];
   bool has_subscriber =
       has_raw_image_subscriber || has_compressed_image_subscriber || save_images_[stream_index];
@@ -2747,19 +2765,10 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
                                                    getSteadyNowUs());
     }
     publishCompressedColorImage(frame, stream_index, timestamp, frame_id);
-    if (!has_raw_image_subscriber) {
-      if (stream_index == COLOR) {
-        fps_delay_status_color_->tick(frame_timestamp);
-      } else if (stream_index == COLOR_LEFT) {
-        fps_delay_status_left_color_->tick(frame_timestamp);
-      } else {
-        fps_delay_status_right_color_->tick(frame_timestamp);
-      }
-    }
   }
 
   CHECK(hasImagePublisher(stream_index));
-  if (!need_raw_image) {
+  if (!need_raw_image && !has_image_transport_compressed_subscriber) {
     record_image_publish_skipped();
     return;
   }
@@ -2821,27 +2830,21 @@ void OBCameraNode::onNewFrameCallback(std::shared_ptr<ob::Frame> frame,
   image_msg->step = image_step;
   image_msg->header.frame_id = frame_id;
   image_msg->header.seq = seq++;
-  if (stream_index == COLOR) {
-    fps_delay_status_color_->tick(frame_timestamp);
-  } else if (stream_index == COLOR_LEFT) {
-    fps_delay_status_left_color_->tick(frame_timestamp);
-  } else if (stream_index == COLOR_RIGHT) {
-    fps_delay_status_right_color_->tick(frame_timestamp);
-  } else if (stream_index == DEPTH) {
-    fps_delay_status_depth_->tick(frame_timestamp);
-  } else if (stream_index == INFRA1) {
-    fps_delay_status_left_ir_->tick(frame_timestamp);
-  } else if (stream_index == INFRA2) {
-    fps_delay_status_right_ir_->tick(frame_timestamp);
-  }
-  if (has_raw_image_subscriber && log_image_timestamps) {
+  if ((has_raw_image_subscriber || has_image_transport_compressed_subscriber) &&
+      log_image_timestamps) {
     timestamp_csv_logger_->recordImagePrePublish(stream_index, frame, getSystemNowUs(),
                                                  getSteadyNowUs());
   }
   saveImageToFile(stream_index, raw_image, image_to_publish, image_msg, frame);
-  if (!has_raw_image_subscriber) {
+  if (!has_raw_image_subscriber && !has_image_transport_compressed_subscriber) {
     record_image_publish_skipped();
     return;
+  }
+  if (has_raw_image_subscriber) {
+    recordStreamStatus(stream_name_.at(stream_index) + "/image_raw", image_msg->header.stamp);
+  }
+  if (has_image_transport_compressed_subscriber) {
+    recordStreamStatus(compressedStreamStatusTopic(stream_index), image_msg->header.stamp);
   }
   auto raw_pub = raw_image_publishers_.find(stream_index);
   if (raw_pub != raw_image_publishers_.end()) {
@@ -3000,6 +3003,87 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
       metadata_ofs.close();
     }
   }
+}
+
+void OBCameraNode::updateImageTransportSubscriberCount(
+    const stream_index_pair& stream_index,
+    const image_transport::SingleSubscriberPublisher& subscriber, bool connected) {
+  (void)stream_index;
+  (void)subscriber;
+  (void)connected;
+  refreshImageTransportSubscriberCounts();
+}
+
+void OBCameraNode::refreshImageTransportSubscriberCounts() {
+  std::map<std::string, std::string> resolved_topics;
+  for (const auto& [stream_index, publisher] : image_publishers_) {
+    (void)publisher;
+    const auto raw_topic = stream_name_.at(stream_index) + "/image_raw";
+    const auto compressed_topic = compressedStreamStatusTopic(stream_index);
+    resolved_topics[resolveStreamStatusTopic(raw_topic)] = raw_topic;
+    resolved_topics[resolveStreamStatusTopic(compressed_topic)] = compressed_topic;
+  }
+  if (resolved_topics.empty()) {
+    return;
+  }
+
+  XmlRpc::XmlRpcValue request;
+  request.setSize(1);
+  request[0] = ros::this_node::getName();
+  XmlRpc::XmlRpcValue response;
+  XmlRpc::XmlRpcValue payload;
+  if (!ros::master::execute("getSystemState", request, response, payload, false) ||
+      payload.getType() != XmlRpc::XmlRpcValue::TypeArray || payload.size() < 2) {
+    return;
+  }
+
+  const auto& subscribers = payload[1];
+  if (subscribers.getType() != XmlRpc::XmlRpcValue::TypeArray) {
+    return;
+  }
+
+  std::map<std::string, size_t> subscriber_counts;
+  for (const auto& [resolved_topic, status_topic] : resolved_topics) {
+    (void)resolved_topic;
+    subscriber_counts[status_topic] = 0;
+  }
+  for (int index = 0; index < subscribers.size(); ++index) {
+    const auto& subscriber = subscribers[index];
+    if (subscriber.getType() != XmlRpc::XmlRpcValue::TypeArray || subscriber.size() < 2 ||
+        subscriber[0].getType() != XmlRpc::XmlRpcValue::TypeString ||
+        subscriber[1].getType() != XmlRpc::XmlRpcValue::TypeArray) {
+      continue;
+    }
+    const auto topic_it = resolved_topics.find(static_cast<std::string>(subscriber[0]));
+    if (topic_it != resolved_topics.end()) {
+      subscriber_counts[topic_it->second] = static_cast<size_t>(subscriber[1].size());
+    }
+  }
+
+  std::lock_guard<std::mutex> lock(stream_status_mutex_);
+  for (const auto& [topic_name, count] : subscriber_counts) {
+    image_transport_subscriber_counts_[topic_name] = count;
+  }
+}
+
+size_t OBCameraNode::getStreamStatusSubscriberCount(const std::string& topic_name) const {
+  std::lock_guard<std::mutex> lock(stream_status_mutex_);
+  const auto count_it = image_transport_subscriber_counts_.find(topic_name);
+  return count_it == image_transport_subscriber_counts_.end() ? 0 : count_it->second;
+}
+
+void OBCameraNode::imageTransportSubscribedCallback(
+    const stream_index_pair& stream_index,
+    const image_transport::SingleSubscriberPublisher& subscriber) {
+  updateImageTransportSubscriberCount(stream_index, subscriber, true);
+  imageSubscribedCallback(stream_index);
+}
+
+void OBCameraNode::imageTransportUnsubscribedCallback(
+    const stream_index_pair& stream_index,
+    const image_transport::SingleSubscriberPublisher& subscriber) {
+  updateImageTransportSubscriberCount(stream_index, subscriber, false);
+  imageUnsubscribedCallback(stream_index);
 }
 
 void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index) {
@@ -3465,5 +3549,9 @@ bool OBCameraNode::isPublishMetaData(uint32_t pid) {
 bool OBCameraNode::isDabaiASeriesForHwD2C(uint32_t pid) {
   return pid == DABAI_A_PID || pid == DABAI_AL_PID || pid == GEMINI_345_PID ||
          pid == GEMINI_345LG_PID;
+}
+
+bool OBCameraNode::isLingBotSupportedPID(uint32_t pid) {
+  return isGemini330SeriesPID(pid) || isDabaiASeriesForHwD2C(pid);
 }
 }  // namespace orbbec_camera

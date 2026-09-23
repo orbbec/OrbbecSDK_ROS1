@@ -41,6 +41,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <queue>
+#include <stdexcept>
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -58,13 +59,19 @@
 #include <image_transport/image_transport.h>
 #include <orbbec_camera/Metadata.h>
 #include <orbbec_camera/IMUInfo.h>
-#include "orbbec_camera/fps_delay_status.hpp"
+#include <orbbec_camera/DeviceStatus.h>
+#include "orbbec_camera/stream_status.hpp"
 
 #include "jpeg_decoder.h"
 
 #include <diagnostic_updater/diagnostic_updater.h>
 
 namespace orbbec_camera {
+class StreamConfigurationError : public std::runtime_error {
+ public:
+  explicit StreamConfigurationError(const std::string &message) : std::runtime_error(message) {}
+};
+
 class OBCameraNode {
  public:
   OBCameraNode(ros::NodeHandle &nh, ros::NodeHandle &nh_private, std::shared_ptr<ob::Device> device,
@@ -102,17 +109,7 @@ class OBCameraNode {
             ir_camera_info_manager_ && ir_camera_info_manager_->isCalibrated());
   }
 
-  void getColorStatus(orbbec_camera::DeviceStatus &status_msg) {
-    fps_delay_status_color_->fillColorStatus(status_msg);
-    fps_delay_status_left_color_->fillLeftColorStatus(status_msg);
-    fps_delay_status_right_color_->fillRightColorStatus(status_msg);
-  }
-
-  void getDepthStatus(orbbec_camera::DeviceStatus &status_msg) {
-    fps_delay_status_depth_->fillDepthStatus(status_msg);
-    fps_delay_status_left_ir_->fillLeftIrStatus(status_msg);
-    fps_delay_status_right_ir_->fillRightIrStatus(status_msg);
-  }
+  void fillStreamStatus(orbbec_camera::DeviceStatus &status_msg);
 
  private:
   struct IMUData {
@@ -318,6 +315,25 @@ class OBCameraNode {
 
   void setupPublishers();
 
+  void registerStreamStatus(const std::string &topic_name,
+                            StreamStatusTracker::SubscriberCountFn subscriber_count);
+  void removeStreamStatus(const std::string &topic_name);
+  void recordStreamStatus(const std::string &topic_name, const ros::Time &stamp);
+  std::string resolveStreamStatusTopic(const std::string &topic_name) const;
+  std::string compressedStreamStatusTopic(const stream_index_pair &stream_index) const;
+
+  void imageTransportSubscribedCallback(
+      const stream_index_pair &stream_index,
+      const image_transport::SingleSubscriberPublisher &subscriber);
+  void imageTransportUnsubscribedCallback(
+      const stream_index_pair &stream_index,
+      const image_transport::SingleSubscriberPublisher &subscriber);
+  void updateImageTransportSubscriberCount(
+      const stream_index_pair &stream_index,
+      const image_transport::SingleSubscriberPublisher &subscriber, bool connected);
+  void refreshImageTransportSubscriberCounts();
+  size_t getStreamStatusSubscriberCount(const std::string &topic_name) const;
+
   void publishDepthFiltersStatus();
 
   void publishLrmObstacleDistance(const ros::TimerEvent &event);
@@ -418,6 +434,8 @@ class OBCameraNode {
   bool isPublishMetaData(uint32_t pid);
 
   static bool isDabaiASeriesForHwD2C(uint32_t pid);
+
+  static bool isLingBotSupportedPID(uint32_t pid);
 
   boost::optional<OBCameraParam> getCameraParam();
 
@@ -621,6 +639,9 @@ class OBCameraNode {
   std::map<stream_index_pair, ob::Sensor::FrameCallback> frame_callback_;
   std::map<stream_index_pair, sensor_msgs::CameraInfo> camera_infos_;
   std::map<stream_index_pair, ros::Publisher> metadata_publishers_;
+  std::map<std::string, std::shared_ptr<StreamStatusTracker>> stream_status_trackers_;
+  std::map<std::string, size_t> image_transport_subscriber_counts_;
+  mutable std::mutex stream_status_mutex_;
 
   // Global topic-based publisher cache to prevent plugin reloading
   static std::map<std::string, image_transport::Publisher> global_image_publishers_;
@@ -1049,13 +1070,6 @@ class OBCameraNode {
   bool enable_frame_drop_log_ = false;
   std::string frame_timestamp_csv_file_;
   std::unique_ptr<TimestampCsvLogger> timestamp_csv_logger_{nullptr};
-
-  std::unique_ptr<FpsDelayStatus> fps_delay_status_color_{nullptr};
-  std::unique_ptr<FpsDelayStatus> fps_delay_status_left_color_{nullptr};
-  std::unique_ptr<FpsDelayStatus> fps_delay_status_right_color_{nullptr};
-  std::unique_ptr<FpsDelayStatus> fps_delay_status_depth_{nullptr};
-  std::unique_ptr<FpsDelayStatus> fps_delay_status_left_ir_{nullptr};
-  std::unique_ptr<FpsDelayStatus> fps_delay_status_right_ir_{nullptr};
 
   std::string intra_camera_sync_reference_ = "";
   std::string ae_reference_stream_;

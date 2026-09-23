@@ -1493,7 +1493,7 @@ void OBCameraNode::publishDepthFiltersStatus() {
   if (disp_outliers_filter_supported) {
     append_unique_filter_name("DispOutliersFilter");
   }
-  if (isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
+  if (isLingBotSupportedPID(device_->getDeviceInfo()->pid())) {
     append_unique_filter_name("EnhancedDepthFilter");
   }
 
@@ -1748,6 +1748,11 @@ void OBCameraNode::setupIrPostProcessFilter() {
 void OBCameraNode::setupUndistortionFilters() {
   hw_d2c_color_undistortion_filter_.reset();
   hw_d2c_color_undistortion_configured_ = false;
+
+  if (enable_enhanced_depth_.load() && isDabaiASeriesForHwD2C(device_info_->pid())) {
+    enable_undistortion_[COLOR] = true;
+    ROS_INFO_STREAM("Enable color undistortion for LingBot enhanced depth filter");
+  }
 
   auto remove_undistortion_filter = [](std::vector<std::shared_ptr<ob::Filter>>& filters) {
     filters.erase(std::remove_if(filters.begin(), filters.end(),
@@ -2323,21 +2328,24 @@ void OBCameraNode::setupDevices() {
     std::string token;
     std::vector<int> values;
     values.reserve(4);
-    while (std::getline(iss, token, ',')) {
-      values.push_back(std::stoi(token));
+    try {
+      while (std::getline(iss, token, ',')) {
+        values.push_back(std::stoi(token));
+      }
+    } catch (const std::exception& e) {
+      throw StreamConfigurationError("Invalid preset_resolution_config '" +
+                                     preset_resolution_config_ + "': " + e.what());
     }
 
-    if (values.size() >= 4) {
-      presetResolutionConfig.width = values[0];
-      presetResolutionConfig.height = values[1];
-      presetResolutionConfig.irDecimationFactor = values[2];
-      presetResolutionConfig.depthDecimationFactor = values[3];
-    } else {
-      ROS_ERROR_STREAM(
-          "Invalid preset_resolution_config parameter. "
-          "Expected format: width,height,ir_decimation_factor,depth_decimation_factor");
-      return;
+    if (values.size() < 4) {
+      throw StreamConfigurationError(
+          "Invalid preset_resolution_config '" + preset_resolution_config_ +
+          "'. Expected format: width,height,ir_decimation_factor,depth_decimation_factor");
     }
+    presetResolutionConfig.width = values[0];
+    presetResolutionConfig.height = values[1];
+    presetResolutionConfig.irDecimationFactor = values[2];
+    presetResolutionConfig.depthDecimationFactor = values[3];
     ROS_INFO_STREAM("Set preset resolution config: "
                     << "width=" << presetResolutionConfig.width
                     << ", height=" << presetResolutionConfig.height
@@ -2771,7 +2779,9 @@ void OBCameraNode::setupDevices() {
             "Current color gain: " << device_->getIntProperty(OB_PROP_COLOR_GAIN_INT)));
       }
     }
-    if (color_mjpeg_quality_ != -1) {
+    if (color_mjpeg_quality_ != -1 &&
+        (format_[COLOR] == OB_FORMAT_UNKNOWN || format_[COLOR] == OB_FORMAT_MJPG ||
+         format_[COLOR] == OB_FORMAT_MJPEG)) {
       if (!device_->isPropertySupported(OB_PROP_MJPEG_QUALITY_INT, OB_PERMISSION_WRITE)) {
         ROS_WARN_STREAM("color_mjpeg_quality is not supported by this device");
       } else {
@@ -2785,6 +2795,9 @@ void OBCameraNode::setupDevices() {
                                             << device_->getIntProperty(OB_PROP_MJPEG_QUALITY_INT)));
         }
       }
+    } else if (color_mjpeg_quality_ != -1) {
+      ROS_WARN_STREAM("color_mjpeg_quality is ignored because color format is "
+                      << format_str_[COLOR] << "; MJPG/MJPEG is required");
     }
     if (color_brightness_ != -1 &&
         device_->isPropertySupported(OB_PROP_COLOR_BRIGHTNESS_INT, OB_PERMISSION_WRITE)) {
@@ -2911,8 +2924,7 @@ void OBCameraNode::setupDevices() {
                                               OB_PROP_COLOR_AE_MAX_GAIN_INT)));
       }
     }
-    if ((should_apply_launch_config("enable_auto_exposure") ||
-         should_apply_launch_config("enable_ir_auto_exposure")) &&
+    if (should_apply_launch_config("enable_ir_auto_exposure") &&
         device_->isPropertySupported(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, OB_PERMISSION_READ_WRITE)) {
       TRY_TO_SET_PROPERTY(setBoolProperty, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL,
                           enable_ir_auto_exposure_);
@@ -2940,8 +2952,7 @@ void OBCameraNode::setupDevices() {
             "Current depth brightness: " << device_->getIntProperty(OB_PROP_IR_BRIGHTNESS_INT)));
       }
     }
-    if ((should_apply_launch_config("enable_auto_exposure") ||
-         should_apply_launch_config("enable_ir_auto_exposure")) &&
+    if (should_apply_launch_config("enable_ir_auto_exposure") &&
         device_->isPropertySupported(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PERMISSION_WRITE)) {
       TRY_TO_SET_PROPERTY(setBoolProperty, OB_PROP_IR_AUTO_EXPOSURE_BOOL, enable_ir_auto_exposure_);
     }
@@ -3147,7 +3158,10 @@ void OBCameraNode::setupDevices() {
       device_->isPropertySupported(OB_PROP_DEVICE_AE_STRATEGY_INT, OB_PERMISSION_WRITE)) {
     TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_DEVICE_AE_STRATEGY_INT,
                         ae_strategy_ == "motion" ? 1 : 0);
-    ROS_INFO_STREAM("Current AE Strategy: " << ae_strategy_);
+    TRY_EXECUTE_BLOCK(ROS_INFO_STREAM(
+        "Current AE Strategy: " << (device_->getIntProperty(OB_PROP_DEVICE_AE_STRATEGY_INT) == 1
+                                        ? "Motion"
+                                        : "Default")));
   }
   if ((ae_reference_stream_ == "depth" || ae_reference_stream_ == "color") &&
       device_->isPropertySupported(OB_PROP_DEVICE_AE_REFERENCE_INT, OB_PERMISSION_WRITE)) {
@@ -3155,8 +3169,7 @@ void OBCameraNode::setupDevices() {
     TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_DEVICE_AE_REFERENCE_INT, ae_reference);
     TRY_EXECUTE_BLOCK({
       auto current_ae_reference = device_->getIntProperty(OB_PROP_DEVICE_AE_REFERENCE_INT);
-      ROS_INFO_STREAM(
-          "Current AE Reference Stream: " << (current_ae_reference == 0 ? "depth" : "color"));
+      ROS_INFO_STREAM("Current AE Reference: " << (current_ae_reference == 0 ? "Depth" : "Color"));
     });
   }
 }
@@ -3286,23 +3299,15 @@ void OBCameraNode::setupProfiles() {
         }
       }
 
-      auto default_profile = profile_list->getProfile(0)->as<ob::VideoStreamProfile>();
       if (!selected_profile) {
-        ROS_WARN_STREAM("Given stream configuration is not supported by the device! "
-                        << " Stream: " << stream_name_[stream_index]
-                        << ", Width: " << width_[stream_index]
-                        << ", Height: " << height_[stream_index] << ", FPS: " << fps_[stream_index]
-                        << ", Format: " << format_[stream_index]);
-        if (default_profile) {
-          ROS_WARN_STREAM("Using default profile instead.");
-          ROS_WARN_STREAM("default FPS " << default_profile->fps());
-          selected_profile = default_profile;
-        } else {
-          ROS_WARN_STREAM(" NO default_profile found , Stream: " << stream_index.first
-                                                                 << " will be disable");
-          enable_stream_[stream_index] = false;
-          continue;
-        }
+        const auto message = "Requested " + stream_name_[stream_index] +
+                             " stream profile is not supported by the device: width=" +
+                             std::to_string(width_[stream_index]) +
+                             ", height=" + std::to_string(height_[stream_index]) +
+                             ", fps=" + std::to_string(fps_[stream_index]) +
+                             ", format=" + OBFormatToString(format_[stream_index]);
+        ROS_ERROR_STREAM(message);
+        throw StreamConfigurationError(message);
       }
       CHECK_NOTNULL(selected_profile.get());
       stream_profile_[stream_index] = selected_profile;
@@ -3339,19 +3344,21 @@ void OBCameraNode::setupProfiles() {
                        << height_[stream_index] << " " << fps_[stream_index] << "fps "
                        << OBFormatToString(format_[stream_index])
                        << " ERROR:" << orbbec_camera::formatObErrorWithStatus(e));
+      ROS_ERROR_STREAM(
+          "The requested stream profile is invalid. Please correct the stream "
+          "configuration and restart the node.");
+      ROS_INFO_STREAM("Available profiles:");
       printProfiles(sensors_[stream_index]->getSensor());
-      ROS_ERROR(
-          "Error: The device might be connected via USB 2.0. Please verify your launch file "
-          "configuration and "
-          "try again. The current process will now exit.");
-      exit(1);
+      throw StreamConfigurationError(
+          "Failed to configure the requested " + stream_name_[stream_index] +
+          " stream profile: " + orbbec_camera::formatObErrorWithStatus(e));
     }
   }
 
   std::string stream_fps_message;
   if (!validate301SeriesStreamFrameRates(fps_, stream_fps_message)) {
     ROS_ERROR_STREAM(stream_fps_message);
-    throw std::runtime_error(stream_fps_message);
+    throw StreamConfigurationError(stream_fps_message);
   }
 
   // IMU
@@ -3802,9 +3809,67 @@ void OBCameraNode::setupTopics() {
   }
 }
 
+std::string OBCameraNode::resolveStreamStatusTopic(const std::string& topic_name) const {
+  return nh_.resolveName(topic_name);
+}
+
+std::string OBCameraNode::compressedStreamStatusTopic(const stream_index_pair& stream_index) const {
+  const std::string topic = stream_name_.at(stream_index) + "/image_raw";
+  return topic + (stream_index == DEPTH ? "/compressedDepth" : "/compressed");
+}
+
+void OBCameraNode::registerStreamStatus(const std::string& topic_name,
+                                        StreamStatusTracker::SubscriberCountFn subscriber_count) {
+  const auto resolved_topic_name = resolveStreamStatusTopic(topic_name);
+  auto tracker =
+      std::make_shared<StreamStatusTracker>(resolved_topic_name, std::move(subscriber_count));
+  std::lock_guard<std::mutex> lock(stream_status_mutex_);
+  stream_status_trackers_[topic_name] = std::move(tracker);
+}
+
+void OBCameraNode::removeStreamStatus(const std::string& topic_name) {
+  std::lock_guard<std::mutex> lock(stream_status_mutex_);
+  stream_status_trackers_.erase(topic_name);
+  image_transport_subscriber_counts_.erase(topic_name);
+}
+
+void OBCameraNode::recordStreamStatus(const std::string& topic_name, const ros::Time& stamp) {
+  std::shared_ptr<StreamStatusTracker> tracker;
+  {
+    std::lock_guard<std::mutex> lock(stream_status_mutex_);
+    const auto iter = stream_status_trackers_.find(topic_name);
+    if (iter == stream_status_trackers_.end()) {
+      return;
+    }
+    tracker = iter->second;
+  }
+  tracker->record(stamp);
+}
+
+void OBCameraNode::fillStreamStatus(orbbec_camera::DeviceStatus& status_msg) {
+  refreshImageTransportSubscriberCounts();
+
+  std::vector<std::shared_ptr<StreamStatusTracker>> trackers;
+  {
+    std::lock_guard<std::mutex> lock(stream_status_mutex_);
+    trackers.reserve(stream_status_trackers_.size());
+    for (const auto& [topic_name, tracker] : stream_status_trackers_) {
+      (void)topic_name;
+      trackers.push_back(tracker);
+    }
+  }
+
+  status_msg.streams.clear();
+  status_msg.streams.reserve(trackers.size());
+  for (const auto& tracker : trackers) {
+    status_msg.streams.emplace_back();
+    tracker->fill(status_msg.streams.back());
+  }
+}
+
 void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
-  const std::string topic_name =
-      "/" + camera_name_ + "/" + stream_name_[stream_index] + "/image_raw";
+  const std::string topic = stream_name_.at(stream_index) + "/image_raw";
+  const std::string topic_name = "/" + camera_name_ + "/" + topic;
   releaseGlobalImagePublisher(topic_name);
   auto raw_it = raw_image_publishers_.find(stream_index);
   if (raw_it != raw_image_publishers_.end()) {
@@ -3817,6 +3882,9 @@ void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
     compressed_image_publishers_.erase(compressed_it);
   }
   image_publishers_.erase(stream_index);
+  removeStreamStatus(topic);
+  removeStreamStatus(topic + "/compressed");
+  removeStreamStatus(compressedStreamStatusTopic(stream_index));
 
   if (!enable_stream_[stream_index]) {
     return;
@@ -3827,24 +3895,35 @@ void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
   ros::SubscriberStatusCallback image_unsubscribed_cb =
       boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
   image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
-      [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
-        this->imageSubscribedCallback(stream_index);
+      [this, stream_index](const image_transport::SingleSubscriberPublisher& subscriber) {
+        this->imageTransportSubscribedCallback(stream_index, subscriber);
       };
   image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
-      [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
-        this->imageUnsubscribedCallback(stream_index);
+      [this, stream_index](const image_transport::SingleSubscriberPublisher& subscriber) {
+        this->imageTransportUnsubscribedCallback(stream_index, subscriber);
       };
 
   if (isMjpgColorStream(stream_index) || !enable_image_transport_plugins_) {
     raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
+    const auto raw_publisher = raw_image_publishers_.at(stream_index);
+    registerStreamStatus(topic, [raw_publisher]() { return raw_publisher.getNumSubscribers(); });
     if (isMjpgColorStream(stream_index)) {
       compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
           topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+      const auto compressed_publisher = compressed_image_publishers_.at(stream_index);
+      registerStreamStatus(topic + "/compressed", [compressed_publisher]() {
+        return compressed_publisher.getNumSubscribers();
+      });
     }
   } else {
     image_publishers_[stream_index] = getGlobalImagePublisher(
         topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+    registerStreamStatus(topic, [this, topic]() { return getStreamStatusSubscriberCount(topic); });
+    const auto compressed_topic = compressedStreamStatusTopic(stream_index);
+    registerStreamStatus(compressed_topic, [this, compressed_topic]() {
+      return getStreamStatusSubscriberCount(compressed_topic);
+    });
   }
 }
 
@@ -3855,40 +3934,13 @@ void OBCameraNode::setupPublishers() {
       continue;
     }
     std::string name = stream_name_[stream_index];
-    std::string topic_name = "/" + camera_name_ + "/" + name + "/image_raw";
+    setupImagePublisher(stream_index);
 
-    // Create subscriber status callbacks for ros::Publisher
     ros::SubscriberStatusCallback image_subscribed_cb =
         boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
     ros::SubscriberStatusCallback image_unsubscribed_cb =
         boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
-
-    // Create wrapper callbacks for image_transport::Publisher (they have different parameter
-    // types)
-    image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
-        [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
-          this->imageSubscribedCallback(stream_index);
-        };
-    image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
-        [this, stream_index](const image_transport::SingleSubscriberPublisher&) {
-          this->imageUnsubscribedCallback(stream_index);
-        };
-
-    if (isMjpgColorStream(stream_index) || !enable_image_transport_plugins_) {
-      raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
-          topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
-      if (isMjpgColorStream(stream_index)) {
-        compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
-            topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
-      }
-    } else {
-      // Use global publisher cache with callbacks to prevent plugin reloading and enable proper
-      // subscriber detection.
-      image_publishers_[stream_index] = getGlobalImagePublisher(
-          topic_name, image_transport_subscribed_cb, image_transport_unsubscribed_cb);
-    }
-
-    topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
+    const std::string topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     CHECK_NOTNULL(device_info_.get());
@@ -3911,6 +3963,10 @@ void OBCameraNode::setupPublishers() {
         boost::bind(&OBCameraNode::pointCloudUnsubscribedCallback, this);
     depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth/points", 1, depth_cloud_subscribed_cb, depth_cloud_unsubscribed_cb);
+    const auto publisher = depth_cloud_pub_;
+    registerStreamStatus("depth/points", [publisher]() { return publisher.getNumSubscribers(); });
+  } else {
+    removeStreamStatus("depth/points");
   }
   if (enable_colored_point_cloud_ && enable_stream_[DEPTH] && enable_stream_[COLOR]) {
     ros::SubscriberStatusCallback depth_registered_cloud_subscribed_cb =
@@ -3920,6 +3976,11 @@ void OBCameraNode::setupPublishers() {
     depth_registered_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth_registered/points", 1, depth_registered_cloud_subscribed_cb,
         depth_registered_cloud_unsubscribed_cb);
+    const auto publisher = depth_registered_cloud_pub_;
+    registerStreamStatus("depth_registered/points",
+                         [publisher]() { return publisher.getNumSubscribers(); });
+  } else {
+    removeStreamStatus("depth_registered/points");
   }
 
   if (depth_registration_ && align_mode_ == "SW") {
@@ -3950,6 +4011,8 @@ void OBCameraNode::setupPublishers() {
         boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, GYRO);
     imu_gyro_accel_publisher_ =
         nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+    const auto publisher = imu_gyro_accel_publisher_;
+    registerStreamStatus(topic_name, [publisher]() { return publisher.getNumSubscribers(); });
     topic_name = stream_name_[GYRO] + "/imu_info";
     imu_info_publishers_[GYRO] = nh_.advertise<orbbec_camera::IMUInfo>(
         topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
@@ -3968,6 +4031,8 @@ void OBCameraNode::setupPublishers() {
           boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, stream_index);
       imu_publishers_[stream_index] =
           nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
+      const auto publisher = imu_publishers_.at(stream_index);
+      registerStreamStatus(topic_name, [publisher]() { return publisher.getNumSubscribers(); });
       topic_name = stream_name_[stream_index] + "/imu_info";
       imu_info_publishers_[stream_index] = nh_.advertise<orbbec_camera::IMUInfo>(
           topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
@@ -4196,8 +4261,8 @@ bool OBCameraNode::validateEnhancedDepthFilterConfig(std::string& message) const
   constexpr char kEnhancedDepthSupportedTargetResolutions[] = "640x480/1280x720/1280x800";
   constexpr char kEnhancedDepthSupportedDepthFormats[] = "Y10/Y11/Y12/Y14/Y16/Z16";
 
-  if (!isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
-    message = "Enhanced depth filter is only supported by Gemini 330 series devices";
+  if (!isLingBotSupportedPID(device_->getDeviceInfo()->pid())) {
+    message = "Enhanced depth filter is only supported by Gemini 330 and Dabai A series devices";
     return false;
   }
 
@@ -4978,8 +5043,8 @@ bool OBCameraNode::applyNamedDepthFilterConfig(
 bool OBCameraNode::applyEnhancedDepthFilterConfig(
     bool enabled, const std::vector<float>& positional_params,
     const std::vector<orbbec_camera::DepthFilterParam>& named_params, std::string& message) {
-  if (!isGemini330SeriesPID(device_->getDeviceInfo()->pid())) {
-    message = "Enhanced depth filter is only supported by Gemini 330 series devices";
+  if (!isLingBotSupportedPID(device_->getDeviceInfo()->pid())) {
+    message = "Enhanced depth filter is only supported by Gemini 330 and Dabai A series devices";
     return false;
   }
 

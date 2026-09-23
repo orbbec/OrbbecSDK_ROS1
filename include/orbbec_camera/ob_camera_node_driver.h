@@ -97,6 +97,7 @@ class OBCameraNodeDriver {
   std::shared_ptr<ob::DeviceInfo> device_info_ = nullptr;
   ros::WallTimer check_connection_timer_;
   std::atomic_bool device_connected_{false};
+  std::atomic_bool stream_configuration_error_{false};
   std::atomic_bool is_alive_{false};
   std::string serial_number_;
   std::string device_uid_;
