@@ -790,6 +790,8 @@ class OBCameraNode {
   int color_ae_roi_top_ = -1;
   int color_ae_roi_right_ = -1;
   int color_ae_roi_bottom_ = -1;
+  int color_ae_roi_last_width_ = -1;
+  int color_ae_roi_last_height_ = -1;
   int color_exposure_ = -1;
   int color_gain_ = -1;
   int color_mjpeg_quality_ = -1;
@@ -812,6 +814,8 @@ class OBCameraNode {
   int depth_ae_roi_top_ = -1;
   int depth_ae_roi_right_ = -1;
   int depth_ae_roi_bottom_ = -1;
+  int depth_ae_roi_last_width_ = -1;
+  int depth_ae_roi_last_height_ = -1;
   int mean_intensity_set_point_ = -1;
   int depth_brightness_ = -1;
   int depth_exposure_ = -1;

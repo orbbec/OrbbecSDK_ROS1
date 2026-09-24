@@ -823,13 +823,9 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
       uint32_t data_size = sizeof(config);
       device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                  &data_size);
-      depth_ae_roi_left_ = config.x0_left;
-      depth_ae_roi_top_ = config.y0_top;
-      depth_ae_roi_right_ = config.x1_right;
-      depth_ae_roi_bottom_ = config.y1_bottom;
       std::ostringstream fields;
-      fields << "left=" << depth_ae_roi_left_ << " top=" << depth_ae_roi_top_
-             << " right=" << depth_ae_roi_right_ << " bottom=" << depth_ae_roi_bottom_;
+      fields << "left=" << config.x0_left << " top=" << config.y0_top
+             << " right=" << config.x1_right << " bottom=" << config.y1_bottom;
       log_readback_fields("depth.ae_roi", fields.str());
     } catch (const std::exception&) {
     }
@@ -1030,13 +1026,9 @@ void OBCameraNode::syncConfigJsonDeviceSettings() {
       uint32_t data_size = sizeof(config);
       device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                  &data_size);
-      color_ae_roi_left_ = config.x0_left;
-      color_ae_roi_top_ = config.y0_top;
-      color_ae_roi_right_ = config.x1_right;
-      color_ae_roi_bottom_ = config.y1_bottom;
       std::ostringstream fields;
-      fields << "left=" << color_ae_roi_left_ << " top=" << color_ae_roi_top_
-             << " right=" << color_ae_roi_right_ << " bottom=" << color_ae_roi_bottom_;
+      fields << "left=" << config.x0_left << " top=" << config.y0_top
+             << " right=" << config.x1_right << " bottom=" << config.y1_bottom;
       log_readback_fields("color.ae_roi", fields.str());
     } catch (const std::exception&) {
     }
@@ -4671,101 +4663,103 @@ void OBCameraNode::setDisparitySearchOffset() {
 }
 
 void OBCameraNode::setDepthAutoExposureROI() {
-  static bool depth_roi_has_run = false;
-  if (depth_roi_has_run) {
+  std::lock_guard<std::recursive_mutex> lock(device_lock_);
+  const int width = width_[DEPTH];
+  const int height = height_[DEPTH];
+  if (width <= 0 || height <= 0 ||
+      (width == depth_ae_roi_last_width_ && height == depth_ae_roi_last_height_)) {
     return;
   }
   if (depth_ae_roi_left_ == -1 && depth_ae_roi_top_ == -1 && depth_ae_roi_right_ == -1 &&
       depth_ae_roi_bottom_ == -1) {
-    depth_roi_has_run = true;
+    depth_ae_roi_last_width_ = width;
+    depth_ae_roi_last_height_ = height;
     return;
   }
   if (isGemini301SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "color") {
     ROS_WARN_STREAM("Skip setting depth AE ROI because AE Reference Stream is color");
-    depth_roi_has_run = true;
+    depth_ae_roi_last_width_ = width;
+    depth_ae_roi_last_height_ = height;
     return;
   }
   if (device_->isPropertySupported(OB_STRUCT_DEPTH_AE_ROI, OB_PERMISSION_READ_WRITE)) {
-    auto config = OBRegionOfInterest();
-    uint32_t data_size = sizeof(config);
-    device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
-                               &data_size);
+    OBRegionOfInterest config{};
+    config.x0_left = 0;
+    config.y0_top = 0;
+    config.x1_right = width - 1;
+    config.y1_bottom = height - 1;
     if (depth_ae_roi_left_ != -1) {
-      config.x0_left = (depth_ae_roi_left_ < 0) ? 0 : depth_ae_roi_left_;
-      config.x0_left =
-          (depth_ae_roi_left_ > width_[DEPTH] - 1) ? width_[DEPTH] - 1 : config.x0_left;
+      config.x0_left = std::max(0, std::min(depth_ae_roi_left_, width - 1));
     }
     if (depth_ae_roi_top_ != -1) {
-      config.y0_top = (depth_ae_roi_top_ < 0) ? 0 : depth_ae_roi_top_;
-      config.y0_top = (depth_ae_roi_top_ > height_[DEPTH] - 1) ? height_[DEPTH] - 1 : config.y0_top;
+      config.y0_top = std::max(0, std::min(depth_ae_roi_top_, height - 1));
     }
     if (depth_ae_roi_right_ != -1) {
-      config.x1_right = (depth_ae_roi_right_ < 0) ? 0 : depth_ae_roi_right_;
-      config.x1_right =
-          (depth_ae_roi_right_ > width_[DEPTH] - 1) ? width_[DEPTH] - 1 : config.x1_right;
+      config.x1_right = std::max(0, std::min(depth_ae_roi_right_, width - 1));
     }
     if (depth_ae_roi_bottom_ != -1) {
-      config.y1_bottom = (depth_ae_roi_bottom_ < 0) ? 0 : depth_ae_roi_bottom_;
-      config.y1_bottom =
-          (depth_ae_roi_bottom_ > height_[DEPTH] - 1) ? height_[DEPTH] - 1 : config.y1_bottom;
+      config.y1_bottom = std::max(0, std::min(depth_ae_roi_bottom_, height - 1));
     }
     device_->setStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<const uint8_t*>(&config),
                                sizeof(config));
+    uint32_t data_size = sizeof(config);
     device_->getStructuredData(OB_STRUCT_DEPTH_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                &data_size);
     ROS_INFO_STREAM("Set depth AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
                                            << config.x1_right << ", " << config.y1_bottom);
   }
-  depth_roi_has_run = true;
+  depth_ae_roi_last_width_ = width;
+  depth_ae_roi_last_height_ = height;
 }
 
 void OBCameraNode::setColorAutoExposureROI() {
-  static bool color_roi_has_run = false;
-  if (color_roi_has_run) {
+  std::lock_guard<std::recursive_mutex> lock(device_lock_);
+  const int width = width_[COLOR];
+  const int height = height_[COLOR];
+  if (width <= 0 || height <= 0 ||
+      (width == color_ae_roi_last_width_ && height == color_ae_roi_last_height_)) {
     return;
   }
   if (color_ae_roi_left_ == -1 && color_ae_roi_top_ == -1 && color_ae_roi_right_ == -1 &&
       color_ae_roi_bottom_ == -1) {
-    color_roi_has_run = true;
+    color_ae_roi_last_width_ = width;
+    color_ae_roi_last_height_ = height;
     return;
   }
   if (isGemini301SeriesPID(device_->getDeviceInfo()->pid()) && ae_reference_stream_ == "depth") {
     ROS_WARN_STREAM("Skip setting color AE ROI because AE Reference Stream is depth");
-    color_roi_has_run = true;
+    color_ae_roi_last_width_ = width;
+    color_ae_roi_last_height_ = height;
     return;
   }
   if (device_->isPropertySupported(OB_STRUCT_COLOR_AE_ROI, OB_PERMISSION_READ_WRITE)) {
-    auto config = OBRegionOfInterest();
-    uint32_t data_size = sizeof(config);
-    device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
-                               &data_size);
+    OBRegionOfInterest config{};
+    config.x0_left = 0;
+    config.y0_top = 0;
+    config.x1_right = width - 1;
+    config.y1_bottom = height - 1;
     if (color_ae_roi_left_ != -1) {
-      config.x0_left = (color_ae_roi_left_ < 0) ? 0 : color_ae_roi_left_;
-      config.x0_left =
-          (color_ae_roi_left_ > width_[COLOR] - 1) ? width_[COLOR] - 1 : config.x0_left;
+      config.x0_left = std::max(0, std::min(color_ae_roi_left_, width - 1));
     }
     if (color_ae_roi_top_ != -1) {
-      config.y0_top = (color_ae_roi_top_ < 0) ? 0 : color_ae_roi_top_;
-      config.y0_top = (color_ae_roi_top_ > height_[COLOR] - 1) ? height_[COLOR] - 1 : config.y0_top;
+      config.y0_top = std::max(0, std::min(color_ae_roi_top_, height - 1));
     }
     if (color_ae_roi_right_ != -1) {
-      config.x1_right = (color_ae_roi_right_ < 0) ? 0 : color_ae_roi_right_;
-      config.x1_right =
-          (color_ae_roi_right_ > width_[COLOR] - 1) ? width_[COLOR] - 1 : config.x1_right;
+      config.x1_right = std::max(0, std::min(color_ae_roi_right_, width - 1));
     }
     if (color_ae_roi_bottom_ != -1) {
-      config.y1_bottom = (color_ae_roi_bottom_ < 0) ? 0 : color_ae_roi_bottom_;
-      config.y1_bottom =
-          (color_ae_roi_bottom_ > height_[COLOR] - 1) ? height_[COLOR] - 1 : config.y1_bottom;
+      config.y1_bottom = std::max(0, std::min(color_ae_roi_bottom_, height - 1));
     }
     device_->setStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<const uint8_t*>(&config),
                                sizeof(config));
+    uint32_t data_size = sizeof(config);
     device_->getStructuredData(OB_STRUCT_COLOR_AE_ROI, reinterpret_cast<uint8_t*>(&config),
                                &data_size);
     ROS_INFO_STREAM("Set color AE ROI to " << config.x0_left << ", " << config.y0_top << ", "
                                            << config.x1_right << ", " << config.y1_bottom);
   }
-  color_roi_has_run = true;
+  color_ae_roi_last_width_ = width;
+  color_ae_roi_last_height_ = height;
 }
 
 void OBCameraNode::updateDepthFilterEnabledCache(const std::string& filter_name, bool enabled) {
