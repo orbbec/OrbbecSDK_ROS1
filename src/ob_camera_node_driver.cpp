@@ -289,8 +289,6 @@ void OBCameraNodeDriver::init() {
   enable_hardware_reset_ = nh_private_.param<bool>("enable_hardware_reset", false);
   uvc_backend_ = nh_private_.param<std::string>("uvc_backend", "libuvc");
   const bool use_explicit_net_device = !ip_address_.empty() && port_ != 0;
-  preset_firmware_path_ = nh_private_.param<std::string>("preset_firmware_path", "");
-  upgrade_firmware_ = nh_private_.param<std::string>("upgrade_firmware", "");
   device_access_mode_ =
       stringToAccessMode(nh_private_.param<std::string>("device_access_mode", "default"));
   ROS_INFO_STREAM("Device access mode: " << accessModeToString(device_access_mode_) << "("
@@ -541,7 +539,6 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
     return;
   }
   device_ = device;
-  updatePresetFirmware(preset_firmware_path_);
   device_info_ = device_->getDeviceInfo();
   device_uid_ = device_info_->uid();
   CHECK_NOTNULL(device_.get());
@@ -574,57 +571,8 @@ void OBCameraNodeDriver::initializeDevice(const std::shared_ptr<ob::Device> &dev
       device_connected_ = false;
       throw;
     }
-
-    if (!upgrade_firmware_.empty()) {
-      bool is_second_update = is_reupdating_.load();
-      if (is_second_update) {
-        ROS_INFO("Device reconnected, starting the second firmware update...");
-      } else {
-        ROS_INFO("Starting firmware update from file: %s", upgrade_firmware_.c_str());
-      }
-      firmware_update_success_ = false;
-      need_reupdate_ = false;
-      ob_camera_node_->withDeviceLock([&]() {
-        device_->updateFirmware(
-            upgrade_firmware_.c_str(),
-            std::bind(&OBCameraNodeDriver::firmwareUpdateCallback, this, std::placeholders::_1,
-                      std::placeholders::_2, std::placeholders::_3),
-            false);
-      });
-      if (need_reupdate_) {
-        // Some devices require a second update after reboot
-        ROS_INFO("The device will reboot and perform a second update automatically.");
-        // Set flag to indicate we're waiting for device to reboot for second update
-        is_reupdating_ = true;
-        // Keep upgrade_firmware_ path and wait for device to reconnect
-        // The second update will be triggered automatically when device reconnects
-        return;
-      }
-      if (firmware_update_success_) {
-        if (is_second_update) {
-          ROS_INFO("Second firmware update completed successfully!");
-          is_reupdating_ = false;
-        } else {
-          ROS_INFO("Firmware update completed successfully!");
-        }
-        return;
-      }
-    }
   } else if (device_type_ == "lidar") {
     ob_lidar_node_ = std::make_shared<orbbec_lidar::OBLidarNode>(nh_, nh_private_, device_);
-    if (!upgrade_firmware_.empty()) {
-      firmware_update_success_ = false;
-      ob_lidar_node_->withDeviceLock([&]() {
-        device_->updateFirmware(
-            upgrade_firmware_.c_str(),
-            std::bind(&OBCameraNodeDriver::firmwareUpdateCallback, this, std::placeholders::_1,
-                      std::placeholders::_2, std::placeholders::_3),
-            false);
-      });
-      if (firmware_update_success_) {
-        return;
-      }
-    }
   }
   if ((ob_camera_node_ && ob_camera_node_->isInitialized()) ||
       (ob_lidar_node_ && ob_lidar_node_->isInitialized())) {
@@ -1049,172 +997,6 @@ bool OBCameraNodeDriver::rebootDeviceServiceCallback(std_srvs::EmptyRequest &req
   } catch (...) {
     ROS_ERROR_STREAM("Failed to reboot device: unknown error");
     return false;
-  }
-}
-
-void OBCameraNodeDriver::updatePresetFirmware(std::string path) {
-  if (path.empty()) {
-    return;
-  } else {
-    std::stringstream ss(path);
-    std::string path_segment;
-    std::vector<std::string> paths;
-    OBFwUpdateState updateState = STAT_START;
-    bool firstCall = true;
-
-    while (std::getline(ss, path_segment, ',')) {
-      paths.push_back(path_segment);
-    }
-    uint8_t index = 0;
-    uint8_t count = static_cast<uint8_t>(paths.size());
-    char(*filePaths)[OB_PATH_MAX] = new char[count][OB_PATH_MAX];
-    ROS_INFO_STREAM("paths.cout : " << (uint32_t)count);
-    for (const auto &p : paths) {
-      strcpy(filePaths[index], p.c_str());
-      ROS_INFO_STREAM("path: " << (uint32_t)index << ":" << filePaths[index]);
-      index++;
-    }
-    ROS_INFO_STREAM("Start to update optional depth preset, please wait a moment...");
-    try {
-      device_->updateOptionalDepthPresets(
-          filePaths, count,
-          [this, &updateState, &firstCall](OBFwUpdateState state, const char *message,
-                                           uint8_t percent) {
-            updateState = state;
-            presetUpdateCallback(firstCall, state, message, percent);
-            // firstCall = false;
-          });
-
-      if (updateState == STAT_DONE || updateState == STAT_DONE_WITH_DUPLICATES) {
-        ROS_INFO_STREAM("After updating the preset: ");
-        auto presetList = device_->getAvailablePresetList();
-        ROS_INFO_STREAM("Preset count: " << presetList->getCount());
-        for (uint32_t i = 0; i < presetList->getCount(); ++i) {
-          ROS_INFO_STREAM("  - " << presetList->getName(i));
-        }
-        ROS_INFO_STREAM("Current preset: " << device_->getCurrentPresetName());
-        std::string key = "PresetVer";
-        if (device_->isExtensionInfoExist(key)) {
-          std::string value = device_->getExtensionInfo(key);
-          ROS_INFO_STREAM("Preset version: " << value);
-        } else {
-          ROS_INFO_STREAM("PresetVer: ");
-        }
-      }
-    } catch (ob::Error &e) {
-      ROS_ERROR_STREAM("Failed to update Preset Firmware "
-                       << orbbec_camera::formatObErrorWithStatus(e));
-    } catch (std::exception &e) {
-      ROS_ERROR_STREAM("Failed to update Preset Firmware " << e.what());
-    } catch (...) {
-      ROS_ERROR_STREAM("Failed to update Preset Firmware");
-    }
-
-    // Clean up allocated memory regardless of success or failure
-    if (filePaths) {
-      delete[] filePaths;
-      filePaths = nullptr;
-    }
-  }
-}
-void OBCameraNodeDriver::presetUpdateCallback(bool firstCall, OBFwUpdateState state,
-                                              const char *message, uint8_t percent) {
-  if (!firstCall) {
-    std::cout << "\033[3F";
-  }
-
-  std::cout << "\033[K";
-  std::cout << "Progress: " << static_cast<uint32_t>(percent) << "%" << std::endl;
-
-  std::cout << "\033[K";
-  std::cout << "Status  : ";
-  switch (state) {
-    case STAT_VERIFY_SUCCESS:
-      std::cout << "Image file verification success" << std::endl;
-      break;
-    case STAT_FILE_TRANSFER:
-      std::cout << "File transfer in progress" << std::endl;
-      break;
-    case STAT_DONE:
-      std::cout << "Update completed" << std::endl;
-      break;
-    case STAT_DONE_REBOOT_AND_REUPDATE:
-      std::cout << "Update completed, requires reboot and reupdate" << std::endl;
-      break;
-    case STAT_DONE_WITH_DUPLICATES:
-      std::cout << "Update completed, duplicated presets have been ignored" << std::endl;
-      break;
-    case STAT_IN_PROGRESS:
-      std::cout << "Update in progress" << std::endl;
-      break;
-    case STAT_START:
-      std::cout << "Starting the update" << std::endl;
-      break;
-    case STAT_VERIFY_IMAGE:
-      std::cout << "Verifying image file" << std::endl;
-      break;
-    default:
-      std::cout << "Unknown status or error" << std::endl;
-      break;
-  }
-
-  std::cout << "\033[K";
-  std::cout << "Message : " << message << std::endl << std::flush;
-}
-void OBCameraNodeDriver::firmwareUpdateCallback(OBFwUpdateState state, const char *message,
-                                                uint8_t percent) {
-  std::cout << "\033[K";  // Clear the current line
-  std::cout << "Progress: " << static_cast<uint32_t>(percent) << "%" << std::endl;
-
-  std::cout << "\033[K";
-  std::cout << "Status  : ";
-  switch (state) {
-    case STAT_VERIFY_SUCCESS:
-      std::cout << "Image file verification success" << std::endl;
-      break;
-    case STAT_FILE_TRANSFER:
-      std::cout << "File transfer in progress" << std::endl;
-      break;
-    case STAT_DONE:
-      std::cout << "Update completed" << std::endl;
-      break;
-    case STAT_DONE_REBOOT_AND_REUPDATE:
-      need_reupdate_ = true;
-      std::cout << "Update completed (requires reboot and reupdate)" << std::endl;
-      break;
-    case STAT_IN_PROGRESS:
-      std::cout << "Upgrade in progress" << std::endl;
-      break;
-    case STAT_START:
-      std::cout << "Starting the upgrade" << std::endl;
-      break;
-    case STAT_VERIFY_IMAGE:
-      std::cout << "Verifying image file" << std::endl;
-      break;
-    default:
-      std::cout << "Unknown status or error" << std::endl;
-      break;
-  }
-
-  std::cout << "\033[K";
-  std::cout << "Message : " << message << std::endl << std::flush;
-  if (state == STAT_DONE || state == STAT_DONE_REBOOT_AND_REUPDATE) {
-    ROS_INFO_STREAM("Reboot device");
-    if (ob_camera_node_) {
-      delay_stream_start_after_reconnect_ = true;
-      device_->reboot();
-    } else if (ob_lidar_node_) {
-      ob_lidar_node_->rebootDevice();
-    }
-    device_connected_ = false;
-
-    firmware_update_success_ = true;
-    if (state == STAT_DONE_REBOOT_AND_REUPDATE) {
-      // Keep upgrade_firmware_ path for second update
-      ROS_INFO("Firmware update requires a second update after reboot");
-    } else {
-      upgrade_firmware_ = "";
-    }
   }
 }
 

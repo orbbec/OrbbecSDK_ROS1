@@ -74,12 +74,6 @@ class OBCameraNodeDriver {
 
   static std::string parseUsbPort(const std::string& line);
 
-  void presetUpdateCallback(bool firstCall, OBFwUpdateState state, const char* message,
-                            uint8_t percent);
-  void updatePresetFirmware(std::string path);
-
-  void firmwareUpdateCallback(OBFwUpdateState state, const char* message, uint8_t percent);
-
   bool applyForceIpConfig();
 
   OBDeviceAccessMode stringToAccessMode(const std::string& mode_str);
@@ -128,11 +122,6 @@ class OBCameraNodeDriver {
   bool hardware_reset_done_ = false;
   std::string extension_path_;
   std::string uvc_backend_;
-  std::string preset_firmware_path_;
-  std::string upgrade_firmware_;
-  std::atomic<bool> firmware_update_success_{false};
-  std::atomic<bool> need_reupdate_{false};
-  std::atomic<bool> is_reupdating_{false};  // Flag to track if we're in reupdate process
   std::atomic<bool> delay_stream_start_after_reconnect_{false};
   bool force_ip_enable_{false};
   bool force_ip_dhcp_{false};

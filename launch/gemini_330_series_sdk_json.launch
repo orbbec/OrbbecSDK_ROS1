@@ -29,8 +29,6 @@
     <arg name="device_access_mode" default="default"/><!-- default, EA, CA or MR -->
     <arg name="ip_address" default=""/>
     <arg name="port" default="0"/>
-    <arg name="upgrade_firmware" default=""/>
-    <arg name="preset_firmware_path" default=""/>
     <arg name="usb_port" default=""/>
     <arg name="serial_number" default=""/>
     <arg name="device_num" default="1"/>
@@ -93,8 +91,6 @@
             <param name="device_access_mode" value="$(arg device_access_mode)"/>
             <param name="ip_address" value="$(arg ip_address)"/>
             <param name="port" value="$(arg port)"/>
-            <param name="upgrade_firmware" value="$(arg upgrade_firmware)"/>
-            <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
             <param name="usb_port" value="$(arg usb_port)"/>
             <param name="serial_number" value="$(arg serial_number)"/>
             <param name="device_num" value="$(arg device_num)"/>
