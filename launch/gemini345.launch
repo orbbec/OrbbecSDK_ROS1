@@ -23,7 +23,6 @@
     <!-- Set device_preset to select a G330 series depth preset. For more information, refer to -->
     <!-- https://www.orbbec.com/docs/g330-use-depth-presets/ -->
     <arg name="device_preset" default=""/>
-    <arg name="preset_firmware_path" default=""/>
     <arg name="diagnostics_frequency" default="1.0"/>
     <arg name="sync_mode" default="standalone"/>
     <arg name="software_trigger_enabled" default="true"/>
@@ -161,7 +160,6 @@
             <param name="color_frame_queue_max_frames" value="$(arg color_frame_queue_max_frames)"/>
             <param name="log_level" value="$(arg log_level)"/>
             <param name="log_file_name" value="$(arg log_file_name)"/>
-            <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
             <param name="publish_tf" value="$(arg publish_tf)"/>
             <param name="tf_publish_rate" value="$(arg tf_publish_rate)"/>
             <param name="enable_frame_sync" value="$(arg enable_frame_sync)"/>

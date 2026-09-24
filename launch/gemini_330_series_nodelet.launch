@@ -46,8 +46,6 @@
     <arg name="frames_per_trigger" default="1"/>
     <arg name="software_trigger_period" default="33"/>
     <arg name="enable_ptp_config" default="false"/><!-- Only for Gemini 335Le -->
-    <arg name="upgrade_firmware" default=""/>
-    <arg name="preset_firmware_path" default=""/>
     <arg name="config_file_path" default=""/>
     <arg name="load_config_json_file_path" default=""/>
     <arg name="export_config_json_file_path" default=""/>
@@ -327,8 +325,6 @@
             <param name="frames_per_trigger" value="$(arg frames_per_trigger)"/>
             <param name="software_trigger_period" value="$(arg software_trigger_period)"/>
             <param name="enable_ptp_config" value="$(arg enable_ptp_config)"/>
-            <param name="upgrade_firmware" value="$(arg upgrade_firmware)"/>
-            <param name="preset_firmware_path" value="$(arg preset_firmware_path)"/>
             <param name="config_file_path" value="$(arg config_file_path)"/>
             <param name="load_config_json_file_path" value="$(arg load_config_json_file_path)"/>
             <param name="export_config_json_file_path" value="$(arg export_config_json_file_path)"/>

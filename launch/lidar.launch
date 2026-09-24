@@ -13,7 +13,6 @@
     <arg name="timestamp_clock_type" default=""/><!-- "realtime" or "monotonic", default is realtime. -->
     <arg name="enable_frame_drop_log" default="false"/>
     <arg name="frame_timestamp_csv_file" default=""/>
-    <arg name="upgrade_firmware" default=""/>
     <arg name="enumerate_net_device" default="true"/>
     <arg name="ip_address" default=""/>
     <arg name="port" default="0"/>
@@ -58,7 +57,6 @@
             <param name="enumerate_net_device" value="$(arg enumerate_net_device)"/>
             <param name="ip_address" value="$(arg ip_address)"/>
             <param name="port" value="$(arg port)"/>
-            <param name="upgrade_firmware" value="$(arg upgrade_firmware)"/>
             <param name="lidar_format" value="$(arg lidar_format)"/>
             <param name="lidar_rate" value="$(arg lidar_rate)"/>
             <param name="enable_scan_to_point" value="$(arg enable_scan_to_point)"/>
