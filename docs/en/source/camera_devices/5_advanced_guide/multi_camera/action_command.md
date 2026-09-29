@@ -1,6 +1,6 @@
-# GigE Vision Action Command
+# Action Command
 
-This example starts two Gemini 335Le cameras and one host-side Action Command sender to trigger multiple cameras through GigE Vision Action Command.
+This example starts two Gemini 335Le cameras and one host-side Action Command sender to trigger multiple cameras through an Action Command.
 
 ## Requirements
 
@@ -13,7 +13,7 @@ This example starts two Gemini 335Le cameras and one host-side Action Command se
 Specify the IP addresses of the two cameras:
 
 ```bash
-roslaunch orbbec_camera multi_gige_action_command.launch \
+roslaunch orbbec_camera multi_action_command.launch \
   camera1_ip:=192.168.1.10 camera2_ip:=192.168.1.11
 ```
 
@@ -24,7 +24,7 @@ The launch file provides these services:
 /camera_01/set_action_config
 /camera_02/get_action_config
 /camera_02/set_action_config
-/gige_action_command_node/send_action_command
+/action_command_node/send_action_command
 ```
 
 ## Configure the Action Signal
@@ -55,7 +55,7 @@ Every camera whose device key, group key, and group mask match the request will 
 
 ## Send an Action Command
 
-The `/gige_action_command_node/send_action_command` service uses `orbbec_camera/SendActionCommand`. The trigger modes are:
+The `/action_command_node/send_action_command` service uses `orbbec_camera/SendActionCommand`. The trigger modes are:
 
 | `trigger_mode` | Mode | Requirements |
 | --- | --- | --- |
@@ -68,7 +68,7 @@ When `broadcast_ip` is empty, the node uses `255.255.255.255`; an IPv4 broadcast
 ### Immediate trigger
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1
@@ -83,7 +83,7 @@ scheduled_time: 0"
 Set `trigger_mode` to `1`. This example triggers the cameras one second later:
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1
@@ -100,7 +100,7 @@ The node reads the host `CLOCK_REALTIME`, adds `delay_ms`, and converts the resu
 Set `trigger_mode` to `2`, keep `delay_ms` at `0`, and provide a future encoded PTP timestamp. The upper 32 bits of `scheduled_time` contain seconds and the lower 32 bits contain nanoseconds:
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1

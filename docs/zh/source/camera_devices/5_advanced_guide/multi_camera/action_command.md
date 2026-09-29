@@ -1,6 +1,6 @@
-# GigE Vision Action Command
+# Action Command
 
-本示例启动两台 Gemini 335Le 相机和一个主机侧 Action Command 发送节点，通过 GigE Vision Action Command 触发多台相机同步采集。
+本示例启动两台 Gemini 335Le 相机和一个主机侧 Action Command 发送节点，通过 Action Command 触发多台相机同步采集。
 
 ## 环境要求
 
@@ -13,7 +13,7 @@
 指定两台相机的 IP 地址：
 
 ```bash
-roslaunch orbbec_camera multi_gige_action_command.launch \
+roslaunch orbbec_camera multi_action_command.launch \
   camera1_ip:=192.168.1.10 camera2_ip:=192.168.1.11
 ```
 
@@ -24,7 +24,7 @@ roslaunch orbbec_camera multi_gige_action_command.launch \
 /camera_01/set_action_config
 /camera_02/get_action_config
 /camera_02/set_action_config
-/gige_action_command_node/send_action_command
+/action_command_node/send_action_command
 ```
 
 ## 配置 Action Signal
@@ -55,7 +55,7 @@ rosservice call /camera_01/get_action_config "selector: 0"
 
 ## 发送 Action Command
 
-`/gige_action_command_node/send_action_command` 服务使用 `orbbec_camera/SendActionCommand` 类型。触发模式如下：
+`/action_command_node/send_action_command` 服务使用 `orbbec_camera/SendActionCommand` 类型。触发模式如下：
 
 | `trigger_mode` | 模式 | 参数要求 |
 | --- | --- | --- |
@@ -68,7 +68,7 @@ rosservice call /camera_01/get_action_config "selector: 0"
 ### 立即触发
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1
@@ -83,7 +83,7 @@ scheduled_time: 0"
 设置 `trigger_mode` 为 `1`，例如延迟 1 秒触发：
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1
@@ -100,7 +100,7 @@ scheduled_time: 0"
 设置 `trigger_mode` 为 `2`，`delay_ms` 保持为 `0`，并传入未来的编码 PTP 时间戳。`scheduled_time` 的高 32 位为秒，低 32 位为纳秒：
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1
