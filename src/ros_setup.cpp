@@ -2123,11 +2123,11 @@ void OBCameraNode::setupDepthPostProcessFilter() {
         spatial_filter->setFilterParams(params);
       }
       auto current_params = spatial_filter->getFilterParams();
-      ROS_INFO_STREAM("Current SpatialFilter params: " << "alpha=" << current_params.alpha
-                                                       << ", disp_diff=" << current_params.disp_diff
-                                                       << ", magnitude="
-                                                       << static_cast<int>(current_params.magnitude)
-                                                       << ", radius=" << current_params.radius);
+      ROS_INFO_STREAM("Current SpatialFilter params: "
+                      << "alpha=" << current_params.alpha
+                      << ", disp_diff=" << current_params.disp_diff
+                      << ", magnitude=" << static_cast<int>(current_params.magnitude)
+                      << ", radius=" << current_params.radius);
     } else if (filter_name == "TemporalFilter" && enable_temporal_filter_) {
       auto temporal_filter = filter->as<ob::TemporalFilter>();
       if (temporal_filter_diff_threshold_ != -1 && temporal_filter_weight_ != -1) {
@@ -2169,10 +2169,10 @@ void OBCameraNode::setupDepthPostProcessFilter() {
       uint32_t hdr_config_size = sizeof(hdr_config);
       device_->getStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG,
                                  reinterpret_cast<uint8_t*>(&hdr_config), &hdr_config_size);
-      ROS_INFO_STREAM("Current HDRMerge params: " << "exposure_1=" << hdr_config.exposure_1
-                                                  << ", gain_1=" << hdr_config.gain_1
-                                                  << ", exposure_2=" << hdr_config.exposure_2
-                                                  << ", gain_2=" << hdr_config.gain_2);
+      ROS_INFO_STREAM("Current HDRMerge params: "
+                      << "exposure_1=" << hdr_config.exposure_1 << ", gain_1=" << hdr_config.gain_1
+                      << ", exposure_2=" << hdr_config.exposure_2
+                      << ", gain_2=" << hdr_config.gain_2);
     } else if (filter_name == "SpatialFastFilter" && enable_spatial_fast_filter_) {
       auto spatial_fast_filter = filter->as<ob::SpatialFastFilter>();
       OBSpatialFastFilterParams params{};
@@ -2780,8 +2780,11 @@ void OBCameraNode::setupDevices() {
       } else {
         auto range = device_->getIntPropertyRange(OB_PROP_MJPEG_QUALITY_INT);
         if (color_mjpeg_quality_ < range.min || color_mjpeg_quality_ > range.max) {
-          ROS_ERROR_STREAM("color MJPEG quality value is out of range ["
-                           << range.min << "," << range.max << "] please check the value");
+          ROS_ERROR_STREAM("color MJPEG quality value " << color_mjpeg_quality_
+                                                        << " is out of range [" << range.min << ","
+                                                        << range.max << "] please check the value");
+          TRY_EXECUTE_BLOCK(ROS_INFO_STREAM("Current color MJPEG quality: "
+                                            << device_->getIntProperty(OB_PROP_MJPEG_QUALITY_INT)));
         } else {
           TRY_TO_SET_PROPERTY(setIntProperty, OB_PROP_MJPEG_QUALITY_INT, color_mjpeg_quality_);
           TRY_EXECUTE_BLOCK(ROS_INFO_STREAM("Current color MJPEG quality: "
