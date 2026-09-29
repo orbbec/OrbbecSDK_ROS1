@@ -4,8 +4,8 @@
     <arg name="camera2_ip" default="192.168.1.11"/>
     <arg name="camera_port" default="8090"/>
 
-    <node pkg="orbbec_camera" type="gige_action_command_node"
-          name="gige_action_command_node" output="screen"/>
+    <node pkg="orbbec_camera" type="action_command_node"
+          name="action_command_node" output="screen"/>
 
     <include file="$(find orbbec_camera)/launch/gemini_330_series.launch">
         <arg name="camera_name" value="camera_01"/>
