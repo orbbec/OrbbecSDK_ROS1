@@ -20,6 +20,7 @@
 #include "utils.h"
 #include "ros_sensor.h"
 #include "timestamp_csv_logger.h"
+#include "callback_context.hpp"
 #include "ros/ros.h"
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -137,6 +138,31 @@ class OBCameraNode {
 
   void setupCameraCtrlServices();
 
+  // ROS queue removal does not drain callbacks already executing. Share the
+  // same generation guard as publisher callbacks before touching camera state.
+  template <typename Request, typename Response, typename Callback>
+  ros::ServiceServer advertiseCameraService(const std::string &name, Callback callback) {
+    return nh_.advertiseService<Request, Response>(
+        name, [context = callback_context_, callback](Request &request, Response &response) {
+          bool result = false;
+          context->invoke([&](OBCameraNode &node) {
+            std::lock_guard<std::recursive_mutex> lock(node.device_lock_);
+            result = callback(request, response);
+          });
+          return result;
+        });
+  }
+
+  template <typename Callback>
+  ros::TimerCallback bindTimerCallback(Callback callback) {
+    return [context = callback_context_, callback](const ros::TimerEvent &event) {
+      context->invoke([&](OBCameraNode &node) {
+        std::lock_guard<std::recursive_mutex> lock(node.device_lock_);
+        callback(event);
+      });
+    };
+  }
+
   bool getColorQueueStatsCallback(std_srvs::SetBoolRequest &request,
                                   std_srvs::SetBoolResponse &response);
 
@@ -237,6 +263,7 @@ class OBCameraNode {
   bool hasRawImageSubscriber(const stream_index_pair &stream_index) const;
 
   bool hasCompressedImageSubscriber(const stream_index_pair &stream_index) const;
+  bool hasImageStreamSubscriber(const stream_index_pair &stream_index) const;
 
   bool isMjpgColorStream(const stream_index_pair &stream_index) const;
 
@@ -368,6 +395,16 @@ class OBCameraNode {
   void syncSoftwareAlignment();
 
   // Global publisher management methods
+  template <typename Method, typename... Args>
+  auto bindSubscriberCallback(Method method, Args... args) {
+    return [context = callback_context_, method, args...](const auto &) {
+      context->invoke([&](OBCameraNode &node) { (node.*method)(args...); });
+    };
+  }
+  image_transport::SubscriberStatusCallback bindImageTransportCallback(
+      const stream_index_pair &stream_index, bool connected);
+  void restoreSubscriberStreams();
+
   static image_transport::Publisher getGlobalImagePublisher(
       const std::string &topic_name, const image_transport::SubscriberStatusCallback &connect_cb,
       const image_transport::SubscriberStatusCallback &disconnect_cb);
@@ -644,7 +681,22 @@ class OBCameraNode {
   mutable std::mutex stream_status_mutex_;
 
   // Global topic-based publisher cache to prevent plugin reloading
-  static std::map<std::string, image_transport::Publisher> global_image_publishers_;
+  struct ImagePublisherCallbacks {
+    std::mutex mutex;
+    image_transport::SubscriberStatusCallback connect;
+    image_transport::SubscriberStatusCallback disconnect;
+
+    void dispatch(const image_transport::SingleSubscriberPublisher &subscriber, bool connected);
+  };
+  struct CachedImagePublisher {
+    image_transport::Publisher publisher;
+    std::shared_ptr<ImagePublisherCallbacks> callbacks;
+  };
+  static std::map<std::string, CachedImagePublisher> global_image_publishers_;
+  // Each camera generation has its own context. A callback copied before
+  // rebinding cannot call the destroyed camera or its replacement.
+  std::shared_ptr<CallbackContext<OBCameraNode>> callback_context_ =
+      std::make_shared<CallbackContext<OBCameraNode>>();
   static std::shared_ptr<image_transport::ImageTransport> global_image_transport_;
   static std::shared_ptr<ros::NodeHandle> global_nh_;
   static std::mutex global_publisher_mutex_;

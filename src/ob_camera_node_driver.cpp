@@ -26,6 +26,7 @@
 
 #include <boost/filesystem.hpp>
 #include <malloc.h>
+#include <cerrno>
 #include <sstream>
 #include <sys/utsname.h>
 
@@ -85,10 +86,14 @@ ros::console::levels::Level rosLogSeverityFromString(const std::string &log_leve
 std::string g_camera_name = "camera";
 
 void signalHandler(int signum) {
-  std::cout << "Received signal: " << signum << std::endl;
   if (signum == SIGINT || signum == SIGTERM) {
-    ros::shutdown();
+    // Match roscpp's SIGINT path: request cleanup on a regular ROS thread.
+    // shutdown() and iostreams can acquire locks held by the interrupted thread.
+    const int saved_errno = errno;
+    ros::requestShutdown();
+    errno = saved_errno;
   } else {
+    std::cout << "Received signal: " << signum << std::endl;
     boost::filesystem::path log_dir = getLogDirectoryForCamera(g_camera_name);
 
     // get current time

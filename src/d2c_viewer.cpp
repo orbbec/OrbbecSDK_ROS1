@@ -23,10 +23,9 @@
 
 /**Only for test*/
 namespace orbbec_camera {
-std::string d_camera_name = "camera";
 D2CViewer::D2CViewer(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
     : nh_(nh), nh_private_(nh_private), is_active_(true) {
-  d_camera_name = nh_private_.param<std::string>("camera_name", "camera");
+  const auto d_camera_name = nh_private_.param<std::string>("camera_name", "camera");
   rgb_sub_.subscribe(nh_, "/" + d_camera_name + "/color/image_raw", 1);
   depth_sub_.subscribe(nh_, "/" + d_camera_name + "/depth/image_raw", 1);
   sync_ = std::make_shared<message_filters::Synchronizer<MySyncPolicy>>(MySyncPolicy(10), rgb_sub_,
@@ -38,14 +37,12 @@ D2CViewer::D2CViewer(ros::NodeHandle& nh, ros::NodeHandle& nh_private)
 
 D2CViewer::~D2CViewer() {
   is_active_.store(false);
-
-  // Safely shut down subscribers and synchronizer
-  {
-    std::lock_guard<std::mutex> lock(callback_mutex_);
-    if (sync_) {
-      sync_.reset();
-    }
-  }
+  // Unsubscribe drains the ROS subscription callbacks while their filter and
+  // synchronizer are still alive. Do not hold callback_mutex_: an in-flight
+  // filter callback can already hold its signal lock and be waiting for it.
+  rgb_sub_.unsubscribe();
+  depth_sub_.unsubscribe();
+  sync_.reset();
 }
 
 void D2CViewer::messageCallback(const sensor_msgs::ImageConstPtr& rgb_msg,

@@ -103,7 +103,7 @@ bool isPropertyWritable(const std::shared_ptr<ob::Device>& device, OBPropertyID 
 void OBCameraNode::setupCameraCtrlServices() {
   using std_srvs::SetBool;
   get_color_queue_stats_srv_ =
-      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+      advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
           "/" + camera_name_ + "/get_color_queue_stats",
           [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
             return this->getColorQueueStatsCallback(request, response);
@@ -115,52 +115,52 @@ void OBCameraNode::setupCameraCtrlServices() {
     }
     auto stream_name = stream_name_[stream_index];
     std::string service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_exposure";
-    get_exposure_srv_[stream_index] = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+    get_exposure_srv_[stream_index] = advertiseCameraService<GetInt32Request, GetInt32Response>(
         service_name, [this, stream_index](GetInt32Request& request, GetInt32Response& response) {
           response.success = this->getExposureCallback(request, response, stream_index);
           return response.success;
         });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_exposure";
-    set_exposure_srv_[stream_index] = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+    set_exposure_srv_[stream_index] = advertiseCameraService<SetInt32Request, SetInt32Response>(
         service_name, [this, stream_index](SetInt32Request& request, SetInt32Response& response) {
           response.success = this->setExposureCallback(request, response, stream_index);
           return response.success;
         });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_ae_roi";
-    set_ae_roi_srv_[stream_index] = nh_.advertiseService<SetArraysRequest, SetArraysResponse>(
+    set_ae_roi_srv_[stream_index] = advertiseCameraService<SetArraysRequest, SetArraysResponse>(
         service_name, [this, stream_index](SetArraysRequest& request, SetArraysResponse& response) {
           this->setAeRoiCallback(request, response, stream_index);
           return true;
         });
     service_name = "/" + camera_name_ + "/" + "reset_" + stream_name + "_exposure";
     reset_exposure_srv_[stream_index] =
-        nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+        advertiseCameraService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
             service_name, [this, stream_index](std_srvs::EmptyRequest& request,
                                                std_srvs::EmptyResponse& response) {
               return this->resetCameraExposureCallback(request, response, stream_index);
             });
     service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_gain";
-    get_gain_srv_[stream_index] = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+    get_gain_srv_[stream_index] = advertiseCameraService<GetInt32Request, GetInt32Response>(
         service_name, [this, stream_index](GetInt32Request& request, GetInt32Response& response) {
           response.success = this->getGainCallback(request, response, stream_index);
           return response.success;
         });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_gain";
-    set_gain_srv_[stream_index] = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+    set_gain_srv_[stream_index] = advertiseCameraService<SetInt32Request, SetInt32Response>(
         service_name, [this, stream_index](SetInt32Request& request, SetInt32Response& response) {
           response.success = this->setGainCallback(request, response, stream_index);
           return response.success;
         });
     service_name = "/" + camera_name_ + "/" + "reset_" + stream_name + "_gain";
     reset_gain_srv_[stream_index] =
-        nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+        advertiseCameraService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
             service_name, [this, stream_index](std_srvs::EmptyRequest& request,
                                                std_srvs::EmptyResponse& response) {
               return this->resetCameraGainCallback(request, response, stream_index);
             });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_mirror";
     set_mirror_srv_[stream_index] =
-        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
             service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
                                                std_srvs::SetBoolResponse& response) {
               response.success = this->setMirrorCallback(request, response, stream_index);
@@ -168,35 +168,35 @@ void OBCameraNode::setupCameraCtrlServices() {
             });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_flip";
     set_flip_srv_[stream_index] =
-        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
             service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
                                                std_srvs::SetBoolResponse& response) {
               response.success = this->setFlipCallback(request, response, stream_index);
               return response.success;
             });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_rotation";
-    set_rotation_srv_[stream_index] = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+    set_rotation_srv_[stream_index] = advertiseCameraService<SetInt32Request, SetInt32Response>(
         service_name, [this, stream_index](SetInt32Request& request, SetInt32Response& response) {
           response.success = this->setRotationCallback(request, response, stream_index);
           return response.success;
         });
     service_name = "/" + camera_name_ + "/" + "set_" + stream_name + "_auto_exposure";
     set_auto_exposure_srv_[stream_index] =
-        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
             service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
                                                std_srvs::SetBoolResponse& response) {
               response.success = this->setAutoExposureCallback(request, response, stream_index);
               return response.success;
             });
     service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_auto_exposure";
-    get_auto_exposure_srv_[stream_index] = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+    get_auto_exposure_srv_[stream_index] = advertiseCameraService<GetBoolRequest, GetBoolResponse>(
         service_name, [this, stream_index](GetBoolRequest& request, GetBoolResponse& response) {
           response.success = this->getAutoExposureCallback(request, response, stream_index);
           return response.success;
         });
     service_name = "/" + camera_name_ + "/" + "toggle_" + stream_name;
     toggle_sensor_srv_[stream_index] =
-        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
             service_name, [this, stream_index](std_srvs::SetBoolRequest& request,
                                                std_srvs::SetBoolResponse& response) {
               response.success = this->toggleSensorCallback(request, response, stream_index);
@@ -204,53 +204,53 @@ void OBCameraNode::setupCameraCtrlServices() {
             });
     service_name = "/" + camera_name_ + "/" + "get_" + stream_name + "_camera_info";
     get_camera_info_srv_[stream_index] =
-        nh_.advertiseService<GetCameraInfoRequest, GetCameraInfoResponse>(
+        advertiseCameraService<GetCameraInfoRequest, GetCameraInfoResponse>(
             service_name,
             [this, stream_index](GetCameraInfoRequest& request, GetCameraInfoResponse& response) {
               response.success = this->getCameraInfoCallback(request, response, stream_index);
               return response.success;
             });
   }
-  get_auto_white_balance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+  get_auto_white_balance_srv_ = advertiseCameraService<GetInt32Request, GetInt32Response>(
       "/" + camera_name_ + "/" + "get_auto_white_balance",
       [this](GetInt32Request& request, GetInt32Response& response) {
         response.success = this->getAutoWhiteBalanceCallback(request, response);
         return response.success;
       });
-  set_auto_white_balance_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+  set_auto_white_balance_srv_ = advertiseCameraService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "set_auto_white_balance",
       [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->setAutoWhiteBalanceCallback(request, response);
         return response.success;
       });
-  get_white_balance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+  get_white_balance_srv_ = advertiseCameraService<GetInt32Request, GetInt32Response>(
       "/" + camera_name_ + "/" + "get_white_balance",
       [this](GetInt32Request& request, GetInt32Response& response) {
         response.success = this->getWhiteBalanceCallback(request, response);
         return response.success;
       });
-  set_white_balance_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+  set_white_balance_srv_ = advertiseCameraService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "set_white_balance",
       [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->setWhiteBalanceCallback(request, response);
         return response.success;
       });
   if (isPropertyReadable(device_, OB_PROP_COLOR_WB_CTRL_INT)) {
-    get_color_wb_ctrl_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+    get_color_wb_ctrl_srv_ = advertiseCameraService<GetInt32Request, GetInt32Response>(
         "/" + camera_name_ + "/get_color_wb_ctrl",
         [this](GetInt32Request& request, GetInt32Response& response) {
           return this->getColorWbCtrlCallback(request, response);
         });
   }
   if (isPropertyWritable(device_, OB_PROP_COLOR_WB_CTRL_INT)) {
-    set_color_wb_ctrl_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+    set_color_wb_ctrl_srv_ = advertiseCameraService<SetInt32Request, SetInt32Response>(
         "/" + camera_name_ + "/set_color_wb_ctrl",
         [this](SetInt32Request& request, SetInt32Response& response) {
           return this->setColorWbCtrlCallback(request, response);
         });
   }
   if (isPropertyReadable(device_, OB_PROP_COLOR_AE_AWB_STAT_INT)) {
-    get_ae_awb_status_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+    get_ae_awb_status_srv_ = advertiseCameraService<GetInt32Request, GetInt32Response>(
         "/" + camera_name_ + "/" + "get_color_ae_awb_status",
         [this](GetInt32Request& request, GetInt32Response& response) {
           response.success = this->getAeAwbStatusCallback(request, response);
@@ -258,7 +258,7 @@ void OBCameraNode::setupCameraCtrlServices() {
         });
   }
   if (isPropertyReadable(device_, OB_STRUCT_COLOR_AWB_GAIN)) {
-    get_awb_gain_srv_ = nh_.advertiseService<GetAwbGainRequest, GetAwbGainResponse>(
+    get_awb_gain_srv_ = advertiseCameraService<GetAwbGainRequest, GetAwbGainResponse>(
         "/" + camera_name_ + "/" + "get_color_awb_gain",
         [this](GetAwbGainRequest& request, GetAwbGainResponse& response) {
           response.success = this->getAwbGainCallback(request, response);
@@ -266,29 +266,31 @@ void OBCameraNode::setupCameraCtrlServices() {
         });
   }
   if (isPropertyWritable(device_, OB_STRUCT_COLOR_AWB_GAIN)) {
-    set_awb_gain_srv_ = nh_.advertiseService<SetAwbGainRequest, SetAwbGainResponse>(
+    set_awb_gain_srv_ = advertiseCameraService<SetAwbGainRequest, SetAwbGainResponse>(
         "/" + camera_name_ + "/" + "set_color_awb_gain",
         [this](SetAwbGainRequest& request, SetAwbGainResponse& response) {
           response.success = this->setAwbGainCallback(request, response);
           return response.success;
         });
   }
-  reset_white_balance_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
-      "/" + camera_name_ + "/" + "reset_white_balance",
-      [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
-        return this->resetCameraWhiteBalanceCallback(request, response);
-      });
+  reset_white_balance_srv_ =
+      advertiseCameraService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+          "/" + camera_name_ + "/" + "reset_white_balance",
+          [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
+            return this->resetCameraWhiteBalanceCallback(request, response);
+          });
   if (isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL) &&
       isPropertyWritable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
-    set_ptp_config_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
-        "/" + camera_name_ + "/" + "set_ptp_config",
-        [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
-          response.success = this->setPtpConfigCallback(request, response);
-          return response.success;
-        });
+    set_ptp_config_srv_ =
+        advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+            "/" + camera_name_ + "/" + "set_ptp_config",
+            [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
+              response.success = this->setPtpConfigCallback(request, response);
+              return response.success;
+            });
   }
   if (isPropertyReadable(device_, OB_DEVICE_PTP_CLOCK_SYNC_ENABLE_BOOL)) {
-    get_ptp_config_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+    get_ptp_config_srv_ = advertiseCameraService<GetBoolRequest, GetBoolResponse>(
         "/" + camera_name_ + "/" + "get_ptp_config",
         [this](GetBoolRequest& request, GetBoolResponse& response) {
           response.success = this->getPtpConfigCallback(request, response);
@@ -296,14 +298,14 @@ void OBCameraNode::setupCameraCtrlServices() {
         });
   }
   send_software_trigger_srv_ =
-      nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+      advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
           "/" + camera_name_ + "/" + "send_software_trigger",
           [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
             return this->sendSoftwareTriggerCallback(request, response);
           });
   if (isPropertyWritable(device_, OB_PROP_FAN_WORK_MODE_INT)) {
     set_fan_work_mode_srv_ =
-        nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+        advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
             "/" + camera_name_ + "/" + "set_fan_work_mode",
             [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
               response.success = this->setFanWorkModeCallback(request, response);
@@ -311,7 +313,7 @@ void OBCameraNode::setupCameraCtrlServices() {
             });
   }
   if (isPropertyWritable(device_, OB_PROP_FLOOD_BOOL)) {
-    set_flood_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+    set_flood_srv_ = advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
         "/" + camera_name_ + "/" + "set_flood",
         [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
           response.success = this->setFloodCallback(request, response);
@@ -320,7 +322,7 @@ void OBCameraNode::setupCameraCtrlServices() {
   }
   if (isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT) ||
       isPropertyWritable(device_, OB_PROP_LASER_BOOL)) {
-    set_laser_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+    set_laser_srv_ = advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
         "/" + camera_name_ + "/" + "set_laser",
         [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
           response.success = this->setLaserCallback(request, response);
@@ -332,7 +334,7 @@ void OBCameraNode::setupCameraCtrlServices() {
         isPropertyWritable(device_, OB_PROP_LASER_CONTROL_INT)) ||
        (isPropertyReadable(device_, OB_PROP_LASER_BOOL) &&
         isPropertyWritable(device_, OB_PROP_LASER_BOOL)))) {
-    set_ldp_srv_ = nh_.advertiseService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
+    set_ldp_srv_ = advertiseCameraService<std_srvs::SetBoolRequest, std_srvs::SetBoolResponse>(
         "/" + camera_name_ + "/" + "set_ldp",
         [this](std_srvs::SetBoolRequest& request, std_srvs::SetBoolResponse& response) {
           response.success = this->setLdpEnableCallback(request, response);
@@ -341,20 +343,20 @@ void OBCameraNode::setupCameraCtrlServices() {
   }
   if (isPropertyReadable(device_, OB_PROP_LDP_BOOL) &&
       isPropertyReadable(device_, OB_PROP_LDP_STATUS_BOOL)) {
-    get_ldp_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+    get_ldp_status_srv_ = advertiseCameraService<GetBoolRequest, GetBoolResponse>(
         "/" + camera_name_ + "/" + "get_ldp_status",
         [this](GetBoolRequest& request, GetBoolResponse& response) {
           response.success = this->getLdpStatusCallback(request, response);
           return response.success;
         });
   }
-  get_device_info_srv_ = nh_.advertiseService<GetDeviceInfoRequest, GetDeviceInfoResponse>(
+  get_device_info_srv_ = advertiseCameraService<GetDeviceInfoRequest, GetDeviceInfoResponse>(
       "/" + camera_name_ + "/" + "get_device_info",
       [this](GetDeviceInfoRequest& request, GetDeviceInfoResponse& response) {
         response.success = this->getDeviceInfoCallback(request, response);
         return response.success;
       });
-  get_device_config_srv_ = nh_.advertiseService<GetDeviceConfigRequest, GetDeviceConfigResponse>(
+  get_device_config_srv_ = advertiseCameraService<GetDeviceConfigRequest, GetDeviceConfigResponse>(
       "/" + camera_name_ + "/" + "get_device_config",
       [this](GetDeviceConfigRequest& request, GetDeviceConfigResponse& response) {
         response.success = this->getDeviceConfigCallback(request, response);
@@ -365,105 +367,109 @@ void OBCameraNode::setupCameraCtrlServices() {
       isPropertyWritable(device_, OB_PROP_ACTION_SELECTOR_INT) &&
       isPropertyReadable(device_, OB_PROP_ACTION_GROUP_KEY_INT) &&
       isPropertyReadable(device_, OB_PROP_ACTION_GROUP_MASK_INT)) {
-    get_action_config_srv_ = nh_.advertiseService<GetActionConfigRequest, GetActionConfigResponse>(
-        "/" + camera_name_ + "/get_action_config",
-        [this](GetActionConfigRequest& request, GetActionConfigResponse& response) {
-          return this->getActionConfigCallback(request, response);
-        });
+    get_action_config_srv_ =
+        advertiseCameraService<GetActionConfigRequest, GetActionConfigResponse>(
+            "/" + camera_name_ + "/get_action_config",
+            [this](GetActionConfigRequest& request, GetActionConfigResponse& response) {
+              return this->getActionConfigCallback(request, response);
+            });
   }
   if (isPropertyReadable(device_, OB_PROP_ACTION_SIGNAL_COUNT_INT) &&
       isPropertyWritable(device_, OB_PROP_ACTION_DEVICE_KEY_INT) &&
       isPropertyWritable(device_, OB_PROP_ACTION_SELECTOR_INT) &&
       isPropertyWritable(device_, OB_PROP_ACTION_GROUP_KEY_INT) &&
       isPropertyWritable(device_, OB_PROP_ACTION_GROUP_MASK_INT)) {
-    set_action_config_srv_ = nh_.advertiseService<SetActionConfigRequest, SetActionConfigResponse>(
-        "/" + camera_name_ + "/set_action_config",
-        [this](SetActionConfigRequest& request, SetActionConfigResponse& response) {
-          return this->setActionConfigCallback(request, response);
-        });
+    set_action_config_srv_ =
+        advertiseCameraService<SetActionConfigRequest, SetActionConfigResponse>(
+            "/" + camera_name_ + "/set_action_config",
+            [this](SetActionConfigRequest& request, SetActionConfigResponse& response) {
+              return this->setActionConfigCallback(request, response);
+            });
   }
-  get_serial_number_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
+  get_serial_number_srv_ = advertiseCameraService<GetStringRequest, GetStringResponse>(
       "/" + camera_name_ + "/" + "get_serial",
       [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->getSerialNumberCallback(request, response);
         return response.success;
       });
-  get_camera_params_srv_ = nh_.advertiseService<GetCameraParamsRequest, GetCameraParamsResponse>(
+  get_camera_params_srv_ = advertiseCameraService<GetCameraParamsRequest, GetCameraParamsResponse>(
       "/" + camera_name_ + "/" + "get_camera_params",
       [this](GetCameraParamsRequest& request, GetCameraParamsResponse& response) {
         response.success = this->getCameraParamsCallback(request, response);
         return response.success;
       });
 
-  get_sdk_version_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
+  get_sdk_version_srv_ = advertiseCameraService<GetStringRequest, GetStringResponse>(
       "/" + camera_name_ + "/" + "get_sdk_version",
       [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->getSDKVersionCallback(request, response);
         return response.success;
       });
-  get_device_type_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
+  get_device_type_srv_ = advertiseCameraService<GetStringRequest, GetStringResponse>(
       "/" + camera_name_ + "/" + "get_device_type",
       [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->getDeviceTypeCallback(request, response);
         return response.success;
       });
-  save_point_cloud_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+  save_point_cloud_srv_ = advertiseCameraService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
       "/" + camera_name_ + "/" + "save_point_cloud",
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->savePointCloudCallback(request, response);
       });
-  save_images_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+  save_images_srv_ = advertiseCameraService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
       "/" + camera_name_ + "/" + "save_images",
       [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
         return this->saveImagesCallback(request, response);
       });
-  export_config_json_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+  export_config_json_srv_ = advertiseCameraService<SetStringRequest, SetStringResponse>(
       "/" + camera_name_ + "/" + "export_config_json",
       [this](SetStringRequest& request, SetStringResponse& response) {
         return this->exportConfigJsonCallback(request, response);
       });
-  switch_ir_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+  switch_ir_mode_srv_ = advertiseCameraService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "switch_ir_mode",
       [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->switchIRModeCallback(request, response);
         return response.success;
       });
   if (isPropertyWritable(device_, OB_PROP_IR_CHANNEL_DATA_SOURCE_INT)) {
-    switch_ir_data_source_channel_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
-        "/" + camera_name_ + "/" + "switch_ir",
-        [this](SetStringRequest& request, SetStringResponse& response) {
-          response.success = this->switchIRDataSourceChannelCallback(request, response);
-          return response.success;
-        });
+    switch_ir_data_source_channel_srv_ =
+        advertiseCameraService<SetStringRequest, SetStringResponse>(
+            "/" + camera_name_ + "/" + "switch_ir",
+            [this](SetStringRequest& request, SetStringResponse& response) {
+              response.success = this->switchIRDataSourceChannelCallback(request, response);
+              return response.success;
+            });
   }
   if (isPropertyReadable(device_, OB_PROP_LDP_MEASURE_DISTANCE_INT)) {
-    get_lrm_measure_distance_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+    get_lrm_measure_distance_srv_ = advertiseCameraService<GetInt32Request, GetInt32Response>(
         "/" + camera_name_ + "/" + "get_lrm_measure_distance",
         [this](GetInt32Request& request, GetInt32Response& response) {
           response.success = this->getLrmMeasureDistanceCallback(request, response);
           return response.success;
         });
   }
-  set_stream_profile_srv_ = nh_.advertiseService<SetStreamProfileRequest, SetStreamProfileResponse>(
-      "/" + camera_name_ + "/" + "set_stream_profile",
-      [this](SetStreamProfileRequest& request, SetStreamProfileResponse& response) {
-        response.success = this->setStreamProfileCallback(request, response);
-        return true;
-      });
-  set_image_registration_mode_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+  set_stream_profile_srv_ =
+      advertiseCameraService<SetStreamProfileRequest, SetStreamProfileResponse>(
+          "/" + camera_name_ + "/" + "set_stream_profile",
+          [this](SetStreamProfileRequest& request, SetStreamProfileResponse& response) {
+            response.success = this->setStreamProfileCallback(request, response);
+            return true;
+          });
+  set_image_registration_mode_srv_ = advertiseCameraService<SetStringRequest, SetStringResponse>(
       "/" + camera_name_ + "/" + "set_image_registration_mode",
       [this](SetStringRequest& request, SetStringResponse& response) {
         response.success = this->setImageRegistrationModeCallback(request, response);
         return true;
       });
 
-  set_write_customerdata_srv_ = nh_.advertiseService<SetStringRequest, SetStringResponse>(
+  set_write_customerdata_srv_ = advertiseCameraService<SetStringRequest, SetStringResponse>(
       "/" + camera_name_ + "/" + "set_write_customer_data",
       [this](SetStringRequest& request, SetStringResponse& response) {
         response.success = this->setWriteCustomerData(request, response);
         return response.success;
       });
-  set_read_customerdata_srv_ = nh_.advertiseService<GetStringRequest, GetStringResponse>(
+  set_read_customerdata_srv_ = advertiseCameraService<GetStringRequest, GetStringResponse>(
       "/" + camera_name_ + "/" + "set_read_customer_data",
       [this](GetStringRequest& request, GetStringResponse& response) {
         response.success = this->setReadCustomerData(request, response);
@@ -471,54 +477,54 @@ void OBCameraNode::setupCameraCtrlServices() {
       });
   if (isPropertyReadable(device_, OB_PROP_LASER_CONTROL_INT) ||
       isPropertyReadable(device_, OB_PROP_LASER_BOOL)) {
-    get_laser_status_srv_ = nh_.advertiseService<GetBoolRequest, GetBoolResponse>(
+    get_laser_status_srv_ = advertiseCameraService<GetBoolRequest, GetBoolResponse>(
         "/" + camera_name_ + "/" + "get_laser_status",
         [this](GetBoolRequest& request, GetBoolResponse& response) {
           response.success = this->getLaserStatusCallback(request, response);
           return response.success;
         });
   }
-  set_point_cloud_decimation_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+  set_point_cloud_decimation_srv_ = advertiseCameraService<SetInt32Request, SetInt32Response>(
       "/" + camera_name_ + "/" + "set_point_cloud_decimation",
       [this](SetInt32Request& request, SetInt32Response& response) {
         response.success = this->setPointCloudDecimationCallback(request, response);
         return response.success;
       });
-  get_point_cloud_decimation_srv_ = nh_.advertiseService<GetInt32Request, GetInt32Response>(
+  get_point_cloud_decimation_srv_ = advertiseCameraService<GetInt32Request, GetInt32Response>(
       "/" + camera_name_ + "/" + "get_point_cloud_decimation",
       [this](GetInt32Request& request, GetInt32Response& response) {
         response.success = this->getPointCloudDecimationCallback(request, response);
         return response.success;
       });
   if (isPropertyWritable(device_, OB_PROP_DISP_SEARCH_RANGE_MODE_INT)) {
-    set_disparity_range_mode_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+    set_disparity_range_mode_srv_ = advertiseCameraService<SetInt32Request, SetInt32Response>(
         "/" + camera_name_ + "/" + "set_disparity_range_mode",
         [this](SetInt32Request& request, SetInt32Response& response) {
           return this->setDisparityRangeModeCallback(request, response);
         });
   }
   if (isPropertyWritable(device_, OB_PROP_DISP_SEARCH_OFFSET_INT)) {
-    set_disparity_search_offset_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+    set_disparity_search_offset_srv_ = advertiseCameraService<SetInt32Request, SetInt32Response>(
         "/" + camera_name_ + "/" + "set_disparity_search_offset",
         [this](SetInt32Request& request, SetInt32Response& response) {
           return this->setDisparitySearchOffsetCallback(request, response);
         });
   }
   if (isPropertyWritable(device_, OB_PROP_USB_SYNC_VOLTAGE_LEVEL_INT)) {
-    set_sync_io_voltage_level_srv_ = nh_.advertiseService<SetInt32Request, SetInt32Response>(
+    set_sync_io_voltage_level_srv_ = advertiseCameraService<SetInt32Request, SetInt32Response>(
         "/" + camera_name_ + "/" + "set_sync_io_voltage_level",
         [this](SetInt32Request& request, SetInt32Response& response) {
           return this->setSyncIoVoltageLevelCallback(request, response);
         });
   }
-  set_ae_reference_stream_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
+  set_ae_reference_stream_srv_ = advertiseCameraService<SetString::Request, SetString::Response>(
       "/" + camera_name_ + "/" + "set_ae_reference_stream",
       [this](const SetStringRequest& request, SetStringResponse& response) {
         this->setAEReferenceStreamCallback(request, response);
         return true;
       });
 
-  set_ae_strategy_srv_ = nh_.advertiseService<SetString::Request, SetString::Response>(
+  set_ae_strategy_srv_ = advertiseCameraService<SetString::Request, SetString::Response>(
       "/" + camera_name_ + "/" + "set_ae_strategy",
       [this](const SetStringRequest& request, SetStringResponse& response) {
         this->setAEStrategyCallback(request, response);

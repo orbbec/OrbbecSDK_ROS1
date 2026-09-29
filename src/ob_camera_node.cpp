@@ -151,6 +151,15 @@ OBCameraNode::OBCameraNode(ros::NodeHandle& nh, ros::NodeHandle& nh_private,
   // Initialize global image_transport (persistent across node recreations)
   initializeGlobalImageTransport();
   init();
+  callback_context_->attach(this);
+  try {
+    // Cached publishers keep existing subscribers across reconnects, so ROS
+    // need not emit another connect callback for them.
+    callback_context_->invoke([](OBCameraNode& node) { node.restoreSubscriberStreams(); });
+  } catch (...) {
+    clean();
+    throw;
+  }
 }
 
 void OBCameraNode::init() {
@@ -248,6 +257,8 @@ void OBCameraNode::rebootDevice() {
 }
 
 void OBCameraNode::clean() {
+  // Drain callbacks before taking device_lock_: callbacks take this lock too.
+  callback_context_->detach();
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
 
   if (is_cleaned_) {
@@ -267,6 +278,9 @@ void OBCameraNode::clean() {
   }
   if (software_trigger_timer_.isValid()) {
     software_trigger_timer_.stop();
+  }
+  if (sync_host_time_timer_.isValid()) {
+    sync_host_time_timer_.stop();
   }
   ROS_DEBUG_STREAM("OBCameraNode::clean() stop tf thread");
   if (tf_thread_ && tf_thread_->joinable()) {
@@ -414,7 +428,12 @@ void OBCameraNode::stopColorFrameThreads() {
     return;
   }
 
-  stop_color_frame_threads_.store(true);
+  {
+    // Pair the stop predicate with the waiters' mutexes. An atomic store plus
+    // notify alone can be lost between a predicate check and entering wait().
+    std::scoped_lock lock(colorFrameMtx_, leftColorFrameMtx_, rightColorFrameMtx_);
+    stop_color_frame_threads_.store(true);
+  }
   colorFrameCV_.notify_all();
   leftColorFrameCV_.notify_all();
   rightColorFrameCV_.notify_all();
@@ -896,12 +915,12 @@ void OBCameraNode::getParameters() {
     device_->timerSyncWithHost();
     if (enable_sync_host_time_ && time_domain_ != "global") {
       device_->enableGlobalTimestamp(false);
-      sync_host_time_timer_ =
-          nh_private_.createTimer(ros::Duration(60.0), [this](const ros::TimerEvent&) {
+      sync_host_time_timer_ = nh_private_.createTimer(
+          ros::Duration(60.0), bindTimerCallback([this](const ros::TimerEvent&) {
             if (device_) {
               device_->timerSyncWithHost();
             }
-          });
+          }));
       ROS_INFO_STREAM("Enabled timer sync with host every 60 seconds");
     }
   }
@@ -1300,10 +1319,7 @@ void OBCameraNode::startStream(const stream_index_pair& stream_index) {
     return;
   }
   ROS_INFO_STREAM("Starting stream " << stream_name_[stream_index] << "...");
-  const bool has_raw_image_subscriber = hasRawImageSubscriber(stream_index);
-  const bool has_compressed_image_subscriber = hasCompressedImageSubscriber(stream_index);
-  bool has_subscriber =
-      has_raw_image_subscriber || has_compressed_image_subscriber || save_images_[stream_index];
+  const bool has_subscriber = hasImageStreamSubscriber(stream_index) || save_images_[stream_index];
   if (!has_subscriber) {
     ROS_INFO_STREAM("No subscriber for stream " << stream_name_[stream_index] << ", skip it.");
     return;
@@ -1948,6 +1964,25 @@ bool OBCameraNode::hasCompressedImageSubscriber(const stream_index_pair& stream_
     return false;
   }
   return getStreamStatusSubscriberCount(compressedStreamStatusTopic(stream_index)) > 0;
+}
+
+bool OBCameraNode::hasImageStreamSubscriber(const stream_index_pair& stream_index) const {
+  const auto subscribed = [&](const auto& publishers) {
+    const auto it = publishers.find(stream_index);
+    return it != publishers.end() && it->second.getNumSubscribers() > 0;
+  };
+  if (subscribed(image_publishers_) || subscribed(raw_image_publishers_) ||
+      subscribed(compressed_image_publishers_) || subscribed(camera_info_publishers_) ||
+      subscribed(metadata_publishers_)) {
+    return true;
+  }
+  if (stream_index == DEPTH && (depth_unaligned_publisher_.getNumSubscribers() > 0 ||
+                                depth_unaligned_raw_publisher_.getNumSubscribers() > 0 ||
+                                depth_cloud_pub_.getNumSubscribers() > 0)) {
+    return true;
+  }
+  return (stream_index == DEPTH || stream_index == COLOR) &&
+         depth_registered_cloud_pub_.getNumSubscribers() > 0;
 }
 
 bool OBCameraNode::isMjpgColorStream(const stream_index_pair& stream_index) const {
@@ -3015,13 +3050,20 @@ void OBCameraNode::updateImageTransportSubscriberCount(
 }
 
 void OBCameraNode::refreshImageTransportSubscriberCounts() {
+  std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
+  if (!is_running_.load()) {
+    return;
+  }
   std::map<std::string, std::string> resolved_topics;
   for (const auto& [stream_index, publisher] : image_publishers_) {
-    (void)publisher;
     const auto raw_topic = stream_name_.at(stream_index) + "/image_raw";
     const auto compressed_topic = compressedStreamStatusTopic(stream_index);
-    resolved_topics[resolveStreamStatusTopic(raw_topic)] = raw_topic;
-    resolved_topics[resolveStreamStatusTopic(compressed_topic)] = compressed_topic;
+    // A nodelet's NodeHandle namespace need not match camera_name_. Query the
+    // actual advertised topic, including remappings, when counting subscribers.
+    resolved_topics[publisher.getTopic()] = raw_topic;
+    resolved_topics[publisher.getTopic() +
+                    (stream_index == DEPTH ? "/compressedDepth" : "/compressed")] =
+        compressed_topic;
   }
   if (resolved_topics.empty()) {
     return;
@@ -3153,41 +3195,9 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       ROS_DEBUG_STREAM("pipeline not started or not exist, skip stop pipeline");
       return;
     }
-    bool all_stream_no_subscriber = true;
-    for (auto& item : image_publishers_) {
-      if (item.second.getNumSubscribers() > 0) {
-        all_stream_no_subscriber = false;
-        break;
-      }
-    }
-    for (auto& item : raw_image_publishers_) {
-      if (item.second.getNumSubscribers() > 0) {
-        all_stream_no_subscriber = false;
-        break;
-      }
-    }
-    for (auto& item : compressed_image_publishers_) {
-      if (item.second.getNumSubscribers() > 0) {
-        all_stream_no_subscriber = false;
-        break;
-      }
-    }
-    for (auto& item : camera_info_publishers_) {
-      if (item.second.getNumSubscribers() > 0) {
-        all_stream_no_subscriber = false;
-        break;
-      }
-    }
-    if (enable_point_cloud_) {
-      if (depth_cloud_pub_.getNumSubscribers() > 0) {
-        all_stream_no_subscriber = false;
-      }
-    }
-    if (enable_colored_point_cloud_) {
-      if (depth_registered_cloud_pub_.getNumSubscribers() > 0) {
-        all_stream_no_subscriber = false;
-      }
-    }
+    const bool all_stream_no_subscriber = std::none_of(
+        IMAGE_STREAMS.begin(), IMAGE_STREAMS.end(),
+        [this](const auto& stream_index) { return hasImageStreamSubscriber(stream_index); });
     if (all_stream_no_subscriber) {
       stopStreams();
     }
@@ -3196,7 +3206,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       ROS_INFO_STREAM("Stream " << stream_name_[stream_index] << " is not started.");
       return;
     }
-    if (!hasRawImageSubscriber(stream_index) && !hasCompressedImageSubscriber(stream_index)) {
+    if (!hasImageStreamSubscriber(stream_index)) {
       stopStream(stream_index);
     }
   }
@@ -3209,6 +3219,15 @@ void OBCameraNode::imuUnsubscribedCallback(const stream_index_pair& stream_index
     ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " unsubscribed");
   }
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  if (enable_sync_output_accel_gyro_) {
+    if (imu_gyro_accel_publisher_.getNumSubscribers() > 0 ||
+        imu_info_publishers_[ACCEL].getNumSubscribers() > 0 ||
+        imu_info_publishers_[GYRO].getNumSubscribers() > 0) {
+      return;
+    }
+    stopIMU();
+    return;
+  }
   if (imu_publishers_.count(stream_index) > 0) {
     auto subscriber_count = imu_publishers_[stream_index].getNumSubscribers();
     if (subscriber_count > 0) {

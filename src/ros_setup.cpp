@@ -2660,7 +2660,8 @@ void OBCameraNode::setupDevices() {
           ROS_INFO_STREAM("Frames per trigger: " << sync_config.framesPerTrigger);
           ROS_INFO_STREAM("Software trigger period: " << software_trigger_period_ << " ms");
           software_trigger_timer_ = nh_private_.createTimer(
-              ros::Duration(0, software_trigger_period_ * 1000000), [this](const ros::TimerEvent&) {
+              ros::Duration(0, software_trigger_period_ * 1000000),
+              bindTimerCallback([this](const ros::TimerEvent&) {
                 if (software_trigger_enabled_) {
                   try {
                     device_->triggerCapture();
@@ -2673,7 +2674,7 @@ void OBCameraNode::setupDevices() {
                     ROS_ERROR_STREAM("Failed to send automatic software trigger: unknown error");
                   }
                 }
-              });
+              }));
         }
       });
     }
@@ -3637,9 +3638,17 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
   std::lock_guard<std::recursive_mutex> lock(device_lock_);
   try {
     const bool restart_pipeline = pipeline_started_.load();
-    if (restart_pipeline) {
-      stopStreams();
+    std::vector<stream_index_pair> streams_to_restart;
+    if (!enable_pipeline_) {
+      for (const auto& stream_index : IMAGE_STREAMS) {
+        if (stream_started_[stream_index]) {
+          streams_to_restart.push_back(stream_index);
+        }
+      }
     }
+    // Drain both pipeline and standalone sensor callbacks before replacing
+    // profiles, buffers or publishers that those callbacks access.
+    stopStreams();
     stopColorFrameThreads();
     clearColorFrameQueues();
 
@@ -3676,6 +3685,10 @@ bool OBCameraNode::applyStreamProfiles(const std::vector<PendingStreamProfile>& 
     clearColorFrameQueues();
     if (restart_pipeline) {
       startStreams();
+    } else {
+      for (const auto& stream_index : streams_to_restart) {
+        startStream(stream_index);
+      }
     }
     message = "success";
     return true;
@@ -3698,7 +3711,8 @@ void OBCameraNode::syncSoftwareAlignment() {
     }
     if (align_target_stream_ != OB_STREAM_COLOR) {
       if (depth_unaligned_publisher_) {
-        depth_unaligned_publisher_.shutdown();
+        releaseGlobalImagePublisher(nh_.resolveName("depth/image_unaligned"));
+        depth_unaligned_publisher_ = image_transport::Publisher();
       }
       if (depth_unaligned_raw_publisher_) {
         depth_unaligned_raw_publisher_.shutdown();
@@ -3707,19 +3721,20 @@ void OBCameraNode::syncSoftwareAlignment() {
     }
     if (!depth_unaligned_publisher_ && !depth_unaligned_raw_publisher_) {
       ros::SubscriberStatusCallback depth_unaligned_subscribed_cb =
-          boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+          bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, DEPTH);
       ros::SubscriberStatusCallback depth_unaligned_unsubscribed_cb =
-          boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
+          bindSubscriberCallback(&OBCameraNode::imageUnsubscribedCallback, DEPTH);
       if (enable_image_transport_plugins_) {
         image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
-            boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+            bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, DEPTH);
         image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
-            boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
-        depth_unaligned_publisher_ = image_transport::ImageTransport(nh_).advertise(
-            "depth/image_unaligned", 1, image_transport_subscribed_cb,
-            image_transport_unsubscribed_cb);
+            bindSubscriberCallback(&OBCameraNode::imageUnsubscribedCallback, DEPTH);
+        depth_unaligned_publisher_ =
+            getGlobalImagePublisher(nh_.resolveName("depth/image_unaligned"),
+                                    image_transport_subscribed_cb, image_transport_unsubscribed_cb);
       } else {
-        depth_unaligned_raw_publisher_ = nh_.advertise<sensor_msgs::Image>(
+        ros::NodeHandle publisher_nh(nh_);
+        depth_unaligned_raw_publisher_ = publisher_nh.advertise<sensor_msgs::Image>(
             "depth/image_unaligned", 1, depth_unaligned_subscribed_cb,
             depth_unaligned_unsubscribed_cb);
       }
@@ -3729,7 +3744,8 @@ void OBCameraNode::syncSoftwareAlignment() {
 
   align_filter_.reset();
   if (depth_unaligned_publisher_) {
-    depth_unaligned_publisher_.shutdown();
+    releaseGlobalImagePublisher(nh_.resolveName("depth/image_unaligned"));
+    depth_unaligned_publisher_ = image_transport::Publisher();
   }
   if (depth_unaligned_raw_publisher_) {
     depth_unaligned_raw_publisher_.shutdown();
@@ -3860,9 +3876,15 @@ void OBCameraNode::fillStreamStatus(orbbec_camera::DeviceStatus& status_msg) {
 }
 
 void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
+  std::lock_guard<decltype(device_lock_)> device_lock(device_lock_);
   const std::string topic = stream_name_.at(stream_index) + "/image_raw";
   const std::string topic_name = "/" + camera_name_ + "/" + topic;
-  releaseGlobalImagePublisher(topic_name);
+  // Reuse image_transport publishers across camera reconnects. Only release
+  // one when the stream is disabled or changes to the direct ROS publisher path.
+  if (!enable_stream_[stream_index] || isMjpgColorStream(stream_index) ||
+      !enable_image_transport_plugins_) {
+    releaseGlobalImagePublisher(topic_name);
+  }
   auto raw_it = raw_image_publishers_.find(stream_index);
   if (raw_it != raw_image_publishers_.end()) {
     raw_it->second.shutdown();
@@ -3883,26 +3905,26 @@ void OBCameraNode::setupImagePublisher(const stream_index_pair& stream_index) {
   }
 
   ros::SubscriberStatusCallback image_subscribed_cb =
-      boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
+      bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, stream_index);
   ros::SubscriberStatusCallback image_unsubscribed_cb =
-      boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
+      bindSubscriberCallback(&OBCameraNode::imageUnsubscribedCallback, stream_index);
   image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
-      [this, stream_index](const image_transport::SingleSubscriberPublisher& subscriber) {
-        this->imageTransportSubscribedCallback(stream_index, subscriber);
-      };
+      bindImageTransportCallback(stream_index, true);
   image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
-      [this, stream_index](const image_transport::SingleSubscriberPublisher& subscriber) {
-        this->imageTransportUnsubscribedCallback(stream_index, subscriber);
-      };
+      bindImageTransportCallback(stream_index, false);
 
   if (isMjpgColorStream(stream_index) || !enable_image_transport_plugins_) {
-    raw_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::Image>(
+    // NodeHandle keeps weak records of every advertisement until destruction.
+    // A short-lived copy prevents those records accumulating on format changes.
+    ros::NodeHandle publisher_nh(nh_);
+    raw_image_publishers_[stream_index] = publisher_nh.advertise<sensor_msgs::Image>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
     const auto raw_publisher = raw_image_publishers_.at(stream_index);
     registerStreamStatus(topic, [raw_publisher]() { return raw_publisher.getNumSubscribers(); });
     if (isMjpgColorStream(stream_index)) {
-      compressed_image_publishers_[stream_index] = nh_.advertise<sensor_msgs::CompressedImage>(
-          topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
+      compressed_image_publishers_[stream_index] =
+          publisher_nh.advertise<sensor_msgs::CompressedImage>(
+              topic_name + "/compressed", 1, image_subscribed_cb, image_unsubscribed_cb);
       const auto compressed_publisher = compressed_image_publishers_.at(stream_index);
       registerStreamStatus(topic + "/compressed", [compressed_publisher]() {
         return compressed_publisher.getNumSubscribers();
@@ -3929,9 +3951,9 @@ void OBCameraNode::setupPublishers() {
     setupImagePublisher(stream_index);
 
     ros::SubscriberStatusCallback image_subscribed_cb =
-        boost::bind(&OBCameraNode::imageSubscribedCallback, this, stream_index);
+        bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, stream_index);
     ros::SubscriberStatusCallback image_unsubscribed_cb =
-        boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, stream_index);
+        bindSubscriberCallback(&OBCameraNode::imageUnsubscribedCallback, stream_index);
     const std::string topic_name = "/" + camera_name_ + "/" + name + "/camera_info";
     camera_info_publishers_[stream_index] = nh_.advertise<sensor_msgs::CameraInfo>(
         topic_name, 1, image_subscribed_cb, image_unsubscribed_cb);
@@ -3950,9 +3972,9 @@ void OBCameraNode::setupPublishers() {
   }
   if (enable_point_cloud_ && enable_stream_[DEPTH]) {
     ros::SubscriberStatusCallback depth_cloud_subscribed_cb =
-        boost::bind(&OBCameraNode::pointCloudSubscribedCallback, this);
+        bindSubscriberCallback(&OBCameraNode::pointCloudSubscribedCallback);
     ros::SubscriberStatusCallback depth_cloud_unsubscribed_cb =
-        boost::bind(&OBCameraNode::pointCloudUnsubscribedCallback, this);
+        bindSubscriberCallback(&OBCameraNode::pointCloudUnsubscribedCallback);
     depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth/points", 1, depth_cloud_subscribed_cb, depth_cloud_unsubscribed_cb);
     const auto publisher = depth_cloud_pub_;
@@ -3962,9 +3984,9 @@ void OBCameraNode::setupPublishers() {
   }
   if (enable_colored_point_cloud_ && enable_stream_[DEPTH] && enable_stream_[COLOR]) {
     ros::SubscriberStatusCallback depth_registered_cloud_subscribed_cb =
-        boost::bind(&OBCameraNode::coloredPointCloudSubscribedCallback, this);
+        bindSubscriberCallback(&OBCameraNode::coloredPointCloudSubscribedCallback);
     ros::SubscriberStatusCallback depth_registered_cloud_unsubscribed_cb =
-        boost::bind(&OBCameraNode::coloredPointCloudUnsubscribedCallback, this);
+        bindSubscriberCallback(&OBCameraNode::coloredPointCloudUnsubscribedCallback);
     depth_registered_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(
         "depth_registered/points", 1, depth_registered_cloud_subscribed_cb,
         depth_registered_cloud_unsubscribed_cb);
@@ -3977,19 +3999,20 @@ void OBCameraNode::setupPublishers() {
 
   if (depth_registration_ && align_mode_ == "SW") {
     ros::SubscriberStatusCallback depth_unaligned_subscribed_cb =
-        boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+        bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, DEPTH);
     ros::SubscriberStatusCallback depth_unaligned_unsubscribed_cb =
-        boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
+        bindSubscriberCallback(&OBCameraNode::imageUnsubscribedCallback, DEPTH);
     if (enable_image_transport_plugins_) {
       image_transport::SubscriberStatusCallback image_transport_subscribed_cb =
-          boost::bind(&OBCameraNode::imageSubscribedCallback, this, DEPTH);
+          bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, DEPTH);
       image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
-          boost::bind(&OBCameraNode::imageUnsubscribedCallback, this, DEPTH);
-      depth_unaligned_publisher_ = image_transport::ImageTransport(nh_).advertise(
-          "depth/image_unaligned", 1, image_transport_subscribed_cb,
-          image_transport_unsubscribed_cb);
+          bindSubscriberCallback(&OBCameraNode::imageUnsubscribedCallback, DEPTH);
+      depth_unaligned_publisher_ =
+          getGlobalImagePublisher(nh_.resolveName("depth/image_unaligned"),
+                                  image_transport_subscribed_cb, image_transport_unsubscribed_cb);
     } else {
-      depth_unaligned_raw_publisher_ = nh_.advertise<sensor_msgs::Image>(
+      ros::NodeHandle publisher_nh(nh_);
+      depth_unaligned_raw_publisher_ = publisher_nh.advertise<sensor_msgs::Image>(
           "depth/image_unaligned", 1, depth_unaligned_subscribed_cb,
           depth_unaligned_unsubscribed_cb);
     }
@@ -3998,9 +4021,9 @@ void OBCameraNode::setupPublishers() {
   if (enable_sync_output_accel_gyro_) {
     std::string topic_name = stream_name_[GYRO] + "_" + stream_name_[ACCEL] + "/sample";
     ros::SubscriberStatusCallback imu_subscribed_cb =
-        boost::bind(&OBCameraNode::imuSubscribedCallback, this, GYRO);
+        bindSubscriberCallback(&OBCameraNode::imuSubscribedCallback, GYRO);
     ros::SubscriberStatusCallback imu_unsubscribed_cb =
-        boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, GYRO);
+        bindSubscriberCallback(&OBCameraNode::imuUnsubscribedCallback, GYRO);
     imu_gyro_accel_publisher_ =
         nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
     const auto publisher = imu_gyro_accel_publisher_;
@@ -4018,9 +4041,9 @@ void OBCameraNode::setupPublishers() {
       }
       std::string topic_name = stream_name_[stream_index] + "/sample";
       ros::SubscriberStatusCallback imu_subscribed_cb =
-          boost::bind(&OBCameraNode::imuSubscribedCallback, this, stream_index);
+          bindSubscriberCallback(&OBCameraNode::imuSubscribedCallback, stream_index);
       ros::SubscriberStatusCallback imu_unsubscribed_cb =
-          boost::bind(&OBCameraNode::imuUnsubscribedCallback, this, stream_index);
+          bindSubscriberCallback(&OBCameraNode::imuUnsubscribedCallback, stream_index);
       imu_publishers_[stream_index] =
           nh_.advertise<sensor_msgs::Imu>(topic_name, 1, imu_subscribed_cb, imu_unsubscribed_cb);
       const auto publisher = imu_publishers_.at(stream_index);
@@ -4064,7 +4087,9 @@ void OBCameraNode::setupPublishers() {
                     << lrm_obstacle_distance_publish_rate_ << " Hz");
     lrm_obstacle_distance_timer_ =
         nh_private_.createTimer(ros::Duration(1.0 / lrm_obstacle_distance_publish_rate_),
-                                &OBCameraNode::publishLrmObstacleDistance, this);
+                                bindTimerCallback([this](const ros::TimerEvent& event) {
+                                  publishLrmObstacleDistance(event);
+                                }));
   }
   if (enable_enhanced_depth_.load()) {
     setupConfidencePublishers();
@@ -4111,7 +4136,48 @@ void OBCameraNode::publishLrmObstacleDistance(const ros::TimerEvent& event) {
 }
 
 // Global topic-based publisher cache to prevent plugin reloading
-std::map<std::string, image_transport::Publisher> OBCameraNode::global_image_publishers_;
+image_transport::SubscriberStatusCallback OBCameraNode::bindImageTransportCallback(
+    const stream_index_pair& stream_index, bool connected) {
+  return [context = callback_context_, stream_index,
+          connected](const image_transport::SingleSubscriberPublisher& subscriber) {
+    context->invoke([&](OBCameraNode& node) {
+      if (connected) {
+        node.imageTransportSubscribedCallback(stream_index, subscriber);
+      } else {
+        node.imageTransportUnsubscribedCallback(stream_index, subscriber);
+      }
+    });
+  };
+}
+
+void OBCameraNode::restoreSubscriberStreams() {
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  refreshImageTransportSubscriberCounts();
+  const auto has_subscriber = [](const auto& publishers, const auto& stream_index) {
+    const auto it = publishers.find(stream_index);
+    return it != publishers.end() && it->second.getNumSubscribers() != 0;
+  };
+  for (const auto& stream_index : IMAGE_STREAMS) {
+    if (enable_stream_[stream_index] && hasImageStreamSubscriber(stream_index)) {
+      imageSubscribedCallback(stream_index);
+    }
+  }
+  if (enable_sync_output_accel_gyro_) {
+    if (imu_gyro_accel_publisher_.getNumSubscribers() ||
+        has_subscriber(imu_info_publishers_, ACCEL) || has_subscriber(imu_info_publishers_, GYRO)) {
+      imuSubscribedCallback(GYRO);
+    }
+  } else {
+    for (const auto& stream_index : HID_STREAMS) {
+      if (enable_stream_[stream_index] && (has_subscriber(imu_publishers_, stream_index) ||
+                                           has_subscriber(imu_info_publishers_, stream_index))) {
+        imuSubscribedCallback(stream_index);
+      }
+    }
+  }
+}
+
+std::map<std::string, OBCameraNode::CachedImagePublisher> OBCameraNode::global_image_publishers_;
 std::shared_ptr<image_transport::ImageTransport> OBCameraNode::global_image_transport_;
 std::shared_ptr<ros::NodeHandle> OBCameraNode::global_nh_;
 std::mutex OBCameraNode::global_publisher_mutex_;
@@ -4129,36 +4195,62 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
     global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
   }
 
-  // Always recreate publisher with callbacks to ensure rostopic hz detection works
   auto it = global_image_publishers_.find(topic_name);
   if (it != global_image_publishers_.end()) {
-    ROS_DEBUG_STREAM("Recreating image publisher for topic with callbacks: " << topic_name);
-    it->second.shutdown();
-    global_image_publishers_.erase(it);
+    const auto& callbacks = it->second.callbacks;
+    std::lock_guard<std::mutex> callback_lock(callbacks->mutex);
+    callbacks->connect = connect_cb;
+    callbacks->disconnect = disconnect_cb;
+    ROS_DEBUG_STREAM("Reusing image publisher: " << topic_name);
+    return it->second.publisher;
   }
 
-  // Create new publisher with callbacks for this topic and cache it
-  image_transport::Publisher pub =
-      global_image_transport_->advertise(topic_name, 1, connect_cb, disconnect_cb);
-  global_image_publishers_[topic_name] = pub;
-
-  ROS_DEBUG_STREAM("Created new image publisher with callbacks for topic: " << topic_name);
+  auto callbacks = std::make_shared<ImagePublisherCallbacks>();
+  callbacks->connect = connect_cb;
+  callbacks->disconnect = disconnect_cb;
+  auto pub = global_image_transport_->advertise(
+      topic_name, 1,
+      [callbacks](const image_transport::SingleSubscriberPublisher& subscriber) {
+        callbacks->dispatch(subscriber, true);
+      },
+      [callbacks](const image_transport::SingleSubscriberPublisher& subscriber) {
+        callbacks->dispatch(subscriber, false);
+      });
+  global_image_publishers_.emplace(topic_name, CachedImagePublisher{pub, callbacks});
+  ROS_DEBUG_STREAM("Created cached image publisher: " << topic_name);
   return pub;
+}
+
+void OBCameraNode::ImagePublisherCallbacks::dispatch(
+    const image_transport::SingleSubscriberPublisher& subscriber, bool connected) {
+  image_transport::SubscriberStatusCallback callback;
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    callback = connected ? connect : disconnect;
+  }
+  // Do not hold the routing lock while calling the camera: a callback can
+  // reconfigure publishers. The generation context protects the copied callback.
+  if (callback) {
+    callback(subscriber);
+  }
 }
 
 void OBCameraNode::releaseGlobalImagePublisher(const std::string& topic_name) {
   std::lock_guard<std::mutex> lock(global_publisher_mutex_);
-
   auto it = global_image_publishers_.find(topic_name);
   if (it != global_image_publishers_.end()) {
-    it->second.shutdown();
+    it->second.publisher.shutdown();
     global_image_publishers_.erase(it);
+    // Discard the transport NodeHandle's expired advertisement records on an
+    // explicit configuration change. Other cached publishers retain their
+    // plugin loaders and remain valid; reconnect alone never takes this path.
+    global_image_transport_.reset();
     ROS_DEBUG_STREAM("Released image publisher for topic: " << topic_name);
   }
 }
 
 void OBCameraNode::initializeGlobalImageTransport() {
-  // Note: This function should be called only when global_publisher_mutex_ is already locked
+  std::lock_guard<std::mutex> lock(global_publisher_mutex_);
 
   if (!global_image_transport_) {
     if (!global_nh_) {
@@ -4175,7 +4267,7 @@ void OBCameraNode::forceCleanupGlobalResources() {
 
   // Force shutdown all publishers
   for (auto& pair : global_image_publishers_) {
-    pair.second.shutdown();
+    pair.second.publisher.shutdown();
   }
   global_image_publishers_.clear();
 
@@ -4663,7 +4755,13 @@ void OBCameraNode::setDisparitySearchOffset() {
 }
 
 void OBCameraNode::setDepthAutoExposureROI() {
-  std::lock_guard<std::recursive_mutex> lock(device_lock_);
+  // Called by the SDK frame thread. A control callback may own device_lock_
+  // while stopping the SDK and joining this thread. Defer ROI setup to the
+  // next frame instead of waiting for that callback.
+  std::unique_lock<std::recursive_mutex> lock(device_lock_, std::try_to_lock);
+  if (!lock.owns_lock()) {
+    return;
+  }
   const int width = width_[DEPTH];
   const int height = height_[DEPTH];
   if (width <= 0 || height <= 0 ||
@@ -4713,7 +4811,12 @@ void OBCameraNode::setDepthAutoExposureROI() {
 }
 
 void OBCameraNode::setColorAutoExposureROI() {
-  std::lock_guard<std::recursive_mutex> lock(device_lock_);
+  // See setDepthAutoExposureROI(): SDK callbacks must not wait for a control
+  // callback that can stop/join them.
+  std::unique_lock<std::recursive_mutex> lock(device_lock_, std::try_to_lock);
+  if (!lock.owns_lock()) {
+    return;
+  }
   const int width = width_[COLOR];
   const int height = height_[COLOR];
   if (width <= 0 || height <= 0 ||
