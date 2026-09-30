@@ -3711,7 +3711,7 @@ void OBCameraNode::syncSoftwareAlignment() {
     }
     if (align_target_stream_ != OB_STREAM_COLOR) {
       if (depth_unaligned_publisher_) {
-        releaseGlobalImagePublisher(nh_.resolveName("depth/image_unaligned"));
+        releaseGlobalImagePublisher("depth/image_unaligned", nh_private_.getNamespace());
         depth_unaligned_publisher_ = image_transport::Publisher();
       }
       if (depth_unaligned_raw_publisher_) {
@@ -3729,9 +3729,9 @@ void OBCameraNode::syncSoftwareAlignment() {
             bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, DEPTH);
         image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
             bindSubscriberCallback(&OBCameraNode::imageUnsubscribedCallback, DEPTH);
-        depth_unaligned_publisher_ =
-            getGlobalImagePublisher(nh_.resolveName("depth/image_unaligned"),
-                                    image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+        depth_unaligned_publisher_ = getGlobalImagePublisher(
+            "depth/image_unaligned", image_transport_subscribed_cb, image_transport_unsubscribed_cb,
+            &nh_, nh_private_.getNamespace());
       } else {
         ros::NodeHandle publisher_nh(nh_);
         depth_unaligned_raw_publisher_ = publisher_nh.advertise<sensor_msgs::Image>(
@@ -3744,7 +3744,7 @@ void OBCameraNode::syncSoftwareAlignment() {
 
   align_filter_.reset();
   if (depth_unaligned_publisher_) {
-    releaseGlobalImagePublisher(nh_.resolveName("depth/image_unaligned"));
+    releaseGlobalImagePublisher("depth/image_unaligned", nh_private_.getNamespace());
     depth_unaligned_publisher_ = image_transport::Publisher();
   }
   if (depth_unaligned_raw_publisher_) {
@@ -3997,6 +3997,12 @@ void OBCameraNode::setupPublishers() {
     removeStreamStatus("depth_registered/points");
   }
 
+  // A reconnect may use a different configuration. The previous generation's
+  // cached transport must not keep disabled unaligned-depth topics advertised.
+  if (!depth_registration_ || align_mode_ != "SW" || !enable_image_transport_plugins_) {
+    releaseGlobalImagePublisher("depth/image_unaligned", nh_private_.getNamespace());
+    depth_unaligned_publisher_ = image_transport::Publisher();
+  }
   if (depth_registration_ && align_mode_ == "SW") {
     ros::SubscriberStatusCallback depth_unaligned_subscribed_cb =
         bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, DEPTH);
@@ -4007,9 +4013,9 @@ void OBCameraNode::setupPublishers() {
           bindSubscriberCallback(&OBCameraNode::imageSubscribedCallback, DEPTH);
       image_transport::SubscriberStatusCallback image_transport_unsubscribed_cb =
           bindSubscriberCallback(&OBCameraNode::imageUnsubscribedCallback, DEPTH);
-      depth_unaligned_publisher_ =
-          getGlobalImagePublisher(nh_.resolveName("depth/image_unaligned"),
-                                  image_transport_subscribed_cb, image_transport_unsubscribed_cb);
+      depth_unaligned_publisher_ = getGlobalImagePublisher(
+          "depth/image_unaligned", image_transport_subscribed_cb, image_transport_unsubscribed_cb,
+          &nh_, nh_private_.getNamespace());
     } else {
       ros::NodeHandle publisher_nh(nh_);
       depth_unaligned_raw_publisher_ = publisher_nh.advertise<sensor_msgs::Image>(
@@ -4177,14 +4183,16 @@ void OBCameraNode::restoreSubscriberStreams() {
   }
 }
 
-std::map<std::string, OBCameraNode::CachedImagePublisher> OBCameraNode::global_image_publishers_;
+std::map<OBCameraNode::ImagePublisherKey, OBCameraNode::CachedImagePublisher>
+    OBCameraNode::global_image_publishers_;
 std::shared_ptr<image_transport::ImageTransport> OBCameraNode::global_image_transport_;
 std::shared_ptr<ros::NodeHandle> OBCameraNode::global_nh_;
 std::mutex OBCameraNode::global_publisher_mutex_;
 
 image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
     const std::string& topic_name, const image_transport::SubscriberStatusCallback& connect_cb,
-    const image_transport::SubscriberStatusCallback& disconnect_cb) {
+    const image_transport::SubscriberStatusCallback& disconnect_cb,
+    const ros::NodeHandle* publisher_nh, const std::string& owner_namespace) {
   std::lock_guard<std::mutex> lock(global_publisher_mutex_);
 
   // Initialize global image transport if needed
@@ -4195,7 +4203,8 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
     global_image_transport_ = std::make_shared<image_transport::ImageTransport>(*global_nh_);
   }
 
-  auto it = global_image_publishers_.find(topic_name);
+  const ImagePublisherKey key{owner_namespace, topic_name};
+  auto it = global_image_publishers_.find(key);
   if (it != global_image_publishers_.end()) {
     const auto& callbacks = it->second.callbacks;
     std::lock_guard<std::mutex> callback_lock(callbacks->mutex);
@@ -4208,7 +4217,13 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
   auto callbacks = std::make_shared<ImagePublisherCallbacks>();
   callbacks->connect = connect_cb;
   callbacks->disconnect = disconnect_cb;
-  auto pub = global_image_transport_->advertise(
+  // The unaligned-depth path historically used ImageTransport(nh_) with a
+  // relative topic. Keep that exact resolution and the nodelet's local remaps.
+  auto scoped_transport = publisher_nh
+                              ? std::make_shared<image_transport::ImageTransport>(*publisher_nh)
+                              : std::shared_ptr<image_transport::ImageTransport>();
+  auto transport = scoped_transport ? scoped_transport : global_image_transport_;
+  auto pub = transport->advertise(
       topic_name, 1,
       [callbacks](const image_transport::SingleSubscriberPublisher& subscriber) {
         callbacks->dispatch(subscriber, true);
@@ -4216,7 +4231,7 @@ image_transport::Publisher OBCameraNode::getGlobalImagePublisher(
       [callbacks](const image_transport::SingleSubscriberPublisher& subscriber) {
         callbacks->dispatch(subscriber, false);
       });
-  global_image_publishers_.emplace(topic_name, CachedImagePublisher{pub, callbacks});
+  global_image_publishers_.emplace(key, CachedImagePublisher{scoped_transport, pub, callbacks});
   ROS_DEBUG_STREAM("Created cached image publisher: " << topic_name);
   return pub;
 }
@@ -4235,16 +4250,20 @@ void OBCameraNode::ImagePublisherCallbacks::dispatch(
   }
 }
 
-void OBCameraNode::releaseGlobalImagePublisher(const std::string& topic_name) {
+void OBCameraNode::releaseGlobalImagePublisher(const std::string& topic_name,
+                                               const std::string& owner_namespace) {
   std::lock_guard<std::mutex> lock(global_publisher_mutex_);
-  auto it = global_image_publishers_.find(topic_name);
+  auto it = global_image_publishers_.find(ImagePublisherKey{owner_namespace, topic_name});
   if (it != global_image_publishers_.end()) {
     it->second.publisher.shutdown();
+    const bool uses_global_transport = !it->second.transport;
     global_image_publishers_.erase(it);
     // Discard the transport NodeHandle's expired advertisement records on an
     // explicit configuration change. Other cached publishers retain their
     // plugin loaders and remain valid; reconnect alone never takes this path.
-    global_image_transport_.reset();
+    if (uses_global_transport) {
+      global_image_transport_.reset();
+    }
     ROS_DEBUG_STREAM("Released image publisher for topic: " << topic_name);
   }
 }

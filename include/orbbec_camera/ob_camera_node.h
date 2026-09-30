@@ -407,8 +407,10 @@ class OBCameraNode {
 
   static image_transport::Publisher getGlobalImagePublisher(
       const std::string &topic_name, const image_transport::SubscriberStatusCallback &connect_cb,
-      const image_transport::SubscriberStatusCallback &disconnect_cb);
-  static void releaseGlobalImagePublisher(const std::string &topic_name);
+      const image_transport::SubscriberStatusCallback &disconnect_cb,
+      const ros::NodeHandle *publisher_nh = nullptr, const std::string &owner_namespace = "");
+  static void releaseGlobalImagePublisher(const std::string &topic_name,
+                                          const std::string &owner_namespace = "");
   static void initializeGlobalImageTransport();
 
   void setupDiagnosticUpdater();
@@ -680,7 +682,7 @@ class OBCameraNode {
   std::map<std::string, size_t> image_transport_subscriber_counts_;
   mutable std::mutex stream_status_mutex_;
 
-  // Global topic-based publisher cache to prevent plugin reloading
+  // Persistent publisher cache to prevent plugin reloading
   struct ImagePublisherCallbacks {
     std::mutex mutex;
     image_transport::SubscriberStatusCallback connect;
@@ -689,10 +691,16 @@ class OBCameraNode {
     void dispatch(const image_transport::SingleSubscriberPublisher &subscriber, bool connected);
   };
   struct CachedImagePublisher {
+    // Scoped transports preserve the original NodeHandle's remappings and queue
+    // across reconnects. Declare before publisher so it is destroyed last.
+    std::shared_ptr<image_transport::ImageTransport> transport;
     image_transport::Publisher publisher;
     std::shared_ptr<ImagePublisherCallbacks> callbacks;
   };
-  static std::map<std::string, CachedImagePublisher> global_image_publishers_;
+  // Key: owner private namespace and original topic argument. A nodelet's local
+  // remappings may differ even when its base topic is shared.
+  using ImagePublisherKey = std::pair<std::string, std::string>;
+  static std::map<ImagePublisherKey, CachedImagePublisher> global_image_publishers_;
   // Each camera generation has its own context. A callback copied before
   // rebinding cannot call the destroyed camera or its replacement.
   std::shared_ptr<CallbackContext<OBCameraNode>> callback_context_ =
