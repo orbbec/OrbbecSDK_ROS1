@@ -522,11 +522,11 @@ void OBCameraNode::getParameters() {
   captureInitialRosParameters();
 
   camera_name_ = nh_private_.param<std::string>("camera_name", "camera");
-  color_frame_queue_max_frames_ = nh_private_.param<int>("color_frame_queue_max_frames", 10);
+  color_frame_queue_max_frames_ = nh_private_.param<int>("color_frame_queue_max_frames", 1);
   left_color_frame_queue_max_frames_ =
-      nh_private_.param<int>("left_color_frame_queue_max_frames", 10);
+      nh_private_.param<int>("left_color_frame_queue_max_frames", 1);
   right_color_frame_queue_max_frames_ =
-      nh_private_.param<int>("right_color_frame_queue_max_frames", 10);
+      nh_private_.param<int>("right_color_frame_queue_max_frames", 1);
   const auto validate_queue_capacity = [](const char* name, int capacity) {
     if (capacity < 1) {
       throw StreamConfigurationError(std::string(name) + " must be greater than zero");
