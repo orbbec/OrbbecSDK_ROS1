@@ -336,10 +336,10 @@ add_orbbec_executable(firmware_update_tool src/firmware_update_tool.cpp)
 add_orbbec_executable(orbbec_camera_node src/main.cpp)
 add_orbbec_executable(service_benchmark_node scripts/service_benchmark_node.cpp)
 add_orbbec_executable(image_sync_example_node examples/multi_camera_time_sync/image_sync_example_node.cpp)
-add_executable(gige_action_command_node src/gige_action_command_node.cpp)
-target_link_libraries(gige_action_command_node PRIVATE ${COMMON_LINK_LIBRARIES})
-target_include_directories(gige_action_command_node PUBLIC ${COMMON_INCLUDE_DIRS})
-add_dependencies(gige_action_command_node ${PROJECT_NAME}_generate_messages_cpp)
+add_executable(action_command_node src/action_command_node.cpp)
+target_link_libraries(action_command_node PRIVATE ${COMMON_LINK_LIBRARIES})
+target_include_directories(action_command_node PUBLIC ${COMMON_INCLUDE_DIRS})
+add_dependencies(action_command_node ${PROJECT_NAME}_generate_messages_cpp)
 
 catkin_install_python(PROGRAMS
   scripts/common_benchmark_node.py
@@ -358,7 +358,7 @@ install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${EXECUTABLES}
   firmware_update_tool
   service_benchmark_node
   image_sync_example_node
-  gige_action_command_node
+  action_command_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

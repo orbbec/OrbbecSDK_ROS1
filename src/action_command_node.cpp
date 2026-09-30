@@ -48,14 +48,14 @@ bool getSystemTimeMilliseconds(uint64_t* milliseconds, std::string* error_messag
 
 }  // namespace
 
-class GigEActionCommandNode {
+class ActionCommandNode {
  public:
-  explicit GigEActionCommandNode(ros::NodeHandle& nh_private)
+  explicit ActionCommandNode(ros::NodeHandle& nh_private)
       : context_(std::make_unique<ob::Context>()) {
     context_->enableNetDeviceEnumeration(true);
     send_action_command_service_ = nh_private.advertiseService(
-        "send_action_command", &GigEActionCommandNode::sendActionCommandCallback, this);
-    ROS_INFO_STREAM("GigE Action Command service is ready");
+        "send_action_command", &ActionCommandNode::sendActionCommandCallback, this);
+    ROS_INFO_STREAM("Action Command service is ready");
   }
 
  private:
@@ -164,9 +164,9 @@ class GigEActionCommandNode {
 }  // namespace orbbec_camera
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "gige_action_command_node");
+  ros::init(argc, argv, "action_command_node");
   ros::NodeHandle nh_private("~");
-  orbbec_camera::GigEActionCommandNode node(nh_private);
+  orbbec_camera::ActionCommandNode node(nh_private);
   ros::spin();
   return 0;
 }

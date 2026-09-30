@@ -1,4 +1,4 @@
-# GigE Action Command
+# Action Command
 
 This example starts two Gemini 335Le cameras in Group Actions synchronization mode and one
 host-side Action Command sender. The sender is created once because one GVCP Action Command can
@@ -11,10 +11,10 @@ trigger multiple cameras.
 - Both cameras and the host on the same network
 
 Pass the camera addresses on launch, or change the defaults in
-`multi_gige_action_command.launch`:
+`multi_action_command.launch`:
 
 ```bash
-roslaunch orbbec_camera multi_gige_action_command.launch \
+roslaunch orbbec_camera multi_action_command.launch \
   camera1_ip:=192.168.1.10 camera2_ip:=192.168.1.11
 ```
 
@@ -25,7 +25,7 @@ The launch file creates these services:
 /camera_01/set_action_config
 /camera_02/get_action_config
 /camera_02/set_action_config
-/gige_action_command_node/send_action_command
+/action_command_node/send_action_command
 ```
 
 Configure Action Signal block 0 on both cameras with matching keys and masks:
@@ -58,7 +58,7 @@ match the request will be triggered.
 Set `trigger_mode` to `0`. The delay and scheduled time fields must be zero:
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1
@@ -75,7 +75,7 @@ system clock, adds the delay, and converts the result to the absolute GVCP/PTP t
 the SDK. This example schedules the command one second in the future:
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1
@@ -96,7 +96,7 @@ Set `trigger_mode` to `2`, leave `delay_ms` at zero, and provide a future encode
 upper 32 bits contain seconds and the lower 32 bits contain nanoseconds:
 
 ```bash
-rosservice call /gige_action_command_node/send_action_command \
+rosservice call /action_command_node/send_action_command \
   "device_key: 1
 group_key: 1
 group_mask: 1
