@@ -14,7 +14,7 @@
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera1_prefix)"/>
         <arg name="ip_address" value="$(arg camera1_ip)"/>
         <arg name="port" value="$(arg camera1_port)"/>
-        <arg name="enumerate_net_device" value="false"/>
+        <arg name="enumerate_net_device" value="true"/>
         <arg name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
     </include>
 
@@ -22,7 +22,7 @@
         <arg name="camera_name" value="$(arg camera_name)_$(arg camera2_prefix)"/>
         <arg name="ip_address" value="$(arg camera2_ip)"/>
         <arg name="port" value="$(arg camera2_port)"/>
-        <arg name="enumerate_net_device" value="false"/>
+        <arg name="enumerate_net_device" value="true"/>
         <arg name="enable_image_transport_plugins" value="$(arg enable_image_transport_plugins)"/>
     </include>
 </launch>
