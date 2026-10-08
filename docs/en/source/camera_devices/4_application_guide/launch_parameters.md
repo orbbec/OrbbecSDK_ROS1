@@ -59,6 +59,8 @@ The following are the launch parameters available:
     ```bash
     rosrun orbbec_camera list_devices_node
     ```
+* **`preset_resolution_config`**
+  * Preset resolution configuration for the camera device. Format: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". Leave empty to disable.
 *   **`[color|depth|left_ir|right_ir|ir]_[width|height|fps|format]`**
     *   The resolution and frame rate of the sensor stream.
     *   For Femto Mega / Femto Bolt, depth NFOV and WFOV modes are configured by combining depth and IR resolutions. See [Configuration of depth NFOV and WFOV modes](../5_advanced_guide/configuration/configuration_of_depth_NFOV_and_WFOV_modes.md).
@@ -66,6 +68,11 @@ The following are the launch parameters available:
 *   **`enable_[color|depth|left_ir|right_ir|ir]`**
     *   Enable or disable the corresponding image stream.
     *   On Gemini 301 series devices, all enabled image streams with an FPS greater than `0` must use the same FPS.
+
+> **Gemini 301 series defaults:** `gemini_301_series.launch` automatically matches device-supported profiles by default. The width, height, and FPS of `color`, `depth`, `left_ir`, and `right_ir` are `0`, and their formats are `ANY`; `ae_strategy` is `default` and `enable_fps_boost` is `true`. Set the corresponding launch parameters explicitly when a fixed profile is required.
+
+* **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
+  * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
 *   **`color_frame_queue_max_frames`**, **`left_color_frame_queue_max_frames`**, **`right_color_frame_queue_max_frames`**
     *   Set the maximum number of color frames buffered by the corresponding color-frame worker. The default is `10`, and the value must be greater than `0`. When the queue is full, the oldest frame is discarded and the overflow counter is incremented. The current queue size and overflow counters can be queried with `/camera/get_color_queue_stats`.
 *   **`[color|depth|left_ir|right_ir|ir]_rotation`**
@@ -99,6 +106,8 @@ The following are the launch parameters available:
   * During playback, image and IMU streams use the profiles recorded in the bag file. The launch parameters do not select new image resolution, frame rate, format, or IMU range/sample rate profiles.
 * **`bag_loop`**
   * Loop SDK bag playback after the file reaches the end. Default: `false`. This only takes effect when `bag_filename` is set.
+* **`enable_fps_boost`**
+  * Enable device FPS Boost. The default is `false`; this parameter only takes effect when the device supports the `FPS Boost` property.
 
 ## Sensor Controls
 
@@ -119,12 +128,18 @@ The following are the launch parameters available:
     *   Set the maximum exposure value for Color auto exposure.
 *   **`color_ae_max_gain`**
     *   Set the maximum gain for Color auto exposure. Supported by Gemini 2 firmware `1.5.04` and above, and Gemini 2L firmware `1.5.09` and above. **Range:** `16–112`.
+* **`ae_reference_stream`**
+  * Select the AE reference stream for Gemini 301 series devices. Options: `color`, `depth`.
+* **`ae_strategy`**
+  * Select the AE strategy for Gemini 301 series devices. Options: `default`, `motion`.
 *   **`color_brightness`**, **`color_sharpness`**, **`color_gamma`**, **`color_saturation`**, **`color_contrast`**, **`color_hue`**
     *   Set the Color brightness, sharpness, gamma, saturation, contrast, and hue.
 *   **`color_backlight_compensation`**
     *   Set the Color camera's backlight compensation level. Valid values are `0–6`; the launch default is `-1`, which leaves the current device value unchanged.
 *   **`color_powerline_freq`**
     *   Set the power line freq. The possible values are `disable`, `50hz`, `60hz`, `auto`.
+* **`color_mjpeg_quality`**
+  * Set the color MJPEG encoding quality. **Range:** `1–100`; **Default:** `-1` (leave the current device value unchanged). Firmware version `1.8.11` or later is required.
 *   **`color_preset`**
     *   Set the Color preset by name. Supported on Gemini 330 series and Gemini 301 series devices. Common options include `Default`, `Warm Biased AWB`, and `Cold Biased AWB`; the exact list is reported by the device. The name comparison is case-insensitive.
 *   **`color_anti_flicker`**
@@ -178,6 +193,9 @@ The following are the launch parameters available:
 ## Device, Sync & Advanced Features
 
 ### Multi-Camera Synchronization
+
+> The ROS1 wrapper does not expose `enable_gmsl_trigger` or `gmsl_trigger_fps` launch parameters. Configure GMSL stream and synchronization behavior with the supported device and sync parameters described in [GMSL Camera Usage Limitations](../5_advanced_guide/multi_camera/gmsl_cameras.md).
+
 *   **`sync_mode`**
     *   Set sync mode. See [multi camera synced](../5_advanced_guide/multi_camera/multi_camera_synced.md) for multi-camera connection, synchronization modes, and trigger configuration.
 *   **`depth_delay_us`** / **`color_delay_us`**
@@ -244,55 +262,6 @@ The following are the launch parameters available:
 - **`intra_camera_sync_reference`**
   - Sets the reference point for intra-camera synchronization on supported Gemini 330/335 series devices. **Options:** `Start`, `Middle`, `End`. When empty, the node leaves the device's current setting unchanged.
 
-## Device-Specific Parameters
-> The ROS1 wrapper does not expose `enable_gmsl_trigger` or `gmsl_trigger_fps` launch parameters. Configure GMSL stream and synchronization behavior with the supported device and sync parameters described in [GMSL Camera Usage Limitations](../5_advanced_guide/multi_camera/gmsl_cameras.md).
-
-* **`enable_ptp_config`**
-  * Enable PTP time synchronization. Requires `enable_sync_host_time` to be `false`.
-  > **Supported Modules**: Gemini 335Le
-* **`preset_resolution_config`**
-  * Preset resolution configuration for the camera device. Format: "width,height,ir_decimation_factor,depth_decimation_factor". Example: "1280,720,4,4". Leave empty to disable.
-  > **Supported Modules**: Gemini 435Le
-* **`ae_reference_stream`**
-  * Select the AE reference stream for Gemini 301 series devices. Options: `color`, `depth`.
-  > **Supported Modules**: Gemini 301 series
-* **`ae_strategy`**
-  * Select the AE strategy for Gemini 301 series devices. Options: `default`, `motion`.
-  > **Supported Modules**: Gemini 301 series
-
-> **Gemini 301 series defaults:** `gemini_301_series.launch` automatically matches device-supported profiles by default. The width, height, and FPS of `color`, `depth`, `left_ir`, and `right_ir` are `0`, and their formats are `ANY`; `ae_strategy` is `default` and `enable_fps_boost` is `true`. Set the corresponding launch parameters explicitly when a fixed profile is required.
-
-* **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
-  * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`
-  > **Supported Modules**: Gemini 301 series
-* **`color_mjpeg_quality`**
-  * Set the color MJPEG encoding quality. **Range:** `1–100`; **Default:** `-1` (leave the current device value unchanged). Firmware version `1.8.11` or later is required.
-  > **Supported Modules**: Gemini 330 series
-* **`enable_false_positive_filter`**
-  * Enable this option to reduce ghosting noise. For usage examples and runtime tuning, see [Gemini 330 Series FalsePositiveFilter Usage Guide](../5_advanced_guide/configuration/false_positive_filter.md).
-  > **Supported Modules**: Gemini 330 series / Gemini 340 series
-* **`enable_enhanced_depth`**
-  * Enable LingBot enhanced depth filtering. The default is `false`. Both Color and Depth must be enabled, and D2C/C2D alignment must be configured. For complete environment, startup, and image requirements, see the [EnhancedDepthFilter Usage Guide](../5_advanced_guide/configuration/enhanced_depth_filter.md).
-  > **Supported Modules**: Gemini 330 series, Dabai A, Dabai AL, Gemini 345, and Gemini 345Lg
-* **`enhanced_depth_model_path`**
-  * Path to the LingBot `model.sm4` file. The default is empty. This parameter is required when enhanced depth filtering is enabled; an absolute path is recommended. The model file cannot be changed at runtime.
-  > **Supported Modules**: Gemini 330 series, Dabai A, Dabai AL, Gemini 345, and Gemini 345Lg
-* **`enhanced_depth_confidence_threshold`**
-  * Confidence threshold for enhanced depth filtering. It must be an integer from `0` to `255`. The default is `51`.
-  > **Supported Modules**: Gemini 330 series, Dabai A, Dabai AL, Gemini 345, and Gemini 345Lg
-* **`enable_fps_boost`**
-  * Enable device FPS Boost. The default is `false`; this parameter only takes effect when the device supports the `FPS Boost` property.
-  > **Supported Modules:** Gemini 305 / Gemini 330 series
-* **`enable_edge_noise_removal_filter`**
-  * Enable EdgeNoiseRemovalFilter to reduce edge noise in depth frames.
-  > **Supported Modules**: DaBai Max Pro
-* **`enable_disp_outliers_filter`**
-  * Enable DispOutliersFilter to remove disparity outliers in depth frames.
-  > **Supported Modules**: DaBai Max Pro
-* **`disp_outliers_filter_search_mode`**
-  * Set the DispOutliersFilter search mode. Leave it empty to keep the SDK default. Options: `FULL`, `OFFSET_80`. The value is case-insensitive.
-  > **Supported Modules**: DaBai Max Pro
-
 ## Basic & General Parameters
 
 ### Firmware & Backend
@@ -323,6 +292,8 @@ The following are the launch parameters available:
 * **`time_domain`**
   * Select timestamp type: `device`, `global`, and `system`.
   * This parameter is case-insensitive. Use one of the valid values listed above.
+* **`enable_ptp_config`**
+  * Enable PTP time synchronization. Requires `enable_sync_host_time` to be `false`.
 * **`timestamp_clock_type`**
   * Set the SDK timestamp clock type. Optional values: `realtime`, `monotonic`. When the launch argument is empty, the node does not explicitly set the SDK clock type.
 
@@ -395,6 +366,8 @@ The following are the launch parameters available:
     *   Enable the Depth hardware noise removal filter. In `gemini_330_series.launch` and `gemini_330_series_nodelet.launch`, the default is empty, so the node keeps the SDK/firmware setting unchanged. See [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md) for low-CPU configuration recommendations.
 *   **`enable_noise_removal_filter`**
     *   Enable the Depth software noise removal filter. In `gemini_330_series.launch` and `gemini_330_series_nodelet.launch`, the default is empty, so the node keeps the SDK/firmware setting unchanged. Set with `noise_removal_filter_min_diff`, etc. See [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md) for low-CPU configuration recommendations. The low-CPU launch variants intentionally use their own explicit filter defaults.
+* **`enable_false_positive_filter`**
+  * Enable this option to reduce ghosting noise on Gemini 330 and Gemini 340 series devices. For usage examples and runtime tuning, see [Gemini 330 Series FalsePositiveFilter Usage Guide](../5_advanced_guide/configuration/false_positive_filter.md).
 *   **`enable_spatial_filter`**
     *   Enable the Depth spatial filter. Set with `spatial_filter_alpha`, etc. See [Lower CPU Usage](../5_advanced_guide/performance/lower_cpu_usage.md) for low-CPU configuration recommendations.
 *   **`enable_temporal_filter`**
@@ -409,6 +382,18 @@ The following are the launch parameters available:
     *   Enable the MGC noise removal filter for OpenNI devices including Astra Mini (S) Pro, DaBai Pro Max, and DaBai DCW2.
 *   **`enable_lut_noise_removal_filter`**
     *   Enable the LUT noise removal filter for OpenNI devices including Astra Mini (S) Pro, DaBai Pro Max, and DaBai DCW2.
+* **`enable_enhanced_depth`**
+  * Enable LingBot enhanced depth filtering. The default is `false`. Both Color and Depth must be enabled, and D2C/C2D alignment must be configured. For complete environment, startup, and image requirements, see the [EnhancedDepthFilter Usage Guide](../5_advanced_guide/configuration/enhanced_depth_filter.md).
+* **`enhanced_depth_model_path`**
+  * Path to the LingBot `model.sm4` file. The default is empty. This parameter is required when enhanced depth filtering is enabled; an absolute path is recommended. The model file cannot be changed at runtime.
+* **`enhanced_depth_confidence_threshold`**
+  * Confidence threshold for enhanced depth filtering. It must be an integer from `0` to `255`. The default is `51`.
+* **`enable_edge_noise_removal_filter`**
+  * Enable EdgeNoiseRemovalFilter to reduce edge noise in depth frames.
+* **`enable_disp_outliers_filter`**
+  * Enable DispOutliersFilter to remove disparity outliers in depth frames.
+* **`disp_outliers_filter_search_mode`**
+  * Set the DispOutliersFilter search mode. Leave it empty to keep the SDK default. Options: `FULL`, `OFFSET_80`. The value is case-insensitive.
 
 ---
 
