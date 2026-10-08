@@ -284,34 +284,6 @@ rosservice call /camera/get_white_balance
 rosservice call /camera/reset_white_balance
 ```
 
-### Gemini 330 AE/AWB 调试
-
-Gemini 330 系列设备使用固件 `1.8.21` 及以上版本时，如果设备支持对应 SDK 属性，节点会提供以下服务：
-
-* `/camera/get_color_ae_awb_status`
-
-获取设备 AE/AWB 状态值。
-
-```bash
-rosservice call /camera/get_color_ae_awb_status
-```
-
-* `/camera/get_color_awb_gain`
-
-获取原始 Q8.8 格式的 `r_gain`、`b_gain` 和 `g_gain`。
-
-```bash
-rosservice call /camera/get_color_awb_gain
-```
-
-* `/camera/set_color_awb_gain`
-
-设置原始 Q8.8 格式的 RGB 通道增益。设置前必须关闭彩色自动白平衡。
-
-```bash
-rosservice call /camera/set_color_awb_gain "{r_gain: 512, b_gain: 512, g_gain: 512}"
-```
-
 * `/camera/set_laser`
 
 ```bash

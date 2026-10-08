@@ -283,34 +283,6 @@ rosservice call /camera/get_white_balance
 rosservice call /camera/reset_white_balance
 ```
 
-### Gemini 330 AE/AWB Debugging
-
-On Gemini 330 series devices with firmware `1.8.21` or later, the following services are advertised when the corresponding SDK properties are supported:
-
-* `/camera/get_color_ae_awb_status`
-
-Returns the device AE/AWB status value.
-
-```bash
-rosservice call /camera/get_color_ae_awb_status
-```
-
-* `/camera/get_color_awb_gain`
-
-Returns the raw Q8.8 `r_gain`, `b_gain`, and `g_gain` values.
-
-```bash
-rosservice call /camera/get_color_awb_gain
-```
-
-* `/camera/set_color_awb_gain`
-
-Sets raw Q8.8 RGB channel gains. Color auto white balance must be disabled before setting the gains.
-
-```bash
-rosservice call /camera/set_color_awb_gain "{r_gain: 512, b_gain: 512, g_gain: 512}"
-```
-
 * `/camera/set_laser`
 
 ```bash
