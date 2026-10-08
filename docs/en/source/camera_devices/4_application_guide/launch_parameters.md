@@ -69,7 +69,6 @@ The following are the launch parameters available:
     *   Enable or disable the corresponding image stream.
     *   On Gemini 301 series devices, all enabled image streams with an FPS greater than `0` must use the same FPS.
 
-> **Gemini 301 series defaults:** `gemini_301_series.launch` automatically matches device-supported profiles by default. The width, height, and FPS of `color`, `depth`, `left_ir`, and `right_ir` are `0`, and their formats are `ANY`; `ae_strategy` is `default` and `enable_fps_boost` is `true`. Set the corresponding launch parameters explicitly when a fixed profile is required.
 
 * **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
   * Set the downsampling multiple. You can use `rosrun orbbec_camera list_camera_profile_mode_node` to view the settable resolution. **Default value:** `1`

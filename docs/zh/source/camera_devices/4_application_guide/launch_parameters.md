@@ -69,7 +69,6 @@
     *   启用或关闭对应图像流。
     *   Gemini 301 系列要求所有已启用且 FPS 大于 `0` 的图像流使用相同 FPS。
 
-> **Gemini 301 系列默认配置：** `gemini_301_series.launch` 默认自动匹配设备支持的 Profile：`color`、`depth`、`left_ir` 和 `right_ir` 的宽、高、FPS 均为 `0`，格式为 `ANY`；`ae_strategy` 为 `default`，`enable_fps_boost` 为 `true`。如需固定 Profile，请显式设置对应的启动参数。
 
 * **`depth_decimation_factor`** / **`left_ir_decimation_factor`** / **`right_ir_decimation_factor`**
   * 设置下采样倍数。可用`rosrun orbbec_camera list_camera_profile_mode_node`查看可设置分辨率。**默认值：** `1`
